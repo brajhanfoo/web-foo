@@ -32,6 +32,27 @@ app/                  # Núcleo de la aplicación (App Router de Next.js)
     └── page.tsxs
 ```
 
+## 🧹 Regla antes de Commit
+
+Este proyecto utiliza **ESLint** y **Prettier** para asegurar un código limpio, consistente y con buenas prácticas.  
+Antes de enviar cualquier commit, sigue estos pasos:
+
+### 1. Verificar el código con ESLint
+
+Ejecuta el siguiente comando para detectar errores y advertencias:
+
+```bash
+npm run lint
+```
+
+### 2. Formatear el código con Prettier
+
+Asegúrate de que el código siga el estilo definido:
+
+```bash
+npm run format
+```
+
 ## ✅ Convenciones de Commits (Conventional Commits)
 
 Usamos **Conventional Commits** para mantener un historial claro y facilitar releases automáticos.
