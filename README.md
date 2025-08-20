@@ -1,36 +1,92 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Foo Talent Group - Plataforma Web
 
-## Getting Started
+Este proyecto es una aplicación web desarrollada con **Next.js 15**, utilizando el **App Router** y **TailwindCSS** para el manejo de estilos.  
+Actualmente el proyecto se encuentra en fase inicial con una **arquitectura monolítica modular**, diseñada para crecer de manera ordenada.
 
-First, run the development server:
+---
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## 🚀 Tecnologías principales
+
+- [Next.js 15](https://nextjs.org/) - Framework de React
+- [React 18](https://react.dev/) - Librería para UI
+- [TailwindCSS](https://tailwindcss.com/) - Framework de estilos
+- [TypeScript](https://www.typescriptlang.org/) (opcional, si se incluye más adelante)
+
+---
+
+## 📂 Estructura de carpetas
+
+```plaintext
+app/                  # Núcleo de la aplicación (App Router de Next.js)
+│
+├── globals.css       # Estilos globales (incluye Tailwind)
+├── layout.tsx        # Layout raíz (HTML base)
+├── page.tsx          # Página principal ("/")
+│
+├── services/         # Módulo de servicios para empresas
+│   ├── layout.tsx    # Layout específico para /services
+│   └── page.tsx      # Página principal de /services
+│
+└── talentos/         # (Futuro módulo) Plataforma de aula virtual, cursos, etc.
+    ├── layout.tsx
+    └── page.tsxs
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## ✅ Convenciones de Commits (Conventional Commits)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Usamos **Conventional Commits** para mantener un historial claro y facilitar releases automáticos.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+**Formato básico**
 
-## Learn More
+```plaintext
+<tipo>(<alcance>): <mensaje corto>
+```
 
-To learn more about Next.js, take a look at the following resources:
+- **tipo** (obligatorio): `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `chore`, `ci`
+- **alcance** (opcional): módulo o área afectada, p. ej. `services`, `auth`, `ui`
+- **mensaje corto**: en modo imperativo, minúsculas, ≤ 50 caracteres recomendados (sin punto final)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+**Ejemplos**
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- `feat(services): agregar endpoint para crear empresa`
+- `fix(auth): corregir expiración de token JWT`
+- `docs(readme): actualizar sección de instalación`
+- `refactor(ui): dividir Header en componentes más pequeños`
+- `perf(api): optimizar consulta de listados`
 
-## Deploy on Vercel
+## Clonar e instalar el proyecto
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Requisitos
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Node.js **v18+** (recomendado v18 o v20)
+- npm (incluido con Node) — o yarn / pnpm si prefieres
+
+### Pasos rápidos
+
+1. Clonar el repositorio
+
+```bash
+git clone https://github.com/brajhanfoo/web-foo.git
+cd web-foo
+```
+
+2. Instalar dependencias
+
+```bash
+$ npm install
+```
+
+3. Compilación y Ejecución del Proyecto
+
+```bash
+# development
+$ npm run dev
+
+# production mode
+$ npm run start
+```
+
+## 📄 Licencia
+
+Este proyecto es propiedad de Foo Talent Group.
+Su uso está restringido a fines internos de la organización.
