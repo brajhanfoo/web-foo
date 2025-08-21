@@ -1,3 +1,5 @@
+import Navbar from '@/components/ui/Navbar'
+import { LOGOWEB } from '@/lib/imagePaths'
 import './globals.css'
 
 import type { Metadata } from 'next'
@@ -14,7 +16,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="es">
-      <body>{children}</body>
+      <body>
+        <Navbar logoSrc={LOGOWEB} logoAlt="Foo Talent Group" />
+        {children}
+      </body>
     </html>
   )
 }
