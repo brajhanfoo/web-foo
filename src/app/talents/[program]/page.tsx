@@ -1,20 +1,17 @@
 import { notFound } from 'next/navigation'
 import { MdConstruction } from 'react-icons/md'
 
-type PropertiesPrograms = {
-  params: {
-    program: string
-  }
+type ProgramPageProperties = {
+  params: Promise<{ program: string }>
 }
 
-export default function ProgramPage({ params }: PropertiesPrograms) {
-  const { program } = params
+export default async function ProgramPage({ params }: ProgramPageProperties) {
+  const { program } = await params
 
-  // lista de programas válidos (opcional)
   const validPrograms = ['smart-projects', 'tech-projects']
 
   if (!validPrograms.includes(program)) {
-    return notFound() // muestra la página 404 de Next si no existe
+    return notFound()
   }
 
   return (
