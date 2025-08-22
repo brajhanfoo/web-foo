@@ -1,6 +1,9 @@
+import Navbar from '@/components/ui/Navbar'
+import { LOGOWEB } from '@/lib/imagePaths'
 import './globals.css'
 
 import type { Metadata } from 'next'
+import Footer from '@/components/ui/Footer'
 
 export const metadata: Metadata = {
   title: 'Foo Talent Group',
@@ -14,7 +17,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="es">
-      <body>{children}</body>
+      <body>
+        <Navbar logoSrc={LOGOWEB} logoAlt="Foo Talent Group" />
+        {children}
+        <Footer />
+      </body>
     </html>
   )
 }
