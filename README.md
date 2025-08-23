@@ -1,20 +1,28 @@
 # Foo Talent Group - Plataforma Web
 
-Este proyecto es una aplicación web desarrollada con **Next.js 15**, utilizando el **App Router** y **TailwindCSS** para el manejo de estilos.  
-Actualmente el proyecto se encuentra en fase inicial con una **arquitectura monolítica modular**, diseñada para crecer de manera ordenada.
+> Repositorio del proyecto web de Foo Talent Group (Next.js 15). Este README combina la información técnica del proyecto con las **buenas prácticas de Gitflow** y las convenciones de trabajo para colaborar usando GitHub (Issues, Projects y Pull Requests).
+---
+
+## 🏷️ Resumen rápido
+
+- **Ramas protegidas:** `main` (producción).  
+- **Rama de integración:** `dev` (desarrollo diario).  
+- **Prefijo para features:** `fet/` (ej.: `fet/123-login-usuario`).
+- Usamos **PRs**, **Issues**, **Projects (Kanban)** y **GitHub Actions** para CI.
 
 ---
 
-## 🚀 Tecnologías principales
+## 📌 Tecnologías principales
 
-- [Next.js 15](https://nextjs.org/) - Framework de React
-- [React 18](https://react.dev/) - Librería para UI
-- [TailwindCSS](https://tailwindcss.com/) - Framework de estilos
-- [TypeScript](https://www.typescriptlang.org/) (opcional, si se incluye más adelante)
+- Next.js 15 - App Router
+- React 18
+- TailwindCSS
+- Node.js (v18+ recomendado)
+- TypeScript (opcional)
 
 ---
 
-## 📂 Estructura de carpetas
+## 📂 Estructura de carpetas (ejemplo)
 
 ```plaintext
 app/                  # Núcleo de la aplicación (App Router de Next.js)
@@ -24,20 +32,22 @@ app/                  # Núcleo de la aplicación (App Router de Next.js)
 ├── page.tsx          # Página principal ("/")
 │
 ├── services/         # Módulo de servicios para empresas
-│   ├── layout.tsx    # Layout específico para /services
-│   └── page.tsx      # Página principal de /services
+│   ├── layout.tsx
+│   └── page.tsx
 │
-└── talentos/         # (Futuro módulo) Plataforma de aula virtual, cursos, etc.
+└── talentos/         # (Futuro módulo) Plataforma de aula virtual
     ├── layout.tsx
-    └── page.tsxs
+    └── page.tsx
 ```
 
-## 🧹 Regla antes de Commit
+---
+
+## 🧹 Reglas antes de commitear
 
 Este proyecto utiliza **ESLint** y **Prettier** para asegurar un código limpio, consistente y con buenas prácticas.  
 Antes de enviar cualquier commit, sigue estos pasos:
 
-### 1. Verificar el código con ESLint
+#### 1. Verificar el código con ESLint
 
 Ejecuta el siguiente comando para detectar errores y advertencias:
 
@@ -45,7 +55,7 @@ Ejecuta el siguiente comando para detectar errores y advertencias:
 npm run lint
 ```
 
-### 2. Formatear el código con Prettier
+#### 2. Formatear el código con Prettier
 
 Asegúrate de que el código siga el estilo definido:
 
@@ -53,61 +63,195 @@ Asegúrate de que el código siga el estilo definido:
 npm run format
 ```
 
-## ✅ Convenciones de Commits (Conventional Commits)
 
-Usamos **Conventional Commits** para mantener un historial claro y facilitar releases automáticos.
 
-**Formato básico**
+---
+
+## ✅ Convenciones de commits (Conventional Commits)
+
+Formato:
 
 ```plaintext
 <tipo>(<alcance>): <mensaje corto>
 ```
 
-- **tipo** (obligatorio): `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `chore`, `ci`
-- **alcance** (opcional): módulo o área afectada, p. ej. `services`, `auth`, `ui`
-- **mensaje corto**: en modo imperativo, minúsculas, ≤ 50 caracteres recomendados (sin punto final)
+Tipos recomendados: `feat`/`feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `chore`, `ci`.
 
-**Ejemplos**
+Ejemplos:
 
 - `feat(services): agregar endpoint para crear empresa`
 - `fix(auth): corregir expiración de token JWT`
 - `docs(readme): actualizar sección de instalación`
 - `refactor(ui): dividir Header en componentes más pequeños`
 - `perf(api): optimizar consulta de listados`
+---
 
-## Clonar e instalar el proyecto
+## 🔧 Clonar e instalar
 
-### Requisitos
-
-- Node.js **v18+** (recomendado v18 o v20)
-- npm (incluido con Node) — o yarn / pnpm si prefieres
-
-### Pasos rápidos
-
-1. Clonar el repositorio
+Requisitos: Node.js v18+.
 
 ```bash
 git clone https://github.com/brajhanfoo/web-foo.git
 cd web-foo
+npm install
+
+# desarrollo
+npm run dev
+
+# producción
+npm run build
+npm run start
 ```
 
-2. Instalar dependencias
+---
+
+## 📋 Flujo Gitflow recomendado (detallado)
+
+### 1. Modelo de ramas
+
+- `main` – Producción (protegida). Solo merges controlados mediante PRs desde `release` o `hotfix`.
+- `dev` – Integración diaria (rama base para features).
+- `feat/...` – Features creadas desde `dev`.
+- `release/...` – Preparación de versiones desde `dev`.
+- `hotfix/...` – Correcciones críticas creadas desde `main`.
+
+### 2. Convenciones de nombres
+
+- Feature: `feat/{ISSUE_NUM}-{descripcion-corta}`  
+  Ej: `feat/123-login-usuario`
+- Release: `release/vX.Y.Z`  
+  Ej: `release/v1.2.0`
+- Hotfix: `hotfix/vX.Y.Z`  
+  Ej: `hotfix/v1.2.1`
+
+> Recomendación: siempre incluir número de issue para trazabilidad.
+
+### 3. Flujo paso a paso
+
+#### a) Crear la tarea (Issue)
+- Crear Issue con título, descripción, tareas y etiqueta (`bug`, `feature`, `documentation`).
+- Asignarse la tarea.
+- Asignar milestone si aplica.
+- Añadir la tarjeta al Project Board (Backlog / In Progress).
+
+#### b) Crear rama desde `dev`
 
 ```bash
-$ npm install
+git checkout dev
+git pull origin dev
+git checkout -b feat/123-descripcion-corta
+# trabaja, commitea
+git add .
+git commit -m "feat(123): descripción corta"
+git push -u origin feat/123-descripcion-corta
 ```
 
-3. Compilación y Ejecución del Proyecto
+#### c) Pull Request a `dev`
+- Abrir PR con descripción, pasos para probar y `Closes #ISSUE_NUM`.
+- Asignar revisores.
+- Merge una vez aprobado.
+
+**Estrategia de merge:** `Squash and merge` para feature branches (historial compacto), `Merge commit` para releases.
+
+#### d) Release
+- Crear `release/vX.Y.Z` desde `dev` cuando estén las features listas.
+- Probar, corregir y mergear `release` → `main`.
+- Crear tag `vX.Y.Z` y desplegar.
+- Merge `main` → `dev` para propagar etiquetas/cambios.
+
+#### e) Hotfix
+- Crear `hotfix/x.y.z` desde `main`, corregir, abrir PR a `main`.
+- Tras merge, taggear y mergear `main` → `dev`.
+
+---
+
+## 📦 Uso de GitHub (Issues, Projects y PRs)
+
+- **Issues:** documentan tareas y bugs. Usa labels y milestones.  
+- **Projects (Kanban):** `Backlog`, `In progress`, `In review`, `QA`, `Done`. 
+- Vincula tarjetas a issues/PRs.
+- **PRs:** deben referenciar issues (`Closes #`) y tener descripción y checklist.
+
+---
+
+## 🧾 Plantillas recomendadas
+
+### Pull Request template (`.github/PULL_REQUEST_TEMPLATE.md`)
+
+```markdown
+## Descripción
+Resumen breve.
+
+## Issue relacionado
+Closes #ISSUE_NUMBER
+
+## Cómo probar
+- Paso 1
+- Paso 2
+
+## Checklist
+- [ ] Tests pasan
+- [ ] Linter OK
+- [ ] Revisores asignados
+- [ ] Documentación actualizada
+```
+
+### Issue template (feature / bug) (`.github/ISSUE_TEMPLATE/`)
+
+```markdown
+### Descripción
+¿Qué quieres lograr?
+
+### Pasos para reproducir (si aplica)
+1.
+2.
+
+### Resultado esperado
+
+### Criterios de aceptación
+- [ ] Criterio 1
+- [ ] Criterio 2
+```
+
+---
+
+## ⚙️ Integración continua (recomendado)
+
+- Usa **GitHub Actions** con workflows que ejecuten: `install`, `build`, `test`, `lint` en cada PR.  
+- Configura los checks como requisito para merge en `dev` y `main`.
+
+---
+
+## 🧰 Comandos útiles
 
 ```bash
-# development
-$ npm run dev
+# crear rama feature
+git checkout dev
+git pull
+git checkout -b fet/123-mi-feature
 
-# production mode
-$ npm run start
+# rebase/merge con dev antes de push
+git fetch origin
+git rebase origin/dev
+
+# push
+git push -u origin fet/123-mi-feature
 ```
+
+---
+
+## ❓ FAQ corto
+
+**¿Puedo crear una rama desde `main`?** Solo para hotfixes críticos.  
+**¿Merge directo a `main`?** No. Solo via `release` o `hotfix` y siempre con PRs y checks aprobados.
+
+---
 
 ## 📄 Licencia
 
-Este proyecto es propiedad de Foo Talent Group.
-Su uso está restringido a fines internos de la organización.
+Propiedad de Foo Talent Group. Uso restringido a fines internos.
+
+---
+
+
+
