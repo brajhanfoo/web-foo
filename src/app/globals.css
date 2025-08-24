@@ -3,9 +3,11 @@
 
 @theme {
   --color-white: #ffffff;
+  --color-white-dark: #f9f9fa;
   --color-yellow: #e7e51a;
   --color-black: #000000;
   --color-violeta: #780b90;
+  --color-gray: #878787;
   --font-manrope: 'Manrope', sans-serif;
 }
 
