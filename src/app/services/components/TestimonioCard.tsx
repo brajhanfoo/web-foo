@@ -26,9 +26,9 @@ export default function TestimonioCard({ testimonio }: PropertiesTestimonio) {
         <Image
           src={imagen}
           alt={nombre}
-          width={64}
-          height={64}
-          className="w-16 h-16 rounded-full border-4 border-yellow"
+          width={78}
+          height={78}
+          className="w-16 lg:w-[78px] h-16 lg:h-[78px] rounded-full border-4 border-yellow"
         />
       </div>
     </div>

@@ -37,8 +37,7 @@ export default function TestimoniosSection() {
   if (total === 0) return null
 
   return (
-    <section className="bg-black pt-[24px] pb-[60px] px-2 relative">
-      {/* Header */}
+    <section className="bg-black pt-[24px] pb-[60px] lg:pb-[80px] px-2 relative">
       <div className="text-center text-white mb-8">
         <h2 className="text-[28px] lg:text-[32px] font-semibold">
           Testimonios
