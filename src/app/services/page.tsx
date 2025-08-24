@@ -1,6 +1,10 @@
-import { Hero, ServicesSection } from './components'
+import {
+  Hero,
+  ServicesSection,
+  TestimoniosSection,
+  FaqSection,
+} from './components'
 import { services } from './_data/services.data'
-import TestimoniosSection from './components/TestimoniosSection'
 
 const page = () => {
   return (
@@ -8,6 +12,7 @@ const page = () => {
       <Hero />
       <ServicesSection services={services} />
       <TestimoniosSection />
+      <FaqSection />
     </main>
   )
 }
