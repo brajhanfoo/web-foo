@@ -8,7 +8,7 @@
 
 - **Ramas protegidas:** `main` (producción).
 - **Rama de integración:** `dev` (desarrollo diario).
-- **Prefijo para features:** `fet/` (ej.: `fet/123-login-usuario`).
+- **Prefijo para features:** `feat/` (ej.: `feat/123-login-usuario`).
 - Usamos **PRs**, **Issues**, **Projects (Kanban)** y **GitHub Actions** para CI.
 
 ---

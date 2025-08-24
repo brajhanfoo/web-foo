@@ -5,3 +5,12 @@ export interface Service {
   description: string
   icon: IconType
 }
+
+export interface Testimonio {
+  id: number
+  nombre: string
+  rol: string
+  opinion: string
+  estrellas: number
+  imagen: string
+}
