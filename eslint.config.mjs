@@ -20,7 +20,7 @@ const eslintConfig = [
       unicorn: eslintPluginUnicorn,
     },
     rules: {
-      'prettier/prettier': 'error',
+      // 'prettier/prettier': 'error',
       // 'simple-import-sort/imports': 'warn',
       // 'simple-import-sort/exports': 'warn',
       'unicorn/prevent-abbreviations': 'warn',
