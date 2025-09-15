@@ -260,6 +260,6 @@ git push -u origin fet/123-mi-feature
 
 ## 📄 Licencia
 
-Propiedad de Foo Talent Group. Uso restringido a fines internos.
+Propiedad de Foo Talent Group 2025. Uso restringido a fines internos.
 
 ---
