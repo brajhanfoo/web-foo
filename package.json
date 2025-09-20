@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint --fix",
-    "format": "npx prettier --write ."
+    "format": "npx prettier --write .",
+    "prepare": "husky"
   },
   "dependencies": {
     "formik": "^2.4.6",
@@ -28,6 +29,7 @@
     "eslint-plugin-prettier": "^5.5.4",
     "eslint-plugin-simple-import-sort": "^12.1.1",
     "eslint-plugin-unicorn": "^60.0.0",
+    "husky": "^9.1.7",
     "prettier": "3.6.2",
     "tailwindcss": "^4",
     "typescript": "^5"

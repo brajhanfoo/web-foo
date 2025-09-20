@@ -1,0 +1,20 @@
+#!/bin/sh
+
+branch="dev"
+
+echo "🔍 Verificando si tu rama está actualizada con $branch..."
+
+# Traemos lo último de dev
+git fetch origin $branch
+
+# Comparamos si tu rama está atrasada
+if ! git merge-base --is-ancestor origin/$branch HEAD; then
+  echo "⚠️ Tu rama está desactualizada con $branch."
+  echo "➡️ Haciendo rebase con origin/$branch..."
+  git pull origin $branch --rebase || {
+    echo "❌ Conflicto al hacer rebase. Resolvés y volvés a intentar."
+    exit 1
+  }
+fi
+
+echo "✅ Tu rama está actualizada con $branch. Procediendo con el commit..."
