@@ -1,0 +1,22 @@
+#!/bin/sh
+
+echo "🔍 Archivos en staging..."
+STAGED_FILES=$(git diff --name-only --cached)
+
+echo "✨ Formateando..."
+npm run format
+
+echo "🏗️ Compilando..."
+npm run build || {
+  echo "❌ El build falló, no se puede pushear."
+  exit 1
+}
+
+# 👉 Si querés que re-agregue archivos formateados al commit (opcional)
+# for file in $STAGED_FILES; do
+#   if [ -f "$file" ]; then
+#     git add "$file"
+#   fi
+# done
+
+echo "✅ Todo ok, listo para pushear."
