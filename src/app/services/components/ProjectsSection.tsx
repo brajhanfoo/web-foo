@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { projectsData} from '../_data/projectsData'
+import { projectsData } from '../_data/projectsData'
 import ProjectCard from './ProjectCard'
 
 export default function ProjectsSection() {
@@ -30,7 +30,6 @@ export default function ProjectsSection() {
           </li>
         ))}
       </ul>
-
 
       <div className="grid gap-6 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
         {projectsData

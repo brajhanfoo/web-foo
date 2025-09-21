@@ -14,7 +14,8 @@ export const projectsData: Project[] = [
     title: 'Variable X',
     description:
       'Variable X es un centro educativo que ofrece una experiencia única...',
-    imageUrl: 'https://res.cloudinary.com/dtaybaydq/image/upload/fl_preserve_transparency/v1757895246/Foo%20Talent%20group/EmpresasLogo/Vector_ghp78h.jpg?_s=public-apps',
+    imageUrl:
+      'https://res.cloudinary.com/dtaybaydq/image/upload/fl_preserve_transparency/v1757895246/Foo%20Talent%20group/EmpresasLogo/Vector_ghp78h.jpg?_s=public-apps',
     link: '#',
   },
   {
@@ -23,17 +24,18 @@ export const projectsData: Project[] = [
     title: 'Proyecto Y',
     description:
       'Proyecto Y es una plataforma innovadora que conecta a usuarios...',
-    imageUrl: 'https://res.cloudinary.com/dtaybaydq/image/upload/fl_preserve_transparency/v1757895246/Foo%20Talent%20group/EmpresasLogo/Vector_ghp78h.jpg?_s=public-apps',
+    imageUrl:
+      'https://res.cloudinary.com/dtaybaydq/image/upload/fl_preserve_transparency/v1757895246/Foo%20Talent%20group/EmpresasLogo/Vector_ghp78h.jpg?_s=public-apps',
     link: '#',
-
   },
-  { 
+  {
     id: 4,
     category: 'Marketing digital',
     title: 'Campaña Z',
     description:
       'Campaña Z es una estrategia de marketing digital que ha logrado...',
-    imageUrl: 'https://res.cloudinary.com/dtaybaydq/image/upload/fl_preserve_transparency/v1757895246/Foo%20Talent%20group/EmpresasLogo/Vector_ghp78h.jpg?_s=public-apps',
+    imageUrl:
+      'https://res.cloudinary.com/dtaybaydq/image/upload/fl_preserve_transparency/v1757895246/Foo%20Talent%20group/EmpresasLogo/Vector_ghp78h.jpg?_s=public-apps',
     link: '#',
   },
   {
@@ -42,7 +44,8 @@ export const projectsData: Project[] = [
     title: 'Variable X',
     description:
       'Variable X es un centro educativo que ofrece una experiencia única...',
-    imageUrl: 'https://res.cloudinary.com/dtaybaydq/image/upload/fl_preserve_transparency/v1757895246/Foo%20Talent%20group/EmpresasLogo/Vector_ghp78h.jpg?_s=public-apps',
+    imageUrl:
+      'https://res.cloudinary.com/dtaybaydq/image/upload/fl_preserve_transparency/v1757895246/Foo%20Talent%20group/EmpresasLogo/Vector_ghp78h.jpg?_s=public-apps',
     link: '#',
   },
   {
@@ -51,9 +54,8 @@ export const projectsData: Project[] = [
     title: 'App Móvil A',
     description:
       'App Móvil A es una aplicación revolucionaria que transforma la manera...',
-    imageUrl: 'https://res.cloudinary.com/dtaybaydq/image/upload/fl_preserve_transparency/v1757895246/Foo%20Talent%20group/EmpresasLogo/Vector_ghp78h.jpg?_s=public-apps',
+    imageUrl:
+      'https://res.cloudinary.com/dtaybaydq/image/upload/fl_preserve_transparency/v1757895246/Foo%20Talent%20group/EmpresasLogo/Vector_ghp78h.jpg?_s=public-apps',
     link: '#',
-  }
-
-  
+  },
 ]

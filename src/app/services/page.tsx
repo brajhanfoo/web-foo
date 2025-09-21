@@ -11,10 +11,10 @@ const page = () => {
   return (
     <main className=" bg-white-dark">
       <Hero />
-      <ServicesSection services={services} />
+      {/* <ServicesSection services={services} />
       <ProjectsSection/>
       <TestimoniosSection />
-      <FaqSection />
+      <FaqSection /> */}
     </main>
   )
 }
