@@ -1,41 +1,41 @@
-"use client";
-import { useState } from "react";
-import { FaChevronDown } from "react-icons/fa";
+'use client'
+import { useState } from 'react'
+import { FaChevronDown } from 'react-icons/fa'
 
 export default function PreguntasFrecuentes() {
-  const [openIndex, setOpenIndex] = useState<number | null>(null);
+  const [openIndex, setOpenIndex] = useState<number | null>(null)
 
   const toggleIndex = (index: number) => {
-    setOpenIndex(openIndex === index ? null : index);
-  };
+    setOpenIndex(openIndex === index ? null : index)
+  }
 
   const faqs = [
     {
-      question: "¿Quiénes pueden participar en los Smart Projects?",
+      question: '¿Quiénes pueden participar en los Smart Projects?',
       answer:
-        "Nuestros programas están dirigidos a recién egresados y profesionales en tecnología que desean adquirir experiencia práctica en desarrollo frontend y backend, diseño UX/UI, testing QA y otros roles relacionados con el desarrollo tecnológico.",
+        'Personas motivadas por aprender sobre tecnología, diseño, desarrollo, producto o testing. No es requisito estar laboralmente en el área, sino tener interés genuino. Requisito mínimo: conocimientos básicos del rol al que aplicas.',
     },
     {
-      question: "¿Qué nivel de experiencia se requiere para participar?",
+      question: '¿Qué nivel de experiencia se requiere para participar?',
       answer:
-        "Solo necesitas haber completado un curso en Project Management, Análisis Funcional, UX/UI, Frontend, Backend o Testing QA, o tener conocimientos básicos en el rol al que postulas. Ofrecemos aprendizaje práctico y apoyo continuo para distintos niveles.",
+        'Solo necesitas haber completado un curso en Project Management, Análisis Funcional, UX/UI, Frontend, Backend o Testing QA, o tener conocimientos básicos en el rol al que postulas. Ofrecemos aprendizaje práctico y apoyo continuo para distintos niveles.',
     },
     {
-      question: "¿Cuál es la duración de los programas?",
+      question: '¿Cuál es la duración de los programas?',
       answer:
-        "La duración de los programas varía según el formato. Por ejemplo: Smart Projects: 8 semanas.",
+        'La duración de los programas varía según el formato. Por ejemplo: Smart Projects: 8 semanas.',
     },
     {
-      question: "¿Recibiré un certificado al finalizar el programa?",
+      question: '¿Recibiré un certificado al finalizar el programa?',
       answer:
-        "¡Sí! Al finalizar el programa, recibirás un certificado que avala tu participación y el trabajo realizado, ideal para enriquecer tu portafolio y tu CV.",
+        '¡Sí! Al finalizar el programa, recibirás un certificado que avala tu participación y el trabajo realizado, ideal para enriquecer tu portafolio y tu CV.',
     },
     {
-      question: "¿Qué soporte se ofrece durante los programas?",
+      question: '¿Qué soporte se ofrece durante los programas?',
       answer:
-        "Tendrás acceso a mentores experimentados, guías prácticas, y grupos de ayuda en Slack para resolver dudas, además de revisiones periódicas de tus avances.",
+        'Tendrás acceso a mentores experimentados, guías prácticas, y grupos de ayuda en Slack para resolver dudas, además de revisiones periódicas de tus avances.',
     },
-  ];
+  ]
 
   return (
     <section className="w-full bg-gray-950 text-white py-16 px-4 md:px-12">
@@ -66,7 +66,7 @@ export default function PreguntasFrecuentes() {
               </span>
               <FaChevronDown
                 className={`text-gray-400 transform transition-transform ${
-                  openIndex === index ? "rotate-180 text-indigo-400" : ""
+                  openIndex === index ? 'rotate-180 text-indigo-400' : ''
                 }`}
               />
             </button>
@@ -77,5 +77,5 @@ export default function PreguntasFrecuentes() {
         ))}
       </div>
     </section>
-  );
+  )
 }

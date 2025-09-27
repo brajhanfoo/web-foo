@@ -1,7 +1,7 @@
-"use client"
+'use client'
 
-import { FaTools } from "react-icons/fa"
-import Image from "next/image"
+import { FaTools } from 'react-icons/fa'
+import Image from 'next/image'
 import { LOGO } from '@/lib/imagePaths'
 
 export default function UnderConstruction() {
@@ -26,8 +26,7 @@ export default function UnderConstruction() {
         Página en construcción
       </h1>
       <p className="text-gray-400 text-center max-w-md">
-        Estamos trabajando para traerte algo increíble.  
-        Vuelve pronto.
+        Estamos trabajando para traerte algo increíble. Vuelve pronto.
       </p>
     </div>
   )

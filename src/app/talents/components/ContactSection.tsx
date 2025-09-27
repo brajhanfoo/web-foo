@@ -1,23 +1,37 @@
-"use client"
+'use client'
 
-import { FaLinkedin, FaInstagram, FaFacebook, FaEnvelope, FaHandsHelping } from "react-icons/fa"
+import {
+  FaLinkedin,
+  FaInstagram,
+  FaFacebook,
+  FaEnvelope,
+  FaHandsHelping,
+} from 'react-icons/fa'
 
 export default function ContactSection() {
   return (
-    <section id="contact" className="bg-gradient-to-r from-indigo-950 via-purple-900 to-indigo-950 text-white py-20 px-6">
+    <section
+      id="contact"
+      className="bg-gradient-to-r from-indigo-950 via-purple-900 to-indigo-950 text-white py-20 px-6"
+    >
       <div className="max-w-4xl mx-auto text-center">
-        <h2 className="text-4xl font-bold mb-6 text-white">💡 Súmate a Foo Talent Group</h2>
+        <h2 className="text-4xl font-bold mb-6 text-white">
+          💡 Súmate a Foo Talent Group
+        </h2>
         <p className="text-lg text-gray-200 mb-10 leading-relaxed">
-          Los <span className="font-semibold text-purple-300">Smart Projects</span> son gratuitos e
-          ilimitados para toda la comunidad tech.  
-          Si eres talento, puedes unirte a través de nuestras redes sociales.  
-          Y si eres empresa o persona con buen corazón, puedes apoyarnos como mentor, jurado o con recursos
-          para que el programa siga creciendo.
+          Los{' '}
+          <span className="font-semibold text-purple-300">Smart Projects</span>{' '}
+          son gratuitos e ilimitados para toda la comunidad tech. Si eres
+          talento, puedes unirte a través de nuestras redes sociales. Y si eres
+          empresa o persona con buen corazón, puedes apoyarnos como mentor,
+          jurado o con recursos para que el programa siga creciendo.
         </p>
 
         {/* Redes sociales */}
         <div className="mb-10">
-          <p className="font-medium text-purple-300 mb-4">📲 Escríbenos en redes sociales</p>
+          <p className="font-medium text-purple-300 mb-4">
+            📲 Escríbenos en redes sociales
+          </p>
           <div className="flex justify-center space-x-6">
             <a
               href="https://www.linkedin.com/company/footalentgroup/"
@@ -27,7 +41,7 @@ export default function ContactSection() {
             >
               <FaLinkedin className="w-6 h-6 text-white" />
             </a>
-         
+
             <a
               href="https://www.instagram.com/footalentgroup"
               target="_blank"
@@ -54,7 +68,8 @@ export default function ContactSection() {
             ¿Quieres apoyarnos?
           </p>
           <p className="text-gray-300 mb-4 text-sm">
-            Escríbenos para ser mentor, jurado o patrocinador en nuestras ediciones.
+            Escríbenos para ser mentor, jurado o patrocinador en nuestras
+            ediciones.
           </p>
           <div className="flex items-center justify-center">
             <FaEnvelope className="w-6 h-6 mr-3 text-purple-400" />

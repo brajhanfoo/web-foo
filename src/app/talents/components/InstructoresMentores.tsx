@@ -1,64 +1,69 @@
-"use client";
+'use client'
 
-import { FaLinkedin } from "react-icons/fa";
-import Image from "next/image"
+import { FaLinkedin } from 'react-icons/fa'
+import Image from 'next/image'
 
 type Mentor = {
-  name: string;
-  role: string;
-  description: string;
-  linkedin: string;
-  color: string;
-  image?: string; // opcional: si hay foto, se usa
-};
+  name: string
+  role: string
+  description: string
+  linkedin: string
+  color: string
+  image?: string // opcional: si hay foto, se usa
+}
 
 const instructors: Mentor[] = [
   {
-    name: "Brajhan López",
-    role: "CEO & Lead Mentor",
+    name: 'Brajhan López',
+    role: 'CEO & Lead Mentor',
     description:
-      "Ingeniero de Sistemas y CEO de Foo Talent Group. Experto en desarrollo de software y formación técnica para equipos junior. Responsable pedagógico y mentor en producto y frontend.",
-    linkedin: "https://www.linkedin.com/in/brajhanlopez/",
-    color: "from-indigo-500 to-purple-500",
-    image: "https://res.cloudinary.com/dtaybaydq/image/upload/fl_preserve_transparency/v1758937336/Foo%20Talent%20group/Founders/Brajhan_idobfh.jpg?_s=public-apps", // Coloca tu foto en /public/mentores
+      'Ingeniero de Sistemas y CEO de Foo Talent Group. Experto en desarrollo de software y formación técnica para equipos junior. Responsable pedagógico y mentor en producto y frontend.',
+    linkedin: 'https://www.linkedin.com/in/brajhanlopez/',
+    color: 'from-indigo-500 to-purple-500',
+    image:
+      'https://res.cloudinary.com/dtaybaydq/image/upload/fl_preserve_transparency/v1758937336/Foo%20Talent%20group/Founders/Brajhan_idobfh.jpg?_s=public-apps', // Coloca tu foto en /public/mentores
   },
   {
-    name: "Gonzalo Rodriguez",
-    role: "COO & Mentor en Operaciones",
+    name: 'Gonzalo Rodriguez',
+    role: 'COO & Mentor en Operaciones',
     description:
-      "Encargado de operaciones y gestión de proyectos dentro de Foo Talent Group. Mentor en organización de equipos y buenas prácticas de trabajo colaborativo.",
-    linkedin: "https://www.linkedin.com/in/gonzalo-ezequiel-rodriguez/",
-    color: "from-blue-500 to-cyan-500",
-    image: "https://res.cloudinary.com/dtaybaydq/image/upload/fl_preserve_transparency/v1758937337/Foo%20Talent%20group/Founders/Gonza_vepndf.jpg?_s=public-apps",
+      'Encargado de operaciones y gestión de proyectos dentro de Foo Talent Group. Mentor en organización de equipos y buenas prácticas de trabajo colaborativo.',
+    linkedin: 'https://www.linkedin.com/in/gonzalo-ezequiel-rodriguez/',
+    color: 'from-blue-500 to-cyan-500',
+    image:
+      'https://res.cloudinary.com/dtaybaydq/image/upload/fl_preserve_transparency/v1758937337/Foo%20Talent%20group/Founders/Gonza_vepndf.jpg?_s=public-apps',
   },
   {
-    name: "Viviana Galarza",
-    role: "Product Designer & UX Mentor",
+    name: 'Viviana Galarza',
+    role: 'Product Designer & UX Mentor',
     description:
-      "Diseñadora de producto con experiencia en UX/UI. Apoya en la formación de equipos de diseño y en la construcción de experiencias digitales centradas en el usuario.",
-    linkedin: "https://www.linkedin.com/in/vivianagalarza/",
-    color: "from-pink-500 to-rose-500",
-    image: "https://res.cloudinary.com/dtaybaydq/image/upload/fl_preserve_transparency/v1758937337/Foo%20Talent%20group/Founders/Viviana_ldiuou.jpg?_s=public-apps",
+      'Diseñadora de producto especializada en UX/UI. Lidera equipos de diseño y utiliza Figma como herramienta principal para prototipado y diseño centrado en el usuario.',
+    linkedin: 'https://www.linkedin.com/in/vivianagalarza/',
+    color: 'from-pink-500 to-rose-500',
+    image:
+      'https://res.cloudinary.com/dtaybaydq/image/upload/fl_preserve_transparency/v1758937337/Foo%20Talent%20group/Founders/Viviana_ldiuou.jpg?_s=public-apps',
   },
   {
-    name: "Mariana Ruiz",
-    role: "CMO & Mentor en Estrategia",
+    name: 'Mariana Ruiz',
+    role: 'CMO & Mentor en Estrategia',
     description:
-      "Especialista en marketing y comunicación. Aporta experiencia en estrategia digital y mentoría en investigación y validación de producto.",
-    linkedin: "https://www.linkedin.com/in/mariana-ruiz-prerovsky/",
-    color: "from-emerald-500 to-green-500",
-    image: "https://res.cloudinary.com/dtaybaydq/image/upload/fl_preserve_transparency/v1758937336/Foo%20Talent%20group/Founders/Mariana_bml695.jpg?_s=public-apps",
+      'Especialista en marketing y comunicación. Aporta experiencia en estrategia digital y mentoría en investigación y validación de producto.',
+    linkedin: 'https://www.linkedin.com/in/mariana-ruiz-prerovsky/',
+    color: 'from-emerald-500 to-green-500',
+    image:
+      'https://res.cloudinary.com/dtaybaydq/image/upload/fl_preserve_transparency/v1758937336/Foo%20Talent%20group/Founders/Mariana_bml695.jpg?_s=public-apps',
   },
   {
-    name: "Luis Navarro",
-    role: "CTO & Mentor en Desarrollo",
+    name: 'Luis Navarro',
+    role: 'CTO & Mentor en Desarrollo',
     description:
-      "Desarrollador y líder técnico. Responsable de guiar a los equipos en desarrollo backend y frontend, asegurando buenas prácticas y escalabilidad.",
-    linkedin: "https://www.linkedin.com/in/luisnavarro-fullstack/",
-    color: "from-orange-500 to-yellow-500",
-    image: "https://res.cloudinary.com/dtaybaydq/image/upload/fl_preserve_transparency/v1758937336/Foo%20Talent%20group/Founders/Luis_xnagpd.jpg?_s=public-apps",
+      'Desarrollador y líder técnico. Responsable de guiar a los equipos en desarrollo backend y frontend, asegurando buenas prácticas y escalabilidad.',
+    linkedin: 'https://www.linkedin.com/in/luisnavarro-fullstack/',
+    color: 'from-orange-500 to-yellow-500',
+    image:
+      'https://res.cloudinary.com/dtaybaydq/image/upload/fl_preserve_transparency/v1758937336/Foo%20Talent%20group/Founders/Luis_xnagpd.jpg?_s=public-apps',
   },
-];
+]
 
 export default function InstructoresMentores() {
   return (
@@ -83,13 +88,13 @@ export default function InstructoresMentores() {
             >
               {/* Avatar: foto o inicial */}
               {mentor.image ? (
-<Image
-  src={mentor.image}
-  alt={mentor.name}
-  width={80}
-  height={80}
-  className="mx-auto mb-6 rounded-full object-cover border-2 border-gray-700 shadow-md"
-/>
+                <Image
+                  src={mentor.image}
+                  alt={mentor.name}
+                  width={80}
+                  height={80}
+                  className="mx-auto mb-6 rounded-full object-cover border-2 border-gray-700 shadow-md"
+                />
               ) : (
                 <div
                   className={`w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-tr ${mentor.color} flex items-center justify-center text-xl font-bold text-white shadow-md`}
@@ -149,7 +154,7 @@ export default function InstructoresMentores() {
           </h3>
           <p className="text-gray-400">
             Profesionales especializados en áreas como UX, UI, Desarrollo y QA.
-            Nos acompañan como{" "}
+            Nos acompañan como{' '}
             <span className="text-indigo-400 font-medium">Tech Lead</span> de su
             respectiva área, guiando a los equipos durante cada cohorte. Cada
             edición cuenta con al menos tres mentores activos que realizan
@@ -159,5 +164,5 @@ export default function InstructoresMentores() {
         </div>
       </div>
     </section>
-  );
+  )
 }
