@@ -13,85 +13,70 @@ interface NavbarProperties {
 }
 const navItems = [
   {
+    name: 'Inicio',
+    href: '/',
+  },
+  {
     name: 'Servicios',
     href: '/services',
     icon: <HiOutlineLightBulb />,
   },
   { name: 'Proyectos', href: '/projects', icon: <IoRocketOutline /> },
   { name: 'Preguntas Frecuentes', href: '/faq', icon: <FiUsers /> },
+  { name: 'Contacto', href: '/contact', icon: <FiUsers /> },
 ]
 
 export default function Navbar({ logoSrc, logoAlt }: NavbarProperties) {
   const [menuOpen, setMenuOpen] = useState(false)
   const toggleMenu = () => setMenuOpen((previous) => !previous)
   return (
-    <nav className="w-full bg-black shadow h-[64px] md:h-[100px]">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center h-full">
-        <Link href="/" className="flex items-center z-50">
-          {/* Móvil: ancho 60px */}
+    <>
+      <nav className="sticky top-0 z-50 grid grid-flow-col items-center justify-between w-full bg-black backdrop-blur px-10 py-5 md:px-4 lg:px-16 xl:px-32">
+        <Link href="/" className="flex items-center z-50 ">
           <Image
             src={logoSrc}
             alt={logoAlt}
             width={50}
             height={30}
-            className="block md:hidden"
-          />
-          {/* Desktop: ancho 100px, alto 68px */}
-          <Image
-            src={logoSrc}
-            alt={logoAlt}
-            width={100}
-            height={68}
-            className="hidden md:block"
+            className="w-14 h-8 md:w-24 md:h-16"
           />
         </Link>
-
-        {/* Menú escritorio */}
-        <ul className="hidden md:flex space-x-8">
-          <li className="hidden md:inline-block">
-            <Link href="/" className="group inline-block">
-              <span className="transition-colors duration-300 text-white group-hover:text-gray-100">
-                Inicio
-              </span>
+        <div className="hidden md:flex items-center space-x-8 w-full">
+          {navItems.map(({ name, href }) => (
+            <Link
+              href={href}
+              className="text-white transition-colors duration-300 hover:text-gray-100 group"
+              key={href}
+            >
+              {name}
               <span className="block max-w-0 group-hover:max-w-full transition-all duration-500 h-[2px] bg-yellow"></span>
             </Link>
-          </li>
-          {navItems.map(({ name, href }) => (
-            <li key={href}>
-              <Link href={href} className="group inline-block">
-                <span className="transition-colors duration-300 text-white group-hover:text-gray-100">
-                  {name}
-                </span>
-                <span className="block max-w-0 group-hover:max-w-full transition-all duration-500 h-[2px] bg-yellow"></span>
-              </Link>
-            </li>
           ))}
-        </ul>
-
-        {/* Botón móvil */}
+        </div>
+        <button className="text-white bg-amber-300 px-4 py-2 rounded-md hover:bg-amber-400 transition duration-300 hidden md:block">
+          Contáctanos
+        </button>
         <button
           onClick={toggleMenu}
           className="md:hidden text-2xl z-50 text-white"
         >
           {menuOpen ? <FaTimes /> : <FaBars />}
         </button>
-      </div>
-
-      {/* Overlay móvil full-screen */}
-      {menuOpen && (
-        <div className="fixed inset-0 bg-black z-40 flex flex-col px-5 py-20  space-y-8">
-          {navItems.map(({ name, href, icon }) => (
-            <Link
-              key={href}
-              href={href}
-              className="flex items-center space-x-3 text-2xl text-white hover:text-gray-900"
-            >
-              {icon}
-              <span>{name}</span>
-            </Link>
-          ))}
-        </div>
-      )}
-    </nav>
+        {menuOpen && (
+          <div className="fixed inset-0 bg-black z-40 flex flex-col px-5 py-20  space-y-8">
+            {navItems.map(({ name, href, icon }) => (
+              <Link
+                key={href}
+                href={href}
+                className="flex items-center space-x-3 text-2xl text-white hover:text-gray-900"
+              >
+                {icon}
+                <span>{name}</span>
+              </Link>
+            ))}
+          </div>
+        )}
+      </nav>
+    </>
   )
 }
