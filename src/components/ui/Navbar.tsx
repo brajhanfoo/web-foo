@@ -18,7 +18,7 @@ const navItems = [
     icon: <HiOutlineLightBulb />,
   },
   { name: 'Programas', href: '/talents', icon: <IoRocketOutline /> },
-  { name: 'Preguntas Frecuentes', href: '/#', icon: <FiUsers /> },
+  { name: 'Nosotros', href: '/aboutus', icon: <FiUsers /> },
 ]
 
 export default function Navbar({ logoSrc, logoAlt }: NavbarProperties) {

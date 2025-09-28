@@ -23,7 +23,7 @@ const ProgramHero = () => {
       </div>
 
       {/* Logo (arriba a la derecha) */}
-      <div className="absolute top-6 right-6 z-10">
+      <div className="absolute top-6 right-6 z-10 w-[80px] h-12 md:w-40 md:h-16">
         <Image
           src="https://res.cloudinary.com/dtaybaydq/image/upload/fl_preserve_transparency/v1758930364/Foo%20Talent%20group/Frame_116_tjnf84.jpg?_s=public-apps" // 👉 reemplaza con la ruta de tu logo
           alt="Foo Talent Group"
