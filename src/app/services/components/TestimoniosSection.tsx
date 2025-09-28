@@ -3,8 +3,8 @@ import { useState, useCallback } from 'react'
 import { motion, AnimatePresence, Variants } from 'framer-motion'
 import { Icons } from '@/lib/icons'
 import { testimonialData } from '../_data/testimoniosData'
-import Image from 'next/image'
 import Heading from './Heading'
+import Image from 'next/image'
 
 const IconLeft = Icons.arrowLeft
 const IconRight = Icons.arrowRight
@@ -90,7 +90,9 @@ export default function TestimoniosSection() {
               className="relative"
             >
               <div className="relative w-full aspect-square overflow-hidden rounded-lg border border-white/10">
-                <img
+                <Image
+                  width={320}
+                  height={320}
                   src={img}
                   alt={t.name}
                   className="h-full w-full object-cover"
