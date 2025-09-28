@@ -7,11 +7,11 @@ export interface Service {
 }
 
 export interface Testimonial {
-  id: number 
+  id: number
   name: string
   position: string
   company: string
   testimonial: string
-  image: string | null 
-  stars?: 1 | 2 | 3 | 4 | 5 
+  image: string | null
+  stars?: 1 | 2 | 3 | 4 | 5
 }

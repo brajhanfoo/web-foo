@@ -12,7 +12,7 @@ const page = () => {
     <main className=" bg-black">
       <Hero />
       <ServicesSection services={services} />
-      <ProjectsSection/>
+      <ProjectsSection />
       <TestimoniosSection />
       <FaqSection />
     </main>

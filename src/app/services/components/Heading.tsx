@@ -1,7 +1,7 @@
 import Image from 'next/image'
 import React from 'react'
 interface HeadingProps {
-    text: string
+  text: string
 }
 export default function Heading({ text }: HeadingProps) {
   return (

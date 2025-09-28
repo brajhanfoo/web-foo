@@ -1,5 +1,3 @@
-
-
 import { Testimonial } from '../_types/services.types'
 
 export const testimonialData: Testimonial[] = [
