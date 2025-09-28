@@ -1,4 +1,5 @@
 'use client'
+
 import { useState, useCallback } from 'react'
 import { motion, AnimatePresence, Variants } from 'framer-motion'
 import { Icons } from '@/lib/icons'
@@ -10,14 +11,17 @@ const IconLeft = Icons.arrowLeft
 const IconRight = Icons.arrowRight
 
 const slideVariants: Variants = {
-  enter: (dir: number) => ({ x: dir > 0 ? 70 : -70, opacity: 0 }),
+  enter: (directionSign: number) => ({
+    x: directionSign > 0 ? 70 : -70,
+    opacity: 0,
+  }),
   center: {
     x: 0,
     opacity: 1,
     transition: { duration: 0.45, ease: [0.22, 1, 0.36, 1] },
   },
-  exit: (dir: number) => ({
-    x: dir < 0 ? 70 : -70,
+  exit: (directionSign: number) => ({
+    x: directionSign < 0 ? 70 : -70,
     opacity: 0,
     transition: { duration: 0.35 },
   }),
@@ -43,17 +47,20 @@ export default function TestimoniosSection() {
   const [index, setIndex] = useState(0)
   const [direction, setDirection] = useState(1)
 
-  if (total === 0) return null
+  const isEmpty = total === 0
 
   const goTo = useCallback(
-    (next: number, dir: number) => {
-      setDirection(dir)
-      setIndex(((next % total) + total) % total)
+    (nextIndex: number, directionSign: number) => {
+      setDirection(directionSign)
+      setIndex(((nextIndex % total) + total) % total)
     },
     [total]
   )
+
   const next = useCallback(() => goTo(index + 1, 1), [goTo, index])
-  const prev = useCallback(() => goTo(index - 1, -1), [goTo, index])
+  const previous = useCallback(() => goTo(index - 1, -1), [goTo, index])
+
+  if (isEmpty) return null
 
   const t = testimonialData[index]
   const img = t?.image || FALLBACK_AVATAR
@@ -65,14 +72,14 @@ export default function TestimoniosSection() {
       aria-roledescription="carousel"
       aria-label="Testimonios"
       tabIndex={0}
-      onKeyDown={(e) => {
-        if (e.key === 'ArrowRight') {
-          e.preventDefault()
+      onKeyDown={(event) => {
+        if (event.key === 'ArrowRight') {
+          event.preventDefault()
           next()
         }
-        if (e.key === 'ArrowLeft') {
-          e.preventDefault()
-          prev()
+        if (event.key === 'ArrowLeft') {
+          event.preventDefault()
+          previous()
         }
       }}
     >
@@ -128,9 +135,9 @@ export default function TestimoniosSection() {
                 dragConstraints={{ left: 0, right: 0 }}
                 dragElastic={0.18}
                 onDragEnd={(_, info) => {
-                  const dx = info.offset.x
-                  if (dx > 60) prev()
-                  if (dx < -60) next()
+                  const deltaX = info.offset.x
+                  if (deltaX > 60) previous()
+                  if (deltaX < -60) next()
                 }}
                 className="relative pb-12"
                 aria-live="polite"
@@ -152,11 +159,10 @@ export default function TestimoniosSection() {
               </motion.div>
             </AnimatePresence>
 
-            {/* Flechas fijas */}
             <div className="pointer-events-auto absolute left-0 bottom-0 flex items-center gap-2">
               <button
                 aria-label="Anterior"
-                onClick={prev}
+                onClick={previous}
                 className="inline-flex h-7 w-7 items-center justify-center rounded-sm border border-white/20 bg-white/5 hover:bg-white/10 transition"
               >
                 <IconLeft size={14} />
@@ -172,8 +178,6 @@ export default function TestimoniosSection() {
           </div>
         </div>
       </div>
-
-      {/* Mobile: si preferís flechas laterales fijas, podés duplicar controles aquí */}
     </section>
   )
 }

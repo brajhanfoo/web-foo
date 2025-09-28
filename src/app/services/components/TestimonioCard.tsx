@@ -6,7 +6,7 @@ interface PropertiesTestimonio {
 }
 
 export default function TestimonioCard({ testimonio }: PropertiesTestimonio) {
-  const { name, position, image, stars, company, testimonial } = testimonio
+  const { name, position, image, stars, testimonial } = testimonio
   return (
     <div className="relative bg-white-dark text-center p-6 rounded-xl shadow-md mx-2 w-72 flex-shrink-0">
       <div className="flex justify-center mb-4">
