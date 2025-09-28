@@ -16,3 +16,149 @@
     font-family: var(--font-manrope);
   }
 }
+
+:root {
+  /* ================== Base ================== */
+  --black: 0 0% 0%;        /* #000000 */
+  --white: 0 0% 100%;      /* #FFFFFF */
+
+  /* ================== Purple ================== */
+  --purple-50: 300 64% 92%;   /* #F2DCFA */
+  --purple-100: 292 65% 91%;  /* #E8C4F5 */
+  --purple-200: 292 64% 73%;  /* #D493EB */
+  --purple-300: 291 64% 66%;  /* #C162E0 */
+  --purple-400: 293 56% 61%;  /* #AD31D6 */
+  --purple-500: 292 100% 65%; /* #9900CC */
+  --purple-600: 293 25% 54%;  /* #7A00A3 */
+  --purple-700: 304 100% 38%; /* #5C007A */
+  --purple-800: 300 100% 16%; /* #3D0052 */
+  --purple-900: 300 100% 9%;  /* #1F0029 */
+  --purple-0:   292 43% 58%;  /* #1F002980 */
+
+  /* ================== Blue ================== */
+  --blue-50: 200 100% 97%;   /* #EFF9FE */
+  --blue-100: 204 54% 93%;   /* #DEF3FE */
+  --blue-200: 200 77% 87%;   /* #BEE7FD */
+  --blue-300: 201 94% 81%;   /* #9DD8FC */
+  --blue-400: 202 100% 74%;  /* #7DCFFB */
+  --blue-500: 201 94% 67%;   /* #5CC3FA */
+  --blue-600: 211 54% 55%;   /* #4AA2D1 */
+  --blue-700: 204 55% 46%;   /* #3881A8 */
+  --blue-800: 200 61% 26%;   /* #25506F */
+  --blue-900: 201 65% 20%;   /* #133F56 */
+  --blue-0:   201 15% 41%;   /* #133F5680 */
+
+  /* ================== Cyan ================== */
+  --cyan-50: 184 100% 95%;   /* #E3FBFB */
+  --cyan-100: 180 64% 90%;   /* #CAF6F6 */
+  --cyan-200: 183 60% 77%;   /* #97EDED */
+  --cyan-300: 184 65% 65%;   /* #65E5E5 */
+  --cyan-400: 185 65% 53%;   /* #32CDDC */
+  --cyan-500: 181 100% 41%;  /* #00D3D3 */
+  --cyan-600: 176 100% 34%;  /* #00A9A9 */
+  --cyan-700: 180 100% 25%;  /* #007F7F */
+  --cyan-800: 183 100% 16%;  /* #005454 */
+  --cyan-900: 182 100% 8%;   /* #002A2A */
+  --cyan-0:   182 12% 40%;   /* #002A2A80 */
+
+  /* ================== Green ================== */
+  --green-50: 145 45% 93%;   /* #F2FAE7 */
+  --green-100: 148 40% 91%;  /* #E6F8CE */
+  --green-200: 79 38% 80%;   /* #CDEC9D */
+  --green-300: 81 54% 66%;   /* #B3E36D */
+  --green-400: 89 56% 61%;   /* #9AD93C */
+  --green-500: 72 100% 43%;  /* #B1D00B */
+  --green-600: 96 61% 36%;   /* #76A609 */
+  --green-700: 90 55% 28%;   /* #4D7D07 */
+  --green-800: 104 61% 23%;  /* #345304 */
+  --green-900: 120 64% 19%;  /* #1A2A02 */
+  --green-0:   120 9% 36%;   /* #1A2A0280 */
+
+  /* ================== Neutral ================== */
+  --neutral-50: 220 6% 95%;  /* #F1F1F2 */
+  --neutral-100: 220 4% 89%; /* #E3E3E4 */
+  --neutral-200: 220 3% 79%; /* #C6C6CA */
+  --neutral-300: 220 3% 67%; /* #AAAAAF */
+  --neutral-400: 220 3% 60%; /* #9B9B95 */
+  --neutral-500: 220 2% 46%; /* #71717A */
+  --neutral-600: 220 2% 34%; /* #5A5A62 */
+  --neutral-700: 220 2% 27%; /* #444449 */
+  --neutral-800: 220 2% 18%; /* #2D2D31 */
+  --neutral-900: 220 2% 9%;  /* #171718 */
+  --neutral-0:   220 3% 42%; /* #17171880 */
+
+  /* ================== Red ================== */
+  --red-50: 0 83% 95%;    /* #FDECEC */
+  --red-100: 0 82% 91%;   /* #FCDADA */
+  --red-200: 0 83% 80%;   /* #F9B4B4 */
+  --red-300: 0 82% 72%;   /* #F58F8F */
+  --red-400: 0 80% 65%;   /* #F26969 */
+  --red-500: 0 82% 60%;   /* #EF4444 */
+  --red-600: 0 72% 43%;   /* #C13737 */
+  --red-700: 0 64% 37%;   /* #932929 */
+  --red-800: 0 64% 27%;   /* #661C1C */
+  --red-900: 0 64% 12%;   /* #380E0E */
+  --red-0:   0 10% 40%;   /* #380E0E80 */
+
+  /* ================== Yellow ================== */
+  --yellow-50: 60 100% 98%;   /* #FFFFE5 */
+  --yellow-100: 60 100% 94%;  /* #FFFFCC */
+  --yellow-200: 60 100% 87%;  /* #FFFF99 */
+  --yellow-300: 60 100% 80%;  /* #FFFF66 */
+  --yellow-400: 60 100% 60%;  /* #FFFF33 */
+  --yellow-500: 60 100% 50%;  /* #FFFF00 */
+  --yellow-600: 60 100% 40%;  /* #CCCC00 */
+  --yellow-700: 60 100% 30%;  /* #999900 */
+  --yellow-800: 60 100% 20%;  /* #666600 */
+  --yellow-900: 60 100% 10%;  /* #333300 */
+  --yellow-0:   60 10% 40%;   /* #33330080 */
+
+  /* ================== Background ================== */
+  --background-color-primary-default: 0 0% 0%;        /* #000000 */
+  --background-color-accent-default-3: 292 43% 58%;   /* #1F002980 (purple-0) */
+  --background-color-error-default-4: 0 10% 40%;      /* #380E0E80 (red-0) */
+  --background-color-info-default-6: 182 12% 40%;     /* #002A2A80 (cyan-0) */
+  --background-color-secondary-default-2: 220 3% 42%; /* #17171880 (neutral-0) */
+  --background-color-success-default-5: 120 9% 36%;   /* #1A2A0280 (green-0) */
+
+  /* ================== Border ================== */
+  --border-color-primary-default: 220 6% 95%;  /* #F1F1F2 */
+  --border-color-accent-default-3: 292 64% 73%;/* #D493EB (purple-200) */
+  --border-color-error-default-4: 0 83% 80%;   /* #F9B4B4 (red-200) */
+  --border-color-info-default-6: 183 60% 77%;  /* #97EDED (cyan-200) */
+  --border-color-secundry-default-2: 220 3% 67%;/* #AAAAAF (neutral-300) */
+  --border-color-success-default-5: 79 38% 80%; /* #CDEC9D (green-200) */
+
+  /* ================== Icon ================== */
+  --icon-color-accent-default-3: 0 0% 100%;     /* #FFFFFF */
+  --icon-color-error-default-4: 0 82% 60%;      /* #EF4444 (red-500) */
+  --icon-color-link-default-6: 181 100% 41%;    /* #00D3D3 (cyan-500) */
+  --icon-color-primary-default: 0 0% 100%;      /* #FFFFFF */
+  --icon-color-secondary-default-2: 220 6% 95%; /* #F1F1F2 (neutral-50) */
+  --icon-color-success-default-5: 72 100% 43%;  /* #B1D00B (green-500) */
+
+  /* Icon Disabled */
+  --icon-color-accent-disabled: 220 3% 79%;    /* #C6C6CA (neutral-200) */
+  --icon-color-error-disabled: 0 83% 80%;      /* #F9B4B4 (red-200) */
+  --icon-color-link-disabled: 183 60% 77%;     /* #97EDED (cyan-200) */
+  --icon-color-primary-disabled: 220 4% 89%;   /* #E3E3E4 (neutral-100) */
+  --icon-color-secondary-disabled: 220 3% 67%;/* #AAAAAF (neutral-300) */
+  --icon-color-success-disabled: 79 38% 80%;   /* #CDEC9D (green-200) */
+
+  /* ================== Text ================== */
+  --text-color-accent-default-3: 292 100% 65%; /* #9900CC (purple-500) */
+  --text-color-error-default-4: 0 82% 60%;     /* #EF4444 (red-500) */
+  --text-color-link-default-6: 181 100% 41%;   /* #00D3D3 (cyan-500) */
+  --text-color-primary-default: 0 0% 100%;     /* #FFFFFF */
+  --text-color-secondary-default-2: 220 6% 95%;/* #F1F1F2 (neutral-50) */
+  --text-color-success-default-5: 72 100% 43%; /* #B1D00B (green-500) */
+
+  /* Text Disabled */
+  --text-color-accent-disabled: 220 3% 79%;    /* #C6C6CA (neutral-200) */
+  --text-color-error-disabled: 0 83% 80%;      /* #F9B4B4 (red-200) */
+  --text-color-link-disabled: 183 60% 77%;     /* #97EDED (cyan-200) */
+  --text-color-primary-disabled: 220 4% 89%;   /* #E3E3E4 (neutral-100) */
+  --text-color-secondary-disabled: 220 3% 67%;/* #AAAAAF (neutral-300) */
+  --text-color-success-disabled: 79 38% 80%;  /* #CDEC9D (green-200) */
+}
+

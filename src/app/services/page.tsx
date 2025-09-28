@@ -9,7 +9,7 @@ import ProjectsSection from './components/ProjectsSection'
 
 const page = () => {
   return (
-    <main className=" bg-white-dark">
+    <main className=" bg-black">
       <Hero />
       <ServicesSection services={services} />
       <ProjectsSection/>
