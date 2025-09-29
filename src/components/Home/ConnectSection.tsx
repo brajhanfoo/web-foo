@@ -122,24 +122,22 @@ const ConnectSection: React.FC = () => {
           <span className="text-[#E7E51A]">Impulsando Empresas</span>
         </h2>
 
-        <p className="text-gray-300 leading-relaxed px-4 sm:px-0">
-          En{" "}
-          <span className="text-[#E7E51A]">Foo Talent Group</span>{" "}
-          desarrollamos{" "}
-          <span className=" text-[#E7E51A]">
-            programas educativos gratuitos
-          </span>{" "}
-          para talentos en tecnología, al mismo tiempo que ofrecemos{" "}
-          <span className=" text-[#E7E51A]">
-            soluciones digitales
-          </span>{" "}
-          de alto impacto para empresas. Nuestra misión es generar{" "}
-          <span className="text-white ">innovación</span>,{" "}
-          fortalecer la{" "}
-          <span className="text-white">comunidad</span> y
-          abrir{" "}
-          <span className="text-white ">oportunidades reales</span>.
-        </p>
+      <p className="text-gray-300 leading-relaxed px-4 sm:px-0">
+  En{" "}
+  <span className="text-[#E7E51A]">Foo Talent Group</span>{" "}
+  desarrollamos{" "}
+  <span className="text-[#E7E51A]">
+    programas educativos gratuitos
+  </span>{" "}
+  para talentos en tecnología, donde crean{" "}
+  <span className="text-[#E7E51A]">proyectos reales</span>{" "}
+  que funcionan como una vitrina de sus habilidades. Nuestra misión es generar{" "}
+  <span className="text-white">innovación</span>,{" "}
+  fortalecer la{" "}
+  <span className="text-white">comunidad</span> y abrir{" "}
+  <span className="text-white">oportunidades reales</span> al conectar estos
+  proyectos con empresas que buscan nuevos talentos.
+</p>
 
         <div className="flex flex-wrap justify-center gap-4 mt-8">
           <button
