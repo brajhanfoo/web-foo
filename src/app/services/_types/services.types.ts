@@ -6,11 +6,12 @@ export interface Service {
   icon: IconType
 }
 
-export interface Testimonio {
+export interface Testimonial {
   id: number
-  nombre: string
-  rol: string
-  opinion: string
-  estrellas: number
-  imagen: string
+  name: string
+  position: string
+  company: string
+  testimonial: string
+  image: string | null
+  stars?: 1 | 2 | 3 | 4 | 5
 }

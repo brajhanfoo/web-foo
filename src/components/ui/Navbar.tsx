@@ -53,7 +53,7 @@ export default function Navbar({ logoSrc, logoAlt }: NavbarProperties) {
             </Link>
           ))}
         </div>
-        <button className="text-white bg-amber-300 px-4 py-2 rounded-md hover:bg-amber-400 transition duration-300 hidden md:block">
+        <button className="text-white bg-gradient-to-b from-[#780B90] to-[#31053A] px-4 py-2 rounded-md transition duration-300 hidden md:block cursor-pointer">
           Contáctanos
         </button>
         <button
