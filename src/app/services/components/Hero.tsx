@@ -18,7 +18,7 @@ const Hero = () => {
           ></div>
         </div>
       </div>
-      <div className="grid w-1/2 text-white">
+      <div className="grid w-1/2 text-white lg:pt-10">
         <motion.h1
           className="text-6xl font-semibold pb-8"
           variants={slideIn('left', 0.3)}
