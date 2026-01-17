@@ -1,5 +1,12 @@
-import { redirect } from 'next/navigation'
+import ConnectSection from '@/components/Home/ConnectSection'
+// import { redirect } from 'next/navigation'
 
 export default function HomePage() {
-  redirect('/services')
+  // redirect('/talents')
+    return (
+    <div>
+     <ConnectSection />
+    </div>
+  )
+  
 }

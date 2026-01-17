@@ -228,7 +228,11 @@ Closes #ISSUE_NUMBER
 
 ## ⚙️ Integración continua (recomendado)
 
-- Usa **GitHub Actions** con workflows que ejecuten: `install`, `build`, `lint` en cada PR.
+<<<<<<< HEAD
+
+- # Usa **GitHub Actions** con workflows que ejecuten: `install`, `build`, `lint` en cada PR.
+- Usa **GitHub Actions** con workflows que ejecuten: `install`, `build`, `test`, `lint` en cada PR.
+  > > > > > > > a85f6d7fb5641b9054cac508b31f6ce2ca8043c7
 - Configura los checks como requisito para merge en `dev` y `main`.
 
 ---
