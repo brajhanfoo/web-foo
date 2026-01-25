@@ -1,16 +1,16 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase/client'
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter()
-  const sp = useSearchParams()
-  const redirectTo = sp.get('redirectTo') || '/plataforma'
+  const searchParams = useSearchParams()
+  const redirectTo = searchParams.get('redirectTo') || '/plataforma'
 
   const [email, setEmail] = useState('')
-  const [pass, setPass] = useState('')
+  const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
 
@@ -19,18 +19,17 @@ export default function LoginPage() {
     supabase.auth.getUser().then(({ data }) => {
       if (data.user) router.replace(redirectTo)
     })
-    // deps estables: redirectTo cambia solo por URL, está bien
   }, [router, redirectTo])
 
-  async function onSubmit(element: React.FormEvent) {
-    element.preventDefault()
+  async function onSubmit(event: React.FormEvent) {
+    event.preventDefault()
     setMessage(null)
     setLoading(true)
 
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
-        password: pass,
+        password,
       })
       if (error) throw error
 
@@ -102,7 +101,7 @@ export default function LoginPage() {
                 type="email"
                 className="mt-1 w-full rounded-xl bg-white/5 border border-white/10 px-4 py-3 outline-none focus:border-emerald-400/60"
                 value={email}
-                onChange={(element) => setEmail(element.target.value)}
+                onChange={(event) => setEmail(event.target.value)}
                 placeholder="tu@email.com"
                 required
               />
@@ -113,8 +112,8 @@ export default function LoginPage() {
               <input
                 type="password"
                 className="mt-1 w-full rounded-xl bg-white/5 border border-white/10 px-4 py-3 outline-none focus:border-emerald-400/60"
-                value={pass}
-                onChange={(element) => setPass(element.target.value)}
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
                 placeholder="••••••••"
                 required
               />
@@ -162,5 +161,19 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-[calc(100vh-80px)] flex items-center justify-center px-4 bg-black">
+          <div className="text-white">Cargando...</div>
+        </div>
+      }
+    >
+      <LoginForm />
+    </Suspense>
   )
 }
