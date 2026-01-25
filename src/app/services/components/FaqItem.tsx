@@ -14,7 +14,7 @@ export default function FaqItem({ faq }: Properties) {
   const isOpen = openId === faq.id
 
   const toggle = (id: number) => {
-    setOpenId((prev) => (prev === id ? null : id))
+    setOpenId((previous) => (previous === id ? null : id))
   }
 
   return (

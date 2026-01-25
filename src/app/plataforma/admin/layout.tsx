@@ -12,11 +12,11 @@ export default function AdminLayout({
   const bootAuth = useAuthStore((state) => state.bootAuth)
   const isBooting = useAuthStore((state) => state.isBooting)
 
-  const hasBootedRef = useRef(false)
+  const hasBootedReference = useRef(false)
 
   useEffect(() => {
-    if (hasBootedRef.current) return
-    hasBootedRef.current = true
+    if (hasBootedReference.current) return
+    hasBootedReference.current = true
     void bootAuth()
   }, [bootAuth])
 

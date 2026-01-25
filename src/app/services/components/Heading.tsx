@@ -1,9 +1,9 @@
 import Image from 'next/image'
 import React from 'react'
-interface HeadingProps {
+interface HeadingProperties {
   text: string
 }
-export default function Heading({ text }: HeadingProps) {
+export default function Heading({ text }: HeadingProperties) {
   return (
     <div className="mx-auto mb-10">
       <div className="relative inline-flex items-center gap-3 rounded-full px-5 py-3 text-white bg-transparent border border-gray-100/10">

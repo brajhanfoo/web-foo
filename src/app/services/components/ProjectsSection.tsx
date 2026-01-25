@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import { projectsData } from '../_data/projectsData'
 import ProjectCard from './ProjectCard'
-import Image from 'next/image'
 import Heading from './Heading'
 
 export default function ProjectsSection() {

@@ -12,7 +12,7 @@ export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [pass, setPass] = useState('')
   const [loading, setLoading] = useState(false)
-  const [msg, setMsg] = useState<string | null>(null)
+  const [message, setMessage] = useState<string | null>(null)
 
   useEffect(() => {
     // si ya está logueado, adentro
@@ -22,9 +22,9 @@ export default function LoginPage() {
     // deps estables: redirectTo cambia solo por URL, está bien
   }, [router, redirectTo])
 
-  async function onSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    setMsg(null)
+  async function onSubmit(element: React.FormEvent) {
+    element.preventDefault()
+    setMessage(null)
     setLoading(true)
 
     try {
@@ -37,22 +37,24 @@ export default function LoginPage() {
       // Bloqueo si email no verificado (PRD)
       if (data.user && !data.user.email_confirmed_at) {
         await supabase.auth.signOut()
-        setMsg('Debes verificar tu email antes de ingresar.')
+        setMessage('Debes verificar tu email antes de ingresar.')
         return
       }
 
       router.replace(redirectTo)
-    } catch (err: any) {
-      setMsg(err?.message ?? 'No se pudo iniciar sesión.')
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error ? error.message : 'No se pudo iniciar sesión.'
+      setMessage(errorMessage)
     } finally {
       setLoading(false)
     }
   }
 
   async function resendVerification() {
-    setMsg(null)
+    setMessage(null)
     if (!email) {
-      setMsg('Ingresa tu email para reenviar verificación.')
+      setMessage('Ingresa tu email para reenviar verificación.')
       return
     }
     setLoading(true)
@@ -62,9 +64,11 @@ export default function LoginPage() {
         email,
       })
       if (error) throw error
-      setMsg('Listo. Revisa tu correo para verificar tu cuenta.')
-    } catch (err: any) {
-      setMsg(err?.message ?? 'No se pudo reenviar.')
+      setMessage('Listo. Revisa tu correo para verificar tu cuenta.')
+    } catch (error: unknown) {
+      const errorMessage =
+        error instanceof Error ? error.message : 'No se pudo reenviar.'
+      setMessage(errorMessage)
     } finally {
       setLoading(false)
     }
@@ -98,7 +102,7 @@ export default function LoginPage() {
                 type="email"
                 className="mt-1 w-full rounded-xl bg-white/5 border border-white/10 px-4 py-3 outline-none focus:border-emerald-400/60"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(element) => setEmail(element.target.value)}
                 placeholder="tu@email.com"
                 required
               />
@@ -110,7 +114,7 @@ export default function LoginPage() {
                 type="password"
                 className="mt-1 w-full rounded-xl bg-white/5 border border-white/10 px-4 py-3 outline-none focus:border-emerald-400/60"
                 value={pass}
-                onChange={(e) => setPass(e.target.value)}
+                onChange={(element) => setPass(element.target.value)}
                 placeholder="••••••••"
                 required
               />
@@ -125,9 +129,9 @@ export default function LoginPage() {
               </div>
             </div>
 
-            {msg && (
+            {message && (
               <div className="text-sm text-white/80 bg-white/5 border border-white/10 rounded-xl px-4 py-3">
-                {msg}
+                {message}
               </div>
             )}
 
