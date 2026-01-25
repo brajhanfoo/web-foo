@@ -1,32 +1,32 @@
-"use client"
+'use client'
 
-import { FaHandsHelping, FaRocket, FaUsers, FaBookOpen } from "react-icons/fa"
+import { FaHandsHelping, FaRocket, FaUsers, FaBookOpen } from 'react-icons/fa'
 
 export default function ValoresSection() {
   const valores = [
     {
       icon: <FaUsers className="text-4xl text-[#e7e51a]" />,
-      title: "Colaboración",
+      title: 'Colaboración',
       description:
-        "Fomentamos el trabajo en equipo entre profesionales y estudiantes, creando un entorno de crecimiento conjunto.",
+        'Fomentamos el trabajo en equipo entre profesionales y estudiantes, creando un entorno de crecimiento conjunto.',
     },
     {
       icon: <FaRocket className="text-4xl text-[#780b90]" />,
-      title: "Innovación",
+      title: 'Innovación',
       description:
-        "Como comunidad tecnológica, aplicamos soluciones modernas tanto en proyectos de clientes como en programas de formación.",
+        'Como comunidad tecnológica, aplicamos soluciones modernas tanto en proyectos de clientes como en programas de formación.',
     },
     {
       icon: <FaHandsHelping className="text-4xl text-[#e7e51a]" />,
-      title: "Responsabilidad Social",
+      title: 'Responsabilidad Social',
       description:
-        "Impulsamos programas educativos gratuitos para que nuevos talentos tengan su primera experiencia en el sector IT.",
+        'Impulsamos programas educativos gratuitos para que nuevos talentos tengan su primera experiencia en el sector IT.',
     },
     {
       icon: <FaBookOpen className="text-4xl text-[#780b90]" />,
-      title: "Educación Abierta",
+      title: 'Educación Abierta',
       description:
-        "Integramos la enseñanza práctica dentro de nuestra actividad empresarial, generando impacto en la comunidad tecnológica.",
+        'Integramos la enseñanza práctica dentro de nuestra actividad empresarial, generando impacto en la comunidad tecnológica.',
     },
   ]
 
@@ -38,7 +38,9 @@ export default function ValoresSection() {
           Nuestros Valores
         </h2>
         <p className="text-gray-300 text-lg">
-          Como comunidad tecnológica, guiamos nuestras acciones con principios que equilibran innovación, responsabilidad y formación de nuevos talentos.
+          Como comunidad tecnológica, guiamos nuestras acciones con principios
+          que equilibran innovación, responsabilidad y formación de nuevos
+          talentos.
         </p>
       </div>
 
@@ -65,4 +67,3 @@ export default function ValoresSection() {
     </section>
   )
 }
-

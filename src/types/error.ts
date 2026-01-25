@@ -1,5 +1,5 @@
 export function getErrorMessage(error: unknown): string {
-  if (error instanceof Error) return error.message;
-  if (typeof error === "string") return error;
-  return "Ocurrió un error inesperado.";
+  if (error instanceof Error) return error.message
+  if (typeof error === 'string') return error
+  return 'Ocurrió un error inesperado.'
 }

@@ -3,10 +3,9 @@ import ConnectSection from '@/components/Home/ConnectSection'
 
 export default function HomePage() {
   // redirect('/talents')
-    return (
+  return (
     <div>
-     <ConnectSection />
+      <ConnectSection />
     </div>
   )
-  
 }

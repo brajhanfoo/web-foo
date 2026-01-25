@@ -5,12 +5,12 @@ import { supabase } from '@/lib/supabase/client'
 import { useAuthStore } from '@/stores/auth-stores'
 
 export function AuthBootstrapper() {
-  const hasBootstrappedRef = useRef(false)
-  const refreshAuth = useAuthStore((state) => state.refreshAuth)
+  const hasBootstrappedReference = useRef(false)
+  const refreshAuth = useAuthStore((state) => state.bootAuth)
 
   useEffect(() => {
-    if (hasBootstrappedRef.current) return
-    hasBootstrappedRef.current = true
+    if (hasBootstrappedReference.current) return
+    hasBootstrappedReference.current = true
 
     void refreshAuth()
 

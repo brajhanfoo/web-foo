@@ -1,50 +1,50 @@
-"use client";
+'use client'
 
-import React from "react";
-import Image from "next/image";
+import React from 'react'
+import Image from 'next/image'
 
 const team = [
   {
-    name: "Brajhan Lopez",
-    role: "CEO – Co-Fundador",
+    name: 'Brajhan Lopez',
+    role: 'CEO – Co-Fundador',
     image:
-      "https://res.cloudinary.com/dtaybaydq/image/upload/fl_preserve_transparency/v1758937336/Foo%20Talent%20group/Founders/Brajhan_idobfh.jpg?_s=public-apps",
+      'https://res.cloudinary.com/dtaybaydq/image/upload/fl_preserve_transparency/v1758937336/Foo%20Talent%20group/Founders/Brajhan_idobfh.jpg?_s=public-apps',
     description:
-      "Ingeniero de Sistemas y Desarrollador Full Stack con sólida experiencia en análisis de procesos y business analysis. Su enfoque está en transformar ideas en soluciones tecnológicas funcionales, aportando una visión estratégica para el crecimiento y la innovación.",
+      'Ingeniero de Sistemas y Desarrollador Full Stack con sólida experiencia en análisis de procesos y business analysis. Su enfoque está en transformar ideas en soluciones tecnológicas funcionales, aportando una visión estratégica para el crecimiento y la innovación.',
   },
   {
-    name: "Gonzalo Rodriguez",
-    role: "COO - Co-Fundador",
+    name: 'Gonzalo Rodriguez',
+    role: 'COO - Co-Fundador',
     image:
-      "https://res.cloudinary.com/dtaybaydq/image/upload/fl_preserve_transparency/v1758937337/Foo%20Talent%20group/Founders/Gonza_vepndf.jpg?_s=public-apps",
+      'https://res.cloudinary.com/dtaybaydq/image/upload/fl_preserve_transparency/v1758937337/Foo%20Talent%20group/Founders/Gonza_vepndf.jpg?_s=public-apps',
     description:
-      "Desarrollador Frontend y Project Manager, actualmente capacitándose en Ingeniería de Ciberseguridad. Su experiencia previa como policía de operaciones especiales le otorgó disciplina, liderazgo y capacidad de resolución bajo presión, cualidades que hoy aplica en la gestión de proyectos y desarrollo de software.",
+      'Desarrollador Frontend y Project Manager, actualmente capacitándose en Ingeniería de Ciberseguridad. Su experiencia previa como policía de operaciones especiales le otorgó disciplina, liderazgo y capacidad de resolución bajo presión, cualidades que hoy aplica en la gestión de proyectos y desarrollo de software.',
   },
   {
-    name: "Mariana Ruiz",
-    role: "CMO - Co-Fundadora",
+    name: 'Mariana Ruiz',
+    role: 'CMO - Co-Fundadora',
     image:
-      "https://res.cloudinary.com/dtaybaydq/image/upload/fl_preserve_transparency/v1758937336/Foo%20Talent%20group/Founders/Mariana_bml695.jpg?_s=public-apps",
+      'https://res.cloudinary.com/dtaybaydq/image/upload/fl_preserve_transparency/v1758937336/Foo%20Talent%20group/Founders/Mariana_bml695.jpg?_s=public-apps',
     description:
-      "Licenciada en Letras y experta en comunicación digital. Como Community Manager, crea y gestiona contenidos, fortaleciendo el vínculo con la comunidad mediante estrategias creativas. Apasionada por la educación y la tecnología, busca nuevas formas de educar y conectar digitalmente.",
+      'Licenciada en Letras y experta en comunicación digital. Como Community Manager, crea y gestiona contenidos, fortaleciendo el vínculo con la comunidad mediante estrategias creativas. Apasionada por la educación y la tecnología, busca nuevas formas de educar y conectar digitalmente.',
   },
   {
-    name: "Luis Navarro",
-    role: "CTO - Co-Fundador",
+    name: 'Luis Navarro',
+    role: 'CTO - Co-Fundador',
     image:
-      "https://res.cloudinary.com/dtaybaydq/image/upload/fl_preserve_transparency/v1758937336/Foo%20Talent%20group/Founders/Luis_xnagpd.jpg?_s=public-apps",
+      'https://res.cloudinary.com/dtaybaydq/image/upload/fl_preserve_transparency/v1758937336/Foo%20Talent%20group/Founders/Luis_xnagpd.jpg?_s=public-apps',
     description:
-      "Ex policía con una trayectoria marcada por la disciplina y el compromiso, que hoy combina con su pasión por la tecnología como Desarrollador Full Stack. Su enfoque está en la construcción de soluciones completas y escalables, integrando tanto la lógica de negocio como la experiencia de usuario.",
+      'Ex policía con una trayectoria marcada por la disciplina y el compromiso, que hoy combina con su pasión por la tecnología como Desarrollador Full Stack. Su enfoque está en la construcción de soluciones completas y escalables, integrando tanto la lógica de negocio como la experiencia de usuario.',
   },
   {
-    name: "Viviana Galarza",
-    role: "Product Designer",
+    name: 'Viviana Galarza',
+    role: 'Product Designer',
     image:
-      "https://res.cloudinary.com/dtaybaydq/image/upload/fl_preserve_transparency/v1758937337/Foo%20Talent%20group/Founders/Viviana_ldiuou.jpg?_s=public-apps",
+      'https://res.cloudinary.com/dtaybaydq/image/upload/fl_preserve_transparency/v1758937337/Foo%20Talent%20group/Founders/Viviana_ldiuou.jpg?_s=public-apps',
     description:
-      "Product Designer con una visión centrada en el usuario, especializada en la creación y diseño de productos digitales que combinan funcionalidad y estética. Su trabajo aporta valor a cada proyecto, garantizando experiencias intuitivas y visualmente atractivas.",
+      'Product Designer con una visión centrada en el usuario, especializada en la creación y diseño de productos digitales que combinan funcionalidad y estética. Su trabajo aporta valor a cada proyecto, garantizando experiencias intuitivas y visualmente atractivas.',
   },
-];
+]
 
 export default function TeamSection() {
   return (
@@ -55,9 +55,10 @@ export default function TeamSection() {
           Nuestro Equipo
         </h2>
         <p className="text-gray-300 text-lg break-words">
-          Foo Talent Group está conformado por un equipo de profesionales apasionados por la innovación,
-          la tecnología y la educación. Somos quienes impulsamos los programas educativos y brindamos
-          soluciones digitales a empresas con responsabilidad y compromiso.
+          Foo Talent Group está conformado por un equipo de profesionales
+          apasionados por la innovación, la tecnología y la educación. Somos
+          quienes impulsamos los programas educativos y brindamos soluciones
+          digitales a empresas con responsabilidad y compromiso.
         </p>
       </div>
 
@@ -76,9 +77,7 @@ export default function TeamSection() {
                 className="object-cover rounded-full border-2 border-[#00FFCC]"
               />
             </div>
-            <h3 className="text-xl font-semibold text-white">
-              {member.name}
-            </h3>
+            <h3 className="text-xl font-semibold text-white">{member.name}</h3>
             <p className="text-[#00FFCC] text-sm mb-2 break-words">
               {member.role}
             </p>
@@ -89,6 +88,5 @@ export default function TeamSection() {
         ))}
       </div>
     </section>
-  );
+  )
 }
-

@@ -1,18 +1,18 @@
-import { create } from "zustand";
+import { create } from 'zustand'
 
 type ProgramsAdminState = {
-  search: string;
-  setSearch: (v: string) => void;
+  search: string
+  setSearch: (v: string) => void
 
-  programId: string | null;
-  setProgramId: (v: string | null) => void;
+  programId: string | null
+  setProgramId: (v: string | null) => void
 
-  editionId: string | null;
-  setEditionId: (v: string | null) => void;
-};
+  editionId: string | null
+  setEditionId: (v: string | null) => void
+}
 
 export const useProgramsAdminStore = create<ProgramsAdminState>((set) => ({
-  search: "",
+  search: '',
   setSearch: (search) => set({ search }),
 
   programId: null,
@@ -20,4 +20,4 @@ export const useProgramsAdminStore = create<ProgramsAdminState>((set) => ({
 
   editionId: null,
   setEditionId: (editionId) => set({ editionId }),
-}));
+}))

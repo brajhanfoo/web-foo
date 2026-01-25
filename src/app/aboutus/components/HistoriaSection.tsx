@@ -1,7 +1,7 @@
-"use client";
+'use client'
 
-import { FaHandsHelping, FaHistory } from "react-icons/fa";
-import React from "react";
+import { FaHandsHelping, FaHistory } from 'react-icons/fa'
+import React from 'react'
 
 export default function HistoriaSection() {
   return (
@@ -14,11 +14,11 @@ export default function HistoriaSection() {
           </h2>
 
           <p className="text-gray-300 leading-relaxed mb-4">
-            Foo Talent Group EIRL nació con la visión de unir{" "}
+            Foo Talent Group EIRL nació con la visión de unir{' '}
             <span className="text-[#780b90] font-semibold">
               desarrollo tecnológico de calidad
-            </span>{" "}
-            con la{" "}
+            </span>{' '}
+            con la{' '}
             <span className="text-[#e7e51a] font-semibold">
               formación práctica de nuevos talentos
             </span>
@@ -27,9 +27,11 @@ export default function HistoriaSection() {
           </p>
 
           <p className="text-gray-300 leading-relaxed mb-4">
-            Nuestro modelo es{" "}
-            <span className="font-semibold text-[#e7e51a]">educativo y no comercial</span>:
-            diseñamos programas estructurados por cohortes, con currículo,
+            Nuestro modelo es{' '}
+            <span className="font-semibold text-[#e7e51a]">
+              educativo y no comercial
+            </span>
+            : diseñamos programas estructurados por cohortes, con currículo,
             mentoría y actividades evaluables para estudiantes genuinos —no
             capacitación para clientes comerciales—.
           </p>
@@ -40,11 +42,14 @@ export default function HistoriaSection() {
                 <FaHandsHelping className="text-2xl text-[#780b90]" />
               </div>
               <div>
-                <h3 className="text-sm font-semibold text-white">Proyectos Reales</h3>
+                <h3 className="text-sm font-semibold text-white">
+                  Proyectos Reales
+                </h3>
                 <p className="text-gray-400 text-sm mt-1">
-                  Creamos sitios web para ONGs y organizaciones sin fines de lucro,
-                  sin cobrar por el servicio. El objetivo: que las y los trainees
-                  ganen experiencia práctica en proyectos con impacto social.
+                  Creamos sitios web para ONGs y organizaciones sin fines de
+                  lucro, sin cobrar por el servicio. El objetivo: que las y los
+                  trainees ganen experiencia práctica en proyectos con impacto
+                  social.
                 </p>
               </div>
             </div>
@@ -54,9 +59,9 @@ export default function HistoriaSection() {
             A lo largo de nuestro recorrido hemos consolidado procesos, validado
             resultados y mantenido la transparencia pública —plan de estudios,
             instructores y admisiones— para garantizar la calidad educativa.
-            Seguimos creciendo con la misma misión:{" "}
-            <span className="text-[#780b90] font-semibold">formar talento</span> y
-            generar oportunidades reales.
+            Seguimos creciendo con la misma misión:{' '}
+            <span className="text-[#780b90] font-semibold">formar talento</span>{' '}
+            y generar oportunidades reales.
           </p>
 
           {/* Pequeño CTA */}
@@ -76,22 +81,26 @@ export default function HistoriaSection() {
           style={{
             backgroundImage:
               "linear-gradient(rgba(0,0,0,0.45), rgba(0,0,0,0.45)), url('https://images.pexels.com/photos/3183197/pexels-photo-3183197.jpeg')",
-            backgroundSize: "cover",
-            backgroundPosition: "center",
-            backgroundRepeat: "no-repeat",
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat',
           }}
         >
           <div className="absolute inset-0 flex flex-col justify-end p-6">
             <div className="bg-black bg-opacity-40 rounded-md inline-flex items-center gap-3 px-4 py-3">
               <FaHistory className="text-2xl text-[#e7e51a]" />
               <div className="text-left">
-                <p className="text-sm text-gray-200 font-semibold">Desde 2022</p>
-                <p className="text-xs text-gray-400">Crecimiento con impacto educativo</p>
+                <p className="text-sm text-gray-200 font-semibold">
+                  Desde 2022
+                </p>
+                <p className="text-xs text-gray-400">
+                  Crecimiento con impacto educativo
+                </p>
               </div>
             </div>
           </div>
         </div>
       </div>
     </section>
-  );
+  )
 }

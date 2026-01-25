@@ -1,6 +1,6 @@
-"use client";
+'use client'
 
-import { FaUsers, FaLightbulb } from "react-icons/fa";
+import { FaUsers, FaLightbulb } from 'react-icons/fa'
 
 export default function AboutHero() {
   return (
@@ -8,8 +8,8 @@ export default function AboutHero() {
       className="relative w-full h-[90vh] flex items-center justify-center text-center text-white"
       style={{
         backgroundImage: `url('https://images.pexels.com/photos/1015568/pexels-photo-1015568.jpeg')`,
-        backgroundSize: "cover",
-        backgroundPosition: "center",
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
       }}
     >
       {/* Overlay oscuro */}
@@ -22,11 +22,17 @@ export default function AboutHero() {
         </h1>
 
         <p className="text-lg md:text-xl text-gray-200 mb-8 leading-relaxed">
-          Una empresa con <span className="font-semibold text-[#8e0cab] drop-shadow-lg">propósito educativo</span> que impulsa el
-          crecimiento de talentos en tecnología a través de{" "}
-          <span className="font-semibold text-[#e7e51a]">programas gratuitos, mentoría y proyectos reales</span>.  
-          Nuestro modelo fomenta la colaboración, la transparencia y el aprendizaje práctico, siempre
-          orientado a la formación no comercial y accesible para toda la comunidad.
+          Una empresa con{' '}
+          <span className="font-semibold text-[#8e0cab] drop-shadow-lg">
+            propósito educativo
+          </span>{' '}
+          que impulsa el crecimiento de talentos en tecnología a través de{' '}
+          <span className="font-semibold text-[#e7e51a]">
+            programas gratuitos, mentoría y proyectos reales
+          </span>
+          . Nuestro modelo fomenta la colaboración, la transparencia y el
+          aprendizaje práctico, siempre orientado a la formación no comercial y
+          accesible para toda la comunidad.
         </p>
 
         {/* Iconos */}
@@ -42,5 +48,5 @@ export default function AboutHero() {
         </div>
       </div>
     </section>
-  );
+  )
 }

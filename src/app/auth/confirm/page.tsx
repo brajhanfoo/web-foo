@@ -1,36 +1,36 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 
-type ConfirmPageSearchParams = {
-  code?: string
-  error?: string
-  error_code?: string
-  error_description?: string
-  next?: string
-}
-
-type ConfirmPageProps = {
-  searchParams: ConfirmPageSearchParams
-}
-
 function safeNextPath(maybePath: string | undefined): string {
   if (!maybePath) return '/plataforma'
   if (!maybePath.startsWith('/')) return '/plataforma'
   return maybePath
 }
 
-export default async function ConfirmPage({ searchParams }: ConfirmPageProps) {
+export default async function ConfirmPage({
+  searchParams,
+}: {
+  searchParams?: Record<string, string | string[] | undefined>
+}) {
+  // extraemos y normalizamos a string
+  const sp = searchParams ?? {}
+
+  const code = typeof sp.code === 'string' ? sp.code : undefined
+  const next = typeof sp.next === 'string' ? sp.next : undefined
+  const error = typeof sp.error === 'string' ? sp.error : undefined
+  const error_code =
+    typeof sp.error_code === 'string' ? sp.error_code : undefined
+  const error_description =
+    typeof sp.error_description === 'string' ? sp.error_description : undefined
+
   const errorMessageFromProvider =
-    searchParams.error_description ||
-    searchParams.error ||
-    (searchParams.error_code ? `Error: ${searchParams.error_code}` : null)
+    error_description || error || (error_code ? `Error: ${error_code}` : null)
 
   if (errorMessageFromProvider) {
     const encoded = encodeURIComponent(errorMessageFromProvider)
     redirect(`/ingresar?error=${encoded}`)
   }
 
-  const code = searchParams.code
   if (!code) {
     redirect(
       '/ingresar?error=' + encodeURIComponent('Falta el parámetro code.')
@@ -38,16 +38,18 @@ export default async function ConfirmPage({ searchParams }: ConfirmPageProps) {
   }
 
   const supabase = await createClient()
+  const { error: exchangeError } =
+    await supabase.auth.exchangeCodeForSession(code)
 
-  const { error } = await supabase.auth.exchangeCodeForSession(code)
-
-  if (error) {
+  if (exchangeError) {
     redirect(
       '/ingresar?error=' +
-        encodeURIComponent(error.message || 'No se pudo confirmar el email.')
+        encodeURIComponent(
+          exchangeError.message || 'No se pudo confirmar el email.'
+        )
     )
   }
 
-  const nextPath = safeNextPath(searchParams.next)
+  const nextPath = safeNextPath(next)
   redirect(nextPath)
 }
