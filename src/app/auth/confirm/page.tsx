@@ -10,10 +10,10 @@ function safeNextPath(maybePath: string | undefined): string {
 export default async function ConfirmPage({
   searchParams,
 }: {
-  searchParams?: Record<string, string | string[] | undefined>
+  searchParams: Promise<Record<string, string | string[] | undefined>>
 }) {
-  // extraemos y normalizamos a string
-  const sp = searchParams ?? {}
+  // Await searchParams en Next.js 15+
+  const sp = await searchParams
 
   const code = typeof sp.code === 'string' ? sp.code : undefined
   const next = typeof sp.next === 'string' ? sp.next : undefined
