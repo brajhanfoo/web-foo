@@ -18,7 +18,9 @@ export function validateAnswers(
       value === undefined ||
       (typeof value === 'string' && value.trim() === '') ||
       (Array.isArray(value) && value.length === 0) ||
-      (typeof value === 'boolean' && value === false && field.type !== 'checkbox')
+      (typeof value === 'boolean' &&
+        value === false &&
+        field.type !== 'checkbox')
 
     // Para checkbox required: debe ser true
     if (field.type === 'checkbox') {
@@ -52,28 +54,38 @@ export function getDefaultAnswers(schema: ApplicationFormSchema): FormAnswers {
 // Type guard para verificar si un valor desconocido es un FormField válido
 function isFormField(field: unknown): field is FormField {
   if (typeof field !== 'object' || field === null) return false
-  
+
   const fieldObject = field as Record<string, unknown>
-  
+
   // Verificar propiedades base requeridas
   if (typeof fieldObject.id !== 'string') return false
   if (typeof fieldObject.label !== 'string') return false
   if (typeof fieldObject.type !== 'string') return false
-  
-  const validTypes = ['text', 'textarea', 'number', 'select', 'multiselect', 'date', 'checkbox']
+
+  const validTypes = [
+    'text',
+    'textarea',
+    'number',
+    'select',
+    'multiselect',
+    'date',
+    'checkbox',
+  ]
   if (!validTypes.includes(fieldObject.type as string)) return false
-  
+
   // Para select y multiselect, verificar que options sea un array
   if (fieldObject.type === 'select' || fieldObject.type === 'multiselect') {
     if (!Array.isArray(fieldObject.options)) return false
   }
-  
+
   return true
 }
 
 export function normalizeSchema(input: unknown): ApplicationFormSchema {
   // Type guard para el input
-  const isValidInput = (value: unknown): value is {
+  const isValidInput = (
+    value: unknown
+  ): value is {
     title?: string | null
     description?: string | null
     fields?: unknown[]
@@ -90,7 +102,8 @@ export function normalizeSchema(input: unknown): ApplicationFormSchema {
     .map((field: FormField) => {
       // Asegurar que select/multiselect tengan options
       if (field.type === 'select' || field.type === 'multiselect') {
-        const hasValidOptions = Array.isArray(field.options) && field.options.length > 0
+        const hasValidOptions =
+          Array.isArray(field.options) && field.options.length > 0
         return hasValidOptions ? field : { ...field, options: [] }
       }
       return field

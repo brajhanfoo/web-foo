@@ -52,7 +52,7 @@ export function AdminSidebar() {
       await signOut()
       showSuccess('Sesión cerrada')
       router.push('/ingresar')
-    } catch (error: unknown) {
+    } catch {
       showError('No se pudo cerrar sesión')
     }
   }

@@ -34,7 +34,7 @@ type AuthStoreState = {
   signOut: () => Promise<void>
 }
 
-export const useAuthStore = create<AuthStoreState>((set, get) => ({
+export const useAuthStore = create<AuthStoreState>((set) => ({
   isBooting: true,
   userId: null,
   email: null,
