@@ -4,6 +4,7 @@ import './globals.css'
 
 import type { Metadata } from 'next'
 import Footer from '@/components/ui/Footer'
+import { Toaster } from 'sonner'
 
 export const metadata: Metadata = {
   title: 'Foo Talent Group',
@@ -21,6 +22,7 @@ export default function RootLayout({
         <Navbar logoSrc={LOGOWEB} logoAlt="Foo Talent Group" />
         {children}
         <Footer />
+        <Toaster richColors position="top-right" expand={false} closeButton />
       </body>
     </html>
   )
