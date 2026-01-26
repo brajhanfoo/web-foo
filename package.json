@@ -7,33 +7,14 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint --fix",
-    "format": "npx prettier --write .",
-    "prepare": "husky"
+    "format": "npx prettier --write ."
   },
   "dependencies": {
-    "@radix-ui/react-checkbox": "^1.3.3",
-    "@radix-ui/react-dropdown-menu": "^2.1.16",
-    "@radix-ui/react-label": "^2.1.8",
-    "@radix-ui/react-select": "^2.2.6",
-    "@radix-ui/react-separator": "^1.1.8",
-    "@radix-ui/react-slot": "^1.2.4",
-    "@radix-ui/react-switch": "^1.2.6",
-    "@supabase/ssr": "^0.8.0",
-    "@supabase/supabase-js": "^2.90.1",
-    "class-variance-authority": "^0.7.1",
-    "clsx": "^2.1.1",
     "formik": "^2.4.6",
-    "lucide-react": "^0.562.0",
-    "motion": "^12.23.16",
-    "next": "^15.5.9",
+    "next": "^15.4.8",
     "react": "19.1.0",
     "react-dom": "19.1.0",
-    "react-icons": "^5.5.0",
-    "sonner": "^2.0.7",
-    "tailwind-merge": "^3.4.0",
-    "tailwindcss-animate": "^1.0.7",
-    "xlsx": "^0.18.5",
-    "zustand": "^5.0.10"
+    "react-icons": "^5.5.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
@@ -47,7 +28,6 @@
     "eslint-plugin-prettier": "^5.5.4",
     "eslint-plugin-simple-import-sort": "^12.1.1",
     "eslint-plugin-unicorn": "^60.0.0",
-    "husky": "^9.1.7",
     "prettier": "3.6.2",
     "tailwindcss": "^4",
     "typescript": "^5"
