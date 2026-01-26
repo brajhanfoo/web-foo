@@ -26,6 +26,7 @@ export default function Navbar({ logoSrc, logoAlt }: NavbarProperties) {
 
   return (
     <nav className="sticky top-0 z-50 flex items-center justify-between w-full bg-black px-10 py-5 md:px-4 lg:px-16 xl:px-32">
+
       <Link href="/" className="z-50">
         <Image
           src={logoSrc}
@@ -39,7 +40,11 @@ export default function Navbar({ logoSrc, logoAlt }: NavbarProperties) {
       {/* Desktop menu */}
       <div className="hidden md:flex items-center space-x-8">
         {navItems.map(({ name, href }) => (
-          <Link key={href} href={href} className="text-white group">
+          <Link
+            key={href}
+            href={href}
+            className="text-white group"
+          >
             {name}
             <span className="block max-w-0 group-hover:max-w-full transition-all duration-300 h-[2px] bg-yellow" />
           </Link>
