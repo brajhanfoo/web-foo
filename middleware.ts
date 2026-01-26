@@ -3,43 +3,45 @@ import { createServerClient } from '@supabase/ssr'
 
 function isPublicPath(pathname: string): boolean {
   const publicExactPaths = [
-    '/',
-    '/aboutus',
-    '/services',
-    '/programas',
-    '/smart-projects',
-    '/project-academy',
-    '/registro',
-    '/ingresar',
-    '/terminos-y-condiciones',
-    '/politica-de-privacidad',
-  ]
-
+  '/',
+  '/aboutus',
+  '/services',
+  '/programas',
+  '/smart-projects',
+  '/project-academy',
+  '/registro',
+  '/ingresar',
+  '/reset-password',
+  '/update-password',
+  '/terminos-y-condiciones',
+  '/politica-de-privacidad',
+]
   const publicStartsWith = ['/_next', '/favicon', '/images', '/legal']
 
   const publicApiExactPaths = ['/api/auth/confirm']
 
   if (publicExactPaths.includes(pathname)) return true
-  if (publicStartsWith.some((prefix) => pathname.startsWith(prefix)))
-    return true
+  if (publicStartsWith.some((prefix) => pathname.startsWith(prefix))) return true
   if (publicApiExactPaths.includes(pathname)) return true
 
   return false
 }
 
 export async function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl
+  const { pathname, search } = request.nextUrl
 
   const isPlatformPath = pathname.startsWith('/plataforma')
   const isAdminPath = pathname.startsWith('/plataforma/admin')
 
+  // público y no plataforma => pasa
   if (!isPlatformPath && isPublicPath(pathname)) {
     return NextResponse.next()
   }
 
+  // ✅ siempre creamos response para poder setear cookies correctamente
   const response = NextResponse.next()
 
-  const supabaseServerClient = createServerClient(
+  const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
@@ -48,34 +50,34 @@ export async function middleware(request: NextRequest) {
           return request.cookies.getAll()
         },
         setAll(cookiesToSet) {
-          for (const cookie of cookiesToSet) {
-            response.cookies.set(cookie)
-          }
+          // ✅ CLAVE: aplicar options correctamente
+          cookiesToSet.forEach(({ name, value, options }) => {
+            response.cookies.set(name, value, options)
+          })
         },
       },
     }
   )
 
-  // Rutas privadas:
   if (isPlatformPath) {
-    const { data, error } = await supabaseServerClient.auth.getUser()
-    const authenticatedUser = data.user
+    const { data, error } = await supabase.auth.getUser()
+    const user = data.user
 
-    if (!authenticatedUser || error) {
+    if (!user || error) {
       const redirectUrl = request.nextUrl.clone()
       redirectUrl.pathname = '/ingresar'
-      redirectUrl.searchParams.set('redirectTo', pathname)
+      redirectUrl.searchParams.set('redirectTo', `${pathname}${search || ''}`)
       return NextResponse.redirect(redirectUrl)
     }
 
     if (isAdminPath) {
-      const { data: profile } = await supabaseServerClient
+      const { data: profile, error: profErr } = await supabase
         .from('profiles')
         .select('role')
-        .eq('id', authenticatedUser.id)
+        .eq('id', user.id)
         .maybeSingle()
 
-      if (profile?.role !== 'super_admin') {
+      if (profErr || profile?.role !== 'super_admin') {
         const redirectUrl = request.nextUrl.clone()
         redirectUrl.pathname = '/plataforma'
         return NextResponse.redirect(redirectUrl)
