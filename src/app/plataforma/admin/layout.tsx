@@ -1,36 +1,46 @@
-'use client'
+import { redirect } from 'next/navigation'
+import { createClient } from '@/lib/supabase/server'
 
-import { useEffect, useRef } from 'react'
 import { AdminSidebar } from './components/admin-sidebar'
-import { useAuthStore } from '@/stores/auth-stores'
+import { AdminTopbar } from './components/admin-topbar'
 
-export default function AdminLayout({
+export default async function AdminLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  const bootAuth = useAuthStore((state) => state.bootAuth)
-  const isBooting = useAuthStore((state) => state.isBooting)
+  const supabase = await createClient()
 
-  const hasBootedReference = useRef(false)
+  // 1) sesión
+  const { data: userRes } = await supabase.auth.getUser()
+  const user = userRes.user
+  if (!user) redirect('/ingresar')
 
-  useEffect(() => {
-    if (hasBootedReference.current) return
-    hasBootedReference.current = true
-    void bootAuth()
-  }, [bootAuth])
+  // 2) rol
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .maybeSingle()
 
+  const role = profile?.role ?? null
+  if (role !== 'admin' && role !== 'super_admin') redirect('/plataforma')
+
+  // 3) layout visual (tu mismo layout)
   return (
-    <div className="flex min-h-[calc(100vh-80px)] bg-black">
-      <AdminSidebar />
+    <div className="min-h-screen bg-black">
+      <div className="flex">
+        {/* Sidebar */}
+        <div className="hidden lg:block">
+          <AdminSidebar />
+        </div>
 
-      <main className="flex-1 p-6">
-        {isBooting ? (
-          <div className="text-white/70">Cargando...</div>
-        ) : (
-          children
-        )}
-      </main>
+        {/* Main */}
+        <div className="flex-1 min-w-0">
+          <AdminTopbar />
+          <main className="px-4 md:px-6 py-6">{children}</main>
+        </div>
+      </div>
     </div>
   )
 }
