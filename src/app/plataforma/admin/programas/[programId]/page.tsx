@@ -1,10 +1,9 @@
 'use client'
 
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
-import { useParams, useRouter } from 'next/navigation'
+import { useParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase/client'
-import { useAuthStore } from '@/stores/auth-stores'
 import { useToastEnhanced } from '@/hooks/use-toast-enhanced'
 
 import { Button } from '@/components/ui/button'
@@ -131,12 +130,11 @@ function toFieldName(label: string) {
 
 export default function AdminProgramDetailPage() {
   const parameters = useParams<{ programId: string }>()
-  const router = useRouter()
   const { showError, showSuccess } = useToastEnhanced()
 
-  const { profile, isBooting } = useAuthStore()
-
   const programId = parameters.programId
+  console.log(programId)
+
   const didLoadReference = useRef(false)
 
   const [loading, setLoading] = useState(true)
@@ -186,29 +184,19 @@ export default function AdminProgramDetailPage() {
     },
   ])
 
-  const isAdmin = useMemo(() => {
-    const role = profile?.role ?? 'talent'
-    return role === 'admin' || role === 'super_admin'
-  }, [profile?.role])
-
   useEffect(() => {
-    if (isBooting) return
-    if (!profile) return
-
-    if (!isAdmin) {
-      router.replace('/plataforma')
-      return
-    }
-
+    if (!programId) return
     if (didLoadReference.current) return
     didLoadReference.current = true
-
     void loadAll()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isBooting, profile, isAdmin, programId])
+  }, [programId])
 
   async function loadAll() {
     setLoading(true)
+    console.log('hola')
+
+    console.log(programId)
 
     const programResponse = await supabase
       .from('programs')
@@ -217,8 +205,10 @@ export default function AdminProgramDetailPage() {
       )
       .eq('id', programId)
       .maybeSingle()
+    console.log(programResponse.error)
 
     if (programResponse.error || !programResponse.data) {
+      console.log(programResponse.error)
       showError('No se pudo cargar el programa.')
       setLoading(false)
       return

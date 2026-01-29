@@ -44,16 +44,31 @@ type ApplicationsAdminViewRow = {
 type DatePreset = 'all' | '7d' | '30d' | 'this_month'
 type OpenMenu = null | 'date' | 'role' | 'status' | 'actions'
 
-function statusBadgeClasses(status: ApplicationStatus): string {
+function statusBadgeClasses(status: ApplicationStatus): Record<string, string> {
   if (status === 'enrolled')
-    return 'bg-emerald-500/15 text-emerald-300 border-emerald-400/20'
+    return {
+      className: 'bg-emerald-500/15 text-emerald-300 border-emerald-400/20',
+      label: 'Matriculado',
+    }
   if (status === 'approved')
-    return 'bg-sky-500/15 text-sky-300 border-sky-400/20'
+    return {
+      className: 'bg-sky-500/15 text-sky-300 border-sky-400/20',
+      label: 'Aprobado',
+    }
   if (status === 'in_review')
-    return 'bg-yellow-500/15 text-yellow-200 border-yellow-400/20'
+    return {
+      className: 'bg-yellow-500/15 text-yellow-200 border-yellow-400/20',
+      label: 'En revisión',
+    }
   if (status === 'rejected')
-    return 'bg-red-500/15 text-red-300 border-red-400/20'
-  return 'bg-white/5 text-white/70 border-white/10'
+    return {
+      className: 'bg-red-500/15 text-red-300 border-red-400/20',
+      label: 'Rechazado',
+    }
+  return {
+    className: 'bg-white/5 text-white/70 border-white/10',
+    label: 'Recibido',
+  }
 }
 
 function getDateRangeFromPreset(preset: DatePreset): {
@@ -644,10 +659,10 @@ export function ApplicationsTable() {
                     <span
                       className={[
                         'inline-flex items-center rounded-full border px-2 py-1 text-[11px]',
-                        statusBadgeClasses(row.status),
+                        statusBadgeClasses(row.status).className,
                       ].join(' ')}
                     >
-                      {row.status}
+                      {statusBadgeClasses(row.status).label}
                     </span>
                   </div>
 
@@ -655,10 +670,11 @@ export function ApplicationsTable() {
                     <button
                       type="button"
                       className="rounded-xl bg-emerald-500/15 px-3 py-1.5 text-xs text-emerald-200 hover:bg-emerald-500/20"
-                      disabled
-                      title="Luego hacemos la ficha / detalle"
+                      title="ver detalles de la postulación"
                     >
-                      Ver ficha
+                      <Link href={`/plataforma/admin/postulaciones/${row.id}`}>
+                        Ver ficha
+                      </Link>
                     </button>
                   </div>
                 </div>

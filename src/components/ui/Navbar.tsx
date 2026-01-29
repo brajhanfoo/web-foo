@@ -12,7 +12,11 @@ interface NavbarProperties {
 
 const navItems = [
   { name: 'Inicio', href: '/' },
-  { name: 'Smart Projects', href: '/talents', icon: <FiUsers /> },
+  {
+    name: 'Smart Projects',
+    href: '/programas/smart-projects',
+    icon: <FiUsers />,
+  },
   { name: 'Nosotros', href: '/aboutus', icon: <FiUsers /> },
 ]
 

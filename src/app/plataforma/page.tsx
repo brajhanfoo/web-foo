@@ -1,51 +1,43 @@
+// src/app/plataforma/page.tsx
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 
-type ProfileRow = {
-  role: string | null
-  full_name: string | null
-}
+export default async function PlataformaIndexPage() {
+  const supabase = await createClient()
 
-export default async function PlataformaPage() {
-  const supabaseServerClient = await createClient()
+  // 1. sesión
+  const { data: userRes } = await supabase.auth.getUser()
 
-  const { data: userResponse, error: getUserError } =
-    await supabaseServerClient.auth.getUser()
-
-  if (getUserError) {
-    // Si falla getUser por sesión/cookies, mandamos a login
+  if (!userRes.user) {
     redirect('/ingresar')
   }
 
-  const authenticatedUser = userResponse.user
+  const userId = userRes.user.id
 
-  if (!authenticatedUser) {
-    // No hay sesión -> no puede entrar a /plataforma
-    redirect('/ingresar')
-  }
-
-  const { data: profileRow } = await supabaseServerClient
+  // 2. rol (consulta mínima)
+  const { data: profile } = await supabase
     .from('profiles')
-    .select('role, first_name, last_name')
-    .eq('id', authenticatedUser.id)
-    .maybeSingle<ProfileRow>()
+    .select('role')
+    .eq('id', userId)
+    .maybeSingle()
 
-  const displayName = profileRow?.full_name?.trim()
-    ? profileRow.full_name
-    : (authenticatedUser.email ?? 'Usuario')
+  if (!profile?.role) {
+    redirect('/ingresar')
+  }
 
-  return (
-    <div className="space-y-4">
-      <h1 className="text-2xl font-semibold">Hola {displayName} 👋</h1>
+  // 3. redirect por rol
+  switch (profile.role) {
+    case 'admin':
+    case 'super_admin':
+      redirect('/plataforma/admin')
 
-      <p className="text-white/70">
-        Rol:{' '}
-        <span className="font-medium">{profileRow?.role ?? 'sin_rol'}</span>
-      </p>
+    case 'talent':
+      redirect('/plataforma/talento')
 
-      <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
-        Dashboard MVP: aquí va el “banner por estado” del PRD y accesos.
-      </div>
-    </div>
-  )
+    case 'staff':
+      redirect('/plataforma/staff')
+
+    default:
+      redirect('/ingresar')
+  }
 }
