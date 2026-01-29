@@ -1,3 +1,5 @@
+//src/app/(public)/programas/types/page.ts
+
 export type ProgramRow = {
   id: string
   slug: string
