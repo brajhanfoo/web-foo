@@ -1,4 +1,4 @@
-// page.tsx (REEMPLAZO COMPLETO) - usando tus componentes (stepper + profile + details + right column)
+// src/app/plataforma/admin/postulaciones/%5BpostulacionesId%5D/page.tsx
 'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'

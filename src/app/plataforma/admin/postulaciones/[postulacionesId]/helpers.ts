@@ -1,3 +1,4 @@
+// src/app/plataforma/admin/postulaciones/%5BpostulacionesId%5D/helpers.ts
 import type {
   ApplicantProfileSummary,
   ApplicationRow,

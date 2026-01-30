@@ -1,3 +1,4 @@
+//src/app/plataforma/admin/postulaciones/components/applications-table.tsx
 'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'

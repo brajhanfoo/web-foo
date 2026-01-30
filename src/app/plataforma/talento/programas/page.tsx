@@ -305,7 +305,9 @@ export default function ProgramsPage() {
                 <Button
                   className="w-full bg-[#00CCA4] text-black hover:bg-[#00CCA4]/90"
                   onClick={() =>
-                    router.push(`/plataforma/programas/${p.slug}/postular`)
+                    router.push(
+                      `/plataforma/talento/programas/${p.slug}/postular`
+                    )
                   }
                 >
                   <span className="flex-1 text-center">

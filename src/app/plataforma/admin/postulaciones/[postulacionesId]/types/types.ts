@@ -1,3 +1,5 @@
+//src/app/plataforma/admin/postulaciones/%5BpostulacionesId%5D/types/types.ts
+
 /* ----------------------------- Types (strict) ----------------------------- */
 
 export type ApplicationStatus =
