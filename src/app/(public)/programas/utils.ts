@@ -15,14 +15,17 @@ const MONTHS_ES: string[] = [
   'Diciembre',
 ]
 
-function parseDateYYYYMMDD(value: string): { y: number; m: number; d: number } | null {
+function parseDateYYYYMMDD(
+  value: string
+): { y: number; m: number; d: number } | null {
   const v = value.trim()
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(v)
   if (!match) return null
   const y = Number(match[1])
   const m = Number(match[2])
   const d = Number(match[3])
-  if (!Number.isFinite(y) || !Number.isFinite(m) || !Number.isFinite(d)) return null
+  if (!Number.isFinite(y) || !Number.isFinite(m) || !Number.isFinite(d))
+    return null
   if (m < 1 || m > 12) return null
   if (d < 1 || d > 31) return null
   return { y, m, d }

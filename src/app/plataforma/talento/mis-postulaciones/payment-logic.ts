@@ -23,7 +23,8 @@ export function getPaymentWindow(app: ApplicationRow): PaymentWindow {
   // Base time: ideal -> approved_at (si existe)
   // Fallback temporal: updated_at (cuando pasó a approved)
   const baseMs = parseIsoToMs(app.updated_at)
-  if (baseMs === null) return { canPay: false, expiresAtIso: null, msRemaining: null }
+  if (baseMs === null)
+    return { canPay: false, expiresAtIso: null, msRemaining: null }
 
   const expiresMs = baseMs + 48 * 60 * 60 * 1000
   const nowMs = Date.now()

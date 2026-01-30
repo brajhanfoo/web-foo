@@ -24,7 +24,10 @@ export async function POST(request: NextRequest) {
   const supabaseServer = await createClient()
   const { data: userRes, error: userErr } = await supabaseServer.auth.getUser()
   if (userErr || !userRes.user) {
-    return NextResponse.json({ ok: false, message: 'No autenticado' }, { status: 401 })
+    return NextResponse.json(
+      { ok: false, message: 'No autenticado' },
+      { status: 401 }
+    )
   }
 
   const formData = await request.formData()
@@ -33,16 +36,26 @@ export async function POST(request: NextRequest) {
   const file = formData.get('file')
 
   if (!applicationId) {
-    return NextResponse.json({ ok: false, message: 'Falta application_id' }, { status: 400 })
+    return NextResponse.json(
+      { ok: false, message: 'Falta application_id' },
+      { status: 400 }
+    )
   }
 
   if (!(file instanceof File)) {
-    return NextResponse.json({ ok: false, message: 'Falta archivo' }, { status: 400 })
+    return NextResponse.json(
+      { ok: false, message: 'Falta archivo' },
+      { status: 400 }
+    )
   }
 
   if (!ALLOWED_MIME_TYPES.has(file.type)) {
     return NextResponse.json(
-      { ok: false, message: 'Tipo de archivo no permitido. Usá PDF o imagen (JPG/PNG/WEBP).' },
+      {
+        ok: false,
+        message:
+          'Tipo de archivo no permitido. Usá PDF o imagen (JPG/PNG/WEBP).',
+      },
       { status: 400 }
     )
   }
@@ -62,7 +75,10 @@ export async function POST(request: NextRequest) {
     .maybeSingle()
 
   if (profileErr || !profileRow) {
-    return NextResponse.json({ ok: false, message: 'Perfil no disponible' }, { status: 403 })
+    return NextResponse.json(
+      { ok: false, message: 'Perfil no disponible' },
+      { status: 403 }
+    )
   }
 
   const isSuperAdmin = profileRow.role === 'super_admin'
@@ -75,18 +91,22 @@ export async function POST(request: NextRequest) {
       .maybeSingle()
 
     if (appErr || !appRow) {
-      return NextResponse.json({ ok: false, message: 'Postulación no encontrada' }, { status: 404 })
+      return NextResponse.json(
+        { ok: false, message: 'Postulación no encontrada' },
+        { status: 404 }
+      )
     }
 
     if (appRow.applicant_profile_id !== userRes.user.id) {
-      return NextResponse.json({ ok: false, message: 'Sin permisos' }, { status: 403 })
+      return NextResponse.json(
+        { ok: false, message: 'Sin permisos' },
+        { status: 403 }
+      )
     }
   }
 
   const ext = getExtensionFromMime(file.type)
   const objectPath = `applications/${applicationId}/proof.${ext}`
-
-  
 
   // 1) Subir (overwrite permitido)
   const arrayBuffer = await file.arrayBuffer()
@@ -100,7 +120,10 @@ export async function POST(request: NextRequest) {
     })
 
   if (uploadErr) {
-    return NextResponse.json({ ok: false, message: uploadErr.message }, { status: 400 })
+    return NextResponse.json(
+      { ok: false, message: uploadErr.message },
+      { status: 400 }
+    )
   }
 
   // 2) Upsert 1 por application_id (UNIQUE)
@@ -121,8 +144,14 @@ export async function POST(request: NextRequest) {
     )
 
   if (upsertErr) {
-    return NextResponse.json({ ok: false, message: upsertErr.message }, { status: 400 })
+    return NextResponse.json(
+      { ok: false, message: upsertErr.message },
+      { status: 400 }
+    )
   }
 
-  return NextResponse.json({ ok: true, object_path: objectPath }, { status: 200 })
+  return NextResponse.json(
+    { ok: true, object_path: objectPath },
+    { status: 200 }
+  )
 }

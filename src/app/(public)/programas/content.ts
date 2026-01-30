@@ -1,4 +1,8 @@
-import type { ProgramCardContent, ProgramFeature, ProgramRow } from './types/types'
+import type {
+  ProgramCardContent,
+  ProgramFeature,
+  ProgramRow,
+} from './types/types'
 
 function feature(id: string, text: string, enabled: boolean): ProgramFeature {
   return { id, text, enabled }
@@ -23,8 +27,16 @@ export function getProgramCardContent(program: ProgramRow): ProgramCardContent {
           'Acompañamiento experto - Técnicos, de Producto y de Carrera',
           true
         ),
-        feature('1-1', 'Mentoría técnica 1:1 - Resuelve tus dudas específicas', true),
-        feature('workshops', 'Workshops en vivo - Clases de producto/UX/DEV/QA', true),
+        feature(
+          '1-1',
+          'Mentoría técnica 1:1 - Resuelve tus dudas específicas',
+          true
+        ),
+        feature(
+          'workshops',
+          'Workshops en vivo - Clases de producto/UX/DEV/QA',
+          true
+        ),
         feature('rituales', 'Rituales ágiles guiados', true),
         feature('coaching', 'Career coaching dedicado', true),
         feature('support', 'Soporte diario', true),
@@ -40,8 +52,16 @@ export function getProgramCardContent(program: ProgramRow): ProgramCardContent {
       badgeIcon: 'folder',
       accent: 'projects',
       features: [
-        feature('admission', 'Proceso de admisión - Entrevista técnica + feedback', true),
-        feature('community', 'Comunidad de talento filtrado - Solo trabajas con los mejores', true),
+        feature(
+          'admission',
+          'Proceso de admisión - Entrevista técnica + feedback',
+          true
+        ),
+        feature(
+          'community',
+          'Comunidad de talento filtrado - Solo trabajas con los mejores',
+          true
+        ),
         feature('briefs', 'Briefs de proyectos con stakeholders', true),
         feature('resources', 'Recursos y guías de autoestudio', true),
         feature('sim', 'Entorno laboral simulado 100% realista', true),

@@ -3,25 +3,26 @@ import { createServerClient } from '@supabase/ssr'
 
 function isPublicPath(pathname: string): boolean {
   const publicExactPaths = [
-  '/',
-  '/aboutus',
-  '/services',
-  '/programas',
-  '/smart-projects',
-  '/project-academy',
-  '/registro',
-  '/ingresar',
-  '/reset-password',
-  '/update-password',
-  '/terminos-y-condiciones',
-  '/politica-de-privacidad',
-]
+    '/',
+    '/aboutus',
+    '/services',
+    '/programas',
+    '/smart-projects',
+    '/project-academy',
+    '/registro',
+    '/ingresar',
+    '/reset-password',
+    '/update-password',
+    '/terminos-y-condiciones',
+    '/politica-de-privacidad',
+  ]
   const publicStartsWith = ['/_next', '/favicon', '/images', '/legal']
 
   const publicApiExactPaths = ['/api/auth/confirm']
 
   if (publicExactPaths.includes(pathname)) return true
-  if (publicStartsWith.some((prefix) => pathname.startsWith(prefix))) return true
+  if (publicStartsWith.some((prefix) => pathname.startsWith(prefix)))
+    return true
   if (publicApiExactPaths.includes(pathname)) return true
 
   return false

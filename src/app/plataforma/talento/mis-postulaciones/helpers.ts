@@ -1,6 +1,10 @@
 // src/app/plataforma/talento/mis-postulaciones/helpers.ts
 
-import type { ApplicationStatus, ApplicationRow, PastCompletedItem } from './types'
+import type {
+  ApplicationStatus,
+  ApplicationRow,
+  PastCompletedItem,
+} from './types'
 
 export function safeTrim(value: string | null | undefined): string {
   return (value ?? '').trim()
@@ -26,7 +30,12 @@ export function fmtMonthYearFromDateISO(dateIso: string): string {
   const year = Number(parts[0])
   const month = Number(parts[1])
 
-  if (!Number.isFinite(year) || !Number.isFinite(month) || month < 1 || month > 12) {
+  if (
+    !Number.isFinite(year) ||
+    !Number.isFinite(month) ||
+    month < 1 ||
+    month > 12
+  ) {
     return 'Fecha no disponible'
   }
 
@@ -60,7 +69,8 @@ export function statusLabel(status: ApplicationStatus): string {
 export function topDotClass(status: ApplicationStatus): string {
   if (status === 'received') return 'bg-[#3B82F6]'
   if (status === 'in_review') return 'bg-orange-500'
-  if (status === 'approved' || status === 'payment_pending') return 'bg-[#E7E51A]'
+  if (status === 'approved' || status === 'payment_pending')
+    return 'bg-[#E7E51A]'
   if (status === 'enrolled') return 'bg-fuchsia-400'
   return 'bg-zinc-500'
 }
@@ -68,17 +78,21 @@ export function topDotClass(status: ApplicationStatus): string {
 export function borderAccentClass(status: ApplicationStatus): string {
   if (status === 'received') return 'ring-1 ring-blue-500/20'
   if (status === 'in_review') return 'ring-1 ring-orange-500/20'
-  if (status === 'approved' || status === 'payment_pending') return 'ring-1 ring-yellow-400/20'
+  if (status === 'approved' || status === 'payment_pending')
+    return 'ring-1 ring-yellow-400/20'
   if (status === 'enrolled') return 'ring-1 ring-fuchsia-500/20'
   return 'ring-1 ring-muted/30'
 }
 
 export function badgeClass(status: ApplicationStatus): string {
-  if (status === 'received') return 'border-blue-500/30 bg-blue-500/10 text-blue-300'
-  if (status === 'in_review') return 'border-orange-500/30 bg-orange-500/10 text-orange-400'
+  if (status === 'received')
+    return 'border-blue-500/30 bg-blue-500/10 text-blue-300'
+  if (status === 'in_review')
+    return 'border-orange-500/30 bg-orange-500/10 text-orange-400'
   if (status === 'approved' || status === 'payment_pending')
     return 'border-yellow-400/30 bg-yellow-400/10 text-yellow-300'
-  if (status === 'enrolled') return 'border-fuchsia-500/30 bg-fuchsia-500/10 text-fuchsia-300'
+  if (status === 'enrolled')
+    return 'border-fuchsia-500/30 bg-fuchsia-500/10 text-fuchsia-300'
   return 'border-muted/30 bg-muted/10 text-muted-foreground'
 }
 
@@ -96,7 +110,9 @@ export function headerLine(programTitle: string, role: string): string {
   return 'Programa'
 }
 
-export function buildPastCompletedItems(past: ApplicationRow[]): PastCompletedItem[] {
+export function buildPastCompletedItems(
+  past: ApplicationRow[]
+): PastCompletedItem[] {
   return past.map((row) => {
     const programTitle = row.program ? row.program.title : 'Programa'
     const editionLabel = row.edition ? row.edition.edition_name : 'Edición'

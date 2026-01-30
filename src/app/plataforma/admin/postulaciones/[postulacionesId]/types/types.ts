@@ -30,7 +30,7 @@ export type ApplicantProfileSummary = {
   portfolio_url: string | null
   english_level: string | null
   role: string | null
-email: string | null
+  email: string | null
   // Extras que estás trayendo en el select
   document_number: string | null
   primary_role: string | null

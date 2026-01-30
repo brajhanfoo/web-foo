@@ -53,7 +53,9 @@ export function statusBadgeLabel(status: ApplicationStatus): string {
   return status
 }
 
-export function buildFullName(profile: ApplicantProfileSummary | null): string | null {
+export function buildFullName(
+  profile: ApplicantProfileSummary | null
+): string | null {
   if (!profile) return null
   const parts = [profile.first_name ?? '', profile.last_name ?? '']
     .map((segment) => segment.trim())
@@ -61,7 +63,9 @@ export function buildFullName(profile: ApplicantProfileSummary | null): string |
   return parts.length ? parts.join(' ') : null
 }
 
-export function isApplicationStatus(value: unknown): value is ApplicationStatus {
+export function isApplicationStatus(
+  value: unknown
+): value is ApplicationStatus {
   return (
     value === 'received' ||
     value === 'admitted' ||
@@ -82,7 +86,9 @@ export function textOrNA(value: string | null | undefined): string {
   return normalized ? normalized : 'No definido'
 }
 
-export function arrayOrNull(value: string[] | null | undefined): string[] | null {
+export function arrayOrNull(
+  value: string[] | null | undefined
+): string[] | null {
   return Array.isArray(value) && value.length ? value : null
 }
 
@@ -95,7 +101,9 @@ export async function copyToClipboard(text: string): Promise<boolean> {
   }
 }
 
-export function getEmailFromAnswers(answers: ParsedAnswers | undefined): string | null {
+export function getEmailFromAnswers(
+  answers: ParsedAnswers | undefined
+): string | null {
   const email = answers?.['email']
   const correo = answers?.['correo']
   const emailString = typeof email === 'string' ? email.trim() : ''
@@ -114,9 +122,10 @@ type DebugInfo = {
   details?: Record<string, unknown>
 }
 
-export function mapSupabaseRowToApplicationRow(
-  raw: unknown
-): { applicationRow: ApplicationRow | null; debugInfo: DebugInfo | null } {
+export function mapSupabaseRowToApplicationRow(raw: unknown): {
+  applicationRow: ApplicationRow | null
+  debugInfo: DebugInfo | null
+} {
   if (!isRecord(raw)) {
     return {
       applicationRow: null,
@@ -175,7 +184,7 @@ export function mapSupabaseRowToApplicationRow(
   const editionRaw = raw['edition']
   const edition = isRecord(editionRaw)
     ? {
-        id: getStringValue(editionRaw['id']) ?? (editionId ?? ''),
+        id: getStringValue(editionRaw['id']) ?? editionId ?? '',
         edition_name: getStringValue(editionRaw['edition_name']),
       }
     : null
@@ -186,7 +195,9 @@ export function mapSupabaseRowToApplicationRow(
         id: getStringValue(applicantProfileRaw['id']) ?? applicantProfileId,
         first_name: getStringValue(applicantProfileRaw['first_name']),
         last_name: getStringValue(applicantProfileRaw['last_name']),
-        country_residence: getStringValue(applicantProfileRaw['country_residence']),
+        country_residence: getStringValue(
+          applicantProfileRaw['country_residence']
+        ),
         whatsapp_e164: getStringValue(applicantProfileRaw['whatsapp_e164']),
         linkedin_url: getStringValue(applicantProfileRaw['linkedin_url']),
         portfolio_url: getStringValue(applicantProfileRaw['portfolio_url']),
