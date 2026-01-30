@@ -1,3 +1,4 @@
+// src/app/plataforma/admin/programas/%5BprogramId%5D/page.tsx
 'use client'
 
 import { useEffect, useRef, useState } from 'react'

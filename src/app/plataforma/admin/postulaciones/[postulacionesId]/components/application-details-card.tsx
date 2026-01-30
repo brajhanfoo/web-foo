@@ -1,4 +1,4 @@
-// components/application-details-card.tsx  (REEMPLAZO COMPLETO)
+// src/app/plataforma/admin/postulaciones/%5BpostulacionesId%5D/components/application-details-card.tsx
 'use client'
 
 import Link from 'next/link'

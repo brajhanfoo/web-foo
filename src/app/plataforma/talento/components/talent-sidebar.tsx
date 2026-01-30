@@ -89,7 +89,7 @@ export function TalentSidebar({ displayName }: { displayName: string }) {
           Icon={GraduationCap}
         />
         <SidebarLink
-          href="/plataforma/talento/postulaciones"
+          href="/plataforma/talento/mis-postulaciones"
           label="Mis Postulaciones"
           Icon={Inbox}
         />
