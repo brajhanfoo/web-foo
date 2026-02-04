@@ -1,8 +1,0 @@
-export { default as Hero } from './Hero'
-export { default as ServicesSection } from './ServicesSection'
-export { default as ServiceCard } from './ServiceCard'
-export { default as TestimoniosSection } from './TestimoniosSection'
-export { default as TestimonioCard } from './TestimonioCard'
-export { default as FaqSection } from './FaqSection'
-export { default as FaqItem } from './FaqItem'
-export { default as Heading } from './Heading'
