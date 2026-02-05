@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase/client'
+import { getPasswordError } from '@/lib/validation/password'
 
 export default function UpdatePasswordPage() {
   const router = useRouter()
@@ -14,6 +15,10 @@ export default function UpdatePasswordPage() {
 
   const [password, setPassword] = useState('')
   const [password2, setPassword2] = useState('')
+  const [passwordError, setPasswordError] = useState<string | null>(null)
+  const [confirmPasswordError, setConfirmPasswordError] = useState<
+    string | null
+  >(null)
 
   useEffect(() => {
     let cancelled = false
@@ -55,15 +60,20 @@ export default function UpdatePasswordPage() {
   async function onSave() {
     setMessage(null)
 
-    if (!password || password.length < 8) {
-      setMessage('La contraseña debe tener al menos 8 caracteres.')
+    const nextPasswordError = getPasswordError(password)
+    if (nextPasswordError) {
+      setPasswordError(nextPasswordError)
+      setMessage(nextPasswordError)
       return
     }
     if (password !== password2) {
+      setConfirmPasswordError('Las contraseñas no coinciden.')
       setMessage('Las contraseñas no coinciden.')
       return
     }
 
+    setPasswordError(null)
+    setConfirmPasswordError(null)
     setPhase('saving')
     try {
       const { error } = await supabase.auth.updateUser({ password })
@@ -110,11 +120,25 @@ export default function UpdatePasswordPage() {
               <label className="text-sm text-white/70">Nueva contraseña</label>
               <input
                 type="password"
-                className="mt-1 w-full rounded-xl bg-white/5 border border-white/10 px-4 py-3 outline-none focus:border-emerald-400/60"
+                className={`mt-1 w-full rounded-xl bg-white/5 border px-4 py-3 outline-none focus:border-emerald-400/60 ${
+                  passwordError ? 'border-red-500/70' : 'border-white/10'
+                }`}
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e) => {
+                  const next = e.target.value
+                  setPassword(next)
+                  setPasswordError(getPasswordError(next))
+                  setConfirmPasswordError(
+                    password2 && next !== password2
+                      ? 'Las contraseñas no coinciden.'
+                      : null
+                  )
+                }}
                 placeholder="••••••••"
               />
+              {passwordError ? (
+                <p className="mt-1 text-xs text-red-400">{passwordError}</p>
+              ) : null}
             </div>
 
             <div>
@@ -123,11 +147,24 @@ export default function UpdatePasswordPage() {
               </label>
               <input
                 type="password"
-                className="mt-1 w-full rounded-xl bg-white/5 border border-white/10 px-4 py-3 outline-none focus:border-emerald-400/60"
+                className={`mt-1 w-full rounded-xl bg-white/5 border px-4 py-3 outline-none focus:border-emerald-400/60 ${
+                  confirmPasswordError ? 'border-red-500/70' : 'border-white/10'
+                }`}
                 value={password2}
-                onChange={(e) => setPassword2(e.target.value)}
+                onChange={(e) => {
+                  const next = e.target.value
+                  setPassword2(next)
+                  setConfirmPasswordError(
+                    next && next !== password ? 'Las contraseñas no coinciden.' : null
+                  )
+                }}
                 placeholder="••••••••"
               />
+              {confirmPasswordError ? (
+                <p className="mt-1 text-xs text-red-400">
+                  {confirmPasswordError}
+                </p>
+              ) : null}
             </div>
 
             <button

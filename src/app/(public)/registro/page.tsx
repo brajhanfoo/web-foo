@@ -1,3 +1,4 @@
+import { Code, Users2 } from 'lucide-react'
 import { RegisterForm } from './components/register-form'
 
 export default function RegisterPage() {
@@ -25,13 +26,27 @@ export default function RegisterPage() {
           </p>
 
           <div className="mt-6 space-y-3">
-            <div className="rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white/75">
-              ✅ Proyectos prácticos <span className="text-white/50">—</span>{' '}
-              aprende haciendo en entornos reales.
+            <div className="flex items-center rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white/75">
+              <div className="bg-[#77039F]/20 h-9 w-9 rounded-xl flex items-center justify-center mr-3">
+                {' '}
+                <Code className="text-[#77039F]" size={16} />
+              </div>
+              <div>
+                {' '}
+                <h2 className="inline-block">Proyectos prácticos</h2>
+                <p>Desarrollo basado en desafíos reales de la industria.</p>
+              </div>
             </div>
-            <div className="rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white/75">
-              ✅ Comunidad activa <span className="text-white/50">—</span>{' '}
-              networking y colaboración.
+            <div className="flex items-center rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-white/75">
+              <div className="bg-[#00CCA4]/20 h-9 w-9 rounded-xl flex items-center justify-center mr-3">
+                {' '}
+                <Users2 className="text-[#00CCA4]" size={16} />
+              </div>
+              <div>
+                {' '}
+                <h2 className="inline-block">Comunidad activa</h2>
+                <p>Conecta con pares y mentores expertos.</p>
+              </div>
             </div>
           </div>
         </section>

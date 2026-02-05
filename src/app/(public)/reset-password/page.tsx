@@ -22,21 +22,24 @@ export default function ResetPasswordPage() {
   }
 
   return (
-    <div className="p-6 max-w-md mx-auto">
-      <h1 className="text-xl font-semibold">Recuperar contraseña</h1>
+    <div className="bg-black min-h-screen flex items-center justify-center">
+      {' '}
+      <div className="p-6 max-w-md mx-auto bg-gray-900 rounded-3xl text-amber-50">
+        <h1 className="text-xl font-semibold">Recuperar contraseña</h1>
 
-      <input
-        className="mt-4 w-full border p-2"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        placeholder="tu@email.com"
-      />
+        <input
+          className="mt-4 w-full border p-2"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="tu@email.com"
+        />
 
-      <button onClick={send} className="mt-4 border px-4 py-2">
-        Enviar correo
-      </button>
+        <button onClick={send} className="mt-4 border px-4 py-2">
+          Enviar correo
+        </button>
 
-      {msg && <p className="mt-3 text-sm">{msg}</p>}
+        {msg && <p className="mt-3 text-sm">{msg}</p>}
+      </div>
     </div>
   )
 }

@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { supabase } from '@/lib/supabase/client'
 import { useToastEnhanced } from '@/hooks/use-toast-enhanced'
+import { getPasswordError } from '@/lib/validation/password'
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -88,6 +89,10 @@ export default function AdminSettingsPage() {
   const [newPassword, setNewPassword] = useState('')
   const [newPassword2, setNewPassword2] = useState('')
   const [isSavingPassword, setIsSavingPassword] = useState(false)
+  const [passwordError, setPasswordError] = useState<string | null>(null)
+  const [confirmPasswordError, setConfirmPasswordError] = useState<
+    string | null
+  >(null)
 
   const showErrorRef = useRef(showError)
   useEffect(() => {
@@ -216,11 +221,14 @@ export default function AdminSettingsPage() {
     const p1 = newPassword.trim()
     const p2 = newPassword2.trim()
 
-    if (p1.length < 8) {
-      showError('Contraseña inválida', 'Debe tener al menos 8 caracteres.')
+    const nextPasswordError = getPasswordError(p1)
+    if (nextPasswordError) {
+      setPasswordError(nextPasswordError)
+      showError('Contrasena invalida', nextPasswordError)
       return
     }
     if (p1 !== p2) {
+      setConfirmPasswordError('Las contraseñas no coinciden.')
       showError('No coincide', 'Las contraseñas no coinciden.')
       return
     }
@@ -236,6 +244,8 @@ export default function AdminSettingsPage() {
 
     setNewPassword('')
     setNewPassword2('')
+    setPasswordError(null)
+    setConfirmPasswordError(null)
     showSuccess('Listo', 'Contraseña actualizada.')
   }
 
@@ -511,10 +521,26 @@ export default function AdminSettingsPage() {
                           <Input
                             type="password"
                             value={newPassword}
-                            onChange={(e) => setNewPassword(e.target.value)}
-                            className="bg-black/30 border-white/10 text-white placeholder:text-white/30"
+                            onChange={(e) => {
+                              const next = e.target.value
+                              setNewPassword(next)
+                              setPasswordError(getPasswordError(next))
+                              setConfirmPasswordError(
+                                newPassword2 && next !== newPassword2
+                                  ? 'Las contraseñas no coinciden.'
+                                  : null
+                              )
+                            }}
+                            className={`bg-black/30 text-white placeholder:text-white/30 ${
+                              passwordError ? 'border-red-500/70' : 'border-white/10'
+                            }`}
                             placeholder="********"
                           />
+                          {passwordError ? (
+                            <p className="text-xs text-red-400">
+                              {passwordError}
+                            </p>
+                          ) : null}
                         </div>
 
                         <div className="space-y-2">
@@ -524,10 +550,27 @@ export default function AdminSettingsPage() {
                           <Input
                             type="password"
                             value={newPassword2}
-                            onChange={(e) => setNewPassword2(e.target.value)}
-                            className="bg-black/30 border-white/10 text-white placeholder:text-white/30"
+                            onChange={(e) => {
+                              const next = e.target.value
+                              setNewPassword2(next)
+                              setConfirmPasswordError(
+                                next && next !== newPassword
+                                  ? 'Las contraseñas no coinciden.'
+                                  : null
+                              )
+                            }}
+                            className={`bg-black/30 text-white placeholder:text-white/30 ${
+                              confirmPasswordError
+                                ? 'border-red-500/70'
+                                : 'border-white/10'
+                            }`}
                             placeholder="********"
                           />
+                          {confirmPasswordError ? (
+                            <p className="text-xs text-red-400">
+                              {confirmPasswordError}
+                            </p>
+                          ) : null}
                         </div>
                       </div>
 

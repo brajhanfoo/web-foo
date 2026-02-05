@@ -1,16 +1,11 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase/client'
 import { getErrorMessage } from '@/types/error'
+import { getPasswordError } from '@/lib/validation/password'
 
-import { PhoneCountryPicker } from './phone-country-picker'
-import {
-  buildE164Phone,
-  isE164Like,
-  normalizeDigitsOnly,
-} from '@/lib/phones/phone-utilities'
 import { useToastEnhanced } from '@/hooks/use-toast-enhanced'
 
 const CURRENT_TERMS_VERSION = '2026-01-19'
@@ -18,17 +13,11 @@ const CURRENT_TERMS_VERSION = '2026-01-19'
 type RegisterFormState = {
   firstName: string
   lastName: string
-  countryResidence: string
-  documentNumber: string
-
-  phoneDialCode: string
-  phoneNationalNumber: string
-
-  linkedinUrl: string
   email: string
   password: string
   confirmPassword: string
   hasAcceptedTerms: boolean
+  marketingOptIn: boolean
 }
 
 export function RegisterForm() {
@@ -39,28 +28,19 @@ export function RegisterForm() {
     {
       firstName: '',
       lastName: '',
-      countryResidence: '',
-      documentNumber: '',
-
-      phoneDialCode: '+593',
-      phoneNationalNumber: '',
-
-      linkedinUrl: '',
       email: '',
       password: '',
       confirmPassword: '',
       hasAcceptedTerms: false,
+      marketingOptIn: false,
     }
   )
 
   const [isSubmitting, setIsSubmitting] = useState(false)
-
-  const whatsappE164Preview = useMemo(() => {
-    return buildE164Phone(
-      registerFormState.phoneDialCode,
-      registerFormState.phoneNationalNumber
-    )
-  }, [registerFormState.phoneDialCode, registerFormState.phoneNationalNumber])
+  const [passwordError, setPasswordError] = useState<string | null>(null)
+  const [confirmPasswordError, setConfirmPasswordError] = useState<string | null>(
+    null
+  )
 
   function updateRegisterFormField<K extends keyof RegisterFormState>(
     fieldName: K,
@@ -75,32 +55,29 @@ export function RegisterForm() {
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
 
+    const passwordError = getPasswordError(registerFormState.password)
+    if (passwordError) {
+      setPasswordError(passwordError)
+      showError('Contrasena invalida', passwordError)
+      return
+    }
+
+    if (registerFormState.password !== registerFormState.confirmPassword) {
+      setConfirmPasswordError('Las contraseñas no coinciden.')
+      showError('Las contraseñas no coinciden', 'Revisa la confirmación.')
+      return
+    }
+
     if (!registerFormState.hasAcceptedTerms) {
       showError(
-        'Debes aceptar los términos',
+        'Debes aceptar los terminos',
         'Marca el checkbox para continuar.'
       )
       return
     }
 
-    if (registerFormState.password !== registerFormState.confirmPassword) {
-      showError('Las contraseñas no coinciden', 'Revisa la confirmación.')
-      return
-    }
-
-    if (!registerFormState.documentNumber.trim()) {
-      showError('Documento requerido', 'Ingresa tu DNI/Cédula/Pasaporte.')
-      return
-    }
-
-    if (!isE164Like(whatsappE164Preview)) {
-      showError(
-        'WhatsApp inválido',
-        'Revisa el país/código y el número. Debe guardarse en formato +XXXXXXXX.'
-      )
-      return
-    }
-
+    setPasswordError(null)
+    setConfirmPasswordError(null)
     setIsSubmitting(true)
 
     try {
@@ -115,15 +92,9 @@ export function RegisterForm() {
             // Para UI/Nombre
             first_name: registerFormState.firstName,
             last_name: registerFormState.lastName,
-
-            // Para profiles (copiado por trigger)
-            country_residence: registerFormState.countryResidence,
-            document_number: registerFormState.documentNumber.trim(),
-            whatsapp_e164: whatsappE164Preview,
-            linkedin_url: registerFormState.linkedinUrl,
             terms_accepted_at: new Date().toISOString(),
             terms_version: CURRENT_TERMS_VERSION,
-            profile_status: 'profile_incomplete',
+            marketing_opt_in: registerFormState.marketingOptIn,
           },
         },
       })
@@ -184,26 +155,6 @@ export function RegisterForm() {
             </div>
 
             <input
-              className="w-full rounded-xl bg-black/30 border border-white/10 px-4 py-3 text-white outline-none focus:border-emerald-400/60 placeholder:text-white/40"
-              placeholder="País de residencia"
-              value={registerFormState.countryResidence}
-              onChange={(event) =>
-                updateRegisterFormField('countryResidence', event.target.value)
-              }
-              required
-            />
-
-            <input
-              className="w-full rounded-xl bg-black/30 border border-white/10 px-4 py-3 text-white outline-none focus:border-emerald-400/60 placeholder:text-white/40"
-              placeholder="Documento de identidad (DNI / Cédula / Pasaporte)"
-              value={registerFormState.documentNumber}
-              onChange={(event) =>
-                updateRegisterFormField('documentNumber', event.target.value)
-              }
-              required
-            />
-
-            <input
               type="email"
               className="w-full rounded-xl bg-black/30 border border-white/10 px-4 py-3 text-white outline-none focus:border-emerald-400/60 placeholder:text-white/40"
               placeholder="Email"
@@ -214,70 +165,52 @@ export function RegisterForm() {
               required
             />
 
-            <div>
-              <label className="mb-1 block text-sm text-white/70">
-                WhatsApp
-              </label>
-              <div className="grid grid-cols-1 gap-3 md:grid-cols-[1fr_1fr]">
-                <PhoneCountryPicker
-                  selectedDialCode={registerFormState.phoneDialCode}
-                  onDialCodeChange={(newDialCode) =>
-                    updateRegisterFormField('phoneDialCode', newDialCode)
-                  }
-                />
-
-                <input
-                  inputMode="numeric"
-                  className="w-full rounded-xl bg-black/30 border border-white/10 px-4 py-3 text-white outline-none focus:border-emerald-400/60 placeholder:text-white/40"
-                  placeholder="Número (solo dígitos)"
-                  value={registerFormState.phoneNationalNumber}
-                  onChange={(event) =>
-                    updateRegisterFormField(
-                      'phoneNationalNumber',
-                      normalizeDigitsOnly(event.target.value)
-                    )
-                  }
-                  required
-                />
-              </div>
-
-              <p className="mt-2 text-xs text-white/50">
-                Se guardará como:{' '}
-                <span className="text-white/70">{whatsappE164Preview}</span>
-              </p>
-            </div>
-
-            <input
-              className="w-full rounded-xl bg-black/30 border border-white/10 px-4 py-3 text-white outline-none focus:border-emerald-400/60 placeholder:text-white/40"
-              placeholder="Link a tu LinkedIn"
-              value={registerFormState.linkedinUrl}
-              onChange={(event) =>
-                updateRegisterFormField('linkedinUrl', event.target.value)
-              }
-              required
-            />
-
             <input
               type="password"
-              className="w-full rounded-xl bg-black/30 border border-white/10 px-4 py-3 text-white outline-none focus:border-emerald-400/60 placeholder:text-white/40"
+              className={`w-full rounded-xl bg-black/30 border px-4 py-3 text-white outline-none focus:border-emerald-400/60 placeholder:text-white/40 ${
+                passwordError ? 'border-red-500/70' : 'border-white/10'
+              }`}
               placeholder="Contraseña"
               value={registerFormState.password}
-              onChange={(event) =>
-                updateRegisterFormField('password', event.target.value)
-              }
+              onChange={(event) => {
+                const next = event.target.value
+                updateRegisterFormField('password', next)
+                setPasswordError(getPasswordError(next))
+                setConfirmPasswordError(
+                  registerFormState.confirmPassword &&
+                    next !== registerFormState.confirmPassword
+                    ? 'Las contraseñas no coinciden.'
+                    : null
+                )
+              }}
               required
             />
+            {passwordError ? (
+              <p className="text-xs text-red-400">{passwordError}</p>
+            ) : null}
 
             <input
               type="password"
-              className="w-full rounded-xl bg-black/30 border border-white/10 px-4 py-3 text-white outline-none focus:border-emerald-400/60 placeholder:text-white/40"
+              className={`w-full rounded-xl bg-black/30 border px-4 py-3 text-white outline-none focus:border-emerald-400/60 placeholder:text-white/40 ${
+                confirmPasswordError ? 'border-red-500/70' : 'border-white/10'
+              }`}
               placeholder="Confirmación de contraseña"
               value={registerFormState.confirmPassword}
-              onChange={(event) =>
-                updateRegisterFormField('confirmPassword', event.target.value)
-              }
+              onChange={(event) => {
+                const next = event.target.value
+                updateRegisterFormField('confirmPassword', next)
+                setConfirmPasswordError(
+                  next && next !== registerFormState.password
+                    ? 'Las contraseñas no coinciden.'
+                    : null
+                )
+              }}
               required
             />
+            {confirmPasswordError ? (
+              <p className="text-xs text-red-400">{confirmPasswordError}</p>
+            ) : null}
+
 
             <label className="flex items-start gap-2 text-sm text-white/70">
               <input
@@ -292,16 +225,33 @@ export function RegisterForm() {
                 }
               />
               <span>
-                He leído y acepto los{' '}
+                He leido y acepto los{' '}
                 <a
                   href="/terminos-y-condiciones"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-emerald-400 underline hover:text-emerald-300"
                 >
-                  Términos y condiciones
+                  Terminos y condiciones
                 </a>
                 .
+              </span>
+            </label>
+
+            <label className="flex items-start gap-2 text-sm text-white/70">
+              <input
+                type="checkbox"
+                className="mt-1"
+                checked={registerFormState.marketingOptIn}
+                onChange={(event) =>
+                  updateRegisterFormField(
+                    'marketingOptIn',
+                    event.target.checked
+                  )
+                }
+              />
+              <span>
+                Quiero recibir comunicaciones y novedades de marketing.
               </span>
             </label>
 
