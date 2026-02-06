@@ -5,81 +5,150 @@ import {
   FaInstagram,
   FaFacebook,
   FaEnvelope,
-  FaHandsHelping,
+  FaRocket,
 } from 'react-icons/fa'
 
 export default function ContactSection() {
   return (
     <section
       id="contact"
-      className="bg-gradient-to-r from-indigo-950 via-purple-900 to-indigo-950 text-white py-20 px-6"
+      className="
+      relative
+      bg-gradient-to-b from-black via-[#14051f] to-[#6d0f9c]
+      text-white
+      py-28 px-6
+      overflow-hidden
+      "
     >
-      <div className="max-w-4xl mx-auto text-center">
-        <h2 className="text-4xl font-bold mb-6 text-white">
-          💡 Súmate a Foo Talent Group
-        </h2>
-        <p className="text-lg text-gray-200 mb-10 leading-relaxed">
-          Los{' '}
-          <span className="font-semibold text-purple-300">Smart Projects</span>{' '}
-          son gratuitos e ilimitados para toda la comunidad tech. Si eres
-          talento, puedes unirte a través de nuestras redes sociales. Y si eres
-          empresa o persona con buen corazón, puedes apoyarnos como mentor,
-          jurado o con recursos para que el programa siga creciendo.
-        </p>
+      {/* glow fondo */}
+      <div className="absolute top-32 left-1/2 -translate-x-1/2 w-[700px] h-[500px] bg-[#D85DFB] opacity-20 blur-[180px] rounded-full" />
+      <div className="absolute bottom-0 left-0 w-full h-40 bg-gradient-to-t from-[#7A0CA3] to-transparent" />
 
-        {/* Redes sociales */}
-        <div className="mb-10">
-          <p className="font-medium text-purple-300 mb-4">
-            📲 Escríbenos en redes sociales
-          </p>
-          <div className="flex justify-center space-x-6">
-            <a
-              href="https://www.linkedin.com/company/footalentgroup/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="p-3 rounded-full bg-gray-800 hover:bg-purple-600 transition"
-            >
-              <FaLinkedin className="w-6 h-6 text-white" />
-            </a>
+      <div className="relative z-10 max-w-4xl mx-auto text-center">
 
-            <a
-              href="https://www.instagram.com/footalentgroup"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="p-3 rounded-full bg-gray-800 hover:bg-purple-600 transition"
-            >
-              <FaInstagram className="w-6 h-6 text-white" />
-            </a>
-            <a
-              href="https://www.facebook.com/footalentgroup"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="p-3 rounded-full bg-gray-800 hover:bg-purple-600 transition"
-            >
-              <FaFacebook className="w-6 h-6 text-white" />
-            </a>
+        {/* icono */}
+        <div className="flex justify-center mb-6">
+          <div className="w-14 h-14 rounded-full bg-[#BDBE0B]/20 flex items-center justify-center shadow-[0_0_25px_rgba(189,190,11,0.35)]">
+            <span className="text-[#BDBE0B] text-2xl">💡</span>
           </div>
         </div>
 
-        {/* Empresas u organizaciones */}
-        <div className="bg-gray-900 p-6 rounded-2xl inline-block shadow-lg border border-purple-600">
-          <p className="flex items-center justify-center gap-2 text-lg font-semibold text-purple-300 mb-3">
-            <FaHandsHelping className="text-purple-400 w-6 h-6" />
-            ¿Quieres apoyarnos?
-          </p>
-          <p className="text-gray-300 mb-4 text-sm">
+        {/* titulo */}
+        <h2 className="text-4xl md:text-5xl font-bold mb-6">
+          Súmate a <span className="text-white">Foo Talent Group</span>
+        </h2>
+
+        {/* texto */}
+        <p className="text-gray-300 text-lg leading-relaxed max-w-2xl mx-auto mb-10">
+          Los <span className="text-white font-semibold">Smart Projects</span>{' '}
+          son gratuitos e ilimitados para toda la comunidad tech. Si eres
+          talento, puedes unirte. Si eres empresa, podemos apoyarnos mutuamente
+          para impulsar el crecimiento del ecosistema.
+        </p>
+
+        {/* redes */}
+        <div className="flex justify-center gap-5 mb-14">
+          <a
+            href="https://www.linkedin.com/company/footalentgroup/"
+            target="_blank"
+            className="
+            group
+            w-12 h-12
+            flex items-center justify-center
+            rounded-full
+            bg-white/5
+            border border-white/10
+            backdrop-blur-md
+            hover:bg-[#0077B5]
+            hover:scale-110
+            transition
+            "
+          >
+            <FaLinkedin className="text-gray-300 group-hover:text-white text-lg" />
+          </a>
+
+          <a
+            href="https://www.instagram.com/footalentgroup"
+            target="_blank"
+            className="
+            group
+            w-12 h-12
+            flex items-center justify-center
+            rounded-full
+            bg-white/5
+            border border-white/10
+            backdrop-blur-md
+            hover:bg-gradient-to-tr hover:from-pink-500 hover:to-yellow-400
+            hover:scale-110
+            transition
+            "
+          >
+            <FaInstagram className="text-gray-300 group-hover:text-white text-lg" />
+          </a>
+
+          <a
+            href="https://www.facebook.com/footalentgroup"
+            target="_blank"
+            className="
+            group
+            w-12 h-12
+            flex items-center justify-center
+            rounded-full
+            bg-white/5
+            border border-white/10
+            backdrop-blur-md
+            hover:bg-[#1877F2]
+            hover:scale-110
+            transition
+            "
+          >
+            <FaFacebook className="text-gray-300 group-hover:text-white text-lg" />
+          </a>
+        </div>
+
+        {/* card apoyo */}
+        <div
+          className="
+          max-w-xl mx-auto
+          rounded-2xl
+          border border-white/10
+          bg-white/5
+          backdrop-blur-xl
+          p-8
+          shadow-[0_0_40px_rgba(216,93,251,0.15)]
+          "
+        >
+          <div className="flex items-center justify-center gap-3 mb-3">
+            <FaRocket className="text-[#00CCA4] text-xl" />
+            <p className="text-lg font-semibold text-white">
+              ¿Quieres apoyarnos?
+            </p>
+          </div>
+
+          <p className="text-gray-400 text-sm mb-6">
             Escríbenos para ser mentor, jurado o patrocinador en nuestras
             ediciones.
           </p>
-          <div className="flex items-center justify-center">
-            <FaEnvelope className="w-6 h-6 mr-3 text-purple-400" />
-            <a
-              href="mailto:contacto@footalentgroup.com"
-              className="text-lg text-purple-400 hover:underline"
-            >
+
+          {/* email */}
+          <a
+            href="mailto:contacto@footalentgroup.com"
+            className="
+            flex items-center justify-center gap-3
+            bg-white/10
+            hover:bg-white/20
+            border border-white/10
+            rounded-xl
+            py-3 px-6
+            transition
+            group
+            "
+          >
+            <FaEnvelope className="text-[#00CCA4]" />
+            <span className="text-white group-hover:text-[#00CCA4] transition">
               contacto@footalentgroup.com
-            </a>
-          </div>
+            </span>
+          </a>
         </div>
       </div>
     </section>
