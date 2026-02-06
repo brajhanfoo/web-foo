@@ -20,7 +20,7 @@ const Hero = () => {
         {/* Headline */}
         <h1 className="text-center text-4xl md:text-6xl font-bold leading-tight">
           Encuentra el Talento que construye{' '}
-          <span className="text-[#780B90]">Productos Reales</span>.
+          <span className="text-[#780B90]">Productos Reales.</span>
         </h1>
 
         {/* Subtitle */}
@@ -84,7 +84,13 @@ const Hero = () => {
             </div>
 
             {/* CTA */}
-            <button className="relative z-10 text-[#00D3D3] text-sm font-medium tracking-wide hover:underline cursor-pointer">
+            <button
+              onClick={() => {
+                const section = document.getElementById('contacto')
+                section?.scrollIntoView({ behavior: 'smooth' })
+              }}
+              className="relative z-10 text-[#00D3D3] text-sm font-medium tracking-wide hover:underline cursor-pointer"
+            >
               SOLICITAR INFORMACIÓN ↓
             </button>
           </div>
@@ -137,9 +143,14 @@ const Hero = () => {
           </ul>
 
           {/* CTA */}
-          <button className="relative z-10 bottom-[-22px] text-[#780B90] text-sm font-medium tracking-wide hover:underline cursor-pointer">
+          <a
+            href="https://wa.me/51930428602?text=Hola%20quiero%20informaci%C3%B3n%20sobre%20patrocinar%20los%20programas"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="relative z-10 bottom-[-22px] text-[#780B90] text-sm font-medium tracking-wide hover:underline cursor-pointer"
+          >
             CONVERSAR CON UN ESPECIALISTA ↓
-          </button>
+          </a>
         </div>
       </div>
     </section>

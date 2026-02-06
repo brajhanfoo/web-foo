@@ -13,11 +13,7 @@ interface NavbarProperties {
 
 const navItems = [
   { name: 'Servicios', href: '/servicios' },
-  {
-    name: 'Programas',
-    href: '/programas',
-    icon: <FiUsers />,
-  },
+  { name: 'Programas', href: '/programas', icon: <FiUsers /> },
   { name: 'Nosotros', href: '/aboutus', icon: <FiUsers /> },
 ]
 
@@ -26,23 +22,32 @@ export default function Navbar({ logoSrc, logoAlt }: NavbarProperties) {
   const pathname = usePathname()
   const router = useRouter()
 
+<<<<<<< HEAD
   // Verificar si estamos en una ruta de programa activo
+=======
+>>>>>>> b7030507466e8ee2781eb12875b64a2b0daf9a71
   const isProgramActive =
     pathname?.startsWith('/programas/') && pathname !== '/programas'
 
-  // 🔒 Bloquear scroll cuando el menú está abierto
   useEffect(() => {
     document.body.style.overflow = menuOpen ? 'hidden' : 'auto'
   }, [menuOpen])
 
-  // Función para manejar el clic en "Ingresar"
   const handleIngresarClick = () => {
-    setMenuOpen(false) // Cerrar menú móvil si está abierto
+    setMenuOpen(false)
     router.push('/ingresar')
+  }
+
+  // 🔥 función active
+  const isActive = (href: string) => {
+    if (href === '/') return pathname === '/'
+    return pathname === href || pathname.startsWith(href + '/')
   }
 
   return (
     <nav className="sticky top-0 z-50 flex items-center justify-between w-full bg-black px-6 py-4 md:px-4 lg:px-16 xl:px-32 shadow-lg">
+      
+      {/* LOGO */}
       <Link href="/" className="z-50">
         <Image
           src={logoSrc}
@@ -53,19 +58,34 @@ export default function Navbar({ logoSrc, logoAlt }: NavbarProperties) {
         />
       </Link>
 
-      {/* Desktop menu */}
+      {/* DESKTOP MENU */}
       <div className="hidden md:flex items-center space-x-8">
-        {navItems.map(({ name, href }) => (
-          <Link key={href} href={href} className="text-white group">
-            {name}
-            <span className="block max-w-0 group-hover:max-w-full transition-all duration-300 h-[2px] bg-yellow" />
-          </Link>
-        ))}
+        {navItems.map(({ name, href }) => {
+          const active = isActive(href)
+
+          return (
+            <Link key={href} href={href} className="text-white group relative">
+              {name}
+
+              {/* underline */}
+              <span
+                className={`
+                  absolute left-0 -bottom-1 h-[2px] bg-yellow transition-all duration-300
+                  ${active ? 'w-full' : 'w-0 group-hover:w-full'}
+                `}
+              />
+            </Link>
+          )
+        })}
       </div>
 
-      {/* Botones desktop */}
+      {/* BOTONES DESKTOP */}
       <div className="hidden md:flex items-center gap-4">
+<<<<<<< HEAD
         {/* Botón Ingresar */}
+=======
+
+>>>>>>> b7030507466e8ee2781eb12875b64a2b0daf9a71
         <button
           onClick={handleIngresarClick}
           className="text-white bg-white/20 hover:bg-white/30 px-5 py-2.5 rounded-md transition-colors duration-300 cursor-pointer"
@@ -73,7 +93,6 @@ export default function Navbar({ logoSrc, logoAlt }: NavbarProperties) {
           Ingresar
         </button>
 
-        {/* Botón Postular (condicional) */}
         {isProgramActive && (
           <button
             className="bg-[#00CCA4] hover:bg-[#00D3D3] cursor-pointer text-black font-semibold px-5 py-2.5 rounded-md transition-colors duration-300 shadow-md hover:shadow-lg"
@@ -84,7 +103,7 @@ export default function Navbar({ logoSrc, logoAlt }: NavbarProperties) {
         )}
       </div>
 
-      {/* Hamburger button */}
+      {/* MOBILE BTN */}
       <button
         onClick={() => setMenuOpen(!menuOpen)}
         className="md:hidden text-2xl text-white z-50"
@@ -92,32 +111,34 @@ export default function Navbar({ logoSrc, logoAlt }: NavbarProperties) {
         {menuOpen ? <FaTimes /> : <FaBars />}
       </button>
 
-      {/* Mobile menu overlay */}
+      {/* MOBILE MENU */}
       <div
         className={`fixed inset-0 bg-black z-40 flex flex-col px-6 py-24 space-y-6 transition-transform duration-300 ease-in-out
         ${menuOpen ? 'translate-x-0' : 'translate-x-full'}`}
       >
-        {/* Navegación móvil */}
-        {navItems.map(({ name, href, icon }) => (
-          <Link
-            key={href}
-            href={href}
-            onClick={() => setMenuOpen(false)}
-            className="flex items-center space-x-3 text-2xl text-white hover:text-yellow-400 transition-colors duration-200"
-          >
-            {icon}
-            <span>{name}</span>
-          </Link>
-        ))}
+        {navItems.map(({ name, href, icon }) => {
+          const active = isActive(href)
 
-        {/* Separador */}
+          return (
+            <Link
+              key={href}
+              href={href}
+              onClick={() => setMenuOpen(false)}
+              className={`flex items-center space-x-3 text-2xl transition-colors duration-200
+              ${active ? 'text-yellow-400' : 'text-white hover:text-yellow-400'}`}
+            >
+              {icon}
+              <span>{name}</span>
+            </Link>
+          )
+        })}
+
         <div className="border-t border-gray-700 my-4 pt-4">
-          {/* Botón Postular móvil (condicional) */}
           {isProgramActive && (
             <button
               onClick={() => {
                 setMenuOpen(false)
-                // Aquí puedes agregar la lógica para postular
+                router.push('/ingresar')
               }}
               className="w-full bg-[#00CCA4] hover:bg-[#00D3D3] cursor-pointer text-black font-semibold text-lg py-3 px-4 rounded-md transition-colors duration-300 mb-4"
             >
@@ -125,7 +146,6 @@ export default function Navbar({ logoSrc, logoAlt }: NavbarProperties) {
             </button>
           )}
 
-          {/* Botón Ingresar móvil - Ahora con router */}
           <button
             onClick={handleIngresarClick}
             className="w-full text-center text-white bg-white/20 hover:bg-white/30 text-lg py-3 px-4 rounded-md transition-colors duration-300 cursor-pointer"

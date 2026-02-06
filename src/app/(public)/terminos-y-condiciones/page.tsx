@@ -1,259 +1,254 @@
 export const metadata = {
   title: 'Términos y Condiciones | Foo Talent Group',
   description:
-    'Términos y Condiciones de uso de la plataforma de Foo Talent Group E.I.R.L.',
+    'Términos y Condiciones de uso de la plataforma educativa Foo Talent Group.',
 }
-
-const TERMS_VERSION = '2026-01-19'
+import Link from "next/link";
+const LAST_UPDATE = '25 de enero de 2026'
 
 export default function TermsAndConditionsPage() {
   return (
-    <main className="min-h-screen px-4 py-10">
-      {/* Background oscuro con gradientes */}
-      <div className="pointer-events-none fixed inset-0 -z-10 bg-black">
+    <main className="min-h-screen bg-black text-white">
+      {/* Background sutil */}
+      <div className="pointer-events-none fixed inset-0 -z-10">
         <div className="absolute inset-0 bg-gradient-to-b from-black via-[#0a0a0a] to-black" />
-        <div className="absolute -top-32 -left-40 h-[420px] w-[420px] rounded-full bg-emerald-500/10 blur-3xl" />
-        <div className="absolute -bottom-40 -right-40 h-[520px] w-[520px] rounded-full bg-emerald-500/10 blur-3xl" />
+        <div className="absolute top-0 left-1/2 h-[500px] w-[500px] -translate-x-1/2 rounded-full bg-[#00CCA4]/10 blur-3xl" />
       </div>
 
-      <div className="mx-auto w-full max-w-4xl">
-        <header className="rounded-2xl border border-emerald-400/20 bg-white/5 p-6 backdrop-blur-xl shadow-[0_0_0_1px_rgba(0,204,164,0.12),0_20px_60px_rgba(0,0,0,0.65)]">
-          <h1 className="text-3xl font-semibold text-white">
-            Términos y Condiciones
+      <div className="mx-auto w-full max-w-4xl px-6 py-16">
+        {/* HEADER LEGAL */}
+        <header className="mb-12 border-b border-white/10 pb-8">
+          <h1 className="text-4xl font-semibold tracking-tight">
+            Términos y Condiciones de Uso
           </h1>
 
-          <p className="mt-2 text-white/70">
-            Estos Términos y Condiciones regulan el acceso y uso de la
-            plataforma de{' '}
-            <span className="text-white">Foo Talent Group E.I.R.L.</span> (en
-            adelante, “FTG”, “nosotros” o “la Empresa”).
+          <p className="mt-3 text-white/60">
+            Foo Talent Group (FTG)
           </p>
 
-          <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-            <div className="text-sm text-white/60">
-              <span className="text-white/80">Versión:</span> {TERMS_VERSION}
-              <span className="mx-2 text-white/30">•</span>
-              <span className="text-white/80">Última actualización:</span>{' '}
-              {TERMS_VERSION}
-            </div>
+          <div className="mt-4 text-sm text-white/50">
+            Última actualización: {LAST_UPDATE}
+          </div>
 
-            <div className="flex flex-col gap-2 sm:flex-row">
-              <a
-                href="/legal/FTG_Terminos_y_Condiciones.pdf"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center justify-center rounded-xl bg-emerald-500 px-4 py-2.5 font-semibold text-black hover:bg-emerald-400"
-              >
-                Descargar PDF
-              </a>
+          {/* Botones */}
+          <div className="mt-6 flex flex-wrap gap-3">
+            <a
+              href="/legal/FTG_Terminos_y_Condiciones.pdf"
+              target="_blank"
+              className="rounded-lg bg-[#00CCA4] px-5 py-2.5 font-semibold text-black hover:bg-[#00bfa0] transition"
+            >
+              Descargar PDF
+            </a>
 
-              <a
-                href="/registro"
-                className="inline-flex items-center justify-center rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 font-semibold text-white hover:bg-white/10"
-              >
-                Volver al registro
-              </a>
-            </div>
+            <Link
+              href="/"
+              className="rounded-lg border border-white/15 px-5 py-2.5 text-white/80 hover:bg-white/5 transition"
+            >
+              Volver al sitio
+            </Link>
           </div>
         </header>
 
-        <section className="mt-6 space-y-4">
-          <article className="rounded-2xl border border-white/10 bg-white/5 p-6 text-white/80">
-            <h2 className="text-xl font-semibold text-white">
-              1. Aceptación de los términos
+        {/* CUERPO LEGAL */}
+        <section className="space-y-10 text-[15px] leading-7 text-white/80">
+
+          {/* 1 */}
+          <article>
+            <h2 className="text-xl font-semibold text-white mb-3">
+              1. Aceptación
             </h2>
-            <p className="mt-2">
-              Al registrarte, acceder o utilizar la plataforma de FTG, declaras
-              haber leído y aceptado estos Términos y Condiciones, así como
-              nuestra política de privacidad (si aplica). Si no estás de
-              acuerdo, debes abstenerte de utilizar la plataforma.
+            <p>
+              Al crear una cuenta, registrarte o utilizar la plataforma,
+              servicios o contenidos de Foo Talent Group (FTG), aceptas estos
+              Términos y Condiciones en su totalidad. Si no estás de acuerdo con
+              cualquiera de sus disposiciones, debes abstenerte de utilizar la
+              Plataforma.
             </p>
           </article>
 
-          <article className="rounded-2xl border border-white/10 bg-white/5 p-6 text-white/80">
-            <h2 className="text-xl font-semibold text-white">
-              2. Servicios y finalidad de la plataforma
+          {/* 2 */}
+          <article>
+            <h2 className="text-xl font-semibold text-white mb-3">
+              2. Elegibilidad y Cuenta de Usuario
             </h2>
-            <p className="mt-2">
-              FTG ofrece una plataforma educativa para gestionar programas de
-              formación, inscripción a iniciativas como Smart Projects,
-              seguimiento de perfil educativo, acceso a contenidos, comunicación
-              con el equipo y gestión administrativa asociada.
+            <p>
+              El servicio está dirigido a personas mayores de 18 años. Al
+              registrarte declaras tener capacidad legal para contratar.
             </p>
             <p className="mt-3">
-              La plataforma puede incluir módulos y funcionalidades que cambien
-              con el tiempo (nuevas rutas, roles, herramientas, integraciones o
-              contenidos), manteniendo el objetivo de soporte educativo y
-              organizativo.
-            </p>
-          </article>
-
-          <article className="rounded-2xl border border-white/10 bg-white/5 p-6 text-white/80">
-            <h2 className="text-xl font-semibold text-white">
-              3. Registro, cuenta y veracidad de datos
-            </h2>
-            <p className="mt-2">
-              Para crear una cuenta es posible que solicitemos datos personales
-              y de contacto (por ejemplo: nombre, apellido, país de residencia,
-              documento de identidad, número de WhatsApp, email, LinkedIn u
-              otros). Te comprometes a proporcionar información veraz, actual y
-              completa.
+              Para usuarios menores de 18 años, se requerirá consentimiento
+              expreso de un tutor legal, quien será responsable del cumplimiento
+              de estos términos.
             </p>
             <p className="mt-3">
-              Eres responsable de mantener la confidencialidad de tu contraseña
-              y de toda actividad realizada desde tu cuenta. Si sospechas un
-              acceso no autorizado, debes notificarlo de inmediato.
+              Eres responsable de mantener la confidencialidad de tus
+              credenciales y de toda actividad realizada bajo tu cuenta.
             </p>
           </article>
 
-          <article className="rounded-2xl border border-white/10 bg-white/5 p-6 text-white/80">
-            <h2 className="text-xl font-semibold text-white">
-              4. Uso permitido y conducta
+          {/* 3 */}
+          <article>
+            <h2 className="text-xl font-semibold text-white mb-3">
+              3. Objeto del Servicio
             </h2>
-            <ul className="mt-3 list-disc space-y-2 pl-5">
-              <li>
-                Usar la plataforma únicamente para fines educativos y de gestión
-                de tu participación en programas de FTG.
-              </li>
-              <li>
-                No intentar vulnerar seguridad, acceso, integridad o
-                disponibilidad del servicio (por ejemplo: scraping abusivo,
-                ataques, inyección, fuerza bruta, etc.).
-              </li>
-              <li>
-                No suplantar identidad, no falsificar datos, ni utilizar la
-                plataforma para actividades ilícitas o no autorizadas.
-              </li>
-              <li>
-                Respetar a la comunidad: conducta apropiada en comunicaciones,
-                respeto y cumplimiento de normas internas del programa.
-              </li>
+            <p>
+              FTG es una plataforma educativa que ofrece programas de formación
+              en tecnología, mentorías, comunidad y recursos educativos. Los
+              programas pueden ser gratuitos o de pago y sus condiciones
+              específicas serán informadas previamente en la página de
+              inscripción correspondiente.
+            </p>
+          </article>
+
+          {/* 4 */}
+          <article>
+            <h2 className="text-xl font-semibold text-white mb-3">
+              4. Registro y Veracidad de la Información
+            </h2>
+            <p>
+              Te comprometes a proporcionar información veraz, exacta y
+              actualizada. FTG podrá suspender cuentas con información falsa o
+              solicitar verificación adicional para prevenir fraudes.
+            </p>
+          </article>
+
+          {/* 5 */}
+          <article>
+            <h2 className="text-xl font-semibold text-white mb-3">
+              5. Propiedad Intelectual
+            </h2>
+            <p>
+              Todo el material formativo, software, diseños, logotipos, textos y
+              contenidos de FTG están protegidos por derechos de autor. Se
+              concede una licencia limitada únicamente para uso educativo dentro
+              de la Plataforma.
+            </p>
+            <p className="mt-3">
+              Los proyectos desarrollados por los usuarios seguirán siendo de su
+              propiedad intelectual, pero podrán ser utilizados por FTG para
+              promoción y mejora de servicios, siempre reconociendo la autoría.
+            </p>
+          </article>
+
+          {/* 6 */}
+          <article>
+            <h2 className="text-xl font-semibold text-white mb-3">
+              6. Normas de Conducta
+            </h2>
+            <ul className="list-disc pl-6 space-y-2">
+              <li>Acoso o intimidación hacia otros usuarios o staff.</li>
+              <li>Suplantación de identidad.</li>
+              <li>Spam o publicidad no autorizada.</li>
+              <li>Contenido ilegal o que infrinja derechos de terceros.</li>
+              <li>Intentos de vulnerar la seguridad de la plataforma.</li>
             </ul>
+            <p className="mt-3">
+              FTG podrá suspender cuentas que incumplan estas normas.
+            </p>
           </article>
 
-          <article className="rounded-2xl border border-white/10 bg-white/5 p-6 text-white/80">
-            <h2 className="text-xl font-semibold text-white">
-              5. Pagos, inscripciones y programas
+          {/* 7 */}
+          <article>
+            <h2 className="text-xl font-semibold text-white mb-3">
+              7. Programas de Pago y Reembolsos
             </h2>
-            <p className="mt-2">
-              Algunos programas pueden ser gratuitos, de pago, o requerir un
-              pago posterior a la inscripción. Las condiciones específicas
-              (precio, formas de pago, fechas, política de reembolso,
-              requisitos) serán informadas en cada programa o convocatoria.
+            <p>
+              Los precios serán informados previamente. Ofrecemos reembolso
+              dentro de los primeros 7 días calendario desde el inicio del
+              programa siempre que no se haya consumido más del 8% del contenido.
             </p>
             <p className="mt-3">
-              FTG puede solicitar validaciones adicionales para confirmar
-              inscripción, identidad o cumplimiento de requisitos del programa.
+              Solicitudes: contacto@footalentgroup.com
             </p>
           </article>
 
-          <article className="rounded-2xl border border-white/10 bg-white/5 p-6 text-white/80">
-            <h2 className="text-xl font-semibold text-white">
-              6. Propiedad intelectual
+          {/* 8 */}
+          <article>
+            <h2 className="text-xl font-semibold text-white mb-3">
+              8. Certificaciones
             </h2>
-            <p className="mt-2">
-              Los contenidos, recursos, materiales, marcas, diseño y software de
-              la plataforma pertenecen a FTG o a sus licenciantes. No se permite
-              copiar, redistribuir, vender o explotar comercialmente el
-              contenido sin autorización escrita.
+            <p>
+              La emisión de certificados está sujeta al cumplimiento de los
+              requisitos académicos y de conducta establecidos por FTG.
             </p>
           </article>
 
-          <article className="rounded-2xl border border-white/10 bg-white/5 p-6 text-white/80">
-            <h2 className="text-xl font-semibold text-white">
-              7. Tratamiento de datos y comunicaciones
+          {/* 9 */}
+          <article>
+            <h2 className="text-xl font-semibold text-white mb-3">
+              9. Limitación de Responsabilidad
             </h2>
-
-            <div className="mt-3 rounded-xl border border-emerald-400/20 bg-emerald-400/10 px-4 py-3 text-sm text-white/85">
-              <span className="font-medium text-emerald-300">Importante:</span>{' '}
-              Al registrarte, autorizas a FTG a usar tus datos de contacto para
-              comunicaciones organizativas y, adicionalmente, para enviarte
-              novedades y publicidad sobre nuevos programas, convocatorias o
-              beneficios.
-            </div>
-
-            <p className="mt-3">Los datos se utilizan principalmente para:</p>
-            <ul className="mt-2 list-disc space-y-2 pl-5">
-              <li>
-                Gestión del perfil educativo y participación en programas
-                (inscripción, seguimiento, certificaciones, coordinación).
-              </li>
-              <li>
-                Canales de comunicación (email, WhatsApp u otros) para soporte,
-                recordatorios y coordinación del programa.
-              </li>
-              <li>
-                Envío de comunicaciones comerciales/publicitarias relacionadas
-                con FTG (por ejemplo: nuevos programas, eventos, becas,
-                oportunidades).
-              </li>
-            </ul>
-
-            <p className="mt-3">
-              Podrás solicitar la baja de comunicaciones promocionales mediante
-              el enlace de desuscripción en emails o contactándonos por los
-              canales oficiales indicados por FTG.
-            </p>
-          </article>
-
-          <article className="rounded-2xl border border-white/10 bg-white/5 p-6 text-white/80">
-            <h2 className="text-xl font-semibold text-white">
-              8. Suspensión o cierre de cuentas
-            </h2>
-            <p className="mt-2">
-              FTG puede suspender o cancelar cuentas que incumplan estos
-              términos, que representen riesgo de seguridad, fraude, abuso o uso
-              no autorizado. También puedes solicitar el cierre de tu cuenta.
-            </p>
-          </article>
-
-          <article className="rounded-2xl border border-white/10 bg-white/5 p-6 text-white/80">
-            <h2 className="text-xl font-semibold text-white">
-              9. Disponibilidad, cambios y limitación de responsabilidad
-            </h2>
-            <p className="mt-2">
-              La plataforma se ofrece “tal cual” y puede presentar
-              interrupciones por mantenimiento, mejoras, cambios técnicos o
-              incidentes. FTG no garantiza disponibilidad ininterrumpida.
+            <p>
+              La plataforma se ofrece tal cual. FTG no garantiza resultados de empleo ni ingresos derivados de los programas.
             </p>
             <p className="mt-3">
-              En la medida permitida por ley, FTG no será responsable por daños
-              indirectos, pérdida de datos, pérdida de oportunidades u otros
-              perjuicios derivados del uso o imposibilidad de uso del servicio.
+              No seremos responsables por daños indirectos, pérdida de datos o
+              lucro cesante derivados del uso de la plataforma.
             </p>
           </article>
 
-          <article className="rounded-2xl border border-white/10 bg-white/5 p-6 text-white/80">
-            <h2 className="text-xl font-semibold text-white">
-              10. Modificaciones de los términos
+          {/* 10 */}
+          <article>
+            <h2 className="text-xl font-semibold text-white mb-3">
+              10. Modificaciones
             </h2>
-            <p className="mt-2">
-              FTG puede actualizar estos términos. Cuando existan cambios
-              relevantes, podremos notificarlo por la plataforma o por email. La
-              versión vigente estará publicada en esta página.
+            <p>
+              FTG puede actualizar estos términos. Los cambios relevantes serán
+              notificados con al menos 15 días de anticipación.
             </p>
           </article>
 
-          <article className="rounded-2xl border border-white/10 bg-white/5 p-6 text-white/80">
-            <h2 className="text-xl font-semibold text-white">11. Contacto</h2>
-            <p className="mt-2">
-              Para consultas sobre estos términos o sobre el uso de la
-              plataforma, podrás contactar a FTG por los canales oficiales
-              publicados en nuestro sitio y comunicaciones.
+          {/* 11 */}
+          <article>
+            <h2 className="text-xl font-semibold text-white mb-3">
+              11. Privacidad
+            </h2>
+            <p>
+              El tratamiento de datos personales se rige por nuestra Política de
+              Privacidad, que forma parte integral de estos términos.
             </p>
           </article>
 
-          <footer className="rounded-2xl border border-white/10 bg-white/5 p-6 text-white/70">
-            <p className="text-sm">
-              <span className="text-white/80">Razón social:</span> Foo Talent
-              Group E.I.R.L.
+          {/* 12 */}
+          <article>
+            <h2 className="text-xl font-semibold text-white mb-3">
+              12. Terminación
+            </h2>
+            <p>
+              FTG podrá suspender o cancelar cuentas que incumplan estos
+              términos. El usuario puede solicitar la baja en cualquier momento.
             </p>
-            <p className="mt-1 text-sm">
-              <span className="text-white/80">Versión de términos:</span>{' '}
-              {TERMS_VERSION}
+          </article>
+
+          {/* 13 */}
+          <article>
+            <h2 className="text-xl font-semibold text-white mb-3">
+              13. Ley Aplicable
+            </h2>
+            <p>
+              Estos términos se rigen por las leyes de la República del Perú.
+              Cualquier controversia será resuelta por los tribunales de El
+              Tambo, Huancayo.
             </p>
-          </footer>
+          </article>
+
+          {/* 14 */}
+          <article>
+            <h2 className="text-xl font-semibold text-white mb-3">
+              14. Contacto
+            </h2>
+            <p>Email legal: contacto@footalentgroup.com</p>
+            <p className="mt-2">
+              Dirección: Av. 26 de julio N° 4272 - Huancayo - Perú
+            </p>
+          </article>
         </section>
+
+        {/* FOOTER LEGAL */}
+        <div className="mt-16 border-t border-white/10 pt-6 text-sm text-white/40">
+          © {new Date().getFullYear()} Foo Talent Group. Documento legal
+          oficial.
+        </div>
       </div>
     </main>
   )

@@ -26,10 +26,9 @@ const ConnectSection: React.FC = () => {
             Tu puente entre <br />
             la formación y <br />
             <span className="relative inline-block text-[#E7E51A]">
-              la industria
+              la industria.
               <span className="absolute left-0 -bottom-1 h-1 w-full bg-[#E7E51A]/80 rounded-full" />
             </span>
-            .
           </h1>
 
           {/* Description */}
