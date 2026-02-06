@@ -6,7 +6,6 @@ import { usePathname, useRouter } from 'next/navigation'
 import { FaBars, FaTimes } from 'react-icons/fa'
 import { FiUsers } from 'react-icons/fi'
 
-
 interface NavbarProperties {
   logoSrc: string
   logoAlt: string
@@ -28,7 +27,8 @@ export default function Navbar({ logoSrc, logoAlt }: NavbarProperties) {
   const router = useRouter()
 
   // Verificar si estamos en una ruta de programa activo
-  const isProgramActive = pathname?.startsWith('/programas/') && pathname !== '/programas'
+  const isProgramActive =
+    pathname?.startsWith('/programas/') && pathname !== '/programas'
 
   // 🔒 Bloquear scroll cuando el menú está abierto
   useEffect(() => {
@@ -65,8 +65,6 @@ export default function Navbar({ logoSrc, logoAlt }: NavbarProperties) {
 
       {/* Botones desktop */}
       <div className="hidden md:flex items-center gap-4">
-
-
         {/* Botón Ingresar */}
         <button
           onClick={handleIngresarClick}
@@ -77,8 +75,10 @@ export default function Navbar({ logoSrc, logoAlt }: NavbarProperties) {
 
         {/* Botón Postular (condicional) */}
         {isProgramActive && (
-          <button className="bg-[#00CCA4] hover:bg-[#00D3D3] cursor-pointer text-black font-semibold px-5 py-2.5 rounded-md transition-colors duration-300 shadow-md hover:shadow-lg"
-          onClick={()=>router.push('/ingresar')}>
+          <button
+            className="bg-[#00CCA4] hover:bg-[#00D3D3] cursor-pointer text-black font-semibold px-5 py-2.5 rounded-md transition-colors duration-300 shadow-md hover:shadow-lg"
+            onClick={() => router.push('/ingresar')}
+          >
             Postular
           </button>
         )}

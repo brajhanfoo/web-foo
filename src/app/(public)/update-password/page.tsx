@@ -155,7 +155,9 @@ export default function UpdatePasswordPage() {
                   const next = e.target.value
                   setPassword2(next)
                   setConfirmPasswordError(
-                    next && next !== password ? 'Las contraseñas no coinciden.' : null
+                    next && next !== password
+                      ? 'Las contraseñas no coinciden.'
+                      : null
                   )
                 }}
                 placeholder="••••••••"

@@ -1,8 +1,8 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { MdOutlineBugReport, MdCode } from "react-icons/md";
-import IdentifyUserType from './IdentifyUserType';
+import { MdOutlineBugReport, MdCode } from 'react-icons/md'
+import IdentifyUserType from './IdentifyUserType'
 
 const ConnectSection: React.FC = () => {
   const router = useRouter()
@@ -28,21 +28,29 @@ const ConnectSection: React.FC = () => {
             <span className="relative inline-block text-[#E7E51A]">
               la industria
               <span className="absolute left-0 -bottom-1 h-1 w-full bg-[#E7E51A]/80 rounded-full" />
-            </span>.
+            </span>
+            .
           </h1>
 
           {/* Description */}
           <p className="text-neutral-400 text-sm md:text-base max-w-xl mb-10 leading-relaxed">
-            <span className="text-neutral-500 font-mono"> </span> {'//'} Deja de hacer tutoriales.
+            <span className="text-neutral-500 font-mono"> </span> {'//'} Deja de
+            hacer tutoriales.
             <br />
-            <span className=' text-neutral-100'> Entrena en equipos reales</span>
-            , con plazos reales y metodologías de industria.
-            Potencia tu <span className="text-[#00CCA4]">perfil</span> antes de saltar al
+            <span className=" text-neutral-100">
+              {' '}
+              Entrena en equipos reales
+            </span>
+            , con plazos reales y metodologías de industria. Potencia tu{' '}
+            <span className="text-[#00CCA4]">perfil</span> antes de saltar al
             mercado laboral.
           </p>
 
           {/* CTA */}
-          <button className="inline-flex items-center gap-3 rounded-sm bg-[#00CCA4]/90 hover:bg-[#00CCA4] cursor-pointer transition px-6 py-3 text-sm font-semibold text-black"  onClick={() => router.push("/programas")}>
+          <button
+            className="inline-flex items-center gap-3 rounded-sm bg-[#00CCA4]/90 hover:bg-[#00CCA4] cursor-pointer transition px-6 py-3 text-sm font-semibold text-black"
+            onClick={() => router.push('/programas')}
+          >
             Inicia tu Camino
             <span className="text-lg">➜</span>
           </button>
@@ -83,8 +91,15 @@ const ConnectSection: React.FC = () => {
                   <span>v2.4</span>
                 </div>
                 <ul className="space-y-2 text-neutral-300">
-                  <li className=' flex items-center gap-2'> <MdOutlineBugReport className="text-[#E7E51A]" /> Fix API Latency</li>
-                  <li className=' flex items-center gap-2'> <MdCode className="text-[#00D3D3]" /> Refactor Core</li>
+                  <li className=" flex items-center gap-2">
+                    {' '}
+                    <MdOutlineBugReport className="text-[#E7E51A]" /> Fix API
+                    Latency
+                  </li>
+                  <li className=" flex items-center gap-2">
+                    {' '}
+                    <MdCode className="text-[#00D3D3]" /> Refactor Core
+                  </li>
                 </ul>
               </div>
 
@@ -97,17 +112,18 @@ const ConnectSection: React.FC = () => {
 
               {/* Terminal */}
               <div className="text-xs text-neutral-400">
-                <div>&gt; <span className=' text-[#780B90]'>~/projects </span> npm run dev</div>
-                <div className=' flex gap-1.5'>
-                  <div>✓ ready in</div>                  
+                <div>
+                  &gt; <span className=" text-[#780B90]">~/projects </span> npm
+                  run dev
+                </div>
+                <div className=" flex gap-1.5">
+                  <div>✓ ready in</div>
                   <div className="text-[#E7E51A]"> 124ms</div>
                 </div>
 
                 <div>
-                  local:{" "}
-                  <span className="text-[#00CCA4]">
-                    http://localhost:3000
-                  </span>
+                  local:{' '}
+                  <span className="text-[#00CCA4]">http://localhost:3000</span>
                 </div>
               </div>
             </div>
@@ -115,8 +131,7 @@ const ConnectSection: React.FC = () => {
         </div>
       </div>
 
-    <IdentifyUserType />
-
+      <IdentifyUserType />
     </section>
   )
 }

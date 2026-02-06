@@ -1,4 +1,4 @@
-import { FaCode, FaBuilding } from "react-icons/fa";
+import { FaCode, FaBuilding } from 'react-icons/fa'
 import { useRouter } from 'next/navigation'
 
 export default function IdentifyUserType() {
@@ -34,7 +34,10 @@ export default function IdentifyUserType() {
             </p>
 
             {/* CTA */}
-            <button className="relative z-10 w-full rounded-xl bg-[#00CCA4]/90 hover:bg-[#00CCA4] cursor-pointer transition py-3 text-sm font-semibold text-black" onClick={()=> router.push('/programas')}>
+            <button
+              className="relative z-10 w-full rounded-xl bg-[#00CCA4]/90 hover:bg-[#00CCA4] cursor-pointer transition py-3 text-sm font-semibold text-black"
+              onClick={() => router.push('/programas')}
+            >
               Ver Programas
             </button>
           </div>
@@ -59,12 +62,15 @@ export default function IdentifyUserType() {
             </p>
 
             {/* CTA */}
-            <button className="relative z-10 w-full rounded-xl bg-[#780B90]/90 hover:bg-[#780B90] cursor-pointer transition py-3 text-sm font-semibold text-white" onClick={()=> router.push('/servicios')}>
+            <button
+              className="relative z-10 w-full rounded-xl bg-[#780B90]/90 hover:bg-[#780B90] cursor-pointer transition py-3 text-sm font-semibold text-white"
+              onClick={() => router.push('/servicios')}
+            >
               Ver Soluciones
             </button>
           </div>
         </div>
       </div>
     </section>
-  );
+  )
 }

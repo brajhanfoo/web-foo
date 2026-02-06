@@ -1,4 +1,4 @@
-import React from "react";
+import React from 'react'
 
 const AboutProjectAcademySection: React.FC = () => {
   return (
@@ -15,15 +15,19 @@ const AboutProjectAcademySection: React.FC = () => {
           <div>
             {/* Badge */}
             <span className="mb-6 inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-1 text-xs uppercase tracking-widest text-[#BDBE0B] font-bold">
-            <span className="h-2 w-2 rounded-full bg-[#BDBE0B]" />
+              <span className="h-2 w-2 rounded-full bg-[#BDBE0B]" />
               Qué es Project Academy
             </span>
 
             {/* Title */}
             <h2 className="text-4xl font-extrabold leading-none tracking-tight sm:text-5xl">
-              Formación profesional aplicada para{" "}
-              <span className="inline-block bg-gradient-to-r from-[#D85DFB] to-[#77039F]
-               bg-clip-text text-transparent">Digital Product Developers</span>
+              Formación profesional aplicada para{' '}
+              <span
+                className="inline-block bg-gradient-to-r from-[#D85DFB] to-[#77039F]
+               bg-clip-text text-transparent"
+              >
+                Digital Product Developers
+              </span>
             </h2>
 
             {/* Description */}
@@ -100,14 +104,14 @@ const AboutProjectAcademySection: React.FC = () => {
         </div>
       </div>
     </section>
-  );
-};
+  )
+}
 
 type ValueCardProps = {
-  title: string;
-  description: string;
-  accent: "violet" | "emerald";
-};
+  title: string
+  description: string
+  accent: 'violet' | 'emerald'
+}
 
 const ValueCard: React.FC<ValueCardProps> = ({
   title,
@@ -115,9 +119,9 @@ const ValueCard: React.FC<ValueCardProps> = ({
   accent,
 }) => {
   const accentMap = {
-    violet: "text-[#D85DFB]",
-    emerald: "text-[#00CCA4]",
-  };
+    violet: 'text-[#D85DFB]',
+    emerald: 'text-[#00CCA4]',
+  }
 
   return (
     <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
@@ -127,19 +131,19 @@ const ValueCard: React.FC<ValueCardProps> = ({
       <p className="mt-2 text-sm text-white/70">{description}</p>
       <div
         className={`mt-4 h-1 w-10 rounded-full ${
-          accent === "violet" ? "bg-[#D85DFB]" : "bg-[#00CCA4]"
+          accent === 'violet' ? 'bg-[#D85DFB]' : 'bg-[#00CCA4]'
         }`}
       />
     </div>
-  );
-};
+  )
+}
 
 type SprintItemProps = {
-  title: string;
-  description: string;
-  status: "In Progress" | "Pending";
-  accent: "violet" | "emerald" | "cyan";
-};
+  title: string
+  description: string
+  status: 'In Progress' | 'Pending'
+  accent: 'violet' | 'emerald' | 'cyan'
+}
 
 const SprintItem: React.FC<SprintItemProps> = ({
   title,
@@ -148,17 +152,15 @@ const SprintItem: React.FC<SprintItemProps> = ({
   accent,
 }) => {
   const accentDot = {
-    violet: "bg-[#77039F]",
-    emerald: "bg-[#00CCA4]",
-    cyan: "bg-[#D85DFB]",
-  };
+    violet: 'bg-[#77039F]',
+    emerald: 'bg-[#00CCA4]',
+    cyan: 'bg-[#D85DFB]',
+  }
 
   return (
     <div className="flex items-center justify-between rounded-xl border border-white/10 bg-black/40 p-4">
       <div className="flex items-start gap-3">
-        <span
-          className={`mt-1 h-3 w-3 rounded-full ${accentDot[accent]}`}
-        />
+        <span className={`mt-1 h-3 w-3 rounded-full ${accentDot[accent]}`} />
         <div>
           <p className="text-sm font-semibold">{title}</p>
           <p className="text-xs text-white/60">{description}</p>
@@ -166,15 +168,13 @@ const SprintItem: React.FC<SprintItemProps> = ({
       </div>
       <span
         className={`text-xs ${
-          status === "In Progress"
-            ? "text-[#BDBE0B]"
-            : "text-white/40"
+          status === 'In Progress' ? 'text-[#BDBE0B]' : 'text-white/40'
         }`}
       >
         {status}
       </span>
     </div>
-  );
-};
+  )
+}
 
-export default AboutProjectAcademySection;
+export default AboutProjectAcademySection

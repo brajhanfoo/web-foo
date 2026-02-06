@@ -38,9 +38,9 @@ export function RegisterForm() {
 
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [passwordError, setPasswordError] = useState<string | null>(null)
-  const [confirmPasswordError, setConfirmPasswordError] = useState<string | null>(
-    null
-  )
+  const [confirmPasswordError, setConfirmPasswordError] = useState<
+    string | null
+  >(null)
 
   function updateRegisterFormField<K extends keyof RegisterFormState>(
     fieldName: K,
@@ -210,7 +210,6 @@ export function RegisterForm() {
             {confirmPasswordError ? (
               <p className="text-xs text-red-400">{confirmPasswordError}</p>
             ) : null}
-
 
             <label className="flex items-start gap-2 text-sm text-white/70">
               <input

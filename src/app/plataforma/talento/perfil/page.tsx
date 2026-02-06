@@ -532,7 +532,9 @@ export default function AdminSettingsPage() {
                               )
                             }}
                             className={`bg-black/30 text-white placeholder:text-white/30 ${
-                              passwordError ? 'border-red-500/70' : 'border-white/10'
+                              passwordError
+                                ? 'border-red-500/70'
+                                : 'border-white/10'
                             }`}
                             placeholder="********"
                           />

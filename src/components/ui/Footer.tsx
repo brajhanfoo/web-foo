@@ -58,7 +58,8 @@ export default function Footer() {
         <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-sm">
           {/* Copyright */}
           <p className="text-white/60 text-center md:text-left">
-            © {new Date().getFullYear()} Foo Talent Group. Todos los derechos reservados.
+            © {new Date().getFullYear()} Foo Talent Group. Todos los derechos
+            reservados.
           </p>
 
           {/* Links legales */}
@@ -79,4 +80,3 @@ export default function Footer() {
     </footer>
   )
 }
-

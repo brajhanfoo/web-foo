@@ -51,15 +51,15 @@ export const PROGRAM_SPECS: Record<string, ProgramRenderSpec> = {
     sections: [
       <div key="placeholder" className="px-6 md:py-16 text-white">
         <HeroProjectAcademy />
-        <IsThisProgramForYou/>
+        <IsThisProgramForYou />
         <AboutProjectAcademySection />
         <RealWorldProductSection />
         <ProgramStructureAccordion />
-        <TracksSection/>
-        <SolutionDefinitionSection/>
-        <AgileRitualsSection/>
-        <MentorshipSection/>
-        <CareerIntensiveSection/>
+        <TracksSection />
+        <SolutionDefinitionSection />
+        <AgileRitualsSection />
+        <MentorshipSection />
+        <CareerIntensiveSection />
         <EvaluationCertificationSection />
         <CareerOutcomeSection />
         <LaunchInvestmentSection />

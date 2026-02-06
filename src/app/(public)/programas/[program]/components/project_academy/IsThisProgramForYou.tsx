@@ -1,4 +1,4 @@
-import { FaCheck } from "react-icons/fa6";
+import { FaCheck } from 'react-icons/fa6'
 
 const IsThisProgramForYou: React.FC = () => {
   return (
@@ -16,10 +16,10 @@ const IsThisProgramForYou: React.FC = () => {
             title="ES PARA TI SI..."
             accent="emerald"
             items={[
-              "Has finalizado algún curso de PM/BA/UX/Dev/QA & No-code",
-              "Tienes compromiso de 12 semanas intensivas",
-              "Buscas experiencia real, no solo clases",
-              "Quieres saltar a roles de producto",
+              'Has finalizado algún curso de PM/BA/UX/Dev/QA & No-code',
+              'Tienes compromiso de 12 semanas intensivas',
+              'Buscas experiencia real, no solo clases',
+              'Quieres saltar a roles de producto',
             ]}
           />
 
@@ -28,23 +28,23 @@ const IsThisProgramForYou: React.FC = () => {
             title="NO ES PARA TI SI..."
             accent="violet"
             items={[
-              "Quieres aprender desde cero",
-              "Buscas solo contenido grabado",
-              "No te gusta trabajar en equipo",
-              "Evitas retroalimentación directa o exigente",
+              'Quieres aprender desde cero',
+              'Buscas solo contenido grabado',
+              'No te gusta trabajar en equipo',
+              'Evitas retroalimentación directa o exigente',
             ]}
           />
         </div>
       </div>
     </section>
-  );
-};
+  )
+}
 
 type DecisionCardProps = {
-  title: string;
-  items: string[];
-  accent: "emerald" | "violet";
-};
+  title: string
+  items: string[]
+  accent: 'emerald' | 'violet'
+}
 
 const DecisionCard: React.FC<DecisionCardProps> = ({
   title,
@@ -53,20 +53,20 @@ const DecisionCard: React.FC<DecisionCardProps> = ({
 }) => {
   const accentStyles = {
     emerald: {
-      border: "border-[#FFFFFF]/10",
-      bg: "bg-[#161616]/40",
-      icon: "bg-[#00CCA4]/10 text-[#00CCA4]",
-      dot: "bg-[#00CCA4]",
+      border: 'border-[#FFFFFF]/10',
+      bg: 'bg-[#161616]/40',
+      icon: 'bg-[#00CCA4]/10 text-[#00CCA4]',
+      dot: 'bg-[#00CCA4]',
     },
     violet: {
-      border: "border-[#FFFFFF]/10",
-      bg: "bg-[#161616]/40",
-      icon: "bg-[#77039F]/10 text-[#77039F]",
-      dot: "bg-[#77039F]",
+      border: 'border-[#FFFFFF]/10',
+      bg: 'bg-[#161616]/40',
+      icon: 'bg-[#77039F]/10 text-[#77039F]',
+      dot: 'bg-[#77039F]',
     },
-  };
+  }
 
-  const styles = accentStyles[accent];
+  const styles = accentStyles[accent]
 
   return (
     <div
@@ -77,7 +77,7 @@ const DecisionCard: React.FC<DecisionCardProps> = ({
         <span
           className={`flex h-8 w-8 items-center justify-center rounded-sm text-sm font-bold ${styles.icon}`}
         >
-          {accent === "emerald" ? <FaCheck /> : "✕"}
+          {accent === 'emerald' ? <FaCheck /> : '✕'}
         </span>
         <h3 className="text-sm font-semibold uppercase tracking-wider text-white/80">
           {title}
@@ -96,7 +96,7 @@ const DecisionCard: React.FC<DecisionCardProps> = ({
         ))}
       </ul>
     </div>
-  );
-};
+  )
+}
 
-export default IsThisProgramForYou;
+export default IsThisProgramForYou

@@ -1,7 +1,7 @@
 'use client'
-import { RiUserSearchLine } from "react-icons/ri";
-import { HiOutlineRocketLaunch } from "react-icons/hi2";
-import { AiOutlineCheckCircle } from "react-icons/ai";
+import { RiUserSearchLine } from 'react-icons/ri'
+import { HiOutlineRocketLaunch } from 'react-icons/hi2'
+import { AiOutlineCheckCircle } from 'react-icons/ai'
 
 const Hero = () => {
   return (
@@ -19,17 +19,15 @@ const Hero = () => {
 
         {/* Headline */}
         <h1 className="text-center text-4xl md:text-6xl font-bold leading-tight">
-          Encuentra el Talento que construye{" "}
+          Encuentra el Talento que construye{' '}
           <span className="text-[#780B90]">Productos Reales</span>.
         </h1>
 
         {/* Subtitle */}
         <p className="mt-6 max-w-3xl mx-auto text-center text-gray-400">
-          Accede a perfiles validados técnicamente en entornos de simulación real o
-          patrocina un proyecto de innovación con nuestros Squads.
+          Accede a perfiles validados técnicamente en entornos de simulación
+          real o patrocina un proyecto de innovación con nuestros Squads.
         </p>
-
-
       </div>
 
       {/* Cards */}
@@ -90,7 +88,6 @@ const Hero = () => {
               SOLICITAR INFORMACIÓN ↓
             </button>
           </div>
-
         </div>
 
         {/* Card: Patrocinio de Retos */}
@@ -100,7 +97,9 @@ const Hero = () => {
 
           {/* Icono */}
           <div className="relative z-10 mb-8 flex h-12 w-12 items-center justify-center rounded-xl bg-purple-500/10 border border-purple-400/20">
-            <span className="text-[#780B90]  text-xl"><HiOutlineRocketLaunch /></span>
+            <span className="text-[#780B90]  text-xl">
+              <HiOutlineRocketLaunch />
+            </span>
           </div>
 
           {/* Título */}
@@ -111,25 +110,26 @@ const Hero = () => {
           {/* Descripción */}
           <p className="relative z-10 text-sm leading-relaxed text-neutral-400 mb-8 max-w-md">
             Trae un problema real de tu empresa y deja que un Squad
-            multidisciplinario construya una solución innovadora en tiempo récord.
+            multidisciplinario construya una solución innovadora en tiempo
+            récord.
           </p>
 
           {/* Lista */}
           <ul className="relative z-10 space-y-3 text-sm text-neutral-300 mb-14">
             <li className="flex items-center gap-3">
-                    <span className=" text-[#780B90] "> 
+              <span className=" text-[#780B90] ">
                 <AiOutlineCheckCircle />
               </span>
               Prototipos Funcionales
             </li>
             <li className="flex items-center gap-3">
-                    <span className=" text-[#780B90] "> 
+              <span className=" text-[#780B90] ">
                 <AiOutlineCheckCircle />
               </span>
               Squad Dedicado
             </li>
             <li className="flex items-center gap-3">
-                    <span className=" text-[#780B90] "> 
+              <span className=" text-[#780B90] ">
                 <AiOutlineCheckCircle />
               </span>
               Innovación Abierta
