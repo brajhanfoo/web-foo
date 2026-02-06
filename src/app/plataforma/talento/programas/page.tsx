@@ -110,7 +110,7 @@ function statusLabel(status: ProgramStatus): string {
 export default function ProgramsPage() {
   const router = useRouter()
   const toast = useToastEnhanced()
-  const { bootAuth } = useAuthStore()
+  const { bootAuth, userId, profile } = useAuthStore()
 
   const didBootReference = useRef<boolean>(false)
   const didLoadReference = useRef<boolean>(false)
@@ -233,6 +233,29 @@ export default function ProgramsPage() {
     () => 'Revisa nuestras preguntas frecuentes o contáctanos por soporte.',
     []
   )
+  async function goToPostulationOrRedirect(programSlug: string): Promise<void> {
+    // Asegura sesión lista (por si el usuario cae directo aquí)
+    if (!userId) {
+      toast.showError('Inicia sesión para postular.')
+      router.push('/ingresar')
+      return
+    }
+
+    if (!profile) {
+      toast.showError('Primero completa tu perfil para postular.')
+      router.push('/plataforma/talento/perfil')
+      return
+    }
+
+    // Si tu enum se llama distinto, ajusta aquí el string
+    if (profile.profile_status !== 'profile_complete') {
+      toast.showError('Completa tu perfil antes de postular.')
+      router.push('/plataforma/talento/perfil')
+      return
+    }
+
+    router.push(`/plataforma/talento/programas/${programSlug}/postular`)
+  }
 
   if (loading) {
     return (
@@ -304,11 +327,7 @@ export default function ProgramsPage() {
               const action = isOpen ? (
                 <Button
                   className="w-full bg-[#00CCA4] text-black hover:bg-[#00CCA4]/90"
-                  onClick={() =>
-                    router.push(
-                      `/plataforma/talento/programas/${p.slug}/postular`
-                    )
-                  }
+                  onClick={() => void goToPostulationOrRedirect(p.slug)}
                 >
                   <span className="flex-1 text-center">
                     INICIAR POSTULACIÓN

@@ -13,6 +13,8 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
+import { Check } from 'lucide-react'
+import skillsCatalog from '@/data/skills.json'
 
 type ProfileRow = {
   id: string
@@ -45,22 +47,7 @@ function buildFullName(p: ProfileRow | null) {
   return s || 'Administrador'
 }
 
-function parseSkillsCsv(input: string): string[] | null {
-  const parts = input
-    .split(',')
-    .map((s) => s.trim())
-    .filter(Boolean)
-
-  if (!parts.length) return null
-
-  // de-dup simple
-  const uniq = Array.from(new Set(parts.map((x) => x.toLowerCase())))
-  return uniq
-}
-
-function skillsToCsv(skills: string[] | null | undefined): string {
-  return Array.isArray(skills) && skills.length ? skills.join(', ') : ''
-}
+const availableSkills = skillsCatalog as string[]
 
 export default function AdminSettingsPage() {
   const { showError, showSuccess } = useToastEnhanced()
@@ -79,7 +66,7 @@ export default function AdminSettingsPage() {
   const [primaryRole, setPrimaryRole] = useState('')
   const [englishLevel, setEnglishLevel] = useState('')
   const [documentNumber, setDocumentNumber] = useState('')
-  const [skillsCsv, setSkillsCsv] = useState('')
+  const [selectedSkills, setSelectedSkills] = useState<string[]>([])
   const [otherSkills, setOtherSkills] = useState('')
   const [marketingOptIn, setMarketingOptIn] = useState(true)
 
@@ -167,7 +154,7 @@ export default function AdminSettingsPage() {
       setPrimaryRole(textOrEmpty(next?.primary_role))
       setEnglishLevel(textOrEmpty(next?.english_level))
       setDocumentNumber(textOrEmpty(next?.document_number))
-      setSkillsCsv(skillsToCsv(next?.skills ?? null))
+      setSelectedSkills(Array.isArray(next?.skills) ? next?.skills : [])
       setOtherSkills(textOrEmpty(next?.other_skills))
       setMarketingOptIn(Boolean(next?.marketing_opt_in ?? true))
 
@@ -196,7 +183,7 @@ export default function AdminSettingsPage() {
       primary_role: primaryRole.trim() || null,
       english_level: englishLevel.trim() || null,
       document_number: documentNumber.trim() || null,
-      skills: parseSkillsCsv(skillsCsv),
+      skills: selectedSkills.length ? selectedSkills : null,
       other_skills: otherSkills.trim() || null,
       marketing_opt_in: Boolean(marketingOptIn),
     }
@@ -398,14 +385,40 @@ export default function AdminSettingsPage() {
 
                       <div className="space-y-2 md:col-span-2">
                         <Label className="text-xs text-white/60">
-                          Skills (separadas por coma)
+                          Skills
                         </Label>
-                        <Input
-                          value={skillsCsv}
-                          onChange={(e) => setSkillsCsv(e.target.value)}
-                          className="bg-black/30 border-white/10 text-white placeholder:text-white/30"
-                          placeholder="react, next.js, tailwind, supabase"
-                        />
+                        <div className="flex flex-wrap gap-2">
+                          {availableSkills.map((skill) => {
+                            const isSelected = selectedSkills.includes(skill)
+                            return (
+                              <button
+                                key={skill}
+                                type="button"
+                                aria-pressed={isSelected}
+                                onClick={() =>
+                                  setSelectedSkills((prev) =>
+                                    isSelected
+                                      ? prev.filter((item) => item !== skill)
+                                      : [...prev, skill]
+                                  )
+                                }
+                                className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-medium transition ${
+                                  isSelected
+                                    ? 'border-emerald-400/50 bg-emerald-400/15 text-emerald-200'
+                                    : 'border-white/10 bg-white/5 text-white/70 hover:border-white/25'
+                                }`}
+                              >
+                                {isSelected ? (
+                                  <Check className="h-3.5 w-3.5" />
+                                ) : null}
+                                {skill}
+                              </button>
+                            )
+                          })}
+                        </div>
+                        <div className="text-xs text-white/40">
+                          Podés sumar otras en el campo de abajo.
+                        </div>
                       </div>
 
                       <div className="space-y-2 md:col-span-2">

@@ -426,19 +426,59 @@ export default function ProgramPostularPage() {
     return true
   }
 
+  async function alreadyApplied(params: {
+    applicantProfileId: string
+    programId: string
+    editionId: string | null
+  }): Promise<boolean> {
+    const { data, error } = await supabase
+      .from('applications')
+      .select('id')
+      .eq('applicant_profile_id', params.applicantProfileId)
+      .eq('program_id', params.programId)
+      .eq('edition_id', params.editionId)
+      .limit(1)
+      .maybeSingle()
+
+    if (error) return false // fallback: deja que el índice único mande
+    return Boolean(data?.id)
+  }
+
   async function handleSubmit() {
     if (!program || !form || !schema) return
     if (!userId || !profile) return
     if (!validateStep(3)) return
 
+    // Seguridad extra: aunque ya lo bloqueaste antes, aquí se mantiene por si entran directo por URL
+    if (profile.profile_status !== 'profile_complete') {
+      toast.showError('Completá tu perfil antes de postular.')
+      router.push('/plataforma/talento/perfil')
+      return
+    }
+
     setIsSubmitting(true)
+
+    const editionId: string | null = null
+
+    const exists = await alreadyApplied({
+      applicantProfileId: profile.id,
+      programId: program.id,
+      editionId,
+    })
+
+    if (exists) {
+      setIsSubmitting(false)
+      toast.showError('Ya te postulaste a este programa en esta edición.')
+      router.push(`/plataforma/talento/programas/${program.slug}`)
+      return
+    }
 
     const appliedRole = safeString(values['rol_postulado']).trim() || null
 
     const insertResponse = await supabase.from('applications').insert({
       applicant_profile_id: profile.id,
       program_id: program.id,
-      edition_id: null,
+      edition_id: editionId,
       form_id: form.id,
       applied_role: appliedRole,
       answers: values,
@@ -448,6 +488,15 @@ export default function ProgramPostularPage() {
     setIsSubmitting(false)
 
     if (insertResponse.error) {
+      const msg = safeString(insertResponse.error.message).toLowerCase()
+
+      // choque con índice único (multi-tab / carrera / doble click)
+      if (msg.includes('duplicate key')) {
+        toast.showError('Ya te postulaste a este programa en esta edición.')
+        router.push(`/plataforma/talento/programas/${program.slug}`)
+        return
+      }
+
       toast.showError(
         `No se pudo enviar. ${safeString(insertResponse.error.message)}`
       )
