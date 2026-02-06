@@ -14,29 +14,30 @@ const AboutSection: React.FC = () => {
         {/* Descripción */}
         <p className="mt-6 text-gray-300 leading-relaxed">
           Es un{' '}
-          <span className="text-purple-400 font-semibold">
+          <span className="text-[#00CCA4] font-semibold">
             programa formativo intensivo
           </span>{' '}
           de 8 semanas diseñado para enseñar habilidades prácticas en desarrollo
           de software y diseño, donde los participantes (profesionales o
           aspirantes tech de diversas áreas) trabajan en equipos
           interdisciplinarios para crear{' '}
-          <span className="text-purple-400 font-semibold">
+          <span className="text-[#77039F] font-semibold">
             productos digitales de práctica
           </span>
           . <br /> <br />
-          Durante todo el proceso se aplica una metodología guiada por mentores,
+         <span className='text-[14px]'>Durante todo el proceso se aplica una metodología guiada por mentores,
           en un entorno que simula la experiencia laboral usando herramientas de
           la industria como Figma, metodologías ágiles y buenas prácticas de
           diseño y desarrollo.
+          </span> 
         </p>
       </div>
 
       {/* Tarjetas / Cards */}
       <div className="mt-12 grid gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-3 max-w-6xl mx-auto">
         {/* Card 1 */}
-        <div className="border-2 border-purple-500 rounded-xl p-6 flex flex-col items-center text-center">
-          <FaLaptopCode className="w-10 h-10 mb-3 text-purple-500" />
+        <div className="border-2 border-[#77039F] rounded-xl p-6 flex flex-col items-center text-center">
+          <FaLaptopCode className="w-10 h-10 mb-3 text-[#77039F]" />
           <h3 className="text-lg font-bold">Simulación Real</h3>
           <p className="text-gray-400 text-sm mt-2">
             Productos de software funcionales <br /> desarrollados en 8 semanas
@@ -53,9 +54,9 @@ const AboutSection: React.FC = () => {
         </div>
 
         {/* Card 3 */}
-        <div className="border-2 border-[#DBC597] rounded-xl p-6 flex flex-col items-center text-center">
-          <FaRocket className="w-10 h-10 mb-3 text-[#E7E51A]" />
-          <h3 className="text-lg font-bold text-[#E7E51A]">Metodología Ágil</h3>
+        <div className="border-2 border-[#BDBE0B] rounded-xl p-6 flex flex-col items-center text-center">
+          <FaRocket className="w-10 h-10 mb-3 text-[#BDBE0B]" />
+          <h3 className="text-lg font-bold ">Metodología Ágil</h3>
           <p className="text-gray-400 text-sm mt-2">
             Desarrollo iterativo aplicando <br /> buenas prácticas de la
             industria
@@ -63,8 +64,8 @@ const AboutSection: React.FC = () => {
         </div>
 
         {/* Card 4 — Herramienta central */}
-        <div className="border-2 border-blue-500 rounded-xl p-6 flex flex-col items-center text-center">
-          <AiOutlineTool className="w-10 h-10 mb-3 text-blue-500" />
+        <div className="border-2 border-[#3B82F6] rounded-xl p-6 flex flex-col items-center text-center">
+          <AiOutlineTool className="w-10 h-10 mb-3 text-[#3B82F6]" />
           <h3 className="text-lg font-bold">Herramienta central</h3>
           <p className="text-gray-400 text-sm mt-2">
             Figma será la herramienta principal de diseño UI/UX, usada para
@@ -73,8 +74,8 @@ const AboutSection: React.FC = () => {
         </div>
 
         {/* Card 5 — Propósito educativo */}
-        <div className="border-2 border-green-500 rounded-xl p-6 flex flex-col items-center text-center">
-          <AiOutlineStar className="w-10 h-10 mb-3 text-green-500" />
+        <div className="border-2 border-[#4ADE80] rounded-xl p-6 flex flex-col items-center text-center">
+          <AiOutlineStar className="w-10 h-10 mb-3 text-[#4ADE80]" />
           <h3 className="text-lg font-bold">Propósito educativo</h3>
           <p className="text-gray-400 text-sm mt-2">
             Los proyectos realizados no son trabajos para clientes ni generan
@@ -87,8 +88,7 @@ const AboutSection: React.FC = () => {
           <AiOutlineBook className="w-10 h-10 mb-3 text-indigo-500" />
           <h3 className="text-lg font-bold">Estructura guiada</h3>
           <p className="text-gray-400 text-sm mt-2">
-            Cada fase del programa está planificada con sesiones, entregas y
-            mentorías, garantizando acompañamiento continuo
+            Cada fase del programa incluye sesiones de trabajo, entregas y retroalimentación, garantizando un acompañamiento continuo.
           </p>
         </div>
       </div>

@@ -4,48 +4,81 @@ import { FaUsers, FaLightbulb } from 'react-icons/fa'
 
 export default function AboutHero() {
   return (
-    <section
-      className="relative w-full h-[90vh] flex items-center justify-center text-center text-white"
-      style={{
-        backgroundImage: `url('https://images.pexels.com/photos/1015568/pexels-photo-1015568.jpeg')`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-      }}
-    >
-      {/* Overlay oscuro */}
-      <div className="absolute inset-0 bg-black/70" />
+    <section className="relative w-full min-h-[92vh] flex items-center justify-center text-center text-white overflow-hidden">
+      
+      {/* Background imagen */}
+      <div
+        className="absolute inset-0 bg-cover bg-center"
+        style={{
+          backgroundImage:
+            "url('https://images.pexels.com/photos/1015568/pexels-photo-1015568.jpeg')",
+        }}
+      />
+
+      {/* Overlay oscuro premium */}
+      <div className="absolute inset-0 bg-black/80" />
+
+      {/* Glow branding FTG */}
+      <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-[#77039F] opacity-20 blur-[140px]" />
+      <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-[#00CCA4] opacity-20 blur-[140px]" />
 
       {/* Contenido */}
-      <div className="relative z-10 max-w-3xl px-6">
-        <h1 className="text-4xl md:text-5xl font-extrabold mb-6">
-          <span className="text-[#e7e51a]">Foo Talent Group</span>
-        </h1>
-
-        <p className="text-lg md:text-xl text-gray-200 mb-8 leading-relaxed">
-          Una empresa con{' '}
-          <span className="font-semibold text-[#8e0cab] drop-shadow-lg">
-            propósito educativo
-          </span>{' '}
-          que impulsa el crecimiento de talentos en tecnología a través de{' '}
-          <span className="font-semibold text-[#e7e51a]">
-            programas gratuitos, mentoría y proyectos reales
-          </span>
-          . Nuestro modelo fomenta la colaboración, la transparencia y el
-          aprendizaje práctico, siempre orientado a la formación no comercial y
-          accesible para toda la comunidad.
+      <div className="relative z-10 max-w-4xl px-6">
+        
+        {/* Eyebrow */}
+        <p className="text-sm tracking-[0.25em] text-[#BDBE0B] mb-6 uppercase font-medium">
+          Startup EdTech · Comunidad Tech LATAM
         </p>
 
-        {/* Iconos */}
-        <div className="flex justify-center gap-8">
-          <div className="flex flex-col items-center">
-            <FaUsers className="text-4xl text-[#e7e51a] mb-2" />
-            <p className="text-sm text-gray-200">Cohortes Abiertas</p>
+        {/* Título */}
+        <h1 className="text-4xl md:text-6xl font-extrabold mb-6 leading-tight">
+          Somos{' '}
+          <span className="bg-gradient-to-r from-[#00CCA4] to-[#D85DFB] bg-clip-text text-transparent">
+            Foo Talent Group
+          </span>
+        </h1>
+
+        {/* Descripción */}
+        <p className="text-lg md:text-xl text-gray-300 mb-12 leading-relaxed">
+          Una EdTech con{' '}
+          <span className="text-white font-semibold">
+            propósito educativo real
+          </span>{' '}
+          que impulsa el crecimiento de talento en tecnología mediante{' '}
+          <span className="text-[#00CCA4] font-semibold">
+            experiencia práctica, mentoría y proyectos reales
+          </span>
+          . Construimos espacios donde desarrolladores, diseñadores, PMs y QA
+          colaboran para adquirir experiencia profesional antes de ingresar al
+          mercado laboral.
+        </p>
+
+        {/* Valores rápidos */}
+        <div className="flex flex-col sm:flex-row justify-center gap-10">
+          
+          {/* Cohortes */}
+          <div className="group bg-white/5 backdrop-blur-xl border border-white/10 hover:border-[#00CCA4]/40 transition rounded-2xl px-8 py-6">
+            <FaUsers className="text-4xl text-[#00CCA4] mb-3 mx-auto group-hover:scale-110 transition" />
+            <p className="font-semibold text-white">Cohortes abiertas</p>
+            <p className="text-sm text-gray-400 mt-1">
+              Talento tech de toda LATAM
+            </p>
           </div>
-          <div className="flex flex-col items-center">
-            <FaLightbulb className="text-4xl text-[#780b90] mb-2" />
-            <p className="text-sm text-gray-200">Innovación Educativa</p>
+
+          {/* Innovación */}
+          <div className="group bg-white/5 backdrop-blur-xl border border-white/10 hover:border-[#D85DFB]/40 transition rounded-2xl px-8 py-6">
+            <FaLightbulb className="text-4xl text-[#D85DFB] mb-3 mx-auto group-hover:scale-110 transition" />
+            <p className="font-semibold text-white">Innovación educativa</p>
+            <p className="text-sm text-gray-400 mt-1">
+              Experiencia real sobre teoría
+            </p>
           </div>
         </div>
+
+        {/* Frase posicionamiento */}
+        <p className="mt-14 text-gray-500 text-sm">
+          Formando la próxima generación de talento tech en LATAM.
+        </p>
       </div>
     </section>
   )

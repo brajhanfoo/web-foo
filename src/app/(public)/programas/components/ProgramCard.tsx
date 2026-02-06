@@ -257,16 +257,34 @@ export function ProgramCard(props: ProgramCardProps): React.JSX.Element {
           <Button
             asChild
             variant="outline"
-            className="w-full rounded-xl py-6 font-semibold bg-black/20 text-white border border-white/15 hover:bg-white/5"
+            className="w-full rounded-xl py-6 font-semibold 
+    bg-black/20 text-white border border-white/15
+    hover:bg-white hover:text-black
+    hover:border-white
+    transition-all duration-300"
           >
-            <Link href={`/programas/${item.program.slug}`}>{ctaText}</Link>
+            <Link
+              href={`/programas/${item.program.slug}`}
+              className="w-full text-center"
+            >
+              {ctaText}
+            </Link>
           </Button>
         ) : (
           <Button
             asChild
-            className="w-full rounded-xl py-6 font-semibold bg-[#00CCA4] text-black hover:bg-[#00CCA4]/90"
+            className="w-full rounded-xl py-6 font-semibold 
+    bg-[#00CCA4] text-black
+    hover:bg-[#00bfa0] hover:text-black
+    active:scale-[0.98]
+    transition-all duration-300"
           >
-            <Link href={`/programas/${item.program.slug}`}>{ctaText}</Link>
+            <Link
+              href={`/programas/${item.program.slug}`}
+              className="w-full text-center"
+            >
+              {ctaText}
+            </Link>
           </Button>
         )}
       </CardContent>

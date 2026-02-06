@@ -1,36 +1,50 @@
 'use client'
 
-import Image from 'next/image'
+import { RiGraduationCapFill } from "react-icons/ri";
 
 const ProgramHero = () => {
   return (
-    <section className="relative w-full h-[400px] flex items-center justify-center bg-gradient-to-r from-[#1a0b2e] to-[#0c0616] overflow-hidden">
-      {/* Círculo amarillo (izquierda) */}
-      <div className="absolute left-0 bottom-0 w-40 h-40 bg-[#b3aa20] rounded-full -translate-x-1/2 translate-y-1/2" />
+    <section className="relative w-full h-[420px] flex items-center justify-center overflow-hidden">
 
-      {/* Círculo violeta (derecha) */}
-      <div className="absolute right-0 top-0 w-96 h-96 bg-[#1a0b2e] rounded-full translate-x-1/3 -translate-y-1/3 opacity-60" />
+      {/* 🌈 Fondo gradiente exacto del diseño */}
+      <div className="absolute inset-0 bg-gradient-to-r from-[#2b0a3d] via-[#071b22] to-[#00CCA4]/15" />
 
-      {/* Contenido */}
-      <div className="relative text-center text-white z-10">
-        <h1 className="text-4xl font-bold">Smart Projects</h1>
-        <p className="text-gray-300 mt-2">
-          Programa intensivo de formación en desarrollo de software
+      {/* Glow suave izquierdo morado */}
+      <div className="absolute -left-32 top-0 w-[420px] h-[420px] bg-[#77039F] opacity-20 blur-[120px] rounded-full" />
+
+      {/* Glow suave derecho verde */}
+      <div className="absolute -right-32 top-0 w-[420px] h-[420px] bg-[#00CCA4] opacity-20 blur-[120px] rounded-full" />
+
+      {/* CONTENIDO */}
+      <div className="relative z-10 text-center px-6">
+
+        {/* TITULO */}
+        <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight text-white">
+          Smart{' '}
+          <span className="bg-gradient-to-r from-[#00CCA4] to-[#4FC3F7] bg-clip-text text-transparent">
+            Projects
+          </span>
+        </h1>
+
+        {/* SUBTITULO */}
+        <p className="mt-4 text-gray-300 text-base md:text-lg">
+          Programa intensivo de formación en desarrollo de software.
         </p>
-        <p className=" mt-2 text-[12px] text-[#b3aa20]">
-          Propósito educativo · No comercial · Cohortes abiertas
+
+        {/* TEXTO AMARILLO */}
+        <p className="mt-3 text-[11px] md:text-xs tracking-[0.25em] text-[#BDBE0B] font-semibold">
+          PROPÓSITO EDUCATIVO · COHORTES ABIERTAS
         </p>
       </div>
 
-      {/* Logo (arriba a la derecha) */}
-      <div className="absolute top-6 right-6 z-10 w-[80px] h-12 md:w-40 md:h-16">
-        <Image
-          src="https://res.cloudinary.com/dtaybaydq/image/upload/fl_preserve_transparency/v1758930364/Foo%20Talent%20group/Frame_116_tjnf84.jpg?_s=public-apps" // 👉 reemplaza con la ruta de tu logo
-          alt="Foo Talent Group"
-          width={130}
-          height={50}
-        />
+      {/* LOGO SUPERIOR DERECHO */}
+      <div className="absolute top-8 right-8 md:right-16 z-10">
+        <div className=" flex flex-col items-center justify-center w-[60px] h-[60px] md:w-[100px] md:h-[100px] rounded-full bg-white/5 backdrop-blur-md border border-white/10 shadow-lg">
+          <RiGraduationCapFill className="w-8 h-8 md:w-12 md:h-12 text-[#00CCA4]" />
+          <p className="text-white text-[8px] md:text-xs font-light text-center">SMART PROJECTS</p>
+        </div>
       </div>
+
     </section>
   )
 }

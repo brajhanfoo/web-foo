@@ -13,68 +13,112 @@ export default function PreguntasFrecuentes() {
     {
       question: '¿Quiénes pueden participar en los Smart Projects?',
       answer:
-        'Personas motivadas por aprender sobre tecnología, diseño, desarrollo, producto o testing. No es requisito estar laboralmente en el área, sino tener interés genuino. Requisito mínimo: conocimientos básicos del rol al que aplicas.',
+        'Personas motivadas por aprender sobre tecnología, diseño, desarrollo, producto o testing. No es requisito estar laboralmente en el área, sino tener interés genuino.',
     },
     {
       question: '¿Qué nivel de experiencia se requiere para participar?',
       answer:
-        'Solo necesitas haber completado un curso en Project Management, Análisis Funcional, UX/UI, Frontend, Backend o Testing QA, o tener conocimientos básicos en el rol al que postulas. Ofrecemos aprendizaje práctico y apoyo continuo para distintos niveles.',
+        'Solo necesitas conocimientos básicos del rol al que postulas. Ofrecemos aprendizaje práctico y mentoría durante todo el programa.',
     },
     {
       question: '¿Cuál es la duración de los programas?',
       answer:
-        'La duración de los programas varía según el formato. Por ejemplo: Smart Projects: 8 semanas.',
+        'Smart Projects tiene una duración de 8 semanas intensivas con sesiones en vivo, trabajo en equipo y mentoría.',
     },
     {
       question: '¿Recibiré un certificado al finalizar el programa?',
       answer:
-        '¡Sí! Al finalizar el programa, recibirás un certificado que avala tu participación y el trabajo realizado, ideal para enriquecer tu portafolio y tu CV.',
-    },
-    {
-      question: '¿Qué soporte se ofrece durante los programas?',
-      answer:
-        'Tendrás acceso a mentores experimentados, guías prácticas, y grupos de ayuda en Slack para resolver dudas, además de revisiones periódicas de tus avances.',
+        'Sí. Al finalizar recibirás un certificado de participación ideal para tu CV y portafolio.',
     },
   ]
 
   return (
-    <section className="w-full bg-gray-950 text-white py-16 px-4 md:px-12">
-      {/* Encabezado */}
-      <div className="text-center max-w-3xl mx-auto mb-12">
-        <h2 className="text-3xl md:text-4xl font-bold mb-4">
-          Preguntas Frecuentes
-        </h2>
-        <p className="text-gray-300 text-lg">
-          Resolvemos las dudas más comunes sobre nuestros programas y su
-          funcionamiento.
-        </p>
-      </div>
+    <section className="w-full bg-black text-white py-24 px-6 relative overflow-hidden">
 
-      {/* Acordeón de preguntas */}
-      <div className="max-w-3xl mx-auto space-y-4">
-        {faqs.map((faq, index) => (
-          <div
-            key={index}
-            className="bg-gray-900 rounded-xl shadow-md border border-gray-800"
-          >
-            <button
-              onClick={() => toggleIndex(index)}
-              className="flex justify-between items-center w-full text-left px-6 py-4 focus:outline-none"
-            >
-              <span className="font-semibold text-purple-400">
-                {faq.question}
-              </span>
-              <FaChevronDown
-                className={`text-gray-400 transform transition-transform ${
-                  openIndex === index ? 'rotate-180 text-indigo-400' : ''
-                }`}
-              />
-            </button>
-            {openIndex === index && (
-              <div className="px-6 pb-4 text-gray-300">{faq.answer}</div>
-            )}
-          </div>
-        ))}
+      {/* glow fondo */}
+      <div className="absolute top-40 left-1/2 -translate-x-1/2 w-[700px] h-[400px] bg-[#77039F] opacity-10 blur-[160px] rounded-full" />
+
+      <div className="relative z-10 max-w-4xl mx-auto">
+
+        {/* header */}
+        <div className="text-center mb-14">
+          <h2 className="text-3xl md:text-4xl font-bold mb-4">
+            Preguntas Frecuentes
+          </h2>
+          <p className="text-gray-400 text-lg">
+            Resolvemos las dudas más comunes sobre nuestros programas.
+          </p>
+        </div>
+
+        {/* acordeon */}
+        <div className="space-y-5">
+          {faqs.map((faq, index) => {
+            const open = openIndex === index
+
+            return (
+              <div
+                key={index}
+                className={`
+                rounded-xl
+                border
+                transition-all duration-300
+                ${
+                  open
+                    ? 'border-[#00CCA4] bg-[#050507] shadow-[0_0_25px_rgba(0,204,164,0.15)]'
+                    : 'border-white/10 bg-[#0B0B0F] hover:border-[#77039F]/40'
+                }
+                `}
+              >
+                {/* pregunta */}
+                <button
+                  onClick={() => toggleIndex(index)}
+                  className="
+                  flex justify-between items-center w-full
+                  text-left px-6 py-5
+                  group
+                  "
+                >
+                  <span
+                    className={`
+                    text-[16px] md:text-[17px]
+                    font-semibold tracking-wide
+                    transition
+                    ${
+                      open
+                        ? 'text-[#00CCA4]'
+                        : 'text-white group-hover:text-[#D85DFB]'
+                    }
+                    `}
+                  >
+                    {faq.question}
+                  </span>
+
+                  <FaChevronDown
+                    className={`
+                    transition-all duration-300 text-sm
+                    ${
+                      open
+                        ? 'rotate-180 text-[#00CCA4]'
+                        : 'text-gray-500 group-hover:text-[#D85DFB]'
+                    }
+                    `}
+                  />
+                </button>
+
+                {/* respuesta */}
+                {open && (
+                  <div className="px-6 pb-6">
+                    <div className="h-px w-full bg-gradient-to-r from-transparent via-white/10 to-transparent mb-4" />
+
+                    <p className="text-gray-300 leading-relaxed text-[15.5px]">
+                      {faq.answer}
+                    </p>
+                  </div>
+                )}
+              </div>
+            )
+          })}
+        </div>
       </div>
     </section>
   )

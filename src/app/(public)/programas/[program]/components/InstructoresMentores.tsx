@@ -84,7 +84,7 @@ export default function InstructoresMentores() {
           {instructors.map((mentor, index) => (
             <div
               key={index}
-              className="bg-gray-900 border border-gray-800 p-8 rounded-2xl shadow-md hover:shadow-xl hover:border-indigo-500 transition transform hover:-translate-y-1"
+              className="bg-[#121214]/60 border border-[#FFFFFF]/5 p-8 rounded-2xl shadow-md hover:shadow-xl hover:border-indigo-500 transition transform hover:-translate-y-1"
             >
               {/* Avatar: foto o inicial */}
               {mentor.image ? (
@@ -107,7 +107,7 @@ export default function InstructoresMentores() {
               <h3 className="text-xl font-semibold text-white">
                 {mentor.name}
               </h3>
-              <p className="text-sm text-indigo-400 font-medium mb-3">
+              <p className="text-sm text-[#00CCA4] font-medium mb-3">
                 {mentor.role}
               </p>
 
@@ -119,7 +119,7 @@ export default function InstructoresMentores() {
                 href={mentor.linkedin}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 mt-5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-medium transition"
+                className="inline-flex items-center gap-2 mt-5 px-4 py-2 bg-[#2563EB] hover:bg-[#1D4ED8] text-white rounded-lg text-sm font-medium transition"
               >
                 <FaLinkedin className="text-lg" />
                 LinkedIn
@@ -129,9 +129,9 @@ export default function InstructoresMentores() {
         </div>
 
         {/* Bloque de Mentores invitados */}
-        <div className="mt-20 bg-gray-900 border border-gray-800 rounded-2xl shadow-md p-10 max-w-4xl mx-auto text-center">
+        <div className="mt-20 bg-[#121214]/60 border border-[#FFFFFF]/5 rounded-2xl shadow-md p-10 max-w-4xl mx-auto text-center">
           <div className="flex justify-center mb-6">
-            <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-pink-500 to-rose-500 flex items-center justify-center shadow-lg">
+            <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-[#EC4899] to-rose-500 flex items-center justify-center shadow-lg">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 className="h-8 w-8 text-white"
@@ -155,7 +155,7 @@ export default function InstructoresMentores() {
           <p className="text-gray-400">
             Profesionales especializados en áreas como UX, UI, Desarrollo y QA.
             Nos acompañan como{' '}
-            <span className="text-indigo-400 font-medium">Tech Lead</span> de su
+            <span className="text-[#00CCA4] font-medium">Tech Lead</span> de su
             respectiva área, guiando a los equipos durante cada cohorte. Cada
             edición cuenta con al menos tres mentores activos que realizan
             revisiones en vivo, brindan retroalimentación personalizada y hacen
