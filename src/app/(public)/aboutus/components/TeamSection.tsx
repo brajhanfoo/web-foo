@@ -49,7 +49,6 @@ const team = [
 export default function TeamSection() {
   return (
     <section className="relative w-full py-28 bg-[#050507] text-white overflow-hidden">
-
       {/* ===== BACKGROUND NUEVO ===== */}
       <div className="absolute inset-0 bg-gradient-to-b from-black via-[#050507] to-black" />
 
@@ -61,7 +60,6 @@ export default function TeamSection() {
       <div className="absolute inset-0 opacity-[0.04] bg-[linear-gradient(to_right,#00CCA422_1px,transparent_1px),linear-gradient(to_bottom,#00CCA422_1px,transparent_1px)] bg-[size:50px_50px]" />
 
       <div className="relative z-10 max-w-7xl mx-auto px-6">
-
         {/* ===== HEADER ===== */}
         <div className="text-center max-w-4xl mx-auto mb-20">
           <p className="text-sm tracking-[0.3em] text-[#00CCA4] uppercase mb-6">

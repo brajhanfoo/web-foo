@@ -48,6 +48,7 @@ export function StepExperience({
   technologiesField,
   motivationField,
   shiftFields,
+  extraFields,
   values,
   onChangeValue,
   onBack,
@@ -57,11 +58,19 @@ export function StepExperience({
   technologiesField: FormField | null
   motivationField: FormField | null
   shiftFields: FormField[]
+  extraFields: FormField[]
   values: FormValuesMap
   onChangeValue: (name: string, value: FormValue) => void
   onBack: () => void
   onNext: () => void
 }) {
+  const extraCheckboxFields = extraFields.filter(
+    (field) => field.type === 'checkbox'
+  )
+  const extraInputFields = extraFields.filter(
+    (field) => field.type !== 'checkbox'
+  )
+
   return (
     <div className="space-y-10">
       <div className="rounded-3xl border border-white/10 bg-white/[0.02] p-6">
@@ -146,6 +155,16 @@ export function StepExperience({
               />
             </FieldBlock>
           ) : null}
+
+          {extraInputFields.length ? (
+            <div className="space-y-5">
+              {extraInputFields.map((field) => (
+                <FieldBlock key={field.name} label={field.label}>
+                  {renderField(field, values, onChangeValue)}
+                </FieldBlock>
+              ))}
+            </div>
+          ) : null}
         </div>
       </div>
 
@@ -181,6 +200,44 @@ export function StepExperience({
         </div>
       ) : null}
 
+      {extraCheckboxFields.length ? (
+        <div className="rounded-3xl border border-white/10 bg-white/[0.02] p-6">
+          <div className="mb-4 text-xs font-semibold uppercase tracking-[0.18em] text-emerald-300/80">
+            Campos adicionales
+          </div>
+          <div className="grid gap-3">
+            {extraCheckboxFields.map((field) => {
+              const checked = Boolean(values[field.name])
+              return (
+                <label
+                  key={field.name}
+                  className={cn(
+                    'flex cursor-pointer items-start gap-3 rounded-2xl border p-5',
+                    'border-white/10 bg-black/20 hover:border-emerald-400/30',
+                    checked && 'border-emerald-400/40 bg-emerald-400/[0.05]'
+                  )}
+                >
+                  <Checkbox
+                    checked={checked}
+                    onCheckedChange={(v) =>
+                      onChangeValue(field.name, Boolean(v))
+                    }
+                  />
+                  <div className="min-w-0">
+                    <div className="text-sm font-semibold text-white">
+                      {field.label}
+                      {field.required ? (
+                        <span className="ml-2 text-emerald-300">*</span>
+                      ) : null}
+                    </div>
+                  </div>
+                </label>
+              )
+            })}
+          </div>
+        </div>
+      ) : null}
+
       <div className="flex items-center justify-between">
         <Button
           type="button"
@@ -202,6 +259,72 @@ export function StepExperience({
         </button>
       </div>
     </div>
+  )
+}
+
+function renderField(
+  field: FormField,
+  values: FormValuesMap,
+  onChangeValue: (name: string, value: FormValue) => void
+) {
+  if (field.type === 'select' && field.options?.length) {
+    return (
+      <Select
+        value={safeString(values[field.name])}
+        onValueChange={(v) => onChangeValue(field.name, v)}
+      >
+        <SelectTrigger className="h-12 rounded-xl border-white/10 bg-black/30 text-white">
+          <SelectValue placeholder={field.placeholder ?? 'Selecciona'} />
+        </SelectTrigger>
+        <SelectContent>
+          {field.options.map((o) => (
+            <SelectItem key={o.value} value={o.value}>
+              {o.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    )
+  }
+
+  if (field.type === 'textarea') {
+    return (
+      <Textarea
+        className="min-h-[110px] rounded-xl border-white/10 bg-black/30 text-white placeholder:text-white/30"
+        value={safeString(values[field.name])}
+        onChange={(e) => onChangeValue(field.name, e.target.value)}
+        placeholder={field.placeholder ?? ''}
+      />
+    )
+  }
+
+  const inputType =
+    field.type === 'email'
+      ? 'email'
+      : field.type === 'phone'
+        ? 'tel'
+        : field.type === 'number'
+          ? 'number'
+          : field.type === 'date'
+            ? 'date'
+            : 'text'
+
+  const inputMode =
+    field.type === 'phone'
+      ? 'tel'
+      : field.type === 'number'
+        ? 'numeric'
+        : undefined
+
+  return (
+    <Input
+      className="h-12 rounded-xl border-white/10 bg-black/30 text-white placeholder:text-white/30"
+      type={inputType}
+      inputMode={inputMode}
+      value={safeString(values[field.name])}
+      onChange={(e) => onChangeValue(field.name, e.target.value)}
+      placeholder={field.placeholder ?? ''}
+    />
   )
 }
 

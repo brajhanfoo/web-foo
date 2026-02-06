@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase/client'
 import { useToastEnhanced } from '@/hooks/use-toast-enhanced'
@@ -49,7 +50,8 @@ type EditionRow = {
 type ApplicationFormRow = {
   id: string
   program_id: string
-  version: string
+  edition_id: string | null
+  version_num: number
   schema_json: unknown
   is_active: boolean
   opens_at: string | null
@@ -103,7 +105,7 @@ function pickProgramIcon(slug: string): 'rocket' | 'users' {
 
 function statusLabel(status: ProgramStatus): string {
   if (status === 'open') return 'ABIERTO'
-  if (status === 'closed') return 'PRÓXIMAMENTE'
+  if (status === 'soon') return 'PRÓXIMAMENTE'
   return 'CERRADO'
 }
 
@@ -170,7 +172,7 @@ export default function ProgramsPage() {
       supabase
         .from('application_forms')
         .select(
-          'id, program_id, version, schema_json, is_active, opens_at, closes_at, created_at'
+          'id, program_id, edition_id, version_num, schema_json, is_active, opens_at, closes_at, created_at'
         )
         .in('program_id', programIds)
         .eq('is_active', true)
@@ -189,15 +191,26 @@ export default function ProgramsPage() {
 
     // última edición por programa (por created_at desc)
     const latestEditionByProgram = new Map<string, EditionRow>()
+    const latestOpenEditionByProgram = new Map<string, EditionRow>()
     for (const ed of editions) {
       if (!latestEditionByProgram.has(ed.program_id)) {
         latestEditionByProgram.set(ed.program_id, ed)
       }
+      if (ed.is_open && !latestOpenEditionByProgram.has(ed.program_id)) {
+        latestOpenEditionByProgram.set(ed.program_id, ed)
+      }
     }
 
-    // último form activo por programa (por created_at desc)
+    // último form activo por programa/edición (por created_at desc)
     const latestFormByProgram = new Map<string, ApplicationFormRow>()
+    const latestFormByEdition = new Map<string, ApplicationFormRow>()
     for (const f of forms) {
+      if (f.edition_id) {
+        if (!latestFormByEdition.has(f.edition_id)) {
+          latestFormByEdition.set(f.edition_id, f)
+        }
+        continue
+      }
       if (!latestFormByProgram.has(f.program_id)) {
         latestFormByProgram.set(f.program_id, f)
       }
@@ -205,15 +218,21 @@ export default function ProgramsPage() {
 
     const now = new Date()
     const vm: ProgramCardVM[] = programs.map((p) => {
-      const edition = latestEditionByProgram.get(p.id) ?? null
-      const form = latestFormByProgram.get(p.id) ?? null
+      const edition =
+        latestOpenEditionByProgram.get(p.id) ??
+        latestEditionByProgram.get(p.id) ??
+        null
+      const editionForm = edition
+        ? latestFormByEdition.get(edition.id) ?? null
+        : null
+      const form = editionForm ?? latestFormByProgram.get(p.id) ?? null
 
       // Si no está publicado: lo tratamos como "soon"
       if (!p.is_published) {
         return { ...p, edition, form, status: 'soon' }
       }
 
-      const editionOpen = Boolean(edition?.is_open)
+      const editionOpen = edition ? edition.is_open : true
       const formOpen = form ? isFormOpen(form, now) : false
       const open = editionOpen && formOpen
 
@@ -336,10 +355,11 @@ export default function ProgramsPage() {
                 </Button>
               ) : isClosed ? (
                 <Button
+                  asChild
                   variant="outline"
                   className="w-full border-white/10 bg-transparent text-white/80 hover:bg-white/5"
                 >
-                  <a
+                  <Link
                     href={`/programas/${p.slug}`}
                     target="_blank"
                     rel="noopener noreferrer"
@@ -349,7 +369,7 @@ export default function ProgramsPage() {
                       VER DETALLES DEL PROGRAMA
                     </span>
                     <ArrowRight className="h-4 w-4" />
-                  </a>
+                  </Link>
                 </Button>
               ) : (
                 <Button
@@ -468,22 +488,17 @@ export default function ProgramsPage() {
                         </span>
                       </div>
 
-                      <button
-                        type="button"
+                      <Link
+                        href={`/programas/${p.slug}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
                         className="inline-flex items-center gap-2 text-white/70 hover:text-white"
                       >
-                        <a
-                          href={`/programas/${p.slug}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex w-full items-center justify-between"
-                        >
-                          <ArrowRight className="h-4 w-4 rotate-[-45deg]" />
-                          <span className="underline underline-offset-4">
-                            Ver detalles del programa
-                          </span>
-                        </a>
-                      </button>
+                        <ArrowRight className="h-4 w-4 rotate-[-45deg]" />
+                        <span className="underline underline-offset-4">
+                          Ver detalles del programa
+                        </span>
+                      </Link>
                     </div>
 
                     {action}
@@ -514,17 +529,17 @@ export default function ProgramsPage() {
 
             <div className="flex flex-wrap gap-2 md:justify-end">
               <Button
+                asChild
                 variant="outline"
                 className="border-white/10 bg-transparent text-white/80 hover:bg-white/5"
-                onClick={() => router.push('/plataforma/ayuda')}
               >
-                Centro de ayuda
+                <Link href="/plataforma/ayuda">Centro de ayuda</Link>
               </Button>
               <Button
+                asChild
                 className="bg-emerald-500/15 text-emerald-200 border border-emerald-500/30 hover:bg-emerald-500/20"
-                onClick={() => router.push('/plataforma/mentor')}
               >
-                Habla con un mentor
+                <Link href="/plataforma/mentor">Habla con un mentor</Link>
               </Button>
             </div>
           </CardContent>

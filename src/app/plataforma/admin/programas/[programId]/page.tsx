@@ -1,7 +1,7 @@
 // src/app/plataforma/admin/programas/%5BprogramId%5D/page.tsx
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase/client'
@@ -32,10 +32,9 @@ import {
   Plus,
   ArrowLeft,
   Save,
-  Lock,
-  Unlock,
   Trash2,
   GripVertical,
+  Pencil,
 } from 'lucide-react'
 
 type ProgramRow = {
@@ -64,7 +63,7 @@ type ApplicationFormRow = {
   id: string
   program_id: string
   edition_id: string | null
-  version: string
+  version_num: number
   schema_json: unknown
   is_active: boolean
   opens_at: string | null
@@ -94,7 +93,6 @@ type FormField = {
 }
 
 type FormSchema = {
-  version: string
   title: string
   description?: string
   fields: FormField[]
@@ -113,7 +111,17 @@ function toIsoOrNull(value: string): string | null {
   return d.toISOString()
 }
 
+function toDateOnlyOrNull(value: string): string | null {
+  const v = value.trim()
+  if (!v) return null
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(v)) return null
+  return v
+}
+
 function uid(prefix = 'f') {
+  if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
+    return `${prefix}_${crypto.randomUUID()}`
+  }
   return `${prefix}_${Math.random().toString(16).slice(2)}_${Date.now().toString(16)}`
 }
 
@@ -129,14 +137,18 @@ function toFieldName(label: string) {
   )
 }
 
+const DEFAULT_SCHEMA_TITLE = 'Formulario de Postulación'
+const DEFAULT_SCHEMA_DESCRIPTION = 'Completa los campos solicitados.'
+
+function createDefaultFields(): FormField[] {
+  return []
+}
+
 export default function AdminProgramDetailPage() {
   const parameters = useParams<{ programId: string }>()
   const { showError, showSuccess } = useToastEnhanced()
 
   const programId = parameters.programId
-  console.log(programId)
-
-  const didLoadReference = useRef(false)
 
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -144,6 +156,10 @@ export default function AdminProgramDetailPage() {
   const [program, setProgram] = useState<ProgramRow | null>(null)
   const [editions, setEditions] = useState<EditionRow[]>([])
   const [form, setForm] = useState<ApplicationFormRow | null>(null)
+  const [latestVersionNum, setLatestVersionNum] = useState<number>(0)
+  const [selectedEditionId, setSelectedEditionId] = useState<string | null>(
+    null
+  )
 
   // Program fields
   const [title, setTitle] = useState('')
@@ -154,50 +170,38 @@ export default function AdminProgramDetailPage() {
 
   // Editions create
   const [newEditionName, setNewEditionName] = useState('')
+  const [newEditionStartsAt, setNewEditionStartsAt] = useState('')
+  const [newEditionEndsAt, setNewEditionEndsAt] = useState('')
+  const [isEditionModalOpen, setIsEditionModalOpen] = useState(false)
+  const [editingEdition, setEditingEdition] = useState<EditionRow | null>(null)
+  const [editionIsOpen, setEditionIsOpen] = useState(true)
 
   // Form builder meta
-  const [newFormVersion, setNewFormVersion] = useState('v1')
   const [newFormIsActive, setNewFormIsActive] = useState(true)
   const [newFormOpensAt, setNewFormOpensAt] = useState<string>('')
   const [newFormClosesAt, setNewFormClosesAt] = useState<string>('')
 
   // Form schema builder
-  const [schemaTitle, setSchemaTitle] = useState('Formulario de Postulación')
+  const [schemaTitle, setSchemaTitle] = useState(DEFAULT_SCHEMA_TITLE)
   const [schemaDescription, setSchemaDescription] = useState(
-    'Completa los campos solicitados.'
+    DEFAULT_SCHEMA_DESCRIPTION
   )
-  const [fields, setFields] = useState<FormField[]>([
-    {
-      id: uid('field'),
-      type: 'text',
-      label: 'Nombre completo',
-      name: 'full_name',
-      placeholder: 'Ej: Gonzalo Rodríguez',
-      required: true,
-    },
-    {
-      id: uid('field'),
-      type: 'email',
-      label: 'Email',
-      name: 'email',
-      placeholder: 'tuemail@ejemplo.com',
-      required: true,
-    },
-  ])
+  const [fields, setFields] = useState<FormField[]>(() =>
+    createDefaultFields()
+  )
 
   useEffect(() => {
     if (!programId) return
-    if (didLoadReference.current) return
-    didLoadReference.current = true
     void loadAll()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [programId])
+
+  useEffect(() => {
+    if (!programId) return
+    void loadFormForEdition(selectedEditionId)
+  }, [programId, selectedEditionId])
 
   async function loadAll() {
     setLoading(true)
-    console.log('hola')
-
-    console.log(programId)
 
     const programResponse = await supabase
       .from('programs')
@@ -206,10 +210,7 @@ export default function AdminProgramDetailPage() {
       )
       .eq('id', programId)
       .maybeSingle()
-    console.log(programResponse.error)
-
     if (programResponse.error || !programResponse.data) {
-      console.log(programResponse.error)
       showError('No se pudo cargar el programa.')
       setLoading(false)
       return
@@ -236,42 +237,98 @@ export default function AdminProgramDetailPage() {
       showError('No se pudieron cargar las ediciones.')
       setEditions([])
     } else {
-      setEditions((editionsResponse.data ?? []) as EditionRow[])
-    }
-
-    const formResponse = await supabase
-      .from('application_forms')
-      .select(
-        'id, program_id, edition_id, version, schema_json, is_active, opens_at, closes_at, created_at, updated_at'
-      )
-      .eq('program_id', programId)
-      .is('edition_id', null) // 👈 SOLO el “form principal del programa”
-      .maybeSingle()
-
-    if (formResponse.error) {
-      showError('No se pudo cargar el formulario del programa.')
-      setForm(null)
-    } else {
-      setForm((formResponse.data ?? null) as ApplicationFormRow | null)
-
-      // si existe, lo cargamos directo al builder
-      if (formResponse.data) {
-        const existing = formResponse.data as ApplicationFormRow
-        const parsed = parseSchema(existing.schema_json)
-        if (parsed) {
-          setNewFormVersion(existing.version || parsed.version || 'v1')
-          setNewFormIsActive(Boolean(existing.is_active))
-          setNewFormOpensAt(existing.opens_at ?? '')
-          setNewFormClosesAt(existing.closes_at ?? '')
-
-          setSchemaTitle(parsed.title || 'Formulario')
-          setSchemaDescription(parsed.description || '')
-          setFields(Array.isArray(parsed.fields) ? parsed.fields : [])
-        }
+      const nextEditions = (editionsResponse.data ?? []) as EditionRow[]
+      setEditions(nextEditions)
+      if (
+        selectedEditionId &&
+        !nextEditions.some((edition) => edition.id === selectedEditionId)
+      ) {
+        setSelectedEditionId(null)
       }
     }
 
     setLoading(false)
+  }
+
+  function resetBuilder() {
+    setNewFormIsActive(true)
+    setNewFormOpensAt('')
+    setNewFormClosesAt('')
+    setSchemaTitle(DEFAULT_SCHEMA_TITLE)
+    setSchemaDescription(DEFAULT_SCHEMA_DESCRIPTION)
+    setFields(createDefaultFields())
+  }
+
+  function applyFormToBuilder(existing: ApplicationFormRow) {
+    const parsed = parseSchema(existing.schema_json)
+    setNewFormIsActive(Boolean(existing.is_active))
+    setNewFormOpensAt(existing.opens_at ?? '')
+    setNewFormClosesAt(existing.closes_at ?? '')
+
+    if (parsed) {
+      setSchemaTitle(parsed.title || DEFAULT_SCHEMA_TITLE)
+      setSchemaDescription(parsed.description ?? DEFAULT_SCHEMA_DESCRIPTION)
+      setFields(Array.isArray(parsed.fields) ? parsed.fields : [])
+    } else {
+      resetBuilder()
+    }
+  }
+
+  async function loadFormForEdition(editionId: string | null) {
+    if (!programId) return
+
+    let query = supabase
+      .from('application_forms')
+      .select(
+        'id, program_id, edition_id, version_num, schema_json, is_active, opens_at, closes_at, created_at, updated_at'
+      )
+      .eq('program_id', programId)
+      .eq('is_active', true)
+      .order('created_at', { ascending: false })
+      .limit(1)
+
+    query = editionId
+      ? query.eq('edition_id', editionId)
+      : query.is('edition_id', null)
+
+    const formResponse = await query.maybeSingle()
+
+    if (formResponse.error) {
+      showError('No se pudo cargar el formulario activo.')
+      setForm(null)
+      resetBuilder()
+      return
+    }
+
+    let latestQuery = supabase
+      .from('application_forms')
+      .select('version_num')
+      .eq('program_id', programId)
+      .order('version_num', { ascending: false })
+      .limit(1)
+
+    latestQuery = editionId
+      ? latestQuery.eq('edition_id', editionId)
+      : latestQuery.is('edition_id', null)
+
+    const latestResponse = await latestQuery.maybeSingle()
+    if (
+      !latestResponse.error &&
+      typeof latestResponse.data?.version_num === 'number'
+    ) {
+      setLatestVersionNum(latestResponse.data.version_num)
+    } else {
+      setLatestVersionNum(0)
+    }
+
+    const existing = (formResponse.data ?? null) as ApplicationFormRow | null
+    setForm(existing)
+
+    if (existing) {
+      applyFormToBuilder(existing)
+    } else {
+      resetBuilder()
+    }
   }
 
   async function saveProgram() {
@@ -306,21 +363,75 @@ export default function AdminProgramDetailPage() {
     await loadAll()
   }
 
-  async function createEdition() {
+  function openEditionModal() {
+    setNewEditionName('')
+    setNewEditionStartsAt('')
+    setNewEditionEndsAt('')
+    setEditionIsOpen(true)
+    setEditingEdition(null)
+    setIsEditionModalOpen(true)
+  }
+
+  function openEditEditionModal(edition: EditionRow) {
+    setNewEditionName(edition.edition_name)
+    setNewEditionStartsAt(edition.starts_at ?? '')
+    setNewEditionEndsAt(edition.ends_at ?? '')
+    setEditionIsOpen(Boolean(edition.is_open))
+    setEditingEdition(edition)
+    setIsEditionModalOpen(true)
+  }
+
+  function closeEditionModal() {
+    setIsEditionModalOpen(false)
+    setEditingEdition(null)
+  }
+
+  async function saveEdition() {
     const editionName = newEditionName.trim()
     if (!editionName) return showError('El nombre de edición es obligatorio.')
 
+    const startsAt = toDateOnlyOrNull(newEditionStartsAt)
+    const endsAt = toDateOnlyOrNull(newEditionEndsAt)
+
+    if (newEditionStartsAt && !startsAt) {
+      return showError('La fecha de inicio no es válida.')
+    }
+    if (newEditionEndsAt && !endsAt) {
+      return showError('La fecha de fin no es válida.')
+    }
+
+    if (startsAt && endsAt) {
+      const startDate = new Date(startsAt)
+      const endDate = new Date(endsAt)
+      if (startDate > endDate) {
+        return showError(
+          'La fecha de inicio no puede ser posterior a la fecha de fin.'
+        )
+      }
+    }
+
     setSaving(true)
 
-    const response = await supabase
-      .from('program_editions')
-      .insert({
-        program_id: programId,
-        edition_name: editionName,
-        is_open: true,
-      })
-      .select('id')
-      .maybeSingle()
+    const payload = {
+      program_id: programId,
+      edition_name: editionName,
+      starts_at: startsAt,
+      ends_at: endsAt,
+      is_open: editionIsOpen,
+    }
+
+    const response = editingEdition
+      ? await supabase
+          .from('program_editions')
+          .update(payload)
+          .eq('id', editingEdition.id)
+          .select('id')
+          .maybeSingle()
+      : await supabase
+          .from('program_editions')
+          .insert(payload)
+          .select('id')
+          .maybeSingle()
 
     setSaving(false)
 
@@ -331,33 +442,16 @@ export default function AdminProgramDetailPage() {
       return
     }
 
-    setNewEditionName('')
-    showSuccess('Edición creada.')
+    showSuccess(editingEdition ? 'Edición actualizada.' : 'Edición creada.')
+    closeEditionModal()
     await loadAll()
   }
 
-  async function toggleEditionOpen(editionId: string, nextOpen: boolean) {
-    setSaving(true)
-    const response = await supabase
-      .from('program_editions')
-      .update({ is_open: nextOpen })
-      .eq('id', editionId)
-    setSaving(false)
-
-    if (response.error) {
-      showError(
-        `No se pudo actualizar la edición. ${safeString(response.error.message)}`
-      )
-      return
-    }
-
-    showSuccess(`Edición ${nextOpen ? 'abierta' : 'cerrada'}.`)
-    await loadAll()
-  }
+  const nextVersionNum = (latestVersionNum ?? 0) + 1
+  const nextVersionLabel = `v${nextVersionNum}`
 
   function buildSchema(): FormSchema {
     return {
-      version: newFormVersion.trim() ? newFormVersion.trim() : 'v1',
       title: schemaTitle.trim() ? schemaTitle.trim() : 'Formulario',
       description: schemaDescription.trim()
         ? schemaDescription.trim()
@@ -368,7 +462,6 @@ export default function AdminProgramDetailPage() {
 
   async function upsertForm() {
     // validaciones mínimas tipo "tally"
-    const version = newFormVersion.trim() ? newFormVersion.trim() : 'v1'
     if (!schemaTitle.trim()) return showError('Poné un título de formulario.')
     if (fields.length === 0) return showError('Agregá al menos 1 campo.')
 
@@ -422,29 +515,44 @@ export default function AdminProgramDetailPage() {
 
     setSaving(true)
 
-    // si existe => update; si no => insert
+    const editionId = selectedEditionId
     const payload = {
       program_id: programId,
-      edition_id: null as string | null, // 👈 siempre null (solo 1 por programa)
-      version,
+      edition_id: editionId,
       schema_json: schema,
       is_active: newFormIsActive,
       opens_at: opensAtIso,
       closes_at: closesAtIso,
     }
 
-    const response = form?.id
-      ? await supabase
-          .from('application_forms')
-          .update(payload)
-          .eq('id', form.id)
-          .select('*')
-          .maybeSingle()
-      : await supabase
-          .from('application_forms')
-          .insert(payload)
-          .select('*')
-          .maybeSingle()
+    if (newFormIsActive) {
+      let deactivateQuery = supabase
+        .from('application_forms')
+        .update({ is_active: false })
+        .eq('program_id', programId)
+        .eq('is_active', true)
+
+      deactivateQuery = editionId
+        ? deactivateQuery.eq('edition_id', editionId)
+        : deactivateQuery.is('edition_id', null)
+
+      const { error: deactivateError } = await deactivateQuery
+      if (deactivateError) {
+        setSaving(false)
+        showError(
+          `No se pudo desactivar el formulario activo. ${safeString(
+            deactivateError.message
+          )}`
+        )
+        return
+      }
+    }
+
+    const response = await supabase
+      .from('application_forms')
+      .insert(payload)
+      .select('*')
+      .maybeSingle()
 
     setSaving(false)
 
@@ -456,8 +564,8 @@ export default function AdminProgramDetailPage() {
     }
 
     setForm(response.data as ApplicationFormRow)
-    showSuccess('Formulario guardado.')
-    await loadAll()
+    showSuccess('Formulario guardado. Nueva versión creada.')
+    await loadFormForEdition(editionId)
   }
 
   // ---------- Form builder helpers ----------
@@ -635,12 +743,10 @@ export default function AdminProgramDetailPage() {
   function parseSchema(schema: unknown): FormSchema | null {
     if (!isRecord(schema)) return null
 
-    const version = schema.version
     const title = schema.title
     const description = schema.description
     const fields = schema.fields
 
-    if (typeof version !== 'string') return null
     if (typeof title !== 'string') return null
     if (
       description !== undefined &&
@@ -653,43 +759,46 @@ export default function AdminProgramDetailPage() {
     if (!fields.every(isFormField)) return null
 
     return {
-      version,
       title,
       description: typeof description === 'string' ? description : undefined,
       fields,
     }
   }
 
-  async function deleteSingleForm() {
+  async function deactivateForm() {
     if (!form?.id) return
     const ok = window.confirm(
-      '¿Eliminar el formulario del programa? Esto NO se puede deshacer.'
+      '¿Desactivar el formulario activo? Las postulaciones anteriores no se verán afectadas.'
     )
     if (!ok) return
 
     setSaving(true)
     const response = await supabase
       .from('application_forms')
-      .delete()
+      .update({ is_active: false })
       .eq('id', form.id)
     setSaving(false)
 
     if (response.error) {
-      showError(`No se pudo eliminar. ${safeString(response.error.message)}`)
+      showError(
+        `No se pudo desactivar. ${safeString(response.error.message)}`
+      )
       return
     }
 
     setForm(null)
-    showSuccess('Formulario eliminado.')
-    // reset builder a defaults
-    setNewFormVersion('v1')
-    setNewFormIsActive(true)
-    setNewFormOpensAt('')
-    setNewFormClosesAt('')
-    setSchemaTitle('Formulario de Postulación')
-    setSchemaDescription('Completa los campos solicitados.')
-    setFields([])
+    showSuccess('Formulario desactivado.')
+    resetBuilder()
   }
+
+  const selectedEdition = selectedEditionId
+    ? editions.find((edition) => edition.id === selectedEditionId) ?? null
+    : null
+
+  const formScopeLabel = selectedEdition
+    ? `Edición: ${selectedEdition.edition_name}`
+    : 'Programa (general)'
+  const isEditingEdition = Boolean(editingEdition)
 
   if (loading) {
     return (
@@ -723,20 +832,20 @@ export default function AdminProgramDetailPage() {
         <div className="flex items-center gap-3">
           <Button asChild className="bg-[#00CCA4]">
             <Link href="/plataforma/admin/programas">
-              <ArrowLeft className="h-4 w-4 mr-2" />
+              <ArrowLeft className="h-4 w-4 mr-2" aria-hidden="true" />
               Volver
             </Link>
           </Button>
         </div>
 
         <Button onClick={saveProgram} disabled={saving}>
-          <Save className="h-4 w-4 mr-2" />
+          <Save className="h-4 w-4 mr-2" aria-hidden="true" />
           Guardar
         </Button>
       </div>
 
       {/* ---------------- Program ---------------- */}
-      <Card className="bg-[#302f2f] text-amber-50">
+      <Card className="border border-white/10 bg-[#0F1117] text-white">
         <CardHeader>
           <CardTitle>Datos del programa</CardTitle>
           <CardDescription>
@@ -750,6 +859,8 @@ export default function AdminProgramDetailPage() {
               <Label htmlFor="title">Título</Label>
               <Input
                 id="title"
+                name="program_title"
+                autoComplete="off"
                 value={title}
                 onChange={(element) => setTitle(element.target.value)}
               />
@@ -759,6 +870,9 @@ export default function AdminProgramDetailPage() {
               <Label htmlFor="slug">Slug</Label>
               <Input
                 id="slug"
+                name="program_slug"
+                autoComplete="off"
+                spellCheck={false}
                 value={slug}
                 onChange={(element) => setSlug(element.target.value)}
               />
@@ -769,6 +883,8 @@ export default function AdminProgramDetailPage() {
             <Label htmlFor="desc">Descripción</Label>
             <Textarea
               id="desc"
+              name="program_description"
+              autoComplete="off"
               value={description}
               onChange={(element) => setDescription(element.target.value)}
               rows={4}
@@ -777,9 +893,16 @@ export default function AdminProgramDetailPage() {
 
           <div className="flex flex-wrap gap-6">
             <div className="flex items-center gap-3">
-              <Switch checked={isPublished} onCheckedChange={setIsPublished} />
+              <Switch
+                id="isPublished"
+                checked={isPublished}
+                onCheckedChange={setIsPublished}
+                aria-label="Publicado"
+              />
               <div>
-                <div className="font-medium">Publicado</div>
+                <Label htmlFor="isPublished" className="font-medium">
+                  Publicado
+                </Label>
                 <div className="text-sm text-muted-foreground">
                   Visible en la web.
                 </div>
@@ -788,11 +911,15 @@ export default function AdminProgramDetailPage() {
 
             <div className="flex items-center gap-3">
               <Switch
+                id="requiresPaymentPre"
                 checked={requiresPaymentPre}
                 onCheckedChange={setRequiresPaymentPre}
+                aria-label="Requiere pago previo"
               />
               <div>
-                <div className="font-medium">Requiere pago previo</div>
+                <Label htmlFor="requiresPaymentPre" className="font-medium">
+                  Requiere pago previo
+                </Label>
                 <div className="text-sm text-muted-foreground">
                   Bloquea postulación sin pago (si no está exento).
                 </div>
@@ -803,7 +930,7 @@ export default function AdminProgramDetailPage() {
       </Card>
 
       {/* ---------------- Editions ---------------- */}
-      <Card className="bg-[#302f2f] text-amber-50">
+      <Card className="border border-white/10 bg-[#0F1117] text-white">
         <CardHeader>
           <CardTitle>Ediciones</CardTitle>
           <CardDescription>
@@ -812,19 +939,12 @@ export default function AdminProgramDetailPage() {
         </CardHeader>
 
         <CardContent className="space-y-4">
-          <div className="flex flex-col gap-3 md:flex-row md:items-end">
-            <div className="flex-1 space-y-2">
-              <Label htmlFor="editionName">Nombre de edición</Label>
-              <Input
-                id="editionName"
-                placeholder="Ej: 7ma Edición 2026"
-                value={newEditionName}
-                onChange={(element) => setNewEditionName(element.target.value)}
-              />
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="text-sm text-muted-foreground">
+              Definí ediciones para controlar apertura y fechas.
             </div>
-
-            <Button onClick={createEdition} disabled={saving}>
-              <Plus className="h-4 w-4 mr-2" />
+            <Button onClick={openEditionModal} disabled={saving}>
+              <Plus className="h-4 w-4 mr-2" aria-hidden="true" />
               Crear edición
             </Button>
           </div>
@@ -840,7 +960,7 @@ export default function AdminProgramDetailPage() {
               {editions.map((ed) => (
                 <div
                   key={ed.id}
-                  className="flex flex-col gap-3 rounded-md border p-3 md:flex-row md:items-center md:justify-between"
+                  className="flex flex-col gap-3 rounded-md border border-white/10 bg-black/30 p-3 md:flex-row md:items-center md:justify-between"
                 >
                   <div>
                     <div className="font-medium">{ed.edition_name}</div>
@@ -852,21 +972,12 @@ export default function AdminProgramDetailPage() {
                   <div className="flex items-center gap-2">
                     <Button
                       size="sm"
-                      onClick={() => toggleEditionOpen(ed.id, !ed.is_open)}
+                      onClick={() => openEditEditionModal(ed)}
                       disabled={saving}
                       className="gap-2"
                     >
-                      {ed.is_open ? (
-                        <>
-                          <Lock className="h-4 w-4" />
-                          Cerrar
-                        </>
-                      ) : (
-                        <>
-                          <Unlock className="h-4 w-4" />
-                          Abrir
-                        </>
-                      )}
+                      <Pencil className="h-4 w-4" aria-hidden="true" />
+                      Editar
                     </Button>
                   </div>
                 </div>
@@ -878,22 +989,56 @@ export default function AdminProgramDetailPage() {
 
       {/* ---------------- Forms + Builder ---------------- */}
       {/* ---------------- Forms + Builder (SINGLE) ---------------- */}
-      <Card className="bg-[#302f2f] text-amber-50">
+      <Card className="border border-white/10 bg-[#0F1117] text-white">
         <CardHeader>
-          <CardTitle>Formulario del programa</CardTitle>
+          <CardTitle>Formulario de inscripción</CardTitle>
           <CardDescription>
-            Solo existe <b>1 formulario</b> por programa. Se edita y se
-            actualiza. Los datos básicos del perfil se completan
-            automáticamente.
+            Podés tener un formulario general y otro por edición. Guardar crea
+            una nueva versión; las postulaciones anteriores mantienen su
+            esquema. Si hay uno activo por edición, tiene prioridad sobre el
+            general. Los datos básicos del perfil se completan automáticamente.
           </CardDescription>
         </CardHeader>
 
         <CardContent className="space-y-6">
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="formScope">Formulario para</Label>
+              <Select
+                name="form_scope"
+                value={selectedEditionId ?? 'program'}
+                onValueChange={(value) =>
+                  setSelectedEditionId(value === 'program' ? null : value)
+                }
+              >
+                <SelectTrigger id="formScope">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="program">Programa (general)</SelectItem>
+                  {editions.map((edition) => (
+                    <SelectItem key={edition.id} value={edition.id}>
+                      {edition.edition_name}{' '}
+                      {edition.is_open ? '(abierta)' : '(cerrada)'}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <div className="text-xs text-muted-foreground">
+                Si no elegís edición, se usará el formulario general.
+              </div>
+            </div>
+          </div>
+
           {/* Status */}
-          <div className="flex flex-col gap-2 rounded-md border p-4 md:flex-row md:items-center md:justify-between">
+          <div className="flex flex-col gap-2 rounded-md border border-white/10 bg-black/30 p-4 md:flex-row md:items-center md:justify-between">
             <div>
               <div className="font-medium">
-                Estado: {form ? 'Existe' : 'No existe aún'}
+                Estado: {form ? 'Activo' : 'Sin formulario activo'}
+              </div>
+              <div className="text-sm text-muted-foreground">
+                {formScopeLabel}
+                {form?.version_num ? ` · Versión v${form.version_num}` : ''}
               </div>
             </div>
 
@@ -902,24 +1047,24 @@ export default function AdminProgramDetailPage() {
                 <Button
                   type="button"
                   variant="destructive"
-                  onClick={deleteSingleForm}
+                  onClick={deactivateForm}
                   disabled={saving}
                   className="gap-2"
                 >
-                  <Trash2 className="h-4 w-4" />
-                  Eliminar
+                  <Trash2 className="h-4 w-4" aria-hidden="true" />
+                  Desactivar
                 </Button>
               ) : null}
 
               <Button onClick={upsertForm} disabled={saving} className="gap-2">
-                <Save className="h-4 w-4" />
+                <Save className="h-4 w-4" aria-hidden="true" />
                 Guardar formulario
               </Button>
             </div>
           </div>
 
           {/* Autofill notice */}
-          <div className="rounded-md border p-4">
+          <div className="rounded-md border border-white/10 bg-black/30 p-4">
             <div className="font-medium">
               Los datos del perfil del postulante se completan automáticamente
               desde su perfil no es necesario pedirlos en el formulario.
@@ -929,42 +1074,56 @@ export default function AdminProgramDetailPage() {
           {/* META */}
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <Label>Versión</Label>
+              <Label htmlFor="formVersion">Versión (auto)</Label>
               <Input
-                value={newFormVersion}
-                onChange={(element) => setNewFormVersion(element.target.value)}
-                placeholder="v1"
+                id="formVersion"
+                name="form_version_num"
+                autoComplete="off"
+                value={nextVersionLabel}
+                disabled
+                aria-readonly="true"
               />
+              <div className="text-xs text-muted-foreground">
+                Se incrementa automáticamente al guardar.
+              </div>
             </div>
 
             <div className="flex items-center gap-3 pt-6">
               <Switch
+                id="formIsActive"
                 checked={newFormIsActive}
                 onCheckedChange={setNewFormIsActive}
+                aria-label="Formulario activo"
               />
-              <div className="text-sm">
+              <Label htmlFor="formIsActive" className="text-sm">
                 {newFormIsActive ? 'Activo' : 'Inactivo'} (solo el activo se usa
                 en la web)
-              </div>
+              </Label>
             </div>
           </div>
 
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <Label>Apertura (ISO opcional)</Label>
+              <Label htmlFor="formOpensAt">Apertura (ISO opcional)</Label>
               <Input
+                id="formOpensAt"
+                name="form_opens_at"
+                autoComplete="off"
                 value={newFormOpensAt}
                 onChange={(element) => setNewFormOpensAt(element.target.value)}
-                placeholder="2026-01-20T12:00:00Z"
+                placeholder="2026-01-20T12:00:00Z…"
               />
             </div>
 
             <div className="space-y-2">
-              <Label>Cierre (ISO opcional)</Label>
+              <Label htmlFor="formClosesAt">Cierre (ISO opcional)</Label>
               <Input
+                id="formClosesAt"
+                name="form_closes_at"
+                autoComplete="off"
                 value={newFormClosesAt}
                 onChange={(element) => setNewFormClosesAt(element.target.value)}
-                placeholder="2026-02-20T23:59:59Z"
+                placeholder="2026-02-20T23:59:59Z…"
               />
             </div>
           </div>
@@ -974,21 +1133,27 @@ export default function AdminProgramDetailPage() {
           {/* Builder schema */}
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <Label>Título del formulario</Label>
+              <Label htmlFor="schemaTitle">Título del formulario</Label>
               <Input
+                id="schemaTitle"
+                name="schema_title"
+                autoComplete="off"
                 value={schemaTitle}
                 onChange={(element) => setSchemaTitle(element.target.value)}
-                placeholder="Ej: Postulación Project Academy"
+                placeholder="Ej: Postulación Project Academy…"
               />
             </div>
             <div className="space-y-2">
-              <Label>Descripción (opcional)</Label>
+              <Label htmlFor="schemaDescription">Descripción (opcional)</Label>
               <Input
+                id="schemaDescription"
+                name="schema_description"
+                autoComplete="off"
                 value={schemaDescription}
                 onChange={(element) =>
                   setSchemaDescription(element.target.value)
                 }
-                placeholder="Ej: Completa tus datos para postular."
+                placeholder="Ej: Completa tus datos para postular…"
               />
             </div>
           </div>
@@ -999,7 +1164,7 @@ export default function AdminProgramDetailPage() {
               type="button"
               variant="outline"
               onClick={() => addField('text')}
-              className="bg-[#302f2f] text-amber-50"
+              className="border-white/10 bg-black/30 text-white"
             >
               + Texto
             </Button>
@@ -1007,7 +1172,7 @@ export default function AdminProgramDetailPage() {
               type="button"
               variant="outline"
               onClick={() => addField('textarea')}
-              className="bg-[#302f2f] text-amber-50"
+              className="border-white/10 bg-black/30 text-white"
             >
               + Párrafo
             </Button>
@@ -1015,7 +1180,7 @@ export default function AdminProgramDetailPage() {
               type="button"
               variant="outline"
               onClick={() => addField('number')}
-              className="bg-[#302f2f] text-amber-50"
+              className="border-white/10 bg-black/30 text-white"
             >
               + Número
             </Button>
@@ -1023,7 +1188,7 @@ export default function AdminProgramDetailPage() {
               type="button"
               variant="outline"
               onClick={() => addField('date')}
-              className="bg-[#302f2f] text-amber-50"
+              className="border-white/10 bg-black/30 text-white"
             >
               + Fecha
             </Button>
@@ -1031,7 +1196,7 @@ export default function AdminProgramDetailPage() {
               type="button"
               variant="outline"
               onClick={() => addField('select')}
-              className="bg-[#302f2f] text-amber-50"
+              className="border-white/10 bg-black/30 text-white"
             >
               + Select
             </Button>
@@ -1039,7 +1204,7 @@ export default function AdminProgramDetailPage() {
               type="button"
               variant="outline"
               onClick={() => addField('checkbox')}
-              className="bg-[#302f2f] text-amber-50"
+              className="border-white/10 bg-black/30 text-white"
             >
               + Checkbox
             </Button>
@@ -1048,10 +1213,16 @@ export default function AdminProgramDetailPage() {
           {/* Fields list (tu mismo bloque actual) */}
           <div className="space-y-3">
             {fields.map((f, index) => (
-              <div key={f.id} className="rounded-md border p-4 space-y-4">
+              <div
+                key={f.id}
+                className="rounded-md border border-white/10 bg-black/30 p-4 space-y-4"
+              >
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex items-center gap-2">
-                    <GripVertical className="h-4 w-4 text-muted-foreground" />
+                    <GripVertical
+                      className="h-4 w-4 text-muted-foreground"
+                      aria-hidden="true"
+                    />
                     <div className="font-medium">
                       Campo {index + 1}:{' '}
                       <span className="text-muted-foreground">{f.type}</span>
@@ -1064,6 +1235,7 @@ export default function AdminProgramDetailPage() {
                       size="sm"
                       onClick={() => moveField(f.id, 'up')}
                       disabled={index === 0}
+                      aria-label="Mover campo arriba"
                     >
                       ↑
                     </Button>
@@ -1072,6 +1244,7 @@ export default function AdminProgramDetailPage() {
                       size="sm"
                       onClick={() => moveField(f.id, 'down')}
                       disabled={index === fields.length - 1}
+                      aria-label="Mover campo abajo"
                     >
                       ↓
                     </Button>
@@ -1080,34 +1253,42 @@ export default function AdminProgramDetailPage() {
                       size="sm"
                       variant="destructive"
                       onClick={() => removeField(f.id)}
+                      aria-label="Eliminar campo"
                     >
-                      <Trash2 className="h-4 w-4" />
+                      <Trash2 className="h-4 w-4" aria-hidden="true" />
                     </Button>
                   </div>
                 </div>
 
                 <div className="grid gap-4 md:grid-cols-2">
                   <div className="space-y-2">
-                    <Label>Label</Label>
+                    <Label htmlFor={`field_${f.id}_label`}>Label</Label>
                     <Input
+                      id={`field_${f.id}_label`}
+                      name={`field_${f.id}_label`}
+                      autoComplete="off"
                       value={f.label}
                       onChange={(element) =>
                         updateField(f.id, { label: element.target.value })
                       }
-                      placeholder="Ej: Empresa"
+                      placeholder="Ej: Empresa…"
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label>Nombre (key)</Label>
+                    <Label htmlFor={`field_${f.id}_name`}>Nombre (key)</Label>
                     <Input
+                      id={`field_${f.id}_name`}
+                      name={`field_${f.id}_name`}
+                      autoComplete="off"
+                      spellCheck={false}
                       value={f.name}
                       onChange={(element) =>
                         updateField(f.id, {
                           name: toFieldName(element.target.value),
                         })
                       }
-                      placeholder="Ej: company"
+                      placeholder="Ej: company…"
                     />
                     <div className="text-xs text-muted-foreground">
                       Se guarda como key. Evitá nombres reservados del perfil.
@@ -1117,8 +1298,9 @@ export default function AdminProgramDetailPage() {
 
                 <div className="grid gap-4 md:grid-cols-2">
                   <div className="space-y-2">
-                    <Label>Tipo</Label>
+                    <Label htmlFor={`field_${f.id}_type`}>Tipo</Label>
                     <Select
+                      name={`field_${f.id}_type`}
                       value={f.type}
                       onValueChange={(v) =>
                         updateField(f.id, {
@@ -1133,7 +1315,7 @@ export default function AdminProgramDetailPage() {
                         })
                       }
                     >
-                      <SelectTrigger>
+                      <SelectTrigger id={`field_${f.id}_type`}>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -1153,6 +1335,7 @@ export default function AdminProgramDetailPage() {
                       onCheckedChange={(v) =>
                         updateField(f.id, { required: v })
                       }
+                      aria-label={`${f.label || 'Campo'} requerido`}
                     />
                     <div className="text-sm">
                       {f.required ? 'Requerido' : 'Opcional'}
@@ -1162,8 +1345,13 @@ export default function AdminProgramDetailPage() {
 
                 {f.type !== 'checkbox' ? (
                   <div className="space-y-2">
-                    <Label>Placeholder (opcional)</Label>
+                    <Label htmlFor={`field_${f.id}_placeholder`}>
+                      Placeholder (opcional)
+                    </Label>
                     <Input
+                      id={`field_${f.id}_placeholder`}
+                      name={`field_${f.id}_placeholder`}
+                      autoComplete="off"
                       value={f.placeholder ?? ''}
                       onChange={(element) =>
                         updateField(f.id, { placeholder: element.target.value })
@@ -1193,27 +1381,44 @@ export default function AdminProgramDetailPage() {
                           className="grid gap-2 md:grid-cols-[1fr_1fr_auto] items-end"
                         >
                           <div className="space-y-1">
-                            <Label className="text-xs">Value</Label>
+                            <Label
+                              htmlFor={`field_${f.id}_opt_${optIndex}_value`}
+                              className="text-xs"
+                            >
+                              Value
+                            </Label>
                             <Input
+                              id={`field_${f.id}_opt_${optIndex}_value`}
+                              name={`field_${f.id}_opt_${optIndex}_value`}
+                              autoComplete="off"
+                              spellCheck={false}
                               value={opt.value}
                               onChange={(element) =>
                                 updateSelectOption(f.id, optIndex, {
                                   value: toFieldName(element.target.value),
                                 })
                               }
-                              placeholder="opcion_1"
+                              placeholder="opcion_1…"
                             />
                           </div>
                           <div className="space-y-1">
-                            <Label className="text-xs">Label</Label>
+                            <Label
+                              htmlFor={`field_${f.id}_opt_${optIndex}_label`}
+                              className="text-xs"
+                            >
+                              Label
+                            </Label>
                             <Input
+                              id={`field_${f.id}_opt_${optIndex}_label`}
+                              name={`field_${f.id}_opt_${optIndex}_label`}
+                              autoComplete="off"
                               value={opt.label}
                               onChange={(element) =>
                                 updateSelectOption(f.id, optIndex, {
                                   label: element.target.value,
                                 })
                               }
-                              placeholder="Opción 1"
+                              placeholder="Opción 1…"
                             />
                           </div>
                           <Button
@@ -1221,8 +1426,9 @@ export default function AdminProgramDetailPage() {
                             variant="destructive"
                             size="sm"
                             onClick={() => removeSelectOption(f.id, optIndex)}
+                            aria-label="Eliminar opción"
                           >
-                            <Trash2 className="h-4 w-4" />
+                            <Trash2 className="h-4 w-4" aria-hidden="true" />
                           </Button>
                         </div>
                       ))}
@@ -1240,11 +1446,94 @@ export default function AdminProgramDetailPage() {
             disabled={saving}
             className="gap-2 bg-[#00CCA4]"
           >
-            <Save className="h-4 w-4" />
+            <Save className="h-4 w-4" aria-hidden="true" />
             Guardar formulario
           </Button>
         </CardContent>
       </Card>
+
+      {isEditionModalOpen ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 overscroll-contain">
+          <div className="w-full max-w-lg rounded-lg bg-[#0F1117] border border-[#1F2937] shadow text-[#E5E7EB]">
+            <div className="p-4 border-b">
+              <div className="text-lg font-semibold">
+                {isEditingEdition ? 'Editar edición' : 'Nueva edición'}
+              </div>
+              <div className="text-sm text-[#9CA3AF]">
+                {isEditingEdition
+                  ? 'Actualizá el nombre, fechas o estado.'
+                  : 'Definí el nombre y el rango de fechas.'}
+              </div>
+            </div>
+
+            <div className="p-4 space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="editionName">Nombre de edición</Label>
+                <Input
+                  id="editionName"
+                  name="edition_name"
+                  autoComplete="off"
+                  placeholder="Ej: 7ma Edición 2026…"
+                  value={newEditionName}
+                  onChange={(element) =>
+                    setNewEditionName(element.target.value)
+                  }
+                />
+              </div>
+
+              <div className="flex items-center gap-3">
+                <Switch
+                  id="editionIsOpen"
+                  checked={editionIsOpen}
+                  onCheckedChange={setEditionIsOpen}
+                  aria-label="Edición abierta"
+                />
+                <Label htmlFor="editionIsOpen" className="text-sm">
+                  {editionIsOpen ? 'Edición abierta' : 'Edición cerrada'}
+                </Label>
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="editionStartsAt">Fecha de inicio</Label>
+                  <Input
+                    id="editionStartsAt"
+                    name="edition_starts_at"
+                    autoComplete="off"
+                    type="date"
+                    value={newEditionStartsAt}
+                    onChange={(element) =>
+                      setNewEditionStartsAt(element.target.value)
+                    }
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="editionEndsAt">Fecha de fin</Label>
+                  <Input
+                    id="editionEndsAt"
+                    name="edition_ends_at"
+                    autoComplete="off"
+                    type="date"
+                    value={newEditionEndsAt}
+                    onChange={(element) =>
+                      setNewEditionEndsAt(element.target.value)
+                    }
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="p-4 border-t flex items-center justify-end gap-2">
+              <Button variant="secondary" onClick={closeEditionModal}>
+                Cancelar
+              </Button>
+              <Button onClick={saveEdition} disabled={saving}>
+                {isEditingEdition ? 'Guardar cambios' : 'Crear edición'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   )
 }

@@ -384,9 +384,7 @@ export default function AdminSettingsPage() {
                       </div>
 
                       <div className="space-y-2 md:col-span-2">
-                        <Label className="text-xs text-white/60">
-                          Skills
-                        </Label>
+                        <Label className="text-xs text-white/60">Skills</Label>
                         <div className="flex flex-wrap gap-2">
                           {availableSkills.map((skill) => {
                             const isSelected = selectedSkills.includes(skill)

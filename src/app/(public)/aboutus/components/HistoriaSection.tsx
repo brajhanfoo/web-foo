@@ -6,13 +6,11 @@ import React from 'react'
 export default function HistoriaSection() {
   return (
     <section className="relative w-full bg-black text-white py-24 px-6 md:px-12 overflow-hidden">
-      
       {/* Glow branding */}
       <div className="absolute top-0 left-0 w-[400px] h-[400px] bg-[#77039F] opacity-20 blur-[140px]" />
       <div className="absolute bottom-0 right-0 w-[400px] h-[400px] bg-[#00CCA4] opacity-20 blur-[140px]" />
 
       <div className="relative z-10 max-w-6xl mx-auto grid lg:grid-cols-2 gap-16 items-center">
-        
         {/* TEXTO */}
         <div>
           {/* eyebrow */}

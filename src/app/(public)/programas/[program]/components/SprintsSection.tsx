@@ -1,6 +1,6 @@
 'use client'
 
-import {  
+import {
   FaBug,
   FaCode,
   FaPaintBrush,
@@ -40,16 +40,13 @@ export default function SprintsSection() {
         {/* Sprint 1 */}
         <div className="bg-[#121214]/80  rounded-2xl p-6 border-l-4 border-[#77039F] shadow-lg">
           <h3 className="text-xl font-semibold mb-6 flex items-center gap-2 text-[#77039F]">
-             Sprint 0 - Fase II (2 semanas) :
-             <span className=' text-white'>Investigación UX</span>
-            
+            Sprint 0 - Fase II (2 semanas) :
+            <span className=" text-white">Investigación UX</span>
           </h3>
 
           <div className="grid md:grid-cols-2 gap-6">
             <div className="bg-[#161616] p-4 rounded-xl shadow">
-              <h4 className="font-semibold text-[#D85DFB] mb-2">
-                🎯 Objetivo
-              </h4>
+              <h4 className="font-semibold text-[#D85DFB] mb-2">🎯 Objetivo</h4>
               <p className="text-gray-300">
                 Hacer que el diseño sea entendible para las personas que usarán
                 el software.

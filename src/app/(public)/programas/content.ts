@@ -62,7 +62,7 @@ export function getProgramCardContent(program: ProgramRow): ProgramCardContent {
           'Comunidad de talento filtrado - Solo trabajas con los mejores',
           true
         ),
-        feature('briefs', 'Briefs de proyectos con stakeholders', true),        
+        feature('briefs', 'Briefs de proyectos con stakeholders', true),
         feature('sim', 'Entorno laboral simulado 100% realista', true),
         feature('mentor', 'Mentoría experta dedicada', false),
         feature('workshops', 'Workshops + career services', false),

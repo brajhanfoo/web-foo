@@ -6,13 +6,11 @@ import React from 'react'
 export default function MisionVisionSection() {
   return (
     <section className="relative py-28 bg-black text-white overflow-hidden">
-      
       {/* Glow branding */}
       <div className="absolute top-0 left-0 w-[400px] h-[400px] bg-[#77039F] opacity-20 blur-[140px]" />
       <div className="absolute bottom-0 right-0 w-[400px] h-[400px] bg-[#00CCA4] opacity-20 blur-[140px]" />
 
       <div className="relative max-w-6xl mx-auto px-6">
-        
         {/* EYEBROW */}
         <p className="text-center text-sm tracking-[0.3em] text-[#BDBE0B] uppercase mb-4">
           Propósito & Dirección
@@ -28,10 +26,8 @@ export default function MisionVisionSection() {
 
         {/* CARDS */}
         <div className="grid md:grid-cols-2 gap-10">
-          
           {/* MISION */}
           <div className="group bg-white/5 backdrop-blur-xl border border-white/10 hover:border-[#00CCA4]/40 transition rounded-3xl p-10">
-            
             <div className="flex items-center gap-4 mb-6">
               <div className="p-4 rounded-xl bg-[#00CCA4]/10">
                 <FaBullseye className="text-3xl text-[#00CCA4]" />
@@ -40,8 +36,8 @@ export default function MisionVisionSection() {
             </div>
 
             <p className="text-gray-300 leading-relaxed text-lg">
-              Acelerar la inserción laboral de talento tecnológico en Latinoamérica
-              mediante un modelo de{' '}
+              Acelerar la inserción laboral de talento tecnológico en
+              Latinoamérica mediante un modelo de{' '}
               <span className="text-white font-semibold">
                 experiencia práctica real
               </span>
@@ -49,9 +45,10 @@ export default function MisionVisionSection() {
             </p>
 
             <p className="text-gray-400 mt-4 leading-relaxed">
-              Diseñamos programas educativos escalables que conectan talento junior,
-              mentores y organizaciones en un ecosistema donde aprender significa
-              construir productos reales y adquirir experiencia verificable.
+              Diseñamos programas educativos escalables que conectan talento
+              junior, mentores y organizaciones en un ecosistema donde aprender
+              significa construir productos reales y adquirir experiencia
+              verificable.
             </p>
 
             {/* badge */}
@@ -70,7 +67,6 @@ export default function MisionVisionSection() {
 
           {/* VISION */}
           <div className="group bg-white/5 backdrop-blur-xl border border-white/10 hover:border-[#D85DFB]/40 transition rounded-3xl p-10">
-            
             <div className="flex items-center gap-4 mb-6">
               <div className="p-4 rounded-xl bg-[#D85DFB]/10">
                 <FaEye className="text-3xl text-[#D85DFB]" />
@@ -105,7 +101,8 @@ export default function MisionVisionSection() {
         {/* FRASE INVERSION */}
         <div className="text-center mt-20">
           <p className="text-gray-500 text-sm">
-            Diseñando una infraestructura educativa escalable para el talento tech del futuro.
+            Diseñando una infraestructura educativa escalable para el talento
+            tech del futuro.
           </p>
         </div>
       </div>

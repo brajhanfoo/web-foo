@@ -3,7 +3,7 @@ export const metadata = {
   description:
     'Términos y Condiciones de uso de la plataforma educativa Foo Talent Group.',
 }
-import Link from "next/link";
+import Link from 'next/link'
 const LAST_UPDATE = '25 de enero de 2026'
 
 export default function TermsAndConditionsPage() {
@@ -22,9 +22,7 @@ export default function TermsAndConditionsPage() {
             Términos y Condiciones de Uso
           </h1>
 
-          <p className="mt-3 text-white/60">
-            Foo Talent Group (FTG)
-          </p>
+          <p className="mt-3 text-white/60">Foo Talent Group (FTG)</p>
 
           <div className="mt-4 text-sm text-white/50">
             Última actualización: {LAST_UPDATE}
@@ -51,7 +49,6 @@ export default function TermsAndConditionsPage() {
 
         {/* CUERPO LEGAL */}
         <section className="space-y-10 text-[15px] leading-7 text-white/80">
-
           {/* 1 */}
           <article>
             <h2 className="text-xl font-semibold text-white mb-3">
@@ -155,11 +152,10 @@ export default function TermsAndConditionsPage() {
             <p>
               Los precios serán informados previamente. Ofrecemos reembolso
               dentro de los primeros 7 días calendario desde el inicio del
-              programa siempre que no se haya consumido más del 8% del contenido.
+              programa siempre que no se haya consumido más del 8% del
+              contenido.
             </p>
-            <p className="mt-3">
-              Solicitudes: contacto@footalentgroup.com
-            </p>
+            <p className="mt-3">Solicitudes: contacto@footalentgroup.com</p>
           </article>
 
           {/* 8 */}
@@ -179,7 +175,8 @@ export default function TermsAndConditionsPage() {
               9. Limitación de Responsabilidad
             </h2>
             <p>
-              La plataforma se ofrece tal cual. FTG no garantiza resultados de empleo ni ingresos derivados de los programas.
+              La plataforma se ofrece tal cual. FTG no garantiza resultados de
+              empleo ni ingresos derivados de los programas.
             </p>
             <p className="mt-3">
               No seremos responsables por daños indirectos, pérdida de datos o

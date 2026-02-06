@@ -33,11 +33,19 @@ type ProgramRow = {
 type ApplicationFormRow = {
   id: string
   program_id: string
-  version: string
+  edition_id: string | null
+  version_num: number
   schema_json: unknown
   is_active: boolean
   opens_at: string | null
   closes_at: string | null
+  created_at: string
+}
+
+type EditionRow = {
+  id: string
+  program_id: string
+  is_open: boolean
   created_at: string
 }
 
@@ -64,7 +72,6 @@ type SchemaField = {
 }
 
 type FormSchema = {
-  version: string
   title: string
   description?: string
   fields: SchemaField[]
@@ -95,7 +102,6 @@ function parseSchema(schema: unknown): FormSchema | null {
   if (typeof title !== 'string') return null
   if (!Array.isArray(fields)) return null
 
-  const versionValue = candidate['version']
   const descriptionValue = candidate['description']
 
   // Validación mínima del array de fields (sin any)
@@ -167,7 +173,6 @@ function parseSchema(schema: unknown): FormSchema | null {
   )
 
   return {
-    version: typeof versionValue === 'string' ? versionValue : 'v1',
     title,
     description:
       typeof descriptionValue === 'string' ? descriptionValue : undefined,
@@ -227,12 +232,12 @@ export default function ProgramPostularPage() {
   const slug = params.slug
 
   const hasBootedOnceRef = useRef(false)
-  const hasLoadedOnceRef = useRef(false)
 
   const [isLoading, setIsLoading] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const [program, setProgram] = useState<ProgramRow | null>(null)
+  const [edition, setEdition] = useState<EditionRow | null>(null)
   const [form, setForm] = useState<ApplicationFormRow | null>(null)
   const [schema, setSchema] = useState<FormSchema | null>(null)
 
@@ -246,10 +251,7 @@ export default function ProgramPostularPage() {
   }, [bootAuth])
 
   useEffect(() => {
-    if (hasLoadedOnceRef.current) return
-    hasLoadedOnceRef.current = true
     void loadProgramAndForm()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slug])
 
   async function loadProgramAndForm() {
@@ -266,6 +268,7 @@ export default function ProgramPostularPage() {
     if (programResponse.error || !programResponse.data) {
       toast.showError('Programa no encontrado.')
       setProgram(null)
+      setEdition(null)
       setForm(null)
       setSchema(null)
       setIsLoading(false)
@@ -274,6 +277,7 @@ export default function ProgramPostularPage() {
 
     const programRow = programResponse.data as ProgramRow
     setProgram(programRow)
+    setEdition(null)
 
     if (!programRow.is_published) {
       setForm(null)
@@ -282,18 +286,60 @@ export default function ProgramPostularPage() {
       return
     }
 
-    const formResponse = await supabase
-      .from('application_forms')
-      .select(
-        'id, program_id, version, schema_json, is_active, opens_at, closes_at, created_at'
-      )
+    const openEditionResponse = await supabase
+      .from('program_editions')
+      .select('id, program_id, is_open, created_at')
       .eq('program_id', programRow.id)
-      .eq('is_active', true)
+      .eq('is_open', true)
       .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle()
 
-    if (formResponse.error) {
+    if (openEditionResponse.error) {
+      toast.showError('No se pudieron cargar las ediciones.')
+    }
+
+    let activeEdition = (openEditionResponse.data ?? null) as EditionRow | null
+
+    if (!activeEdition) {
+      const latestEditionResponse = await supabase
+        .from('program_editions')
+        .select('id, program_id, is_open, created_at')
+        .eq('program_id', programRow.id)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+
+      if (latestEditionResponse.error) {
+        toast.showError('No se pudieron cargar las ediciones.')
+      }
+
+      activeEdition = (latestEditionResponse.data ?? null) as EditionRow | null
+    }
+
+    setEdition(activeEdition)
+
+    const fetchForm = async (editionId: string | null) => {
+      let query = supabase
+        .from('application_forms')
+        .select(
+          'id, program_id, edition_id, version_num, schema_json, is_active, opens_at, closes_at, created_at'
+        )
+        .eq('program_id', programRow.id)
+        .eq('is_active', true)
+        .order('created_at', { ascending: false })
+        .limit(1)
+
+      query = editionId
+        ? query.eq('edition_id', editionId)
+        : query.is('edition_id', null)
+
+      return query.maybeSingle()
+    }
+
+    const editionFormResponse = await fetchForm(activeEdition?.id ?? null)
+
+    if (editionFormResponse.error) {
       toast.showError('No se pudo cargar el formulario activo.')
       setForm(null)
       setSchema(null)
@@ -301,7 +347,24 @@ export default function ProgramPostularPage() {
       return
     }
 
-    const activeForm = (formResponse.data ?? null) as ApplicationFormRow | null
+    let activeForm = (editionFormResponse.data ?? null) as
+      | ApplicationFormRow
+      | null
+
+    if (!activeForm && activeEdition?.id) {
+      const programFormResponse = await fetchForm(null)
+      if (programFormResponse.error) {
+        toast.showError('No se pudo cargar el formulario activo.')
+        setForm(null)
+        setSchema(null)
+        setIsLoading(false)
+        return
+      }
+      activeForm = (programFormResponse.data ?? null) as
+        | ApplicationFormRow
+        | null
+    }
+
     setForm(activeForm)
 
     const parsedSchema = activeForm ? parseSchema(activeForm.schema_json) : null
@@ -320,8 +383,9 @@ export default function ProgramPostularPage() {
     if (!program) return 'not_found'
     if (!program.is_published) return 'unpublished'
     if (!form || !schema) return 'no_form'
+    if (edition && !edition.is_open) return 'closed'
     return isFormOpen(form, new Date()) ? 'open' : 'closed'
-  }, [program, form, schema])
+  }, [program, form, schema, edition])
 
   const fieldByName = useMemo(() => {
     const map = new Map<string, SchemaField>()
@@ -353,6 +417,21 @@ export default function ProgramPostularPage() {
     availabilityField,
   ]
     .filter((field): field is SchemaField => Boolean(field))
+    .map(mapSchemaFieldToStepField)
+
+  const reservedFieldNames = new Set(
+    [
+      roleField?.name,
+      motivationField?.name,
+      technologiesField?.name,
+      experienceField?.name,
+      ...shiftFields.map((field) => field.name),
+      ...commitmentFields.map((field) => field.name),
+    ].filter((name): name is string => Boolean(name))
+  )
+
+  const extraFields = (schema?.fields ?? [])
+    .filter((field) => !reservedFieldNames.has(field.name))
     .map(mapSchemaFieldToStepField)
   function handleChangeValue(name: string, value: FormValue) {
     setValues((previous) => ({ ...previous, [name]: value }))
@@ -390,14 +469,33 @@ export default function ProgramPostularPage() {
         }
       }
 
-      const hasSomeShift =
-        Boolean(values['turno_maniana']) ||
-        Boolean(values['turno_tarde']) ||
-        Boolean(values['turno_noche'])
+      const shiftFieldNames = shiftFields.map((field) => field.name)
+      if (shiftFieldNames.length > 0) {
+        const hasSomeShift = shiftFieldNames.some((name) =>
+          Boolean(values[name])
+        )
+        if (!hasSomeShift) {
+          toast.showError('Elegí al menos un turno (mañana/tarde/noche).')
+          return false
+        }
+      }
 
-      if (!hasSomeShift) {
-        toast.showError('Elegí al menos un turno (mañana/tarde/noche).')
-        return false
+      for (const field of extraFields) {
+        if (!field.required) continue
+        const value = values[field.name]
+        if (field.type === 'checkbox') {
+          if (!Boolean(value)) {
+            toast.showError(`Completá: ${field.label}`)
+            return false
+          }
+          continue
+        }
+
+        const textValue = typeof value === 'string' ? value.trim() : ''
+        if (!textValue) {
+          toast.showError(`Completá: ${field.label}`)
+          return false
+        }
       }
 
       return true
@@ -458,7 +556,7 @@ export default function ProgramPostularPage() {
 
     setIsSubmitting(true)
 
-    const editionId: string | null = null
+    const editionId: string | null = edition?.id ?? null
 
     const exists = await alreadyApplied({
       applicantProfileId: profile.id,
@@ -689,6 +787,7 @@ export default function ProgramPostularPage() {
             motivationField ? mapSchemaFieldToStepField(motivationField) : null
           }
           shiftFields={shiftFields.map(mapSchemaFieldToStepField)}
+          extraFields={extraFields}
           values={values}
           onChangeValue={handleChangeValue}
           onBack={() => setStep(1)}

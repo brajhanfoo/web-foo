@@ -5,7 +5,6 @@ import { FaUsers, FaLightbulb } from 'react-icons/fa'
 export default function AboutHero() {
   return (
     <section className="relative w-full min-h-[92vh] flex items-center justify-center text-center text-white overflow-hidden">
-      
       {/* Background imagen */}
       <div
         className="absolute inset-0 bg-cover bg-center"
@@ -24,7 +23,6 @@ export default function AboutHero() {
 
       {/* Contenido */}
       <div className="relative z-10 max-w-4xl px-6">
-        
         {/* Eyebrow */}
         <p className="text-sm tracking-[0.25em] text-[#BDBE0B] mb-6 uppercase font-medium">
           Startup EdTech · Comunidad Tech LATAM
@@ -55,7 +53,6 @@ export default function AboutHero() {
 
         {/* Valores rápidos */}
         <div className="flex flex-col sm:flex-row justify-center gap-10">
-          
           {/* Cohortes */}
           <div className="group bg-white/5 backdrop-blur-xl border border-white/10 hover:border-[#00CCA4]/40 transition rounded-2xl px-8 py-6">
             <FaUsers className="text-4xl text-[#00CCA4] mb-3 mx-auto group-hover:scale-110 transition" />

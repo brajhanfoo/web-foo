@@ -34,12 +34,10 @@ export default function PreguntasFrecuentes() {
 
   return (
     <section className="w-full bg-black text-white py-24 px-6 relative overflow-hidden">
-
       {/* glow fondo */}
       <div className="absolute top-40 left-1/2 -translate-x-1/2 w-[700px] h-[400px] bg-[#77039F] opacity-10 blur-[160px] rounded-full" />
 
       <div className="relative z-10 max-w-4xl mx-auto">
-
         {/* header */}
         <div className="text-center mb-14">
           <h2 className="text-3xl md:text-4xl font-bold mb-4">

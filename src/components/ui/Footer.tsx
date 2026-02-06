@@ -64,11 +64,17 @@ export default function Footer() {
 
           {/* Links legales */}
           <div className="flex items-center gap-3 text-white/50">
-            <Link href="/terminos-y-condiciones" className="hover:text-white transition">
+            <Link
+              href="/terminos-y-condiciones"
+              className="hover:text-white transition"
+            >
               Términos y Condiciones
             </Link>
             <span className="opacity-40">|</span>
-            <Link href="/politica-de-privacidad" className="hover:text-white transition">
+            <Link
+              href="/politica-de-privacidad"
+              className="hover:text-white transition"
+            >
               Política de Privacidad
             </Link>
           </div>

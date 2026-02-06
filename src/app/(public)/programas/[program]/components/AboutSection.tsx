@@ -25,11 +25,12 @@ const AboutSection: React.FC = () => {
             productos digitales de práctica
           </span>
           . <br /> <br />
-         <span className='text-[14px]'>Durante todo el proceso se aplica una metodología guiada por mentores,
-          en un entorno que simula la experiencia laboral usando herramientas de
-          la industria como Figma, metodologías ágiles y buenas prácticas de
-          diseño y desarrollo.
-          </span> 
+          <span className="text-[14px]">
+            Durante todo el proceso se aplica una metodología guiada por
+            mentores, en un entorno que simula la experiencia laboral usando
+            herramientas de la industria como Figma, metodologías ágiles y
+            buenas prácticas de diseño y desarrollo.
+          </span>
         </p>
       </div>
 
@@ -88,7 +89,8 @@ const AboutSection: React.FC = () => {
           <AiOutlineBook className="w-10 h-10 mb-3 text-indigo-500" />
           <h3 className="text-lg font-bold">Estructura guiada</h3>
           <p className="text-gray-400 text-sm mt-2">
-            Cada fase del programa incluye sesiones de trabajo, entregas y retroalimentación, garantizando un acompañamiento continuo.
+            Cada fase del programa incluye sesiones de trabajo, entregas y
+            retroalimentación, garantizando un acompañamiento continuo.
           </p>
         </div>
       </div>

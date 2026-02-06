@@ -159,7 +159,7 @@ export default function AdminProgramsPage() {
       .update({ is_published: next })
       .eq('id', p.id)
     if (error) return showError('No se pudo cambiar el estado de publicación.')
-    showError(next ? 'Programa publicado.' : 'Programa despublicado.')
+    showSuccess(next ? 'Programa publicado.' : 'Programa despublicado.')
     await load()
   }
 

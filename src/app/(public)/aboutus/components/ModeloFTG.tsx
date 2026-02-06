@@ -6,7 +6,6 @@ import React from 'react'
 export default function ModeloFTGSection() {
   return (
     <section className="relative w-full py-28 bg-black text-white overflow-hidden">
-      
       {/* ===== BACKGROUND FUTURISTA ===== */}
       <div className="absolute inset-0 bg-gradient-to-b from-black via-[#07070a] to-black" />
 
@@ -18,7 +17,6 @@ export default function ModeloFTGSection() {
       <div className="absolute inset-0 opacity-[0.06] bg-[linear-gradient(to_right,#ffffff22_1px,transparent_1px),linear-gradient(to_bottom,#ffffff22_1px,transparent_1px)] bg-[size:40px_40px]" />
 
       <div className="relative z-10 max-w-7xl mx-auto px-6">
-        
         {/* ===== HEADER ===== */}
         <div className="text-center max-w-4xl mx-auto">
           <p className="text-sm tracking-[0.3em] text-[#e7e51a] uppercase mb-6">
@@ -54,16 +52,15 @@ export default function ModeloFTGSection() {
 
           <p className="text-gray-400 mt-6 text-[16px] leading-relaxed">
             Hacemos énfasis en lo que{' '}
-            <strong className="text-white">sirve para conseguir trabajo</strong>,
-            no solo en lo que resulta atractivo aprender. Nuestro enfoque prioriza
-            herramientas, metodologías y habilidades que realmente aumentan la
-            empleabilidad global.
+            <strong className="text-white">sirve para conseguir trabajo</strong>
+            , no solo en lo que resulta atractivo aprender. Nuestro enfoque
+            prioriza herramientas, metodologías y habilidades que realmente
+            aumentan la empleabilidad global.
           </p>
         </div>
 
         {/* ===== PILARES FUTURISTAS ===== */}
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mt-20">
-          
           {/* card */}
           <div className="group relative bg-white/5 backdrop-blur-xl border border-white/10 hover:border-[#780b90] transition rounded-2xl p-7">
             <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition bg-gradient-to-b from-[#780b90]/10 to-transparent" />
@@ -120,9 +117,10 @@ export default function ModeloFTGSection() {
         {/* ===== FRASE FINAL PODEROSA ===== */}
         <div className="mt-24 text-center max-w-3xl mx-auto">
           <p className="text-2xl md:text-3xl font-semibold leading-relaxed">
-            No formamos estudiantes.  
+            No formamos estudiantes.
             <span className="bg-gradient-to-r from-[#e7e51a] to-[#780b90] bg-clip-text text-transparent">
-              {' '}Formamos talento listo para resolver.
+              {' '}
+              Formamos talento listo para resolver.
             </span>
           </p>
 

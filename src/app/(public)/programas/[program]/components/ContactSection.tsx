@@ -25,7 +25,6 @@ export default function ContactSection() {
       <div className="absolute bottom-0 left-0 w-full h-40 bg-gradient-to-t from-[#7A0CA3] to-transparent" />
 
       <div className="relative z-10 max-w-4xl mx-auto text-center">
-
         {/* icono */}
         <div className="flex justify-center mb-6">
           <div className="w-14 h-14 rounded-full bg-[#BDBE0B]/20 flex items-center justify-center shadow-[0_0_25px_rgba(189,190,11,0.35)]">

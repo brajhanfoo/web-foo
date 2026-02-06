@@ -74,7 +74,6 @@ const colorStyles = {
 const Timeline: React.FC = () => {
   return (
     <section className="w-full bg-black text-white py-24 px-6 relative overflow-hidden">
-
       {/* glow fondo */}
       <div className="absolute left-1/2 top-0 -translate-x-1/2 w-[500px] h-[500px] bg-[#77039F] opacity-10 blur-[140px] rounded-full" />
 
@@ -89,7 +88,6 @@ const Timeline: React.FC = () => {
       </div>
 
       <div className="relative max-w-6xl mx-auto">
-
         {/* linea central */}
         <div className="hidden md:block absolute left-1/2 top-0 -translate-x-1/2 h-full w-[2px] bg-gradient-to-b from-[#77039F] via-[#00CCA4] to-[#3B82F6]" />
 
@@ -111,7 +109,9 @@ const Timeline: React.FC = () => {
                     className={`bg-[#0c0c0c] backdrop-blur-md border ${styles.border} ${styles.glow}
                     rounded-2xl p-7 max-w-lg`}
                   >
-                    <p className={`text-xs tracking-widest font-semibold ${styles.tag}`}>
+                    <p
+                      className={`text-xs tracking-widest font-semibold ${styles.tag}`}
+                    >
                       {phase.tag}
                     </p>
 

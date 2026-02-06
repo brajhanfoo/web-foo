@@ -32,7 +32,6 @@ export default function ValoresSection() {
 
   return (
     <section className="relative w-full py-28 px-6 md:px-12 text-white overflow-hidden">
-      
       {/* 🌌 Fondo futurista */}
       <div className="absolute inset-0 bg-gradient-to-b from-black via-[#05010a] to-black" />
 
@@ -43,7 +42,6 @@ export default function ValoresSection() {
       <div className="absolute bottom-10 left-[20%] w-[300px] h-[300px] bg-[#e7e51a]/10 blur-[120px] rounded-full" />
 
       <div className="relative z-10">
-
         {/* 🧠 Header */}
         <div className="text-center max-w-3xl mx-auto mb-20">
           <h2 className="text-4xl md:text-5xl font-extrabold mb-6">
@@ -52,8 +50,8 @@ export default function ValoresSection() {
 
           <p className="text-gray-300 text-lg leading-relaxed">
             Construimos una comunidad tecnológica basada en aprendizaje real,
-            colaboración y crecimiento profesional. Más que una empresa,
-            somos un ecosistema de talento.
+            colaboración y crecimiento profesional. Más que una empresa, somos
+            un ecosistema de talento.
           </p>
         </div>
 

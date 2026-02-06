@@ -6,7 +6,6 @@ import Link from 'next/link'
 export default function AdmissionsSection() {
   return (
     <section className="w-full bg-black text-white py-24 px-6 relative overflow-hidden">
-
       {/* glow fondo */}
       <div className="absolute right-0 top-0 w-[400px] h-[400px] bg-[#BDBE0B] opacity-10 blur-[140px] rounded-full" />
       <div className="absolute left-0 bottom-0 w-[400px] h-[400px] bg-[#77039F] opacity-10 blur-[140px] rounded-full" />
@@ -28,7 +27,6 @@ export default function AdmissionsSection() {
 
       {/* contenedor principal */}
       <div className="max-w-6xl mx-auto relative z-10">
-
         <div
           className="
           relative
@@ -46,16 +44,21 @@ export default function AdmissionsSection() {
           {/* texto */}
           <p className="text-gray-300 text-lg leading-relaxed mb-10 max-w-4xl text-center mx-auto">
             Cada cohorte reúne al menos{' '}
-            <span className="text-white font-semibold">50 estudiantes</span>, organizados en
-            equipos de desarrollo de software. El programa combina{' '}
-            <span className="text-[#00CCA4] font-semibold">sesiones en vivo</span>, trabajo
-            asincrónico y{' '}
-            <span className="text-[#00CCA4] font-semibold">mentoría guiada</span>.
+            <span className="text-white font-semibold">50 estudiantes</span>,
+            organizados en equipos de desarrollo de software. El programa
+            combina{' '}
+            <span className="text-[#00CCA4] font-semibold">
+              sesiones en vivo
+            </span>
+            , trabajo asincrónico y{' '}
+            <span className="text-[#00CCA4] font-semibold">
+              mentoría guiada
+            </span>
+            .
           </p>
 
           {/* grid */}
           <div className="grid md:grid-cols-2 gap-6 mb-12">
-
             {/* card */}
             <div className="flex items-start gap-4 bg-[#0d0d0d] border border-white/10 p-6 rounded-2xl hover:border-[#00CCA4]/40 transition">
               <div className="w-12 h-12 flex items-center justify-center rounded-xl bg-[#00CCA4]/15 text-[#00CCA4] text-xl">
@@ -63,7 +66,9 @@ export default function AdmissionsSection() {
               </div>
               <div>
                 <h4 className="font-semibold text-white">Cupo mínimo</h4>
-                <p className="text-gray-400 text-sm">50 estudiantes por cohorte</p>
+                <p className="text-gray-400 text-sm">
+                  50 estudiantes por cohorte
+                </p>
               </div>
             </div>
 
