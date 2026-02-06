@@ -22,10 +22,6 @@ export default function Navbar({ logoSrc, logoAlt }: NavbarProperties) {
   const pathname = usePathname()
   const router = useRouter()
 
-<<<<<<< HEAD
-  // Verificar si estamos en una ruta de programa activo
-=======
->>>>>>> b7030507466e8ee2781eb12875b64a2b0daf9a71
   const isProgramActive =
     pathname?.startsWith('/programas/') && pathname !== '/programas'
 
@@ -46,7 +42,6 @@ export default function Navbar({ logoSrc, logoAlt }: NavbarProperties) {
 
   return (
     <nav className="sticky top-0 z-50 flex items-center justify-between w-full bg-black px-6 py-4 md:px-4 lg:px-16 xl:px-32 shadow-lg">
-      
       {/* LOGO */}
       <Link href="/" className="z-50">
         <Image
@@ -81,11 +76,6 @@ export default function Navbar({ logoSrc, logoAlt }: NavbarProperties) {
 
       {/* BOTONES DESKTOP */}
       <div className="hidden md:flex items-center gap-4">
-<<<<<<< HEAD
-        {/* Botón Ingresar */}
-=======
-
->>>>>>> b7030507466e8ee2781eb12875b64a2b0daf9a71
         <button
           onClick={handleIngresarClick}
           className="text-white bg-white/20 hover:bg-white/30 px-5 py-2.5 rounded-md transition-colors duration-300 cursor-pointer"
