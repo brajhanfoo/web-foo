@@ -14,7 +14,11 @@ import {
 } from '@/components/ui/card'
 
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
-import { UsersTable, type UserRow, type AppRole } from './components/users-table'
+import {
+  UsersTable,
+  type UserRow,
+  type AppRole,
+} from './components/users-table'
 import { UsersToolbar } from './components/users-toolbar'
 
 const ROLE_OPTIONS: AppRole[] = ['talent', 'super_admin']
@@ -167,7 +171,8 @@ export default function AdminUsersPage() {
     return rows.filter((row) => {
       if (hasFilter && row.role !== roleFilter) return false
       if (!q) return true
-      const hay = `${safeText(row.first_name)} ${safeText(row.last_name)} ${safeText(row.email)}`.toLowerCase()
+      const hay =
+        `${safeText(row.first_name)} ${safeText(row.last_name)} ${safeText(row.email)}`.toLowerCase()
       return hay.includes(q)
     })
   }, [rows, search, roleFilter])
