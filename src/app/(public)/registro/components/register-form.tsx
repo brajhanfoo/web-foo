@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase/client'
+import { getSiteUrl } from '@/lib/site-url'
 import { getErrorMessage } from '@/types/error'
 import { getPasswordError } from '@/lib/validation/password'
 
@@ -81,7 +82,16 @@ export function RegisterForm() {
     setIsSubmitting(true)
 
     try {
-      const emailRedirectUrl = `${window.location.origin}/auth/confirm?next=/plataforma`
+      const siteUrl = getSiteUrl()
+      if (!siteUrl) {
+        showError(
+          'Falta configurar la URL del sitio',
+          'Define NEXT_PUBLIC_SITE_URL.'
+        )
+        return
+      }
+
+      const emailRedirectUrl = `${siteUrl}/auth/confirm?next=/plataforma`
 
       const { error: signUpError } = await supabase.auth.signUp({
         email: registerFormState.email,

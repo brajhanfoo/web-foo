@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { supabase } from '@/lib/supabase/client'
+import { getSiteUrl } from '@/lib/site-url'
 
 export default function ResetPasswordPage() {
   const [email, setEmail] = useState('')
@@ -10,8 +11,14 @@ export default function ResetPasswordPage() {
   async function send() {
     setMsg(null)
 
+    const siteUrl = getSiteUrl()
+    if (!siteUrl) {
+      setMsg('Configura NEXT_PUBLIC_SITE_URL en el entorno.')
+      return
+    }
+
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/api/auth/confirm?next=/update-password`,
+      redirectTo: `${siteUrl}/api/auth/confirm?next=/update-password`,
     })
 
     if (error) {

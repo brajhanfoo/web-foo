@@ -8,6 +8,7 @@ import { supabase } from '@/lib/supabase/client'
 import { useToastEnhanced } from '@/hooks/use-toast-enhanced'
 
 import { Button } from '@/components/ui/button'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import {
   Card,
   CardContent,
@@ -160,6 +161,7 @@ export default function AdminProgramDetailPage() {
   const [selectedEditionId, setSelectedEditionId] = useState<string | null>(
     null
   )
+  const [confirmDeactivateOpen, setConfirmDeactivateOpen] = useState(false)
 
   // Program fields
   const [title, setTitle] = useState('')
@@ -763,12 +765,14 @@ export default function AdminProgramDetailPage() {
     }
   }
 
-  async function deactivateForm() {
+  function requestDeactivateForm() {
     if (!form?.id) return
-    const ok = window.confirm(
-      '¿Desactivar el formulario activo? Las postulaciones anteriores no se verán afectadas.'
-    )
-    if (!ok) return
+    setConfirmDeactivateOpen(true)
+  }
+
+  async function confirmDeactivateForm() {
+    if (!form?.id) return
+    setConfirmDeactivateOpen(false)
 
     setSaving(true)
     const response = await supabase
@@ -1043,7 +1047,7 @@ export default function AdminProgramDetailPage() {
                 <Button
                   type="button"
                   variant="destructive"
-                  onClick={deactivateForm}
+                  onClick={requestDeactivateForm}
                   disabled={saving}
                   className="gap-2"
                 >
@@ -1530,6 +1534,17 @@ export default function AdminProgramDetailPage() {
           </div>
         </div>
       ) : null}
+
+      <ConfirmDialog
+        open={confirmDeactivateOpen}
+        onOpenChange={setConfirmDeactivateOpen}
+        title="¿Desactivar formulario?"
+        description="Las postulaciones anteriores se mantendrán intactas, pero este formulario dejará de estar disponible."
+        confirmLabel="Desactivar"
+        confirmVariant="destructive"
+        confirmDisabled={saving}
+        onConfirm={confirmDeactivateForm}
+      />
     </div>
   )
 }
