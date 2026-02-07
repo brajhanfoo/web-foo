@@ -347,9 +347,8 @@ export default function ProgramPostularPage() {
       return
     }
 
-    let activeForm = (editionFormResponse.data ?? null) as
-      | ApplicationFormRow
-      | null
+    let activeForm = (editionFormResponse.data ??
+      null) as ApplicationFormRow | null
 
     if (!activeForm && activeEdition?.id) {
       const programFormResponse = await fetchForm(null)
@@ -360,9 +359,8 @@ export default function ProgramPostularPage() {
         setIsLoading(false)
         return
       }
-      activeForm = (programFormResponse.data ?? null) as
-        | ApplicationFormRow
-        | null
+      activeForm = (programFormResponse.data ??
+        null) as ApplicationFormRow | null
     }
 
     setForm(activeForm)

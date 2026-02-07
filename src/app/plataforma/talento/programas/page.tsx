@@ -223,7 +223,7 @@ export default function ProgramsPage() {
         latestEditionByProgram.get(p.id) ??
         null
       const editionForm = edition
-        ? latestFormByEdition.get(edition.id) ?? null
+        ? (latestFormByEdition.get(edition.id) ?? null)
         : null
       const form = editionForm ?? latestFormByProgram.get(p.id) ?? null
 

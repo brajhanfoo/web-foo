@@ -186,9 +186,7 @@ export default function AdminProgramDetailPage() {
   const [schemaDescription, setSchemaDescription] = useState(
     DEFAULT_SCHEMA_DESCRIPTION
   )
-  const [fields, setFields] = useState<FormField[]>(() =>
-    createDefaultFields()
-  )
+  const [fields, setFields] = useState<FormField[]>(() => createDefaultFields())
 
   useEffect(() => {
     if (!programId) return
@@ -780,9 +778,7 @@ export default function AdminProgramDetailPage() {
     setSaving(false)
 
     if (response.error) {
-      showError(
-        `No se pudo desactivar. ${safeString(response.error.message)}`
-      )
+      showError(`No se pudo desactivar. ${safeString(response.error.message)}`)
       return
     }
 
@@ -792,7 +788,7 @@ export default function AdminProgramDetailPage() {
   }
 
   const selectedEdition = selectedEditionId
-    ? editions.find((edition) => edition.id === selectedEditionId) ?? null
+    ? (editions.find((edition) => edition.id === selectedEditionId) ?? null)
     : null
 
   const formScopeLabel = selectedEdition
