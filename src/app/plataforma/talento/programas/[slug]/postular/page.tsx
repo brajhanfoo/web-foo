@@ -1015,5 +1015,3 @@ export default function ProgramPostularPage() {
     </PostulationShell>
   )
 }
-
-

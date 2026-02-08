@@ -16,7 +16,11 @@ export async function POST(req: NextRequest) {
   const supabase = await createClient()
   const { data: userRes } = await supabase.auth.getUser()
   const userId = userRes.user?.id
-  if (!userId) return NextResponse.json({ ok: false, message: 'No autenticado' }, { status: 401 })
+  if (!userId)
+    return NextResponse.json(
+      { ok: false, message: 'No autenticado' },
+      { status: 401 }
+    )
 
   let body: Body | null = null
   try {
@@ -30,7 +34,10 @@ export async function POST(req: NextRequest) {
   const msg = (body?.message ?? '').trim()
 
   if (!clientTxId || !Number.isFinite(transactionIdNum)) {
-    return NextResponse.json({ ok: false, message: 'Payload inválido' }, { status: 400 })
+    return NextResponse.json(
+      { ok: false, message: 'Payload inválido' },
+      { status: 400 }
+    )
   }
 
   const { data: payment, error } = await supabaseAdmin
@@ -40,12 +47,18 @@ export async function POST(req: NextRequest) {
     .maybeSingle()
 
   if (error || !payment) {
-    return NextResponse.json({ ok: false, message: 'Pago no encontrado' }, { status: 404 })
+    return NextResponse.json(
+      { ok: false, message: 'Pago no encontrado' },
+      { status: 404 }
+    )
   }
 
   const p = payment as PaymentRow
   if (p.user_id !== userId) {
-    return NextResponse.json({ ok: false, message: 'Sin permisos' }, { status: 403 })
+    return NextResponse.json(
+      { ok: false, message: 'Sin permisos' },
+      { status: 403 }
+    )
   }
 
   if (p.status === 'paid') {

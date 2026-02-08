@@ -69,4 +69,3 @@ export type PastCompletedItem = {
   editionLabel: string
   finishedLabel: string
 }
-

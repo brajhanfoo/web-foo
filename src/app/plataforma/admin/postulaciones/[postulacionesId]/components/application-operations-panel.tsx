@@ -73,15 +73,22 @@ export function ApplicationOperationsPanel({
     if (isEnrolled) return 'Matriculado'
     if (isRejected) return 'Rechazado'
     return status
-  }, [status, isReceived, isInReview, isAdmitted, isPaymentPending, isEnrolled, isRejected])
+  }, [
+    status,
+    isReceived,
+    isInReview,
+    isAdmitted,
+    isPaymentPending,
+    isEnrolled,
+    isRejected,
+  ])
 
   const paymentBadge = useMemo(() => {
     if (!paymentStatus) return null
     if (paymentStatus === 'paid') {
       return {
         label: 'Pago confirmado',
-        className:
-          'bg-emerald-500/20 text-emerald-200 border-emerald-400/30',
+        className: 'bg-emerald-500/20 text-emerald-200 border-emerald-400/30',
       }
     }
     if (paymentStatus === 'failed' || paymentStatus === 'canceled') {
@@ -173,18 +180,23 @@ export function ApplicationOperationsPanel({
     : 'admitted'
 
   const canReject: boolean =
-    Boolean(applicationId) && (isReceived || isInReview || isAdmitted) && !isRejectLoading
+    Boolean(applicationId) &&
+    (isReceived || isInReview || isAdmitted) &&
+    !isRejectLoading
 
   const canBackToReview: boolean =
     Boolean(applicationId) &&
-    ((usesPaymentPending && isPaymentPending) || (!usesPaymentPending && isAdmitted)) &&
+    ((usesPaymentPending && isPaymentPending) ||
+      (!usesPaymentPending && isAdmitted)) &&
     !isBackToReviewLoading
 
   const canBackToPrevious: boolean =
     Boolean(applicationId) && isEnrolled && !isBackToPaymentPendingLoading
 
   const canOpenProofDialog: boolean =
-    usesPaymentPending && Boolean(applicationId) && (isPaymentPending || isEnrolled)
+    usesPaymentPending &&
+    Boolean(applicationId) &&
+    (isPaymentPending || isEnrolled)
 
   const canEnrollNow: boolean =
     usesPaymentPending &&
@@ -194,7 +206,10 @@ export function ApplicationOperationsPanel({
     !isEnrollLoading
 
   const canEnrollDirect: boolean =
-    !usesPaymentPending && Boolean(applicationId) && isAdmitted && !isEnrollLoading
+    !usesPaymentPending &&
+    Boolean(applicationId) &&
+    isAdmitted &&
+    !isEnrollLoading
   async function setStatus(nextStatus: ApplicationStatus): Promise<void> {
     await onUpdateStatus(nextStatus)
 

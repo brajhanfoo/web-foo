@@ -18,11 +18,7 @@ import type {
   PaymentStatus,
   ProgramPaymentMode,
 } from './types/types'
-import {
-  getStringValue,
-  statusToStepIndex,
-  textOrNA,
-} from './helpers'
+import { getStringValue, statusToStepIndex, textOrNA } from './helpers'
 
 import { ApplicationStepper } from './components/application-stepper'
 import { ApplicantProfileCard } from './components/applicant-profile-card'
@@ -46,10 +42,12 @@ function isApplicationStatus(value: unknown): value is ApplicationStatus {
   )
 }
 
-function resolvePaymentMode(program: {
-  payment_mode: ProgramPaymentMode | null
-  requires_payment_pre: boolean
-} | null): ProgramPaymentMode {
+function resolvePaymentMode(
+  program: {
+    payment_mode: ProgramPaymentMode | null
+    requires_payment_pre: boolean
+  } | null
+): ProgramPaymentMode {
   if (!program) return 'none'
   if (program.payment_mode) return program.payment_mode
   return program.requires_payment_pre ? 'pre' : 'none'
@@ -123,41 +121,53 @@ function parseFormSchema(schema: unknown): FormSchema | null {
   const title = candidate['title']
   const fields = candidate['fields']
   if (typeof title !== 'string' || !Array.isArray(fields)) return null
-  const description = typeof candidate['description'] === 'string' ? candidate['description'] : undefined
-  const parsedFields: SchemaField[] = fields.reduce<SchemaField[]>((acc, fieldUnknown) => {
-    if (!fieldUnknown || typeof fieldUnknown !== 'object') return acc
-    const row = fieldUnknown as Record<string, unknown>
-    const id = row['id']
-    const name = row['name']
-    const type = row['type']
-    const label = row['label']
-    if (typeof id !== 'string' || typeof name !== 'string' || typeof label !== 'string') return acc
-    if (!isFieldType(type)) return acc
-    const placeholder = row['placeholder']
-    const required = row['required']
-    const optionsRaw = row['options']
-    const options: SchemaFieldOption[] | undefined = Array.isArray(optionsRaw)
-      ? optionsRaw.reduce<SchemaFieldOption[]>((optAcc, optUnknown) => {
-          if (!optUnknown || typeof optUnknown !== 'object') return optAcc
-          const optRow = optUnknown as Record<string, unknown>
-          const optLabel = optRow['label']
-          const optValue = optRow['value']
-          if (typeof optLabel !== 'string' || typeof optValue !== 'string') return optAcc
-          optAcc.push({ label: optLabel, value: optValue })
-          return optAcc
-        }, [])
+  const description =
+    typeof candidate['description'] === 'string'
+      ? candidate['description']
       : undefined
-    acc.push({
-      id,
-      name,
-      type,
-      label,
-      placeholder: typeof placeholder === 'string' ? placeholder : undefined,
-      required: typeof required === 'boolean' ? required : undefined,
-      options,
-    })
-    return acc
-  }, [])
+  const parsedFields: SchemaField[] = fields.reduce<SchemaField[]>(
+    (acc, fieldUnknown) => {
+      if (!fieldUnknown || typeof fieldUnknown !== 'object') return acc
+      const row = fieldUnknown as Record<string, unknown>
+      const id = row['id']
+      const name = row['name']
+      const type = row['type']
+      const label = row['label']
+      if (
+        typeof id !== 'string' ||
+        typeof name !== 'string' ||
+        typeof label !== 'string'
+      )
+        return acc
+      if (!isFieldType(type)) return acc
+      const placeholder = row['placeholder']
+      const required = row['required']
+      const optionsRaw = row['options']
+      const options: SchemaFieldOption[] | undefined = Array.isArray(optionsRaw)
+        ? optionsRaw.reduce<SchemaFieldOption[]>((optAcc, optUnknown) => {
+            if (!optUnknown || typeof optUnknown !== 'object') return optAcc
+            const optRow = optUnknown as Record<string, unknown>
+            const optLabel = optRow['label']
+            const optValue = optRow['value']
+            if (typeof optLabel !== 'string' || typeof optValue !== 'string')
+              return optAcc
+            optAcc.push({ label: optLabel, value: optValue })
+            return optAcc
+          }, [])
+        : undefined
+      acc.push({
+        id,
+        name,
+        type,
+        label,
+        placeholder: typeof placeholder === 'string' ? placeholder : undefined,
+        required: typeof required === 'boolean' ? required : undefined,
+        options,
+      })
+      return acc
+    },
+    []
+  )
   return { title, description, fields: parsedFields }
 }
 

@@ -131,7 +131,9 @@ async function findExistingPaid(params: {
 }): Promise<PaymentRow | null> {
   let q = supabaseAdmin
     .from('payments')
-    .select('id,status,edition_id,client_transaction_id,payphone_transaction_id')
+    .select(
+      'id,status,edition_id,client_transaction_id,payphone_transaction_id'
+    )
     .eq('user_id', params.userId)
     .eq('program_id', params.programId)
     .eq('purpose', params.purpose)
@@ -139,7 +141,9 @@ async function findExistingPaid(params: {
     .order('created_at', { ascending: false })
     .limit(1)
 
-  q = params.editionId ? q.eq('edition_id', params.editionId) : q.is('edition_id', null)
+  q = params.editionId
+    ? q.eq('edition_id', params.editionId)
+    : q.is('edition_id', null)
 
   const { data, error } = await q.maybeSingle()
   if (error || !data) return null
@@ -154,7 +158,9 @@ async function findReusableOpen(params: {
 }): Promise<PaymentRow | null> {
   let q = supabaseAdmin
     .from('payments')
-    .select('id,status,edition_id,client_transaction_id,payphone_transaction_id')
+    .select(
+      'id,status,edition_id,client_transaction_id,payphone_transaction_id'
+    )
     .eq('user_id', params.userId)
     .eq('program_id', params.programId)
     .eq('purpose', params.purpose)
@@ -162,19 +168,26 @@ async function findReusableOpen(params: {
     .order('created_at', { ascending: false })
     .limit(1)
 
-  q = params.editionId ? q.eq('edition_id', params.editionId) : q.is('edition_id', null)
+  q = params.editionId
+    ? q.eq('edition_id', params.editionId)
+    : q.is('edition_id', null)
 
   const { data, error } = await q.maybeSingle()
   if (error || !data) return null
   return data as PaymentRow
 }
 
-export async function POST(request: NextRequest): Promise<NextResponse<CreateCheckoutResponse>> {
+export async function POST(
+  request: NextRequest
+): Promise<NextResponse<CreateCheckoutResponse>> {
   const supabaseServer = await createClient()
   const { data: userRes, error: userErr } = await supabaseServer.auth.getUser()
 
   if (userErr || !userRes.user) {
-    return NextResponse.json({ ok: false, message: 'No autenticado' }, { status: 401 })
+    return NextResponse.json(
+      { ok: false, message: 'No autenticado' },
+      { status: 401 }
+    )
   }
 
   let payload: CreateCheckoutInput | null = null
@@ -185,7 +198,10 @@ export async function POST(request: NextRequest): Promise<NextResponse<CreateChe
   }
 
   if (!payload) {
-    return NextResponse.json({ ok: false, message: 'Payload inválido' }, { status: 400 })
+    return NextResponse.json(
+      { ok: false, message: 'Payload inválido' },
+      { status: 400 }
+    )
   }
 
   const { programId, editionId, purpose, applicationId, amountCents } = payload
@@ -198,22 +214,34 @@ export async function POST(request: NextRequest): Promise<NextResponse<CreateChe
     .maybeSingle()
 
   if (programErr || !programRow) {
-    return NextResponse.json({ ok: false, message: 'Programa no encontrado' }, { status: 404 })
+    return NextResponse.json(
+      { ok: false, message: 'Programa no encontrado' },
+      { status: 404 }
+    )
   }
 
   const program = programRow as ProgramRow
   const paymentMode = resolvePaymentMode(program)
 
   if (purpose === 'pre_enrollment' && paymentMode !== 'pre') {
-    return NextResponse.json({ ok: false, message: 'El programa no requiere pago previo' }, { status: 400 })
+    return NextResponse.json(
+      { ok: false, message: 'El programa no requiere pago previo' },
+      { status: 400 }
+    )
   }
 
   if (purpose === 'tuition') {
     if (!applicationId) {
-      return NextResponse.json({ ok: false, message: 'Falta applicationId' }, { status: 400 })
+      return NextResponse.json(
+        { ok: false, message: 'Falta applicationId' },
+        { status: 400 }
+      )
     }
     if (paymentMode !== 'post') {
-      return NextResponse.json({ ok: false, message: 'El programa no usa pago posterior' }, { status: 400 })
+      return NextResponse.json(
+        { ok: false, message: 'El programa no usa pago posterior' },
+        { status: 400 }
+      )
     }
   }
 
@@ -235,15 +263,24 @@ export async function POST(request: NextRequest): Promise<NextResponse<CreateChe
       .maybeSingle()
 
     if (appErr || !appRow) {
-      return NextResponse.json({ ok: false, message: 'Postulación no encontrada' }, { status: 404 })
+      return NextResponse.json(
+        { ok: false, message: 'Postulación no encontrada' },
+        { status: 404 }
+      )
     }
 
     const application = appRow as ApplicationRow
     if (application.applicant_profile_id !== userId) {
-      return NextResponse.json({ ok: false, message: 'Sin permisos para esta postulación' }, { status: 403 })
+      return NextResponse.json(
+        { ok: false, message: 'Sin permisos para esta postulación' },
+        { status: 403 }
+      )
     }
     if (application.program_id !== programId) {
-      return NextResponse.json({ ok: false, message: 'Programa no coincide con la postulación' }, { status: 400 })
+      return NextResponse.json(
+        { ok: false, message: 'Programa no coincide con la postulación' },
+        { status: 400 }
+      )
     }
 
     resolvedEditionId = resolvedEditionId ?? application.edition_id ?? null
@@ -258,7 +295,12 @@ export async function POST(request: NextRequest): Promise<NextResponse<CreateChe
 
   if (existingPaid) {
     return NextResponse.json(
-      { ok: true, paymentId: existingPaid.id, status: 'paid', alreadyPaid: true },
+      {
+        ok: true,
+        paymentId: existingPaid.id,
+        status: 'paid',
+        alreadyPaid: true,
+      },
       { status: 200 }
     )
   }
@@ -268,27 +310,31 @@ export async function POST(request: NextRequest): Promise<NextResponse<CreateChe
   const storeId = process.env.NEXT_PUBLIC_PAYPHONE_STORE_ID
   if (!token || !storeId) {
     return NextResponse.json(
-      { ok: false, message: 'Configura NEXT_PUBLIC_PAYPHONE_TOKEN y NEXT_PUBLIC_PAYPHONE_STORE_ID' },
+      {
+        ok: false,
+        message:
+          'Configura NEXT_PUBLIC_PAYPHONE_TOKEN y NEXT_PUBLIC_PAYPHONE_STORE_ID',
+      },
       { status: 500 }
     )
   }
 
   // Reusar pago abierto
- // Buscar pago abierto previo (si existe)
-const openRow = await findReusableOpen({
-  userId,
-  programId,
-  editionId: resolvedEditionId,
-  purpose,
-})
+  // Buscar pago abierto previo (si existe)
+  const openRow = await findReusableOpen({
+    userId,
+    programId,
+    editionId: resolvedEditionId,
+    purpose,
+  })
 
-if (openRow) {
-  // Importante: NO reusar clientTxId (PayPhone lo rechaza si ya existe)
-  await supabaseAdmin
-    .from('payments')
-    .update({ status: 'canceled' })
-    .eq('id', openRow.id)
-}
+  if (openRow) {
+    // Importante: NO reusar clientTxId (PayPhone lo rechaza si ya existe)
+    await supabaseAdmin
+      .from('payments')
+      .update({ status: 'canceled' })
+      .eq('id', openRow.id)
+  }
   // Crear nuevo
   const { data: inserted, error: insertErr } = await supabaseAdmin
     .from('payments')
@@ -308,7 +354,10 @@ if (openRow) {
     .maybeSingle()
 
   if (insertErr || !inserted?.id) {
-    return NextResponse.json({ ok: false, message: 'No se pudo iniciar el pago' }, { status: 500 })
+    return NextResponse.json(
+      { ok: false, message: 'No se pudo iniciar el pago' },
+      { status: 500 }
+    )
   }
 
   const paymentId = inserted.id as string
@@ -320,7 +369,10 @@ if (openRow) {
     .eq('id', paymentId)
 
   if (updateErr) {
-    return NextResponse.json({ ok: false, message: 'No se pudo actualizar el pago' }, { status: 500 })
+    return NextResponse.json(
+      { ok: false, message: 'No se pudo actualizar el pago' },
+      { status: 500 }
+    )
   }
 
   return NextResponse.json(

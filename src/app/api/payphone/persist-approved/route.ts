@@ -95,7 +95,10 @@ export async function POST(req: NextRequest) {
   const p = payment as PaymentRow
 
   if (p.user_id !== userId) {
-    return NextResponse.json({ ok: false, message: 'Sin permisos' }, { status: 403 })
+    return NextResponse.json(
+      { ok: false, message: 'Sin permisos' },
+      { status: 403 }
+    )
   }
 
   if (p.status === 'paid') {
@@ -147,4 +150,3 @@ export async function POST(req: NextRequest) {
 
   return NextResponse.json({ ok: true, redirectTo }, { status: 200 })
 }
-

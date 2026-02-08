@@ -71,7 +71,11 @@ export function statusLabel(status: ApplicationStatus): string {
 export function topDotClass(status: ApplicationStatus): string {
   if (status === 'received') return 'bg-[#3B82F6]'
   if (status === 'in_review') return 'bg-orange-500'
-  if (status === 'approved' || status === 'admitted' || status === 'payment_pending')
+  if (
+    status === 'approved' ||
+    status === 'admitted' ||
+    status === 'payment_pending'
+  )
     return 'bg-[#E7E51A]'
   if (status === 'enrolled') return 'bg-fuchsia-400'
   return 'bg-zinc-500'
@@ -80,7 +84,11 @@ export function topDotClass(status: ApplicationStatus): string {
 export function borderAccentClass(status: ApplicationStatus): string {
   if (status === 'received') return 'ring-1 ring-blue-500/20'
   if (status === 'in_review') return 'ring-1 ring-orange-500/20'
-  if (status === 'approved' || status === 'admitted' || status === 'payment_pending')
+  if (
+    status === 'approved' ||
+    status === 'admitted' ||
+    status === 'payment_pending'
+  )
     return 'ring-1 ring-yellow-400/20'
   if (status === 'enrolled') return 'ring-1 ring-fuchsia-500/20'
   return 'ring-1 ring-muted/30'
@@ -91,7 +99,11 @@ export function badgeClass(status: ApplicationStatus): string {
     return 'border-blue-500/30 bg-blue-500/10 text-blue-300'
   if (status === 'in_review')
     return 'border-orange-500/30 bg-orange-500/10 text-orange-400'
-  if (status === 'approved' || status === 'admitted' || status === 'payment_pending')
+  if (
+    status === 'approved' ||
+    status === 'admitted' ||
+    status === 'payment_pending'
+  )
     return 'border-yellow-400/30 bg-yellow-400/10 text-yellow-300'
   if (status === 'enrolled')
     return 'border-fuchsia-500/30 bg-fuchsia-500/10 text-fuchsia-300'
@@ -172,10 +184,7 @@ function compareDateParts(a: DateParts, b: DateParts): number {
   return 0
 }
 
-export function isEditionEnded(
-  edition: EditionRow | null,
-  now: Date
-): boolean {
+export function isEditionEnded(edition: EditionRow | null, now: Date): boolean {
   if (!edition?.ends_at) return false
   const endParts = parseDateParts(edition.ends_at)
   if (!endParts) return false
@@ -207,7 +216,11 @@ export function iconGlowClass(status: ApplicationStatus): string {
   if (status === 'in_review')
     return 'shadow-[0_0_30px_rgba(249,115,22,0.35)] border-orange-500/40'
 
-  if (status === 'approved' || status === 'admitted' || status === 'payment_pending')
+  if (
+    status === 'approved' ||
+    status === 'admitted' ||
+    status === 'payment_pending'
+  )
     return 'shadow-[0_0_34px_rgba(250,204,21,0.40)] border-yellow-400/50'
 
   if (status === 'enrolled')
