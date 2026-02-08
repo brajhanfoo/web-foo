@@ -6,6 +6,8 @@ import { useParams, useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase/client'
 import { useAuthStore } from '@/stores/auth-stores'
 import { useToastEnhanced } from '@/hooks/use-toast-enhanced'
+import { PayphoneCheckoutModal } from '@/components/payments/payphone-checkout-modal'
+import { Button } from '@/components/ui/button'
 
 import {
   StepRole,
@@ -27,7 +29,9 @@ type ProgramRow = {
   title: string
   description: string | null
   is_published: boolean
+  payment_mode: ProgramPaymentMode | null
   requires_payment_pre: boolean
+  price_usd: string | null
 }
 
 type ApplicationFormRow = {
@@ -79,8 +83,22 @@ type FormSchema = {
 
 type StepIdentifier = 1 | 2 | 3
 
+type ProgramPaymentMode = 'none' | 'pre' | 'post'
+
 function safeString(value: unknown): string {
   return typeof value === 'string' ? value : ''
+}
+
+function resolvePaymentMode(program: ProgramRow): ProgramPaymentMode {
+  if (program.payment_mode) return program.payment_mode
+  return program.requires_payment_pre ? 'pre' : 'none'
+}
+
+function parsePriceToCents(priceUsd: string | null): number | null {
+  if (!priceUsd) return null
+  const parsed = Number(priceUsd)
+  if (!Number.isFinite(parsed)) return null
+  return Math.round(parsed * 100)
 }
 
 function isFormOpen(form: ApplicationFormRow, now: Date): boolean {
@@ -243,6 +261,8 @@ export default function ProgramPostularPage() {
 
   const [step, setStep] = useState<StepIdentifier>(1)
   const [values, setValues] = useState<FormValuesMap>({})
+  const [hasPaidPre, setHasPaidPre] = useState<boolean | null>(null)
+  const [checkoutOpen, setCheckoutOpen] = useState(false)
 
   useEffect(() => {
     if (hasBootedOnceRef.current) return
@@ -254,13 +274,27 @@ export default function ProgramPostularPage() {
     void loadProgramAndForm()
   }, [slug])
 
+  useEffect(() => {
+    if (!program) return
+    if (resolvePaymentMode(program) !== 'pre') {
+      setHasPaidPre(true)
+      return
+    }
+    if (!userId) {
+      setHasPaidPre(false)
+      return
+    }
+    void checkPrePayment(program.id, edition?.id ?? null)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [program?.id, edition?.id, userId])
+
   async function loadProgramAndForm() {
     setIsLoading(true)
 
     const programResponse = await supabase
       .from('programs')
       .select(
-        'id, slug, title, description, is_published, requires_payment_pre'
+        'id, slug, title, description, is_published, payment_mode, requires_payment_pre, price_usd'
       )
       .eq('slug', slug)
       .maybeSingle()
@@ -327,6 +361,7 @@ export default function ProgramPostularPage() {
         )
         .eq('program_id', programRow.id)
         .eq('is_active', true)
+        .order('version_num', { ascending: false })
         .order('created_at', { ascending: false })
         .limit(1)
 
@@ -540,6 +575,62 @@ export default function ProgramPostularPage() {
     return Boolean(data?.id)
   }
 
+  async function checkPrePayment(
+    programId: string,
+    editionId: string | null
+  ): Promise<void> {
+    if (!userId) {
+      setHasPaidPre(false)
+      return
+    }
+
+    setHasPaidPre(null)
+
+    let query = supabase
+      .from('payments')
+      .select('id')
+      .eq('user_id', userId)
+      .eq('program_id', programId)
+      .eq('purpose', 'pre_enrollment')
+      .eq('status', 'paid')
+      .limit(1)
+
+    query = editionId
+      ? query.eq('edition_id', editionId)
+      : query.is('edition_id', null)
+
+    const { data, error } = await query.maybeSingle()
+    if (error) {
+      setHasPaidPre(false)
+      return
+    }
+
+    if (data?.id) {
+      setHasPaidPre(true)
+      return
+    }
+
+    if (editionId) {
+      const fallback = await supabase
+        .from('payments')
+        .select('id')
+        .eq('user_id', userId)
+        .eq('program_id', programId)
+        .eq('purpose', 'pre_enrollment')
+        .eq('status', 'paid')
+        .is('edition_id', null)
+        .limit(1)
+        .maybeSingle()
+
+      if (fallback.data?.id) {
+        setHasPaidPre(true)
+        return
+      }
+    }
+
+    setHasPaidPre(false)
+  }
+
   async function handleSubmit() {
     if (!program || !form || !schema) return
     if (!userId || !profile) return
@@ -549,6 +640,11 @@ export default function ProgramPostularPage() {
     if (profile.profile_status !== 'profile_complete') {
       toast.showError('Completá tu perfil antes de postular.')
       router.push('/plataforma/talento/perfil')
+      return
+    }
+
+    if (resolvePaymentMode(program) === 'pre' && hasPaidPre !== true) {
+      toast.showError('Debes completar el pago antes de postular.')
       return
     }
 
@@ -569,6 +665,49 @@ export default function ProgramPostularPage() {
       return
     }
 
+    const paymentMode = resolvePaymentMode(program)
+    let paymentStatus: 'initiated' | 'paid' = 'initiated'
+    let paidAt: string | null = null
+    let paymentRequired = false
+
+    if (paymentMode === 'pre') {
+      paymentRequired = true
+      if (hasPaidPre) {
+        let paymentQuery = supabase
+          .from('payments')
+          .select('paid_at')
+          .eq('user_id', userId)
+          .eq('program_id', program.id)
+          .eq('purpose', 'pre_enrollment')
+          .eq('status', 'paid')
+          .limit(1)
+
+        paymentQuery = editionId
+          ? paymentQuery.eq('edition_id', editionId)
+          : paymentQuery.is('edition_id', null)
+
+        const { data: paidRow } = await paymentQuery.maybeSingle()
+
+        if (!paidRow?.paid_at && editionId) {
+          const { data: fallbackRow } = await supabase
+            .from('payments')
+            .select('paid_at')
+            .eq('user_id', userId)
+            .eq('program_id', program.id)
+            .eq('purpose', 'pre_enrollment')
+            .eq('status', 'paid')
+            .is('edition_id', null)
+            .limit(1)
+            .maybeSingle()
+          paidAt = (fallbackRow?.paid_at as string | null) ?? null
+        } else {
+          paidAt = (paidRow?.paid_at as string | null) ?? null
+        }
+
+        paymentStatus = 'paid'
+      }
+    }
+
     const appliedRole = safeString(values['rol_postulado']).trim() || null
 
     const insertResponse = await supabase.from('applications').insert({
@@ -579,6 +718,9 @@ export default function ProgramPostularPage() {
       applied_role: appliedRole,
       answers: values,
       status: 'received',
+      payment_status: paymentStatus,
+      paid_at: paidAt,
+      payment_required: paymentRequired,
     })
 
     setIsSubmitting(false)
@@ -729,6 +871,68 @@ export default function ProgramPostularPage() {
     )
   }
 
+  const paymentMode = resolvePaymentMode(program)
+
+  if (paymentMode === 'pre') {
+    if (hasPaidPre === null) {
+      return (
+        <div className="p-6 max-w-3xl mx-auto">
+          <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-6 text-white">
+            Verificando tu pago…
+          </div>
+        </div>
+      )
+    }
+
+    if (!hasPaidPre) {
+      const amountCents = parsePriceToCents(program.price_usd) ?? 0
+      return (
+        <div className="p-6 max-w-3xl mx-auto space-y-4">
+          <Link
+            className="inline-flex items-center rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-white hover:bg-white/10"
+            href={`/plataforma/talento/programas`}
+          >
+            ← Volver
+          </Link>
+
+          <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-6 text-white space-y-3">
+            <div className="text-lg font-semibold">{program.title}</div>
+            <div className="text-sm text-white/60">
+              Este programa requiere pago previo para habilitar la postulación.
+            </div>
+
+            <Button
+              className="w-full bg-amber-400 text-black hover:bg-amber-400/90"
+              onClick={() => setCheckoutOpen(true)}
+              disabled={!amountCents}
+            >
+              Pagar e inscribirme
+            </Button>
+
+            {!amountCents ? (
+              <div className="text-xs text-white/60">
+                Falta configurar el precio del programa.
+              </div>
+            ) : null}
+          </div>
+
+          <PayphoneCheckoutModal
+            open={checkoutOpen}
+            onOpenChange={setCheckoutOpen}
+            programId={program.id}
+            editionId={edition?.id ?? null}
+            purpose="pre_enrollment"
+            amountCents={amountCents}
+            onPaid={() => {
+              setHasPaidPre(true)
+              setCheckoutOpen(false)
+            }}
+          />
+        </div>
+      )
+    }
+  }
+
   // ------------------------------ Step metadata -----------------------------
 
   const selectedRoleTitle = safeString(values['rol_postulado'])
@@ -753,6 +957,7 @@ export default function ProgramPostularPage() {
     <PostulationShell
       stepLabel={`Paso ${String(step).padStart(2, '0')} de 03`}
       title={stepTitle}
+      programTitle={program?.title ?? undefined}
       subtitle={stepSubtitle}
     >
       <div className="mb-8">
@@ -810,3 +1015,5 @@ export default function ProgramPostularPage() {
     </PostulationShell>
   )
 }
+
+

@@ -7,11 +7,13 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card'
 export function PostulationShell({
   stepLabel,
   title,
+  programTitle,
   subtitle,
   children,
 }: {
   stepLabel: string
   title: string
+  programTitle?: string
   subtitle?: string
   children: ReactNode
 }) {
@@ -25,11 +27,15 @@ export function PostulationShell({
       </div>
 
       <div className="relative mx-auto w-full max-w-[1200px] px-4 pb-10 pt-8 md:px-6">
-        <div className="mb-6 flex items-center justify-between gap-3 text-xs text-white/50">
-          <div className="uppercase tracking-widest">
-            Project Academy · Proceso de postulación
+        <div className="mb-6 flex flex-col gap-2 text-xs text-white/50 md:flex-row md:items-center md:justify-between">
+          <div className="flex flex-wrap items-center gap-x-2 uppercase tracking-widest">
+            <span>
+              {programTitle
+                ? `${programTitle} - Proceso de postulación`
+                : 'Proceso de postulación'}
+            </span>
           </div>
-          <div className="hidden md:block uppercase tracking-widest">
+          <div className="uppercase tracking-widest md:text-right">
             {stepLabel}
           </div>
         </div>

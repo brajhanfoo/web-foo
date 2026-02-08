@@ -44,10 +44,13 @@ type ProgramRow = {
   title: string
   description: string | null
   is_published: boolean
+  payment_mode: ProgramPaymentMode | null
   requires_payment_pre: boolean
   created_at: string
   updated_at: string
 }
+
+type ProgramPaymentMode = 'none' | 'pre' | 'post'
 
 type EditionRow = {
   id: string
@@ -102,6 +105,11 @@ type FormSchema = {
 function safeString(value: unknown): string {
   if (typeof value === 'string') return value
   return ''
+}
+
+function resolvePaymentMode(program: ProgramRow): ProgramPaymentMode {
+  if (program.payment_mode) return program.payment_mode
+  return program.requires_payment_pre ? 'pre' : 'none'
 }
 
 function toIsoOrNull(value: string): string | null {
@@ -168,7 +176,7 @@ export default function AdminProgramDetailPage() {
   const [slug, setSlug] = useState('')
   const [description, setDescription] = useState<string>('')
   const [isPublished, setIsPublished] = useState(false)
-  const [requiresPaymentPre, setRequiresPaymentPre] = useState(false)
+  const [paymentMode, setPaymentMode] = useState<ProgramPaymentMode>('none')
 
   // Editions create
   const [newEditionName, setNewEditionName] = useState('')
@@ -206,7 +214,7 @@ export default function AdminProgramDetailPage() {
     const programResponse = await supabase
       .from('programs')
       .select(
-        'id, slug, title, description, is_published, requires_payment_pre, created_at, updated_at'
+        'id, slug, title, description, is_published, payment_mode, requires_payment_pre, created_at, updated_at'
       )
       .eq('id', programId)
       .maybeSingle()
@@ -223,7 +231,7 @@ export default function AdminProgramDetailPage() {
     setSlug(p.slug)
     setDescription(p.description ?? '')
     setIsPublished(p.is_published)
-    setRequiresPaymentPre(p.requires_payment_pre)
+    setPaymentMode(resolvePaymentMode(p))
 
     const editionsResponse = await supabase
       .from('program_editions')
@@ -348,7 +356,8 @@ export default function AdminProgramDetailPage() {
         slug: nextSlug,
         description: description.trim() ? description.trim() : null,
         is_published: isPublished,
-        requires_payment_pre: requiresPaymentPre,
+        payment_mode: paymentMode,
+        requires_payment_pre: paymentMode === 'pre',
       })
       .eq('id', program.id)
 
@@ -909,20 +918,27 @@ export default function AdminProgramDetailPage() {
               </div>
             </div>
 
-            <div className="flex items-center gap-3">
-              <Switch
-                id="requiresPaymentPre"
-                checked={requiresPaymentPre}
-                onCheckedChange={setRequiresPaymentPre}
-                aria-label="Requiere pago previo"
-              />
-              <div>
-                <Label htmlFor="requiresPaymentPre" className="font-medium">
-                  Requiere pago previo
-                </Label>
-                <div className="text-sm text-muted-foreground">
-                  Bloquea postulación sin pago (si no está exento).
-                </div>
+            <div className="min-w-[220px] space-y-2">
+              <Label htmlFor="paymentMode" className="font-medium">
+                Modo de pago
+              </Label>
+              <Select
+                value={paymentMode}
+                onValueChange={(value) =>
+                  setPaymentMode(value as ProgramPaymentMode)
+                }
+              >
+                <SelectTrigger id="paymentMode">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Sin pago</SelectItem>
+                  <SelectItem value="pre">Pago previo</SelectItem>
+                  <SelectItem value="post">Pago posterior</SelectItem>
+                </SelectContent>
+              </Select>
+              <div className="text-sm text-muted-foreground">
+                Define si se exige pago previo o posterior a la admisión.
               </div>
             </div>
           </div>
@@ -1548,3 +1564,4 @@ export default function AdminProgramDetailPage() {
     </div>
   )
 }
+

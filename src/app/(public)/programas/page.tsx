@@ -13,7 +13,7 @@ export default async function PublicProgramsPage(): Promise<React.JSX.Element> {
   const { data: programsData, error: programsError } = await supabase
     .from('programs')
     .select(
-      'id,slug,title,description,is_published,requires_payment_pre,price_usd,created_at,updated_at'
+      'id,slug,title,description,is_published,payment_mode,requires_payment_pre,price_usd,created_at,updated_at'
     )
     .eq('is_published', true)
     .order('created_at', { ascending: true })

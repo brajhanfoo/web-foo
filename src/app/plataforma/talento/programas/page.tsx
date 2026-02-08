@@ -25,7 +25,9 @@ import {
   Lock,
   Calendar,
   HelpCircle,
+  CreditCard,
 } from 'lucide-react'
+import { PayphoneCheckoutModal } from '@/components/payments/payphone-checkout-modal'
 
 type ProgramRow = {
   id: string
@@ -33,7 +35,9 @@ type ProgramRow = {
   title: string
   description: string | null
   is_published: boolean
+  payment_mode: ProgramPaymentMode | null
   requires_payment_pre: boolean
+  price_usd: string | null
   created_at: string
 }
 
@@ -61,6 +65,21 @@ type ApplicationFormRow = {
 
 type ProgramStatus = 'open' | 'closed' | 'soon'
 
+type ProgramPaymentMode = 'none' | 'pre' | 'post'
+
+type PaymentRow = {
+  id: string
+  program_id: string
+  edition_id: string | null
+  status: 'initiated' | 'pending' | 'paid' | 'failed' | 'canceled'
+  purpose: 'pre_enrollment' | 'tuition'
+}
+
+type ApplicationRow = {
+  program_id: string
+  edition_id: string | null
+}
+
 type ProgramCardVM = ProgramRow & {
   edition: EditionRow | null
   form: ApplicationFormRow | null
@@ -70,6 +89,22 @@ type ProgramCardVM = ProgramRow & {
 function safeString(value: unknown): string {
   if (typeof value === 'string') return value
   return ''
+}
+
+function resolvePaymentMode(program: ProgramRow): ProgramPaymentMode {
+  if (program.payment_mode) return program.payment_mode
+  return program.requires_payment_pre ? 'pre' : 'none'
+}
+
+function paymentKey(programId: string, editionId: string | null): string {
+  return `${programId}:${editionId ?? 'none'}`
+}
+
+function parsePriceToCents(priceUsd: string | null): number | null {
+  if (!priceUsd) return null
+  const parsed = Number(priceUsd)
+  if (!Number.isFinite(parsed)) return null
+  return Math.round(parsed * 100)
 }
 
 function parseIsoDateOnlyToDM(value: string): string {
@@ -119,6 +154,12 @@ export default function ProgramsPage() {
 
   const [loading, setLoading] = useState<boolean>(true)
   const [items, setItems] = useState<ProgramCardVM[]>([])
+  const [paidPreMap, setPaidPreMap] = useState<Record<string, boolean>>({})
+  const [appliedMap, setAppliedMap] = useState<Record<string, boolean>>({})
+  const [checkoutOpen, setCheckoutOpen] = useState(false)
+  const [checkoutProgram, setCheckoutProgram] = useState<ProgramCardVM | null>(
+    null
+  )
 
   useEffect(() => {
     if (didBootReference.current) return
@@ -133,13 +174,38 @@ export default function ProgramsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  useEffect(() => {
+    if (!userId) {
+      setPaidPreMap({})
+      return
+    }
+    if (!items.length) {
+      setPaidPreMap({})
+      return
+    }
+    void loadPaidPrePayments(items)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId, items])
+  useEffect(() => {
+    if (!userId) {
+      setAppliedMap({})
+      return
+    }
+    if (!items.length) {
+      setAppliedMap({})
+      return
+    }
+    void loadAppliedPrograms(items)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId, items])
+
   async function loadAll(): Promise<void> {
     setLoading(true)
 
     const programsResponse = await supabase
       .from('programs')
       .select(
-        'id, slug, title, description, is_published, requires_payment_pre, created_at'
+        'id, slug, title, description, is_published, payment_mode, requires_payment_pre, price_usd, created_at'
       )
       .order('created_at', { ascending: true })
 
@@ -244,6 +310,66 @@ export default function ProgramsPage() {
     setLoading(false)
   }
 
+  async function loadPaidPrePayments(programs: ProgramCardVM[]): Promise<void> {
+    const prePrograms = programs.filter((p) => resolvePaymentMode(p) === 'pre')
+    if (!prePrograms.length || !userId) {
+      setPaidPreMap({})
+      return
+    }
+
+    const programIds = prePrograms.map((p) => p.id)
+
+    const { data, error } = await supabase
+      .from('payments')
+      .select('id, program_id, edition_id, status, purpose')
+      .eq('user_id', userId)
+      .in('program_id', programIds)
+      .eq('purpose', 'pre_enrollment')
+      .eq('status', 'paid')
+
+    if (error) {
+      toast.showError('No se pudieron cargar tus pagos.')
+      setPaidPreMap({})
+      return
+    }
+
+    const rows = (data ?? []) as PaymentRow[]
+    const nextMap: Record<string, boolean> = {}
+    for (const row of rows) {
+      nextMap[paymentKey(row.program_id, row.edition_id ?? null)] = true
+    }
+    setPaidPreMap(nextMap)
+  }
+  async function loadAppliedPrograms(programs: ProgramCardVM[]): Promise<void> {
+    if (!userId) {
+      setAppliedMap({})
+      return
+    }
+
+    const programIds = programs.map((p) => p.id)
+
+    const { data, error } = await supabase
+      .from('applications')
+      .select('program_id, edition_id')
+      .eq('applicant_profile_id', userId)
+      .in('program_id', programIds)
+
+    if (error) {
+      toast.showError('No se pudieron cargar tus postulaciones.')
+      setAppliedMap({})
+      return
+    }
+
+    const rows = (data ?? []) as ApplicationRow[]
+    const nextMap: Record<string, boolean> = {}
+
+    for (const row of rows) {
+      nextMap[paymentKey(row.program_id, row.edition_id ?? null)] = true
+    }
+
+    setAppliedMap(nextMap)
+  }
+
   const helpTitle = useMemo<string>(
     () => '¿Tienes dudas sobre los programas?',
     []
@@ -274,6 +400,36 @@ export default function ProgramsPage() {
     }
 
     router.push(`/plataforma/talento/programas/${programSlug}/postular`)
+  }
+
+  function hasPaidPre(programId: string, editionId: string | null): boolean {
+    const exact = paymentKey(programId, editionId)
+    if (paidPreMap[exact]) return true
+    const fallback = paymentKey(programId, null)
+    return Boolean(paidPreMap[fallback])
+  }
+
+  function hasApplied(programId: string, editionId: string | null): boolean {
+    const exact = paymentKey(programId, editionId)
+    if (appliedMap[exact]) return true
+    const fallback = paymentKey(programId, null)
+    return Boolean(appliedMap[fallback])
+  }
+  function openCheckoutFor(program: ProgramCardVM): void {
+    if (!userId) {
+      toast.showError('Inicia sesión para pagar.')
+      router.push('/ingresar')
+      return
+    }
+
+    const amountCents = parsePriceToCents(program.price_usd)
+    if (!amountCents || amountCents <= 0) {
+      toast.showError('Este programa no tiene un precio configurado.')
+      return
+    }
+
+    setCheckoutProgram(program)
+    setCheckoutOpen(true)
   }
 
   if (loading) {
@@ -318,6 +474,9 @@ export default function ProgramsPage() {
               const iconKind = pickProgramIcon(p.slug)
               const isOpen = p.status === 'open'
               const isClosed = p.status === 'closed'
+              const paymentMode = resolvePaymentMode(p)
+              const paidPre = hasPaidPre(p.id, p.edition?.id ?? null)
+              const applied = hasApplied(p.id, p.edition?.id ?? null)
 
               const badge = isOpen ? (
                 <Badge className="bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
@@ -344,15 +503,27 @@ export default function ProgramsPage() {
               const startText = startLine ? `Inicio: ${startLine}` : ''
 
               const action = isOpen ? (
-                <Button
-                  className="w-full bg-[#00CCA4] text-black hover:bg-[#00CCA4]/90"
-                  onClick={() => void goToPostulationOrRedirect(p.slug)}
-                >
-                  <span className="flex-1 text-center">
-                    INICIAR POSTULACIÓN
-                  </span>
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
+                paymentMode === 'pre' && !paidPre ? (
+                  <Button
+                    className="w-full bg-amber-400 text-black hover:bg-amber-400/90"
+                    onClick={() => openCheckoutFor(p)}
+                  >
+                    <span className="flex-1 text-center">
+                      PAGAR E INSCRIBIRME
+                    </span>
+                    <CreditCard className="h-4 w-4" />
+                  </Button>
+                ) : (
+                  <Button
+                    className="w-full bg-[#00CCA4] text-black hover:bg-[#00CCA4]/90"
+                    onClick={() => void goToPostulationOrRedirect(p.slug)}
+                  >
+                    <span className="flex-1 text-center">
+                      INICIAR POSTULACIÓN
+                    </span>
+                    <ArrowRight className="h-4 w-4" />
+                  </Button>
+                )
               ) : isClosed ? (
                 <Button
                   asChild
@@ -380,6 +551,23 @@ export default function ProgramsPage() {
                   <span className="flex-1 text-center">
                     UNIRME A LA LISTA DE ESPERA
                   </span>
+                </Button>
+              )
+
+              const appliedAction = (
+                <Button
+                  className="w-full bg-white/10 text-white hover:bg-white/20"
+                  asChild
+                >
+                  <Link
+                    href="/plataforma/talento/mis-postulaciones"
+                    className="flex w-full items-center justify-between"
+                  >
+                    <span className="flex-1 text-center">
+                      VER EN MIS POSTULACIONES
+                    </span>
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
                 </Button>
               )
 
@@ -482,9 +670,11 @@ export default function ProgramsPage() {
                       <div className="flex items-center gap-2">
                         <Calendar className="h-4 w-4 text-white/50" />
                         <span className="text-white/60">
-                          {p.requires_payment_pre
-                            ? 'Simulación Laboral Guiada'
-                            : 'Networking especializado'}
+                          {paymentMode === 'pre'
+                            ? 'Pago previo requerido'
+                            : paymentMode === 'post'
+                              ? 'Pago posterior'
+                              : 'Sin pago'}
                         </span>
                       </div>
 
@@ -501,7 +691,7 @@ export default function ProgramsPage() {
                       </Link>
                     </div>
 
-                    {action}
+                    {applied ? appliedAction : action}
                   </CardContent>
 
                   {/* Glow lateral extra (verde+amarillo) solo abierto */}
@@ -513,6 +703,28 @@ export default function ProgramsPage() {
             })}
           </div>
         )}
+
+        {checkoutProgram ? (
+          <PayphoneCheckoutModal
+            open={checkoutOpen}
+            onOpenChange={(open) => {
+              if (!open) setCheckoutOpen(false)
+            }}
+            programId={checkoutProgram.id}
+            editionId={checkoutProgram.edition?.id ?? null}
+            purpose="pre_enrollment"
+            amountCents={parsePriceToCents(checkoutProgram.price_usd) ?? 0}
+            onPaid={() => {
+              const key = paymentKey(
+                checkoutProgram.id,
+                checkoutProgram.edition?.id ?? null
+              )
+              setPaidPreMap((previous) => ({ ...previous, [key]: true }))
+              setCheckoutOpen(false)
+              void goToPostulationOrRedirect(checkoutProgram.slug)
+            }}
+          />
+        ) : null}
 
         {/* Help bar (abajo como en la imagen) */}
         <Card className="bg-black border-white/10 text-amber-50">
