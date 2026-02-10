@@ -104,19 +104,19 @@ export function ApplicationDetailsCard({
   const hasEntries = entries.length > 0
 
   return (
-    <Card className="bg-black/40 border-white/10 backdrop-blur-md overflow-hidden">
+    <Card className="bg-slate-900 border-slate-800 backdrop-blur-md overflow-hidden">
       <CardContent className="p-5 space-y-5">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <div className="text-base font-semibold text-white">
+            <div className="text-base font-semibold text-slate-100">
               Ficha de Postulante
             </div>
-            <div className="text-xs text-white/50 mt-1">
+            <div className="text-xs text-slate-400 mt-1">
               Datos &amp; Respuestas
             </div>
           </div>
 
-          <Badge className="bg-white/10 text-white border border-white/10">
+          <Badge className="bg-slate-800 text-slate-100 border border-slate-800">
             {application?.status === 'received'
               ? 'Postulacion recibida'
               : application?.status === 'payment_pending'
@@ -130,39 +130,39 @@ export function ApplicationDetailsCard({
         </div>
 
         {isLoading ? (
-          <div className="text-sm text-white/60">Cargando ficha...</div>
+          <div className="text-sm text-slate-300">Cargando ficha...</div>
         ) : application ? (
           <>
-            <div className="rounded-2xl border border-white/10 bg-black/30 p-4">
+            <div className="rounded-2xl border border-slate-800 bg-slate-900 p-4">
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div>
-                  <div className="text-[11px] tracking-wide text-white/50">
+                  <div className="text-[11px] tracking-wide text-slate-400">
                     DNI / ID
                   </div>
-                  <div className="mt-1 text-sm font-semibold text-white break-words">
+                  <div className="mt-1 text-sm font-semibold text-slate-100 break-words">
                     {documentNumber}
                   </div>
 
-                  <div className="mt-4 text-[11px] tracking-wide text-white/50">
+                  <div className="mt-4 text-[11px] tracking-wide text-slate-400">
                     EMAIL
                   </div>
-                  <div className="mt-1 text-sm text-white/80 break-words">
+                  <div className="mt-1 text-sm text-slate-200 break-words">
                     {textOrNA(email)}
                   </div>
                 </div>
 
                 <div>
-                  <div className="text-[11px] tracking-wide text-white/50">
+                  <div className="text-[11px] tracking-wide text-slate-400">
                     UBICACIÓN
                   </div>
-                  <div className="mt-1 text-sm font-semibold text-white break-words">
+                  <div className="mt-1 text-sm font-semibold text-slate-100 break-words">
                     {location}
                   </div>
 
-                  <div className="mt-4 text-[11px] tracking-wide text-white/50">
+                  <div className="mt-4 text-[11px] tracking-wide text-slate-400">
                     TELÉFONO
                   </div>
-                  <div className="mt-1 text-sm text-white/80 break-words">
+                  <div className="mt-1 text-sm text-slate-200 break-words">
                     {phone}
                   </div>
                 </div>
@@ -173,26 +173,26 @@ export function ApplicationDetailsCard({
               RESPUESTAS DEL FORMULARIO
             </div>
 
-            <Separator className="border-white/10" />
+            <Separator className="border-slate-800" />
 
             {hasEntries ? (
               <div className="space-y-3">
                 {entries.map((entry) => (
                   <div
                     key={entry.key}
-                    className="rounded-2xl border border-white/10 bg-black/30 p-4"
+                    className="rounded-2xl border border-slate-800 bg-slate-900 p-4"
                   >
-                    <div className="text-[11px] tracking-wide text-white/50">
+                    <div className="text-[11px] tracking-wide text-slate-400">
                       {entry.label}
                     </div>
-                    <div className="mt-2 text-sm text-white/85 whitespace-pre-wrap">
+                    <div className="mt-2 text-sm text-slate-200 whitespace-pre-wrap">
                       {entry.value}
                     </div>
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="text-sm text-white/60">
+              <div className="text-sm text-slate-300">
                 {hasSchema
                   ? 'El formulario no tiene campos para mostrar.'
                   : 'No se encontro el formulario asociado.'}
@@ -200,7 +200,7 @@ export function ApplicationDetailsCard({
             )}
           </>
         ) : (
-          <div className="text-sm text-white/60">
+          <div className="text-sm text-slate-300">
             No se pudo cargar la postulacion.
             <div className="mt-3">
               <Button asChild variant="outline" size="sm">

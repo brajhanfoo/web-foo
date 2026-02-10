@@ -1,5 +1,8 @@
 //src/app/plataforma/admin/postulaciones/%5BpostulacionesId%5D/types/types.ts
 
+import type { ProgramPaymentMode } from '@/types/programs'
+import type { PaymentStatus } from '@/types/payments'
+
 /* ----------------------------- Types (strict) ----------------------------- */
 
 export type ApplicationStatus =
@@ -10,14 +13,9 @@ export type ApplicationStatus =
   | 'enrolled'
   | 'rejected'
 
-export type PaymentStatus =
-  | 'initiated'
-  | 'pending'
-  | 'paid'
-  | 'failed'
-  | 'canceled'
+export type { PaymentStatus }
 
-export type ProgramPaymentMode = 'none' | 'pre' | 'post'
+export type { ProgramPaymentMode }
 
 export type ProgramSummary = {
   id: string

@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation'
 import { Loader2 } from 'lucide-react'
 import { useToastEnhanced } from '@/hooks/use-toast-enhanced'
 
+import type { PaymentStatus } from '@/types/payments'
+
 import {
   Dialog,
   DialogContent,
@@ -16,8 +18,6 @@ import {
 import { Button } from '@/components/ui/button'
 
 type PaymentPurpose = 'pre_enrollment' | 'tuition'
-type PaymentStatus = 'initiated' | 'pending' | 'paid' | 'failed' | 'canceled'
-
 type CreateCheckoutResponse = {
   ok: boolean
   message?: string

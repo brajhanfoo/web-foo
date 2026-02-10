@@ -84,8 +84,8 @@ export function TalentSidebar({ displayName }: { displayName: string }) {
           Icon={LayoutGrid}
         />
         <SidebarLink
-          href="/plataforma/talento/programas"
-          label="Programas"
+          href="/plataforma/talento/explorar"
+          label="Explorar"
           Icon={GraduationCap}
         />
         <SidebarLink

@@ -67,7 +67,7 @@ function statusBadgeClasses(status: ApplicationStatus): Record<string, string> {
       label: 'Rechazado',
     }
   return {
-    className: 'bg-white/5 text-white/70 border-white/10',
+    className: 'bg-slate-900 text-slate-300 border-slate-800',
     label: 'Recibido',
   }
 }
@@ -346,15 +346,15 @@ export function ApplicationsTable() {
   }
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-black p-4">
+    <div className="rounded-2xl border border-slate-800 bg-slate-900 p-4">
       {/* Top bar */}
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-lg font-semibold text-white">
+          <h1 className="text-lg font-semibold text-slate-100">
             Gestión de Postulaciones
           </h1>
-          <p className="text-xs text-white/50">
-            Total: <span className="text-white/70">{totalCount}</span>
+          <p className="text-xs text-slate-400">
+            Total: <span className="text-slate-300">{totalCount}</span>
           </p>
         </div>
 
@@ -363,7 +363,7 @@ export function ApplicationsTable() {
           <select
             value={selectedProgramId}
             onChange={(element) => setSelectedProgramId(element.target.value)}
-            className="w-full md:w-72 rounded-xl bg-black/30 border border-white/10 px-3 py-3 text-white outline-none focus:border-emerald-400/60"
+            className="w-full md:w-72 rounded-xl bg-slate-900 border border-slate-800 px-3 py-3 text-slate-100 outline-none focus:border-emerald-400/60"
           >
             <option value="all">Todos los programas</option>
             {programs.map((p) => (
@@ -375,12 +375,12 @@ export function ApplicationsTable() {
 
           {/* Search */}
           <div className="relative w-full md:w-80">
-            <Search className="pointer-events-none absolute left-3 top-3.5 h-4 w-4 text-white/40" />
+            <Search className="pointer-events-none absolute left-3 top-3.5 h-4 w-4 text-slate-400" />
             <input
               value={searchText}
               onChange={(element) => setSearchText(element.target.value)}
               placeholder="Buscar..."
-              className="w-full rounded-xl bg-black/30 border border-white/10 pl-9 pr-3 py-3 text-white outline-none focus:border-emerald-400/60 placeholder:text-white/40"
+              className="w-full rounded-xl bg-slate-900 border border-slate-800 pl-9 pr-3 py-3 text-slate-100 outline-none focus:border-emerald-400/60 placeholder:text-slate-400"
             />
           </div>
 
@@ -393,7 +393,7 @@ export function ApplicationsTable() {
               if (v === 'export_page') await exportCurrentPage()
               if (v === 'export_all') await exportAllFiltered()
             }}
-            className="w-full md:w-56 rounded-xl bg-black/30 border border-white/10 px-3 py-3 text-white outline-none focus:border-emerald-400/60"
+            className="w-full md:w-56 rounded-xl bg-slate-900 border border-slate-800 px-3 py-3 text-slate-100 outline-none focus:border-emerald-400/60"
           >
             <option value="" disabled>
               Acciones…
@@ -405,18 +405,18 @@ export function ApplicationsTable() {
       </div>
 
       {/* Table */}
-      <div className="mt-4 overflow-hidden rounded-2xl border border-white/10">
+      <div className="mt-4 overflow-hidden rounded-2xl border border-slate-800">
         {/* Header row with dropdown filters on Fecha/Rol/Estado */}
         <div
           ref={menuWrapReference}
-          className="relative grid grid-cols-12 gap-0 bg-black/30 px-4 py-3 text-xs text-white/50"
+          className="relative grid grid-cols-12 gap-0 bg-slate-900 px-4 py-3 text-xs text-slate-400"
         >
           {/* Fecha (dropdown) */}
           <div className="col-span-2 flex items-center gap-2">
             <button
               type="button"
               onClick={() => toggleMenu('date')}
-              className="inline-flex items-center gap-1 rounded-lg px-2 py-1 hover:bg-white/5 text-white/70"
+              className="inline-flex items-center gap-1 rounded-lg px-2 py-1 hover:bg-slate-900 text-slate-300"
               title="Filtrar por fecha"
             >
               Fecha
@@ -424,20 +424,20 @@ export function ApplicationsTable() {
             </button>
 
             {datePreset !== 'all' ? (
-              <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[11px] text-white/70">
+              <span className="rounded-full border border-slate-800 bg-slate-900 px-2 py-0.5 text-[11px] text-slate-300">
                 {datePresetLabel(datePreset)}
               </span>
             ) : null}
 
             {openMenu === 'date' ? (
-              <div className="absolute left-4 top-11 z-20 w-56 rounded-xl border border-white/10 bg-black p-2 shadow-xl">
+              <div className="absolute left-4 top-11 z-20 w-56 rounded-xl border border-slate-800 bg-slate-900 p-2 shadow-xl">
                 <button
                   type="button"
                   onClick={() => {
                     setDatePreset('all')
                     setOpenMenu(null)
                   }}
-                  className="w-full rounded-lg px-3 py-2 text-left text-sm text-white/80 hover:bg-white/5"
+                  className="w-full rounded-lg px-3 py-2 text-left text-sm text-slate-200 hover:bg-slate-900"
                 >
                   Todas
                 </button>
@@ -447,7 +447,7 @@ export function ApplicationsTable() {
                     setDatePreset('7d')
                     setOpenMenu(null)
                   }}
-                  className="w-full rounded-lg px-3 py-2 text-left text-sm text-white/80 hover:bg-white/5"
+                  className="w-full rounded-lg px-3 py-2 text-left text-sm text-slate-200 hover:bg-slate-900"
                 >
                   Últimos 7 días
                 </button>
@@ -457,7 +457,7 @@ export function ApplicationsTable() {
                     setDatePreset('30d')
                     setOpenMenu(null)
                   }}
-                  className="w-full rounded-lg px-3 py-2 text-left text-sm text-white/80 hover:bg-white/5"
+                  className="w-full rounded-lg px-3 py-2 text-left text-sm text-slate-200 hover:bg-slate-900"
                 >
                   Últimos 30 días
                 </button>
@@ -467,7 +467,7 @@ export function ApplicationsTable() {
                     setDatePreset('this_month')
                     setOpenMenu(null)
                   }}
-                  className="w-full rounded-lg px-3 py-2 text-left text-sm text-white/80 hover:bg-white/5"
+                  className="w-full rounded-lg px-3 py-2 text-left text-sm text-slate-200 hover:bg-slate-900"
                 >
                   Este mes
                 </button>
@@ -483,7 +483,7 @@ export function ApplicationsTable() {
             <button
               type="button"
               onClick={() => toggleMenu('role')}
-              className="inline-flex items-center gap-1 rounded-lg px-2 py-1 hover:bg-white/5 text-white/70"
+              className="inline-flex items-center gap-1 rounded-lg px-2 py-1 hover:bg-slate-900 text-slate-300"
               title="Filtrar por rol"
             >
               Rol
@@ -491,19 +491,19 @@ export function ApplicationsTable() {
             </button>
 
             {roleFilter.trim() ? (
-              <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[11px] text-white/70">
+              <span className="rounded-full border border-slate-800 bg-slate-900 px-2 py-0.5 text-[11px] text-slate-300">
                 {roleFilter.trim()}
               </span>
             ) : null}
 
             {openMenu === 'role' ? (
-              <div className="absolute left-[52%] top-11 z-20 w-72 -translate-x-1/2 rounded-xl border border-white/10 bg-black p-3 shadow-xl">
-                <div className="text-xs text-white/50">Contiene</div>
+              <div className="absolute left-[52%] top-11 z-20 w-72 -translate-x-1/2 rounded-xl border border-slate-800 bg-slate-900 p-3 shadow-xl">
+                <div className="text-xs text-slate-400">Contiene</div>
                 <input
                   value={roleFilter}
                   onChange={(element) => setRoleFilter(element.target.value)}
                   placeholder="Ej: Frontend, Designer…"
-                  className="mt-2 w-full rounded-xl bg-black/30 border border-white/10 px-3 py-2 text-sm text-white outline-none focus:border-emerald-400/60 placeholder:text-white/40"
+                  className="mt-2 w-full rounded-xl bg-slate-900 border border-slate-800 px-3 py-2 text-sm text-slate-100 outline-none focus:border-emerald-400/60 placeholder:text-slate-400"
                 />
 
                 <div className="mt-3 flex items-center justify-between">
@@ -513,7 +513,7 @@ export function ApplicationsTable() {
                       setRoleFilter('')
                       setOpenMenu(null)
                     }}
-                    className="rounded-xl bg-white/5 px-3 py-2 text-xs text-white/80 hover:bg-white/10"
+                    className="rounded-xl bg-slate-900 px-3 py-2 text-xs text-slate-200 hover:bg-slate-800"
                   >
                     Limpiar
                   </button>
@@ -528,7 +528,7 @@ export function ApplicationsTable() {
 
                 {roleSuggestions.length > 0 ? (
                   <div className="mt-3">
-                    <div className="text-xs text-white/50">
+                    <div className="text-xs text-slate-400">
                       Sugerencias (página actual)
                     </div>
                     <div className="mt-2 flex flex-wrap gap-2">
@@ -537,7 +537,7 @@ export function ApplicationsTable() {
                           key={role}
                           type="button"
                           onClick={() => setRoleFilter(role)}
-                          className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-white/70 hover:bg-white/10"
+                          className="rounded-full border border-slate-800 bg-slate-900 px-3 py-1 text-xs text-slate-300 hover:bg-slate-800"
                         >
                           {role}
                         </button>
@@ -556,7 +556,7 @@ export function ApplicationsTable() {
             <button
               type="button"
               onClick={() => toggleMenu('status')}
-              className="inline-flex items-center gap-1 rounded-lg px-2 py-1 hover:bg-white/5 text-white/70"
+              className="inline-flex items-center gap-1 rounded-lg px-2 py-1 hover:bg-slate-900 text-slate-300"
               title="Filtrar por estado"
             >
               Estado
@@ -564,13 +564,13 @@ export function ApplicationsTable() {
             </button>
 
             {statusFilter !== 'all' ? (
-              <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[11px] text-white/70">
+              <span className="rounded-full border border-slate-800 bg-slate-900 px-2 py-0.5 text-[11px] text-slate-300">
                 {statusLabel(statusFilter)}
               </span>
             ) : null}
 
             {openMenu === 'status' ? (
-              <div className="absolute right-24 top-11 z-20 w-56 rounded-xl border border-white/10 bg-black p-2 shadow-xl">
+              <div className="absolute right-24 top-11 z-20 w-56 rounded-xl border border-slate-800 bg-slate-900 p-2 shadow-xl">
                 {(
                   [
                     'all',
@@ -588,7 +588,7 @@ export function ApplicationsTable() {
                       setStatusFilter(v)
                       setOpenMenu(null)
                     }}
-                    className="w-full rounded-lg px-3 py-2 text-left text-sm text-white/80 hover:bg-white/5"
+                    className="w-full rounded-lg px-3 py-2 text-left text-sm text-slate-200 hover:bg-slate-900"
                   >
                     {statusLabel(v)}
                   </button>
@@ -601,9 +601,9 @@ export function ApplicationsTable() {
         </div>
 
         {isLoading ? (
-          <div className="px-4 py-6 text-sm text-white/70">Cargando...</div>
+          <div className="px-4 py-6 text-sm text-slate-300">Cargando...</div>
         ) : visibleRows.length === 0 ? (
-          <div className="px-4 py-10 text-sm text-white/60">
+          <div className="px-4 py-10 text-sm text-slate-300">
             No hay postulaciones todavía.
           </div>
         ) : (
@@ -622,20 +622,20 @@ export function ApplicationsTable() {
               return (
                 <div
                   key={row.id}
-                  className="grid grid-cols-12 px-4 py-3 text-sm text-white/80"
+                  className="grid grid-cols-12 px-4 py-3 text-sm text-slate-200"
                 >
                   <div className="col-span-2">{createdAt}</div>
 
                   <div className="col-span-3">
-                    <div className="font-medium text-white">{fullName}</div>
-                    <div className="text-xs text-white/50">
+                    <div className="font-medium text-slate-100">{fullName}</div>
+                    <div className="text-xs text-slate-400">
                       {row.applicant?.whatsapp_e164 ?? '—'}
                     </div>
                   </div>
 
                   <div className="col-span-2">
-                    <div className="text-white">{programTitle}</div>
-                    <div className="text-xs text-white/50">
+                    <div className="text-slate-100">{programTitle}</div>
+                    <div className="text-xs text-slate-400">
                       {row.editions?.edition_name ?? ''}
                     </div>
                   </div>
@@ -652,7 +652,7 @@ export function ApplicationsTable() {
                         <ExternalLink className="h-4 w-4" />
                       </Link>
                     ) : (
-                      <span className="text-white/40">—</span>
+                      <span className="text-slate-400">—</span>
                     )}
                   </div>
 
@@ -687,16 +687,16 @@ export function ApplicationsTable() {
 
       {/* Pagination */}
       <div className="mt-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-        <div className="text-xs text-white/50">
-          Página <span className="text-white/70">{page}</span> de{' '}
-          <span className="text-white/70">{totalPages}</span>
+        <div className="text-xs text-slate-400">
+          Página <span className="text-slate-300">{page}</span> de{' '}
+          <span className="text-slate-300">{totalPages}</span>
         </div>
 
         <div className="flex items-center gap-2">
           <select
             value={pageSize}
             onChange={(element) => setPageSize(Number(element.target.value))}
-            className="rounded-xl bg-black/30 border border-white/10 px-3 py-2 text-sm text-white outline-none focus:border-emerald-400/60"
+            className="rounded-xl bg-slate-900 border border-slate-800 px-3 py-2 text-sm text-slate-100 outline-none focus:border-emerald-400/60"
           >
             <option value={10}>10</option>
             <option value={20}>20</option>
@@ -708,7 +708,7 @@ export function ApplicationsTable() {
             type="button"
             onClick={() => setPage((p) => Math.max(1, p - 1))}
             disabled={page <= 1}
-            className="rounded-xl bg-white/5 px-3 py-2 text-sm text-white/80 hover:bg-white/10 disabled:opacity-40"
+            className="rounded-xl bg-slate-900 px-3 py-2 text-sm text-slate-200 hover:bg-slate-800 disabled:opacity-40"
           >
             Anterior
           </button>
@@ -716,7 +716,7 @@ export function ApplicationsTable() {
             type="button"
             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
             disabled={page >= totalPages}
-            className="rounded-xl bg-white/5 px-3 py-2 text-sm text-white/80 hover:bg-white/10 disabled:opacity-40"
+            className="rounded-xl bg-slate-900 px-3 py-2 text-sm text-slate-200 hover:bg-slate-800 disabled:opacity-40"
           >
             Siguiente
           </button>

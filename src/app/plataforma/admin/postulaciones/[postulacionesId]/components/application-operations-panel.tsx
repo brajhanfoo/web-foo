@@ -225,18 +225,18 @@ export function ApplicationOperationsPanel({
   }
 
   return (
-    <Card className="bg-black/40 border-white/10 backdrop-blur-md overflow-hidden">
+    <Card className="bg-slate-900 border-slate-800 backdrop-blur-md overflow-hidden">
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <CardTitle className="text-base">Acciones</CardTitle>
-            <div className="text-xs text-white/50 mt-1">
+            <div className="text-xs text-slate-400 mt-1">
               Gestión del estado y pago
             </div>
           </div>
 
           <div className="flex flex-col items-end gap-2">
-            <Badge className="bg-white/10 text-white border border-white/10">
+            <Badge className="bg-slate-800 text-slate-100 border border-slate-800">
               {phaseLabel}
             </Badge>
             {paymentBadge ? (
@@ -250,10 +250,10 @@ export function ApplicationOperationsPanel({
 
       <CardContent className="space-y-4">
         {/* Fase 1 */}
-        <div className="rounded-lg border border-white/10 bg-black/20 p-3 space-y-3">
+        <div className="rounded-lg border border-slate-800 bg-slate-900 p-3 space-y-3">
           <div className="flex items-center justify-between gap-2">
-            <div className="text-sm font-semibold text-white">Fase 1</div>
-            <Badge variant="outline" className="border-white/15 text-white/80">
+            <div className="text-sm font-semibold text-slate-100">Fase 1</div>
+            <Badge variant="outline" className="border-slate-800 text-slate-200">
               {isReceived || isInReview ? 'Activa' : 'OK'}
             </Badge>
           </div>
@@ -310,18 +310,18 @@ export function ApplicationOperationsPanel({
           ) : null}
 
           {isRejected ? (
-            <div className="text-xs text-white/60">
+            <div className="text-xs text-slate-300">
               Postulación rechazada. Para volver a verla en flujo, marcala como{' '}
-              <span className="text-white">En revisión</span>.
+              <span className="text-slate-100">En revisión</span>.
             </div>
           ) : null}
         </div>
 
         {/* Fase 2 */}
-        <div className="rounded-lg border border-white/10 bg-black/20 p-3 space-y-3">
+        <div className="rounded-lg border border-slate-800 bg-slate-900 p-3 space-y-3">
           <div className="flex items-center justify-between gap-2">
-            <div className="text-sm font-semibold text-white">Fase 2</div>
-            <Badge variant="outline" className="border-white/15 text-white/80">
+            <div className="text-sm font-semibold text-slate-100">Fase 2</div>
+            <Badge variant="outline" className="border-slate-800 text-slate-200">
               {usesPaymentPending
                 ? isPaymentPending
                   ? 'Activa'
@@ -352,8 +352,8 @@ export function ApplicationOperationsPanel({
                         setProofPresence(hasProof ? 'present' : 'missing')
                       }
                     />
-                    <Separator className="border-white/10" />
-                    <div className="text-xs text-white/50">Marcar como:</div>
+                    <Separator className="border-slate-800" />
+                    <div className="text-xs text-slate-400">Marcar como:</div>
 
                     <Button
                       className="w-full"
@@ -366,7 +366,7 @@ export function ApplicationOperationsPanel({
 
                     {proofPresence === 'present' ? (
                       <>
-                        <Separator className="border-white/10" />
+                        <Separator className="border-slate-800" />
 
                         <Button
                           className="w-full"
@@ -377,9 +377,9 @@ export function ApplicationOperationsPanel({
                         </Button>
                       </>
                     ) : (
-                      <div className="text-xs text-white/50">
+                      <div className="text-xs text-slate-400">
                         Cuando cargues el comprobante, se habilita{' '}
-                        <span className="text-white">Matricular</span>.
+                        <span className="text-slate-100">Matricular</span>.
                       </div>
                     )}
                   </>
@@ -399,8 +399,8 @@ export function ApplicationOperationsPanel({
                       }
                     />
 
-                    <Separator className="border-white/10" />
-                    <div className="text-xs text-white/50">Marcar como:</div>
+                    <Separator className="border-slate-800" />
+                    <div className="text-xs text-slate-400">Marcar como:</div>
                     <Button
                       className="w-full bg-[#00CCA4] text-black hover:bg-[#00e6b3] focus:ring-[#00e6b3]/50 cursor-pointer"
                       disabled={!canBackToPrevious}
@@ -415,9 +415,9 @@ export function ApplicationOperationsPanel({
 
                 {/* Otros estados: mensaje */}
                 {!isPaymentPending && !isEnrolled ? (
-                  <div className="text-xs text-white/50">
+                  <div className="text-xs text-slate-400">
                     Para registrar pago, primero debe ser{' '}
-                    <span className="text-white">Admitido</span>.
+                    <span className="text-slate-100">Admitido</span>.
                   </div>
                 ) : null}
               </>
@@ -425,7 +425,7 @@ export function ApplicationOperationsPanel({
               <>
                 {isAdmitted ? (
                   <>
-                    <div className="text-xs text-white/50">Marcar como:</div>
+                    <div className="text-xs text-slate-400">Marcar como:</div>
 
                     <Button
                       className="w-full"
@@ -457,7 +457,7 @@ export function ApplicationOperationsPanel({
 
                 {isEnrolled ? (
                   <>
-                    <div className="text-xs text-white/50">Marcar como:</div>
+                    <div className="text-xs text-slate-400">Marcar como:</div>
                     <Button
                       className="w-full bg-[#00CCA4] text-black hover:bg-[#00e6b3] focus:ring-[#00e6b3]/50 cursor-pointer"
                       disabled={!canBackToPrevious}
@@ -471,9 +471,9 @@ export function ApplicationOperationsPanel({
                 ) : null}
 
                 {!isAdmitted && !isEnrolled ? (
-                  <div className="text-xs text-white/50">
+                  <div className="text-xs text-slate-400">
                     Para matricular, primero debe ser{' '}
-                    <span className="text-white">Admitido</span>.
+                    <span className="text-slate-100">Admitido</span>.
                   </div>
                 ) : null}
               </>

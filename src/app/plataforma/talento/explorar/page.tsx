@@ -28,44 +28,13 @@ import {
   CreditCard,
 } from 'lucide-react'
 import { PayphoneCheckoutModal } from '@/components/payments/payphone-checkout-modal'
-
-type ProgramRow = {
-  id: string
-  slug: string
-  title: string
-  description: string | null
-  is_published: boolean
-  payment_mode: ProgramPaymentMode | null
-  requires_payment_pre: boolean
-  price_usd: string | null
-  created_at: string
-}
-
-type EditionRow = {
-  id: string
-  program_id: string
-  edition_name: string
-  starts_at: string | null
-  ends_at: string | null
-  is_open: boolean
-  created_at: string
-}
-
-type ApplicationFormRow = {
-  id: string
-  program_id: string
-  edition_id: string | null
-  version_num: number
-  schema_json: unknown
-  is_active: boolean
-  opens_at: string | null
-  closes_at: string | null
-  created_at: string
-}
-
-type ProgramStatus = 'open' | 'closed' | 'soon'
-
-type ProgramPaymentMode = 'none' | 'pre' | 'post'
+import type { ApplicationFormRow } from '@/types/program-editions'
+import type {
+  EditionRow,
+  ProgramPaymentMode,
+  ProgramRow,
+  ProgramStatus,
+} from '@/types/programs'
 
 type PaymentRow = {
   id: string
@@ -100,8 +69,8 @@ function paymentKey(programId: string, editionId: string | null): string {
   return `${programId}:${editionId ?? 'none'}`
 }
 
-function parsePriceToCents(priceUsd: string | null): number | null {
-  if (!priceUsd) return null
+function parsePriceToCents(priceUsd: string | number | null): number | null {
+  if (priceUsd === null || priceUsd === undefined) return null
   const parsed = Number(priceUsd)
   if (!Number.isFinite(parsed)) return null
   return Math.round(parsed * 100)
@@ -399,7 +368,7 @@ export default function ProgramsPage() {
       return
     }
 
-    router.push(`/plataforma/talento/programas/${programSlug}/postular`)
+    router.push(`/plataforma/talento/explorar/${programSlug}/postular`)
   }
 
   function hasPaidPre(programId: string, editionId: string | null): boolean {
@@ -500,7 +469,15 @@ export default function ProgramsPage() {
               const startLine = p.edition?.starts_at
                 ? parseIsoDateOnlyToDM(p.edition.starts_at)
                 : ''
+              const endLine = p.edition?.ends_at
+                ? parseIsoDateOnlyToDM(p.edition.ends_at)
+                : ''
               const startText = startLine ? `Inicio: ${startLine}` : ''
+              const endText = endLine ? `Fin: ${endLine}` : ''
+              const rangeText =
+                startText && endText
+                  ? `${startText} · ${endText}`
+                  : startText || endText
 
               const action = isOpen ? (
                 paymentMode === 'pre' && !paidPre ? (
@@ -656,8 +633,8 @@ export default function ProgramsPage() {
                           <span className="font-medium text-white/80">
                             {editionLine}
                           </span>
-                          {startText ? (
-                            <span className="text-white/60">· {startText}</span>
+                          {rangeText ? (
+                            <span className="text-white/60">· {rangeText}</span>
                           ) : null}
                         </div>
                       ) : (

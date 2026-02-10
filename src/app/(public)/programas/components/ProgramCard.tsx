@@ -10,7 +10,7 @@ import type { ProgramCardVM, ProgramFeature } from '../types/types'
 import {
   formatEditionLine,
   formatPriceUSD,
-  formatStartDateChip,
+  formatDateRangeChip,
 } from '../utils'
 
 type ProgramCardProps = {
@@ -107,9 +107,9 @@ export function ProgramCard(props: ProgramCardProps): React.JSX.Element {
     () => formatEditionLine(item.edition),
     [item.edition]
   )
-  const startChip = useMemo(
-    () => formatStartDateChip(item.edition?.starts_at ?? null),
-    [item.edition?.starts_at]
+  const rangeChip = useMemo(
+    () => formatDateRangeChip(item.edition?.starts_at ?? null, item.edition?.ends_at ?? null),
+    [item.edition?.starts_at, item.edition?.ends_at]
   )
 
   const isOpen = item.status === 'open'
@@ -233,8 +233,8 @@ export function ProgramCard(props: ProgramCardProps): React.JSX.Element {
             {editionLine ? (
               <div className="text-xs text-white/50">
                 {editionLine}
-                {startChip ? (
-                  <span className="text-white/40"> · Inicio: {startChip}</span>
+                {rangeChip ? (
+                  <span className="text-white/40"> · {rangeChip}</span>
                 ) : null}
               </div>
             ) : (

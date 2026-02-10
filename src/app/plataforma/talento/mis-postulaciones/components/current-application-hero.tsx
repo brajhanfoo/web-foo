@@ -36,8 +36,8 @@ function resolvePaymentMode(program: ProgramRow | null): ProgramPaymentMode {
   return program.requires_payment_pre ? 'pre' : 'none'
 }
 
-function parsePriceToCents(priceUsd: string | null): number | null {
-  if (!priceUsd) return null
+function parsePriceToCents(priceUsd: string | number | null): number | null {
+  if (priceUsd === null || priceUsd === undefined) return null
   const parsed = Number(priceUsd)
   if (!Number.isFinite(parsed)) return null
   return Math.round(parsed * 100)

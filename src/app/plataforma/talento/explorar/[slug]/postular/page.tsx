@@ -12,46 +12,22 @@ import { Button } from '@/components/ui/button'
 import {
   StepRole,
   type RoleOption,
-} from '@/app/plataforma/talento/programas/[slug]/postular/components/step-role'
+} from '@/app/plataforma/talento/explorar/[slug]/postular/components/step-role'
 import {
   StepExperience,
   type FormField,
   type FormValuesMap,
   type FormValue,
-} from '@/app/plataforma/talento/programas/[slug]/postular/components/step-experience'
-import { StepCommitment } from '@/app/plataforma/talento/programas/[slug]/postular/components/step-commitment'
-import { PostulationShell } from '@/app/plataforma/talento/programas/[slug]/postular/components/postulation-shell'
-import { PostulationStepper } from '@/app/plataforma/talento/programas/[slug]/postular/components/postulation-stepper'
-
-type ProgramRow = {
-  id: string
-  slug: string
-  title: string
-  description: string | null
-  is_published: boolean
-  payment_mode: ProgramPaymentMode | null
-  requires_payment_pre: boolean
-  price_usd: string | null
-}
-
-type ApplicationFormRow = {
-  id: string
-  program_id: string
-  edition_id: string | null
-  version_num: number
-  schema_json: unknown
-  is_active: boolean
-  opens_at: string | null
-  closes_at: string | null
-  created_at: string
-}
-
-type EditionRow = {
-  id: string
-  program_id: string
-  is_open: boolean
-  created_at: string
-}
+} from '@/app/plataforma/talento/explorar/[slug]/postular/components/step-experience'
+import { StepCommitment } from '@/app/plataforma/talento/explorar/[slug]/postular/components/step-commitment'
+import { PostulationShell } from '@/app/plataforma/talento/explorar/[slug]/postular/components/postulation-shell'
+import { PostulationStepper } from '@/app/plataforma/talento/explorar/[slug]/postular/components/postulation-stepper'
+import type { ApplicationFormRow } from '@/types/program-editions'
+import type {
+  EditionRowBase,
+  ProgramPaymentMode,
+  ProgramRow,
+} from '@/types/programs'
 
 type FieldType =
   | 'text'
@@ -83,8 +59,6 @@ type FormSchema = {
 
 type StepIdentifier = 1 | 2 | 3
 
-type ProgramPaymentMode = 'none' | 'pre' | 'post'
-
 function safeString(value: unknown): string {
   return typeof value === 'string' ? value : ''
 }
@@ -94,8 +68,8 @@ function resolvePaymentMode(program: ProgramRow): ProgramPaymentMode {
   return program.requires_payment_pre ? 'pre' : 'none'
 }
 
-function parsePriceToCents(priceUsd: string | null): number | null {
-  if (!priceUsd) return null
+function parsePriceToCents(priceUsd: string | number | null): number | null {
+  if (priceUsd === null || priceUsd === undefined) return null
   const parsed = Number(priceUsd)
   if (!Number.isFinite(parsed)) return null
   return Math.round(parsed * 100)
@@ -255,7 +229,7 @@ export default function ProgramPostularPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const [program, setProgram] = useState<ProgramRow | null>(null)
-  const [edition, setEdition] = useState<EditionRow | null>(null)
+  const [edition, setEdition] = useState<EditionRowBase | null>(null)
   const [form, setForm] = useState<ApplicationFormRow | null>(null)
   const [schema, setSchema] = useState<FormSchema | null>(null)
 
@@ -333,7 +307,7 @@ export default function ProgramPostularPage() {
       toast.showError('No se pudieron cargar las ediciones.')
     }
 
-    let activeEdition = (openEditionResponse.data ?? null) as EditionRow | null
+    let activeEdition = (openEditionResponse.data ?? null) as EditionRowBase | null
 
     if (!activeEdition) {
       const latestEditionResponse = await supabase
@@ -348,7 +322,7 @@ export default function ProgramPostularPage() {
         toast.showError('No se pudieron cargar las ediciones.')
       }
 
-      activeEdition = (latestEditionResponse.data ?? null) as EditionRow | null
+      activeEdition = (latestEditionResponse.data ?? null) as EditionRowBase | null
     }
 
     setEdition(activeEdition)
@@ -661,7 +635,7 @@ export default function ProgramPostularPage() {
     if (exists) {
       setIsSubmitting(false)
       toast.showError('Ya te postulaste a este programa en esta edición.')
-      router.push(`/plataforma/talento/programas/${program.slug}`)
+      router.push(`/plataforma/talento/explorar/${program.slug}`)
       return
     }
 
@@ -731,7 +705,7 @@ export default function ProgramPostularPage() {
       // choque con índice único (multi-tab / carrera / doble click)
       if (msg.includes('duplicate key')) {
         toast.showError('Ya te postulaste a este programa en esta edición.')
-        router.push(`/plataforma/talento/programas/${program.slug}`)
+        router.push(`/plataforma/talento/explorar/${program.slug}`)
         return
       }
 
@@ -742,7 +716,7 @@ export default function ProgramPostularPage() {
     }
 
     toast.showSuccess('¡Postulación enviada! Te contactaremos pronto.')
-    router.push(`/plataforma/talento/programas/${program.slug}`)
+    router.push(`/plataforma/talento/explorar/${program.slug}`)
   }
 
   // ---------------------------- UI states (early) ---------------------------
@@ -777,7 +751,7 @@ export default function ProgramPostularPage() {
       <div className="p-6 max-w-3xl mx-auto space-y-4">
         <Link
           className="inline-flex items-center rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-white hover:bg-white/10"
-          href="/plataforma/talento/programas"
+          href="/plataforma/talento/explorar"
         >
           ← Volver
         </Link>
@@ -815,7 +789,7 @@ export default function ProgramPostularPage() {
       <div className="p-6 max-w-3xl mx-auto space-y-4">
         <Link
           className="inline-flex items-center rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-white hover:bg-white/10"
-          href={`/plataforma/talento/programas/${program.slug}`}
+          href={`/plataforma/talento/explorar/${program.slug}`}
         >
           ← Volver
         </Link>
@@ -845,7 +819,7 @@ export default function ProgramPostularPage() {
       <div className="p-6 max-w-3xl mx-auto space-y-4">
         <Link
           className="inline-flex items-center rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-white hover:bg-white/10"
-          href={`/plataforma/talento/programas/${program.slug}`}
+          href={`/plataforma/talento/explorar/${program.slug}`}
         >
           ← Volver
         </Link>
@@ -890,7 +864,7 @@ export default function ProgramPostularPage() {
         <div className="p-6 max-w-3xl mx-auto space-y-4">
           <Link
             className="inline-flex items-center rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-white hover:bg-white/10"
-            href={`/plataforma/talento/programas`}
+            href={`/plataforma/talento/explorar`}
           >
             ← Volver
           </Link>

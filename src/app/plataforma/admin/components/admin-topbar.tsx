@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useEffect, useMemo } from 'react'
 import { usePathname } from 'next/navigation'
 import { Search } from 'lucide-react'
 
@@ -15,6 +15,7 @@ function textOrEmpty(v: string | null | undefined) {
 
 export function AdminTopbar() {
   const pathname = usePathname()
+  const bootAuth = useAuthStore((s) => s.bootAuth)
   const profile = useAuthStore((s) => s.profile)
 
   const displayName = useMemo(() => {
@@ -32,36 +33,43 @@ export function AdminTopbar() {
     return 'Panel de Admin'
   }, [pathname])
 
+  useEffect(() => {
+    void bootAuth()
+  }, [bootAuth])
+
   return (
-    <header className="sticky top-0 z-30 border-b border-white/10 bg-black/30 backdrop-blur-md">
+    <header className="sticky top-0 z-30 border-b border-slate-800 bg-slate-900 backdrop-blur-md">
       <div className="h-14 px-4 flex items-center justify-between gap-3">
         <div className="min-w-0">
-          <div className="text-sm font-semibold text-white truncate">
+          <div className="text-sm font-semibold text-slate-100 truncate">
             {title}
           </div>
-          <div className="text-[11px] text-white/50 truncate">
+          <div className="text-[11px] text-slate-400 truncate">
             Gestión interna · Foo Talent Group
           </div>
         </div>
 
         <div className="hidden md:flex items-center gap-2 min-w-[320px]">
           <div className="relative w-full">
-            <Search className="h-4 w-4 text-white/40 absolute left-3 top-1/2 -translate-y-1/2" />
+            <Search className="h-4 w-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
             <Input
               placeholder="Buscar…"
-              className="pl-9 bg-black/30 border-white/10 text-white placeholder:text-white/30"
+              name="admin-search"
+              aria-label="Buscar en admin"
+              autoComplete="off"
+              className="pl-9 bg-slate-900 border-slate-800 text-slate-100 placeholder:text-slate-400"
             />
           </div>
         </div>
 
         <div className="flex items-center gap-2">
-          <Badge className="bg-white/10 text-white border border-white/10">
+          <Badge className="bg-slate-800 text-slate-100 border border-slate-800">
             Admin
           </Badge>
 
           <Button
             variant="secondary"
-            className="bg-white/10 hover:bg-white/15 border border-white/10 text-white"
+            className="bg-slate-800 hover:bg-slate-700 border border-slate-800 text-slate-100"
           >
             Hola, {displayName}
           </Button>
