@@ -35,7 +35,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import type { EditionRow, ProgramPaymentMode, ProgramRow } from '@/types/programs'
+import type {
+  EditionRow,
+  ProgramPaymentMode,
+  ProgramRow,
+} from '@/types/programs'
 
 import { ArrowLeft, ExternalLink, Plus, Save } from 'lucide-react'
 
@@ -249,10 +253,12 @@ export default function AdminProgramDetailPage() {
     }
 
     if (teamCount > 0) {
-      const teamsPayload = Array.from({ length: teamCount }).map((_, index) => ({
-        edition_id: response.data?.id,
-        name: `Equipo ${index + 1}`,
-      }))
+      const teamsPayload = Array.from({ length: teamCount }).map(
+        (_, index) => ({
+          edition_id: response.data?.id,
+          name: `Equipo ${index + 1}`,
+        })
+      )
       const teamsResponse = await supabase
         .from('program_edition_teams')
         .insert(teamsPayload)
@@ -308,7 +314,9 @@ export default function AdminProgramDetailPage() {
             <ArrowLeft className="h-4 w-4" /> Volver
           </Link>
           <div className="space-y-1">
-            <h1 className="text-xl font-semibold text-slate-100">{program.title}</h1>
+            <h1 className="text-xl font-semibold text-slate-100">
+              {program.title}
+            </h1>
             <p className="text-sm text-slate-300">{program.slug}</p>
           </div>
         </div>
@@ -430,12 +438,11 @@ export default function AdminProgramDetailPage() {
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div>
-                        <div className="font-medium">{edition.edition_name}</div>
+                        <div className="font-medium">
+                          {edition.edition_name}
+                        </div>
                         <div className="text-xs text-slate-300">
-                          {formatDateRange(
-                            edition.starts_at,
-                            edition.ends_at
-                          )}
+                          {formatDateRange(edition.starts_at, edition.ends_at)}
                         </div>
                       </div>
                       <div className="text-xs rounded-full border border-slate-800 px-2 py-1">
@@ -444,11 +451,7 @@ export default function AdminProgramDetailPage() {
                     </div>
 
                     <div className="flex items-center justify-end">
-                      <Button
-                        asChild
-                        variant="secondary"
-                        className="gap-2"
-                      >
+                      <Button asChild variant="secondary" className="gap-2">
                         <Link
                           href={`/plataforma/admin/programas/${programId}/ediciones/${edition.id}`}
                         >

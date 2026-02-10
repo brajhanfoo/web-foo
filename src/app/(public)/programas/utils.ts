@@ -74,7 +74,9 @@ export function computeProgramStatus(params: {
 
   const now = params.now ?? new Date()
   const opensAt = params.form.opens_at ? new Date(params.form.opens_at) : null
-  const closesAt = params.form.closes_at ? new Date(params.form.closes_at) : null
+  const closesAt = params.form.closes_at
+    ? new Date(params.form.closes_at)
+    : null
 
   if (opensAt && now < opensAt) return 'closed'
   if (closesAt && now > closesAt) return 'closed'

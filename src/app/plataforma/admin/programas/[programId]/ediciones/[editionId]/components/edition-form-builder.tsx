@@ -152,7 +152,10 @@ function parseSchema(schema: unknown): FormSchema | null {
                 if (!isRecord(optUnknown)) return optAcc
                 const optValue = optUnknown['value']
                 const optLabel = optUnknown['label']
-                if (typeof optValue !== 'string' || typeof optLabel !== 'string')
+                if (
+                  typeof optValue !== 'string' ||
+                  typeof optLabel !== 'string'
+                )
                   return optAcc
                 optAcc.push({ value: optValue, label: optLabel })
                 return optAcc
@@ -556,7 +559,9 @@ export function EditionFormBuilder(props: {
       <CardContent className="space-y-6">
         <div className="flex flex-wrap items-center gap-3">
           <div className="text-sm text-slate-300">
-            {form?.is_active ? 'Hay un formulario activo.' : 'Sin formulario activo.'}
+            {form?.is_active
+              ? 'Hay un formulario activo.'
+              : 'Sin formulario activo.'}
           </div>
           {form?.is_active ? (
             <Button

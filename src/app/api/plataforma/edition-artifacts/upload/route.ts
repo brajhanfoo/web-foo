@@ -71,7 +71,10 @@ export async function POST(request: NextRequest) {
 
   if (file.size <= 0 || file.size > MAX_BYTES) {
     return NextResponse.json(
-      { ok: false, message: 'Archivo invalido o demasiado grande (max 10 MB).' },
+      {
+        ok: false,
+        message: 'Archivo invalido o demasiado grande (max 10 MB).',
+      },
       { status: 400 }
     )
   }
@@ -134,7 +137,10 @@ export async function POST(request: NextRequest) {
 
   const updatePayload =
     kind === 'certificate'
-      ? { certificate_bucket_id: BUCKET_ID, certificate_object_path: objectPath }
+      ? {
+          certificate_bucket_id: BUCKET_ID,
+          certificate_object_path: objectPath,
+        }
       : { feedback_bucket_id: BUCKET_ID, feedback_object_path: objectPath }
 
   const { error: updateErr } = await supabaseServer

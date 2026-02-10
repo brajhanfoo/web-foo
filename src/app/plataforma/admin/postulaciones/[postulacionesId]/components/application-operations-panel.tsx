@@ -253,7 +253,10 @@ export function ApplicationOperationsPanel({
         <div className="rounded-lg border border-slate-800 bg-slate-900 p-3 space-y-3">
           <div className="flex items-center justify-between gap-2">
             <div className="text-sm font-semibold text-slate-100">Fase 1</div>
-            <Badge variant="outline" className="border-slate-800 text-slate-200">
+            <Badge
+              variant="outline"
+              className="border-slate-800 text-slate-200"
+            >
               {isReceived || isInReview ? 'Activa' : 'OK'}
             </Badge>
           </div>
@@ -321,7 +324,10 @@ export function ApplicationOperationsPanel({
         <div className="rounded-lg border border-slate-800 bg-slate-900 p-3 space-y-3">
           <div className="flex items-center justify-between gap-2">
             <div className="text-sm font-semibold text-slate-100">Fase 2</div>
-            <Badge variant="outline" className="border-slate-800 text-slate-200">
+            <Badge
+              variant="outline"
+              className="border-slate-800 text-slate-200"
+            >
               {usesPaymentPending
                 ? isPaymentPending
                   ? 'Activa'

@@ -28,7 +28,10 @@ export default async function AdminLayout({
 
   // 3) layout visual (tu mismo layout)
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100" style={{ colorScheme: 'dark' }}>
+    <div
+      className="min-h-screen bg-slate-950 text-slate-100"
+      style={{ colorScheme: 'dark' }}
+    >
       <a
         href="#admin-main"
         className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:rounded-md focus:bg-slate-100 focus:px-3 focus:py-2 focus:text-sm focus:text-slate-900 focus:shadow"

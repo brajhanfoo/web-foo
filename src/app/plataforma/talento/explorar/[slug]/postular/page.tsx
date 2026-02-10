@@ -307,7 +307,8 @@ export default function ProgramPostularPage() {
       toast.showError('No se pudieron cargar las ediciones.')
     }
 
-    let activeEdition = (openEditionResponse.data ?? null) as EditionRowBase | null
+    let activeEdition = (openEditionResponse.data ??
+      null) as EditionRowBase | null
 
     if (!activeEdition) {
       const latestEditionResponse = await supabase
@@ -322,7 +323,8 @@ export default function ProgramPostularPage() {
         toast.showError('No se pudieron cargar las ediciones.')
       }
 
-      activeEdition = (latestEditionResponse.data ?? null) as EditionRowBase | null
+      activeEdition = (latestEditionResponse.data ??
+        null) as EditionRowBase | null
     }
 
     setEdition(activeEdition)

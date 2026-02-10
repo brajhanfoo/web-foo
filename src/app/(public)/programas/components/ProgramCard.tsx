@@ -108,7 +108,11 @@ export function ProgramCard(props: ProgramCardProps): React.JSX.Element {
     [item.edition]
   )
   const rangeChip = useMemo(
-    () => formatDateRangeChip(item.edition?.starts_at ?? null, item.edition?.ends_at ?? null),
+    () =>
+      formatDateRangeChip(
+        item.edition?.starts_at ?? null,
+        item.edition?.ends_at ?? null
+      ),
     [item.edition?.starts_at, item.edition?.ends_at]
   )
 

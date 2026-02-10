@@ -10,7 +10,6 @@ import type {
 export type { ApplicationFormRow } from '@/types/program-editions'
 export type { EditionRow, ProgramPaymentMode, ProgramRow, ProgramStatus }
 
-
 export type ProgramAccent = 'academy' | 'projects' | 'default'
 
 export type ProgramFeature = {

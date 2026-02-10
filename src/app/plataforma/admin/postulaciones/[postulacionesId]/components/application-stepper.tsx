@@ -61,7 +61,9 @@ export function ApplicationStepper({ currentStep }: { currentStep: number }) {
 
                 <span
                   className={`text-xs text-center ${
-                    isActive || isCompleted ? 'text-slate-100' : 'text-slate-400'
+                    isActive || isCompleted
+                      ? 'text-slate-100'
+                      : 'text-slate-400'
                   }`}
                 >
                   {step.label}
