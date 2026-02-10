@@ -1,7 +1,7 @@
 // src/app/plataforma/admin/programas/%5BprogramId%5D/page.tsx
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase/client'
@@ -64,6 +64,11 @@ function formatDateRange(startsAt: string | null, endsAt: string | null) {
 export default function AdminProgramDetailPage() {
   const parameters = useParams<{ programId: string }>()
   const { showError, showSuccess } = useToastEnhanced()
+  const showErrorRef = useRef(showError)
+
+  useEffect(() => {
+    showErrorRef.current = showError
+  }, [showError])
 
   const programId = parameters.programId
 
@@ -89,12 +94,8 @@ export default function AdminProgramDetailPage() {
   const [newEditionEndsAt, setNewEditionEndsAt] = useState('')
   const [newEditionTeamCount, setNewEditionTeamCount] = useState('4')
 
-  useEffect(() => {
+  const loadAll = useCallback(async () => {
     if (!programId) return
-    void loadAll()
-  }, [programId])
-
-  async function loadAll() {
     setLoading(true)
 
     const programResponse = await supabase
@@ -106,7 +107,7 @@ export default function AdminProgramDetailPage() {
       .maybeSingle()
 
     if (programResponse.error || !programResponse.data) {
-      showError('No se pudo cargar el programa.')
+      showErrorRef.current('No se pudo cargar el programa.')
       setLoading(false)
       return
     }
@@ -129,14 +130,18 @@ export default function AdminProgramDetailPage() {
       .order('created_at', { ascending: false })
 
     if (editionsResponse.error) {
-      showError('No se pudieron cargar las ediciones.')
+      showErrorRef.current('No se pudieron cargar las ediciones.')
       setEditions([])
     } else {
       setEditions((editionsResponse.data ?? []) as EditionRow[])
     }
 
     setLoading(false)
-  }
+  }, [programId])
+
+  useEffect(() => {
+    void loadAll()
+  }, [loadAll])
 
   async function saveProgram() {
     if (!program) return
