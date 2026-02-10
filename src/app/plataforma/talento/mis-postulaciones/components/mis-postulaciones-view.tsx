@@ -64,7 +64,20 @@ export function MisPostulacionesView(props: {
 
       {props.state.kind === 'ready' ? (
         <div className="space-y-6">
-          <CurrentApplicationHero app={props.state.current} />
+          {props.state.active.length ? (
+            <div className="space-y-4">
+              {props.state.active.length > 1 ? (
+                <div className="text-sm font-semibold">
+                  Postulaciones activas
+                </div>
+              ) : null}
+              <div className="space-y-4">
+                {props.state.active.map((app) => (
+                  <CurrentApplicationHero key={app.id} app={app} />
+                ))}
+              </div>
+            </div>
+          ) : null}
 
           {props.pastCompleted.length ? (
             <div className="pt-2">

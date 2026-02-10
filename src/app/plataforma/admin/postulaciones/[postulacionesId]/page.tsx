@@ -11,13 +11,14 @@ import type {
   ApplicationRow,
   ApplicationStatus,
   ParsedAnswers,
+  FormSchema,
+  SchemaField,
+  SchemaFieldOption,
+  FieldType,
+  PaymentStatus,
+  ProgramPaymentMode,
 } from './types/types'
-import {
-  getBooleanValue,
-  getStringValue,
-  statusToStepIndex,
-  textOrNA,
-} from './helpers'
+import { getStringValue, statusToStepIndex, textOrNA } from './helpers'
 
 import { ApplicationStepper } from './components/application-stepper'
 import { ApplicantProfileCard } from './components/applicant-profile-card'
@@ -34,10 +35,22 @@ function isApplicationStatus(value: unknown): value is ApplicationStatus {
   return (
     value === 'received' ||
     value === 'admitted' ||
+    value === 'in_review' ||
     value === 'payment_pending' ||
     value === 'enrolled' ||
     value === 'rejected'
   )
+}
+
+function resolvePaymentMode(
+  program: {
+    payment_mode: ProgramPaymentMode | null
+    requires_payment_pre: boolean
+  } | null
+): ProgramPaymentMode {
+  if (!program) return 'none'
+  if (program.payment_mode) return program.payment_mode
+  return program.requires_payment_pre ? 'pre' : 'none'
 }
 
 function buildFullName(
@@ -56,6 +69,8 @@ type SupabaseApplicationRow = {
   program_id: unknown
   edition_id: unknown
   status: unknown
+  payment_status: unknown
+  paid_at: unknown
   applied_role: unknown
   cv_url: unknown
   answers: unknown
@@ -77,6 +92,85 @@ function pickObject(value: unknown): Record<string, unknown> | null {
   return null
 }
 
+function isFieldType(value: unknown): value is FieldType {
+  return (
+    value === 'text' ||
+    value === 'textarea' ||
+    value === 'email' ||
+    value === 'phone' ||
+    value === 'number' ||
+    value === 'select' ||
+    value === 'checkbox' ||
+    value === 'date'
+  )
+}
+
+function isPaymentStatus(value: unknown): value is PaymentStatus {
+  return (
+    value === 'initiated' ||
+    value === 'pending' ||
+    value === 'paid' ||
+    value === 'failed' ||
+    value === 'canceled'
+  )
+}
+
+function parseFormSchema(schema: unknown): FormSchema | null {
+  if (!schema || typeof schema !== 'object') return null
+  const candidate = schema as Record<string, unknown>
+  const title = candidate['title']
+  const fields = candidate['fields']
+  if (typeof title !== 'string' || !Array.isArray(fields)) return null
+  const description =
+    typeof candidate['description'] === 'string'
+      ? candidate['description']
+      : undefined
+  const parsedFields: SchemaField[] = fields.reduce<SchemaField[]>(
+    (acc, fieldUnknown) => {
+      if (!fieldUnknown || typeof fieldUnknown !== 'object') return acc
+      const row = fieldUnknown as Record<string, unknown>
+      const id = row['id']
+      const name = row['name']
+      const type = row['type']
+      const label = row['label']
+      if (
+        typeof id !== 'string' ||
+        typeof name !== 'string' ||
+        typeof label !== 'string'
+      )
+        return acc
+      if (!isFieldType(type)) return acc
+      const placeholder = row['placeholder']
+      const required = row['required']
+      const optionsRaw = row['options']
+      const options: SchemaFieldOption[] | undefined = Array.isArray(optionsRaw)
+        ? optionsRaw.reduce<SchemaFieldOption[]>((optAcc, optUnknown) => {
+            if (!optUnknown || typeof optUnknown !== 'object') return optAcc
+            const optRow = optUnknown as Record<string, unknown>
+            const optLabel = optRow['label']
+            const optValue = optRow['value']
+            if (typeof optLabel !== 'string' || typeof optValue !== 'string')
+              return optAcc
+            optAcc.push({ label: optLabel, value: optValue })
+            return optAcc
+          }, [])
+        : undefined
+      acc.push({
+        id,
+        name,
+        type,
+        label,
+        placeholder: typeof placeholder === 'string' ? placeholder : undefined,
+        required: typeof required === 'boolean' ? required : undefined,
+        options,
+      })
+      return acc
+    },
+    []
+  )
+  return { title, description, fields: parsedFields }
+}
+
 export default function ApplicationDetailClientPage() {
   const rawParams = useParams() as Record<string, string | string[] | undefined>
   const postulacionId = useMemo(
@@ -88,6 +182,7 @@ export default function ApplicationDetailClientPage() {
 
   const [isLoading, setIsLoading] = useState(true)
   const [application, setApplication] = useState<ApplicationRow | null>(null)
+  const [formSchema, setFormSchema] = useState<FormSchema | null>(null)
 
   const [isAdmitLoading, setIsAdmitLoading] = useState(false)
   const [isPaymentPendingLoading, setIsPaymentPendingLoading] = useState(false)
@@ -98,24 +193,6 @@ export default function ApplicationDetailClientPage() {
     () => application?.answers ?? {},
     [application?.answers]
   )
-
-  const motivationText =
-    getStringValue(parsedAnswers['motivacion']) ??
-    getStringValue(parsedAnswers['mativacion']) ??
-    null
-
-  const experienceText = getStringValue(parsedAnswers['experiencia'])
-  const technologiesText = getStringValue(parsedAnswers['tecnologias'])
-
-  const shiftMorning = getBooleanValue(parsedAnswers['turno_maniana'])
-  const shiftAfternoon = getBooleanValue(parsedAnswers['turno_tarde'])
-  const shiftNight = getBooleanValue(parsedAnswers['turno_noche'])
-
-  const acceptTerms = getBooleanValue(parsedAnswers['acepto_terminos'])
-  const acceptAvailability = getBooleanValue(
-    parsedAnswers['acepto_disponibilidad']
-  )
-  const acceptQuorum = getBooleanValue(parsedAnswers['acepto_quorum'])
 
   const currentStep = statusToStepIndex(application?.status ?? 'received')
 
@@ -141,6 +218,7 @@ export default function ApplicationDetailClientPage() {
       if (!postulacionId) {
         setIsLoading(false)
         setApplication(null)
+        setFormSchema(null)
         return
       }
 
@@ -155,13 +233,15 @@ export default function ApplicationDetailClientPage() {
         program_id,
         edition_id,
         status,
+        payment_status,
+        paid_at,
         applied_role,
         cv_url,
         answers,
         created_at,
         updated_at,
         form_id,
-        program:programs(id,title,slug),
+        program:programs(id,title,slug,payment_mode,requires_payment_pre),
         edition:program_editions(id,edition_name),
         applicant_profile:profiles(
           id,
@@ -188,6 +268,7 @@ export default function ApplicationDetailClientPage() {
 
       if (error) {
         setApplication(null)
+        setFormSchema(null)
         setIsLoading(false)
         showErrorRef.current('No se pudo cargar la postulación', error.message)
         return
@@ -195,6 +276,7 @@ export default function ApplicationDetailClientPage() {
 
       if (!data) {
         setApplication(null)
+        setFormSchema(null)
         setIsLoading(false)
         return
       }
@@ -211,6 +293,10 @@ export default function ApplicationDetailClientPage() {
         program_id: String(row.program_id),
         edition_id: pickString(row.edition_id),
         status: isApplicationStatus(row.status) ? row.status : 'received',
+        payment_status: isPaymentStatus(row.payment_status)
+          ? row.payment_status
+          : null,
+        paid_at: pickString(row.paid_at),
         applied_role: pickString(row.applied_role),
         cv_url: pickString(row.cv_url),
         answers: (pickObject(row.answers) ?? {}) as ParsedAnswers,
@@ -222,6 +308,12 @@ export default function ApplicationDetailClientPage() {
               id: String(programObject['id']),
               title: pickString(programObject['title']),
               slug: pickString(programObject['slug']),
+              payment_mode:
+                (programObject['payment_mode'] as ProgramPaymentMode | null) ??
+                null,
+              requires_payment_pre: Boolean(
+                programObject['requires_payment_pre']
+              ),
             }
           : null,
         edition: editionObject
@@ -256,6 +348,20 @@ export default function ApplicationDetailClientPage() {
           : null,
       }
 
+      let nextSchema: FormSchema | null = null
+      if (next.form_id) {
+        const { data: formData } = await supabase
+          .from('application_forms')
+          .select('schema_json')
+          .eq('id', next.form_id)
+          .maybeSingle()
+
+        if (!cancelled) {
+          nextSchema = parseFormSchema(formData?.schema_json)
+        }
+      }
+      if (cancelled) return
+      setFormSchema(nextSchema)
       setApplication(next)
       setIsLoading(false)
     }
@@ -270,11 +376,17 @@ export default function ApplicationDetailClientPage() {
   async function updateApplicationStatus(nextStatus: ApplicationStatus) {
     if (!application?.id) return
 
-    // Seguridad extra: si por algún motivo te llega "admitted", lo forzamos
-    const safeNextStatus: ApplicationStatus =
-      nextStatus === ('admitted' as unknown as ApplicationStatus)
-        ? 'payment_pending'
-        : nextStatus
+    const paymentMode = resolvePaymentMode(application.program ?? null)
+    const usesPaymentPending = paymentMode === 'post'
+    let safeNextStatus: ApplicationStatus = nextStatus
+
+    if (nextStatus === 'admitted' && usesPaymentPending) {
+      safeNextStatus = 'payment_pending'
+    }
+
+    if (nextStatus === 'payment_pending' && !usesPaymentPending) {
+      safeNextStatus = 'admitted'
+    }
 
     setIsAdmitLoading(false)
     setIsPaymentPendingLoading(false)
@@ -334,15 +446,7 @@ export default function ApplicationDetailClientPage() {
             <ApplicationDetailsCard
               isLoading={isLoading}
               application={application}
-              experienceText={experienceText}
-              technologiesText={technologiesText}
-              motivationText={motivationText}
-              shiftMorning={shiftMorning}
-              shiftAfternoon={shiftAfternoon}
-              shiftNight={shiftNight}
-              acceptTerms={acceptTerms}
-              acceptAvailability={acceptAvailability}
-              acceptQuorum={acceptQuorum}
+              formSchema={formSchema}
             />
           </div>
 

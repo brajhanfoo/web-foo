@@ -8,65 +8,100 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 
-import type { ApplicationRow } from '../types/types'
-import { getEmailFromAnswers, textOrNA } from '../helpers'
-import { MiniCheck } from './mini-check'
-import { cn } from '@/lib/utils'
+import type { ApplicationRow, FormSchema, SchemaField } from '../types/types'
+import { textOrNA } from '../helpers'
 
-function splitTags(value: string | null): string[] {
-  if (!value) return []
-  const cleaned = value.trim()
-  if (!cleaned) return []
-  return cleaned
-    .split(/[,;\n\r]+/g)
-    .map((part) => part.trim())
-    .filter((part) => part.length > 0)
-    .slice(0, 24)
+function formatValue(value: unknown, field?: SchemaField): string {
+  if (value === null || value === undefined) return '-'
+
+  if (Array.isArray(value)) {
+    const items = value
+      .map((item) => formatValue(item, field))
+      .filter((item) => item !== '-')
+    return items.length ? items.join(', ') : '-'
+  }
+
+  if (typeof value === 'boolean') return value ? 'Si' : 'No'
+
+  if (typeof value === 'number') {
+    return Number.isFinite(value) ? String(value) : '-'
+  }
+
+  if (typeof value === 'string') {
+    const trimmed = value.trim()
+    if (!trimmed) return '-'
+
+    if (field?.options?.length) {
+      const match = field.options.find((option) => option.value === trimmed)
+      if (match?.label) return match.label
+    }
+
+    return trimmed
+  }
+
+  if (typeof value === 'object') {
+    try {
+      return JSON.stringify(value)
+    } catch {
+      return '-'
+    }
+  }
+
+  return '-'
 }
 
-function StepTitle({ number, title }: { number: number; title: string }) {
-  return (
-    <div className="flex items-center gap-3">
-      <div className="h-7 w-7 rounded-lg bg-[#00CCA4]/15 border border-[#00CCA4]/25 flex items-center justify-center text-xs font-bold text-[#00CCA4]">
-        {number}
-      </div>
-      <div className="text-sm font-semibold text-white">{title}</div>
-    </div>
-  )
+function labelFromKey(key: string): string {
+  return key.replace(/_/g, ' ').trim() || key
+}
+
+type FieldEntry = {
+  key: string
+  label: string
+  value: string
+}
+
+function buildEntriesFromSchema(
+  schema: FormSchema,
+  answers: Record<string, unknown>
+): FieldEntry[] {
+  return schema.fields.map((field) => ({
+    key: field.id || field.name,
+    label: field.label,
+    value: formatValue(answers[field.name], field),
+  }))
+}
+
+function buildFallbackEntries(answers: Record<string, unknown>): FieldEntry[] {
+  return Object.entries(answers).map(([key, value]) => ({
+    key,
+    label: labelFromKey(key),
+    value: formatValue(value),
+  }))
 }
 
 export function ApplicationDetailsCard({
   isLoading,
   application,
-  experienceText,
-  technologiesText,
-  motivationText,
-  shiftMorning,
-  shiftAfternoon,
-  shiftNight,
-  acceptTerms,
-  acceptAvailability,
-  acceptQuorum,
+  formSchema,
 }: {
   isLoading: boolean
   application: ApplicationRow | null
-  experienceText: string | null
-  technologiesText: string | null
-  motivationText: string | null
-  shiftMorning: boolean | null
-  shiftAfternoon: boolean | null
-  shiftNight: boolean | null
-  acceptTerms: boolean | null
-  acceptAvailability: boolean | null
-  acceptQuorum: boolean | null
+  formSchema: FormSchema | null
 }) {
   const applicant = application?.applicant_profile ?? null
-  const email = getEmailFromAnswers(application?.answers)
-  const technologies = splitTags(technologiesText)
+  const email = applicant?.email ?? null
 
   const location = textOrNA(applicant?.country_residence ?? null)
   const phone = textOrNA(applicant?.whatsapp_e164 ?? null)
   const documentNumber = textOrNA(applicant?.document_number ?? null)
+
+  const answers = application?.answers ?? {}
+  const hasSchema = Boolean(formSchema?.fields.length)
+  const entries = formSchema
+    ? buildEntriesFromSchema(formSchema, answers)
+    : buildFallbackEntries(answers)
+
+  const hasEntries = entries.length > 0
 
   return (
     <Card className="bg-black/40 border-white/10 backdrop-blur-md overflow-hidden">
@@ -83,22 +118,21 @@ export function ApplicationDetailsCard({
 
           <Badge className="bg-white/10 text-white border border-white/10">
             {application?.status === 'received'
-              ? 'Postulación recibida'
+              ? 'Postulacion recibida'
               : application?.status === 'payment_pending'
                 ? 'Pago pendiente'
                 : application?.status === 'enrolled'
                   ? 'Inscrito'
                   : application?.status === 'rejected'
                     ? 'Rechazado'
-                    : '—'}
+                    : '-'}
           </Badge>
         </div>
 
         {isLoading ? (
-          <div className="text-sm text-white/60">Cargando ficha…</div>
+          <div className="text-sm text-white/60">Cargando ficha...</div>
         ) : application ? (
           <>
-            {/* Caja superior (DNI, ubicación, email, teléfono) */}
             <div className="rounded-2xl border border-white/10 bg-black/30 p-4">
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div>
@@ -136,117 +170,38 @@ export function ApplicationDetailsCard({
             </div>
 
             <div className="text-[11px] font-semibold tracking-wide text-[#00CCA4]">
-              RESPUESTAS TÉCNICAS
+              RESPUESTAS DEL FORMULARIO
             </div>
 
             <Separator className="border-white/10" />
 
-            {/* 1 */}
-            <div className="space-y-3">
-              <StepTitle number={1} title="Experiencia práctica en el rol" />
-              <div className="rounded-2xl border border-white/10 bg-black/30 p-4">
-                <div className="text-sm text-white/85 whitespace-pre-wrap">
-                  {experienceText?.trim() ? experienceText : '—'}
-                </div>
-              </div>
-            </div>
-
-            {/* 2 */}
-            <div className="space-y-3">
-              <StepTitle
-                number={2}
-                title="Tecnologías y herramientas dominadas para el rol postulado"
-              />
-              <div className="rounded-2xl border border-white/10 bg-black/30 p-4">
-                {technologies.length ? (
-                  <div className="flex flex-wrap gap-2">
-                    {technologies.map((tag) => (
-                      <span
-                        key={tag}
-                        className="px-3 py-1 rounded-lg text-[11px] font-semibold border border-white/10 bg-black/40 text-white/80"
-                      >
-                        {tag}
-                      </span>
-                    ))}
+            {hasEntries ? (
+              <div className="space-y-3">
+                {entries.map((entry) => (
+                  <div
+                    key={entry.key}
+                    className="rounded-2xl border border-white/10 bg-black/30 p-4"
+                  >
+                    <div className="text-[11px] tracking-wide text-white/50">
+                      {entry.label}
+                    </div>
+                    <div className="mt-2 text-sm text-white/85 whitespace-pre-wrap">
+                      {entry.value}
+                    </div>
                   </div>
-                ) : (
-                  <div className="text-sm text-white/60 whitespace-pre-wrap">
-                    {technologiesText?.trim() ? technologiesText : '—'}
-                  </div>
-                )}
+                ))}
               </div>
-            </div>
-
-            {/* 3 */}
-            <div className="space-y-3">
-              <StepTitle
-                number={3}
-                title="Principal objetivo al entrar a la simulación"
-              />
-              <div className="rounded-2xl border border-white/10 bg-black/30 p-4">
-                <div className="text-sm text-white/85 whitespace-pre-wrap">
-                  {motivationText?.trim() ? motivationText : '—'}
-                </div>
+            ) : (
+              <div className="text-sm text-white/60">
+                {hasSchema
+                  ? 'El formulario no tiene campos para mostrar.'
+                  : 'No se encontro el formulario asociado.'}
               </div>
-            </div>
-
-            <Separator className="border-white/10" />
-
-            {/* Disponibilidad + Aceptaciones */}
-            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-              <div className="rounded-2xl border border-white/10 bg-black/30 p-4 space-y-3">
-                <div className="text-sm font-semibold text-white">
-                  Disponibilidad
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  <Badge
-                    className={cn(
-                      shiftMorning
-                        ? 'border-[#D1D5DB] bg-white text-black'
-                        : 'border-white/10 text-white'
-                    )}
-                  >
-                    Mañana
-                  </Badge>
-                  <Badge
-                    className={cn(
-                      shiftAfternoon
-                        ? 'border-[#D1D5DB] bg-white text-black'
-                        : 'border-white/10 text-white'
-                    )}
-                  >
-                    Tarde
-                  </Badge>
-                  <Badge
-                    className={cn(
-                      shiftNight
-                        ? 'border-[#D1D5DB] bg-white text-black'
-                        : 'border-white/10 text-white'
-                    )}
-                  >
-                    Noche
-                  </Badge>
-                </div>
-              </div>
-
-              <div className="rounded-2xl border border-white/10 bg-black/30 p-4 space-y-3">
-                <div className="text-sm font-semibold text-white">
-                  Aceptaciones
-                </div>
-                <div className="grid grid-cols-1 gap-2 border-white/10 text-white">
-                  <MiniCheck label="Términos" value={acceptTerms} />
-                  <MiniCheck
-                    label="Disponibilidad"
-                    value={acceptAvailability}
-                  />
-                  <MiniCheck label="Quórum" value={acceptQuorum} />
-                </div>
-              </div>
-            </div>
+            )}
           </>
         ) : (
           <div className="text-sm text-white/60">
-            No se pudo cargar la postulación.
+            No se pudo cargar la postulacion.
             <div className="mt-3">
               <Button asChild variant="outline" size="sm">
                 <Link href="/plataforma/admin/postulaciones">Volver</Link>

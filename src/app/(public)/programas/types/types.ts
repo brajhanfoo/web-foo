@@ -6,11 +6,14 @@ export type ProgramRow = {
   title: string
   description: string | null
   is_published: boolean
+  payment_mode: ProgramPaymentMode | null
   requires_payment_pre: boolean
   price_usd: number | null
   created_at: string
   updated_at: string
 }
+
+export type ProgramPaymentMode = 'none' | 'pre' | 'post'
 
 export type EditionRow = {
   id: string

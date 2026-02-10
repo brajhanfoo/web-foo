@@ -1,10 +1,12 @@
-// src/app/plataforma/talento/mis-postulaciones/components/current-application-hero.tsx
+﻿// src/app/plataforma/talento/mis-postulaciones/components/current-application-hero.tsx
 
 'use client'
 
 import Link from 'next/link'
+import { useState } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { PayphoneCheckoutModal } from '@/components/payments/payphone-checkout-modal'
 
 import {
   ArrowRight,
@@ -16,7 +18,7 @@ import {
   Trophy,
 } from 'lucide-react'
 
-import type { ApplicationRow } from '../types'
+import type { ApplicationRow, ProgramPaymentMode, ProgramRow } from '../types'
 import {
   badgeClass,
   fmtDateESFromISO,
@@ -28,7 +30,21 @@ import {
 import { ShellCard } from './shell-card'
 import { getPaymentWindow } from '../payment-logic'
 
+function resolvePaymentMode(program: ProgramRow | null): ProgramPaymentMode {
+  if (!program) return 'none'
+  if (program.payment_mode) return program.payment_mode
+  return program.requires_payment_pre ? 'pre' : 'none'
+}
+
+function parsePriceToCents(priceUsd: string | null): number | null {
+  if (!priceUsd) return null
+  const parsed = Number(priceUsd)
+  if (!Number.isFinite(parsed)) return null
+  return Math.round(parsed * 100)
+}
+
 export function CurrentApplicationHero(props: { app: ApplicationRow }) {
+  const [checkoutOpen, setCheckoutOpen] = useState(false)
   const programTitle = props.app.program ? props.app.program.title : 'Programa'
   const role = safeTrim(props.app.applied_role)
   const appliedAt = fmtDateESFromISO(props.app.created_at)
@@ -53,7 +69,7 @@ export function CurrentApplicationHero(props: { app: ApplicationRow }) {
         topLeft={programTitle}
         topRight={topRight}
         icon={<Clock3 className="h-5 w-5 text-[#60A5FA]" />}
-        title="Postulación Recibida"
+        title="Postulación recibida"
         description="Hemos recibido tu ficha correctamente. Nuestro equipo de admisión comenzará a revisarla pronto."
         bottomLeft={<span>Postulado: {appliedAt}</span>}
         bottomRight={<span className={roleTextClass()}>{role || '—'}</span>}
@@ -86,9 +102,16 @@ export function CurrentApplicationHero(props: { app: ApplicationRow }) {
 
   if (
     props.app.status === 'approved' ||
+    props.app.status === 'admitted' ||
     props.app.status === 'payment_pending'
   ) {
     const payment = getPaymentWindow(props.app)
+    const paymentMode = resolvePaymentMode(props.app.program)
+    const amountCents =
+      parsePriceToCents(props.app.program?.price_usd ?? null) ?? 0
+    const needsPayment =
+      paymentMode === 'post' && props.app.payment_status !== 'paid'
+    const canPayNow = needsPayment && payment.canPay && amountCents > 0
 
     const expiresLabel = payment.expiresAtIso
       ? `TU RESERVA VENCE EL: ${fmtDateESFromISO(payment.expiresAtIso)}`
@@ -114,26 +137,42 @@ export function CurrentApplicationHero(props: { app: ApplicationRow }) {
         }
         bottomRight={
           <>
-            <Button
-              className={[
-                'h-11 w-full justify-center gap-2',
-                'bg-emerald-400/90 text-black hover:bg-emerald-400',
-                'shadow-[0_0_25px_rgba(52,211,153,0.25)]',
-              ].join(' ')}
-              disabled={!payment.canPay}
-            >
-              REALIZAR PAGO AHORA <CreditCard className="h-4 w-4" />
-            </Button>
-
-            <Button
-              variant="ghost"
-              className="h-9 w-full justify-center gap-2 text-[#6B7280]"
-              asChild
-            >
-              <Link href="#">
-                Ver detalles del pago <ArrowRight className="h-4 w-4" />
-              </Link>
-            </Button>
+            {needsPayment ? (
+              <>
+                <Button
+                  className={[
+                    'h-11 w-full justify-center gap-2',
+                    'bg-emerald-400/90 text-black hover:bg-emerald-400',
+                    'shadow-[0_0_25px_rgba(52,211,153,0.25)]',
+                  ].join(' ')}
+                  disabled={!canPayNow}
+                  onClick={() => setCheckoutOpen(true)}
+                >
+                  PAGAR MATRÍCULA <CreditCard className="h-4 w-4" />
+                </Button>
+                {!amountCents ? (
+                  <div className="text-xs text-white/60">
+                    Falta configurar el precio del programa.
+                  </div>
+                ) : null}
+                <PayphoneCheckoutModal
+                  open={checkoutOpen}
+                  onOpenChange={setCheckoutOpen}
+                  programId={props.app.program_id}
+                  editionId={props.app.edition_id}
+                  purpose="tuition"
+                  applicationId={props.app.id}
+                  amountCents={amountCents}
+                  onPaid={() => setCheckoutOpen(false)}
+                />
+              </>
+            ) : (
+              <Badge className="border border-emerald-500/30 bg-emerald-500/10 text-emerald-300">
+                {paymentMode === 'post'
+                  ? 'Pago confirmado'
+                  : 'Pago no requerido'}
+              </Badge>
+            )}
           </>
         }
       />

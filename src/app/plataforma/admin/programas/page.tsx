@@ -28,10 +28,13 @@ type ProgramRow = {
   title: string
   description: string | null
   is_published: boolean
+  payment_mode: ProgramPaymentMode | null
   requires_payment_pre: boolean
   payment_instructions: string | null
   created_at: string
 }
+
+type ProgramPaymentMode = 'none' | 'pre' | 'post'
 
 function slugify(input: string) {
   return input
@@ -57,7 +60,7 @@ export default function AdminProgramsPage() {
   const [title, setTitle] = useState('')
   const [slug, setSlug] = useState('')
   const [description, setDescription] = useState('')
-  const [requiresPaymentPre, setRequiresPaymentPre] = useState(false)
+  const [paymentMode, setPaymentMode] = useState<ProgramPaymentMode>('none')
 
   const bootedReference = useRef(false)
 
@@ -66,7 +69,7 @@ export default function AdminProgramsPage() {
     const { data, error } = await supabase
       .from('programs')
       .select(
-        'id,slug,title,description,is_published,requires_payment_pre,created_at'
+        'id,slug,title,description,is_published,payment_mode,requires_payment_pre,created_at'
       )
       .order('created_at', { ascending: false })
 
@@ -102,7 +105,12 @@ export default function AdminProgramsPage() {
     setTitle('')
     setSlug('')
     setDescription('')
-    setRequiresPaymentPre(false)
+    setPaymentMode('none')
+  }
+
+  function resolvePaymentMode(row: ProgramRow): ProgramPaymentMode {
+    if (row.payment_mode) return row.payment_mode
+    return row.requires_payment_pre ? 'pre' : 'none'
   }
 
   function openCreate() {
@@ -115,7 +123,7 @@ export default function AdminProgramsPage() {
     setTitle(p.title)
     setSlug(p.slug)
     setDescription(p.description ?? '')
-    setRequiresPaymentPre(!!p.requires_payment_pre)
+    setPaymentMode(resolvePaymentMode(p))
     setOpen(true)
   }
 
@@ -130,7 +138,8 @@ export default function AdminProgramsPage() {
       title: t,
       slug: s,
       description: description.trim() || null,
-      requires_payment_pre: requiresPaymentPre,
+      payment_mode: paymentMode,
+      requires_payment_pre: paymentMode === 'pre',
     }
 
     if (editing) {
@@ -224,9 +233,11 @@ export default function AdminProgramsPage() {
               <div className="col-span-3 px-3 py-3 text-sm">{p.slug}</div>
 
               <div className="col-span-2 px-3 py-3 text-sm">
-                {p.requires_payment_pre
+                {resolvePaymentMode(p) === 'pre'
                   ? 'Pago previo'
-                  : 'Pago posterior / manual'}
+                  : resolvePaymentMode(p) === 'post'
+                    ? 'Pago posterior'
+                    : 'Sin pago'}
               </div>
 
               <div className="col-span-2 px-3 py-3 text-sm">
@@ -333,18 +344,19 @@ export default function AdminProgramsPage() {
                 />
               </div>
 
-              <div className="flex items-center gap-3">
-                <input
-                  id="requiresPaymentPre"
-                  type="checkbox"
-                  checked={requiresPaymentPre}
+              <div className="space-y-1">
+                <label className="text-sm font-medium">Modo de pago</label>
+                <select
+                  value={paymentMode}
                   onChange={(element) =>
-                    setRequiresPaymentPre(element.target.checked)
+                    setPaymentMode(element.target.value as ProgramPaymentMode)
                   }
-                />
-                <label htmlFor="requiresPaymentPre" className="text-sm">
-                  Requiere pago previo para inscribirse
-                </label>
+                  className="w-full rounded-md border px-3 py-2 text-sm bg-black text-white"
+                >
+                  <option value="none">Sin pago</option>
+                  <option value="pre">Pago previo</option>
+                  <option value="post">Pago posterior</option>
+                </select>
               </div>
             </div>
 

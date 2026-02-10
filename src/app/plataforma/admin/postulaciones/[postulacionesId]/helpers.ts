@@ -4,6 +4,8 @@ import type {
   ApplicationRow,
   ApplicationStatus,
   ParsedAnswers,
+  PaymentStatus,
+  ProgramPaymentMode,
 } from './types/types'
 
 /* ----------------------------- Helpers (safe) ----------------------------- */
@@ -40,13 +42,17 @@ export function buildWhatsAppLink(whatsappE164: string): string {
 
 export function statusToStepIndex(status: ApplicationStatus): number {
   if (status === 'received') return 1
-  if (status === 'payment_pending') return 2
+  if (status === 'in_review') return 1
+  if (status === 'admitted') return 2
+  if (status === 'payment_pending') return 3
   if (status === 'enrolled') return 4
   return 1
 }
 
 export function statusBadgeLabel(status: ApplicationStatus): string {
   if (status === 'received') return 'Recibida'
+  if (status === 'in_review') return 'En revisiÃ³n'
+  if (status === 'admitted') return 'Admitida'
   if (status === 'payment_pending') return 'Pago pendiente'
   if (status === 'enrolled') return 'Matriculada'
   if (status === 'rejected') return 'Rechazada'
@@ -71,7 +77,18 @@ export function isApplicationStatus(
     value === 'admitted' ||
     value === 'payment_pending' ||
     value === 'enrolled' ||
-    value === 'rejected'
+    value === 'rejected' ||
+    value === 'in_review'
+  )
+}
+
+export function isPaymentStatus(value: unknown): value is PaymentStatus {
+  return (
+    value === 'initiated' ||
+    value === 'pending' ||
+    value === 'paid' ||
+    value === 'failed' ||
+    value === 'canceled'
   )
 }
 
@@ -147,6 +164,8 @@ export function mapSupabaseRowToApplicationRow(raw: unknown): {
   const createdAt = getStringValue(raw['created_at'])
   const updatedAt = getStringValue(raw['updated_at'])
   const formId = getStringValue(raw['form_id'])
+  const paymentStatusRaw = raw['payment_status']
+  const paidAt = getStringValue(raw['paid_at'])
 
   const answersRaw = raw['answers']
   const answers: ParsedAnswers = isRecord(answersRaw) ? answersRaw : {}
@@ -171,6 +190,9 @@ export function mapSupabaseRowToApplicationRow(raw: unknown): {
   const status: ApplicationStatus = isApplicationStatus(statusValue)
     ? statusValue
     : 'received'
+  const paymentStatus: PaymentStatus | null = isPaymentStatus(paymentStatusRaw)
+    ? paymentStatusRaw
+    : null
 
   const programRaw = raw['program']
   const program = isRecord(programRaw)
@@ -178,6 +200,8 @@ export function mapSupabaseRowToApplicationRow(raw: unknown): {
         id: getStringValue(programRaw['id']) ?? programId,
         title: getStringValue(programRaw['title']),
         slug: getStringValue(programRaw['slug']),
+        payment_mode: programRaw['payment_mode'] as ProgramPaymentMode | null,
+        requires_payment_pre: Boolean(programRaw['requires_payment_pre']),
       }
     : null
 
@@ -217,6 +241,8 @@ export function mapSupabaseRowToApplicationRow(raw: unknown): {
     program_id: programId,
     edition_id: editionId,
     status,
+    payment_status: paymentStatus,
+    paid_at: paidAt,
     applied_role: appliedRole,
     cv_url: cvUrl,
     answers,

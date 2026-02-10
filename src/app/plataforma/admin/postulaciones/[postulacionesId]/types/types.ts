@@ -5,14 +5,26 @@
 export type ApplicationStatus =
   | 'received'
   | 'in_review'
+  | 'admitted'
   | 'payment_pending'
   | 'enrolled'
   | 'rejected'
+
+export type PaymentStatus =
+  | 'initiated'
+  | 'pending'
+  | 'paid'
+  | 'failed'
+  | 'canceled'
+
+export type ProgramPaymentMode = 'none' | 'pre' | 'post'
 
 export type ProgramSummary = {
   id: string
   title: string | null
   slug: string | null
+  payment_mode: ProgramPaymentMode | null
+  requires_payment_pre: boolean
 }
 
 export type EditionSummary = {
@@ -40,12 +52,42 @@ export type ApplicantProfileSummary = {
 
 export type ParsedAnswers = Record<string, unknown>
 
+export type FieldType =
+  | 'text'
+  | 'textarea'
+  | 'email'
+  | 'phone'
+  | 'number'
+  | 'select'
+  | 'checkbox'
+  | 'date'
+
+export type SchemaFieldOption = { value: string; label: string }
+
+export type SchemaField = {
+  id: string
+  type: FieldType
+  label: string
+  name: string
+  placeholder?: string
+  required?: boolean
+  options?: SchemaFieldOption[]
+}
+
+export type FormSchema = {
+  title: string
+  description?: string
+  fields: SchemaField[]
+}
+
 export type ApplicationBase = {
   id: string
   applicant_profile_id: string
   program_id: string
   edition_id: string | null
   status: ApplicationStatus
+  payment_status: PaymentStatus | null
+  paid_at: string | null
   applied_role: string | null
   cv_url: string | null
   answers: ParsedAnswers

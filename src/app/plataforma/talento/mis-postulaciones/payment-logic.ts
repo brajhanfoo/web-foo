@@ -1,4 +1,4 @@
-// helpers.ts
+﻿// helpers.ts
 import type { ApplicationRow } from './types'
 
 export type PaymentWindow = {
@@ -16,7 +16,11 @@ function parseIsoToMs(iso: string): number | null {
 
 export function getPaymentWindow(app: ApplicationRow): PaymentWindow {
   // Regla: se puede pagar si status está en approved o payment_pending
-  if (app.status !== 'approved' && app.status !== 'payment_pending') {
+  if (
+    app.status !== 'approved' &&
+    app.status !== 'admitted' &&
+    app.status !== 'payment_pending'
+  ) {
     return { canPay: false, expiresAtIso: null, msRemaining: null }
   }
 

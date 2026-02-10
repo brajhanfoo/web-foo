@@ -7,7 +7,7 @@ import { supabase } from '@/lib/supabase/client'
 import { useToastEnhanced } from '@/hooks/use-toast-enhanced'
 
 import type { ApplicationRow, ViewState } from './types'
-import { buildPastCompletedItems } from './helpers'
+import { buildPastCompletedItems, splitByEditionEnd } from './helpers'
 import { MisPostulacionesView } from './components/mis-postulaciones-view'
 
 export default function MisPostulacionesPage() {
@@ -44,6 +44,8 @@ export default function MisPostulacionesPage() {
           program_id,
           edition_id,
           status,
+          payment_status,
+          paid_at,
           applied_role,
           created_at,
           updated_at,
@@ -55,6 +57,7 @@ export default function MisPostulacionesPage() {
             is_published,
             created_at,
             updated_at,
+            payment_mode,
             requires_payment_pre,
             price_usd
           ),
@@ -85,7 +88,14 @@ export default function MisPostulacionesPage() {
         return
       }
 
-      setState({ kind: 'ready', current: rows[0], past: rows.slice(1) })
+      const { active, past } = splitByEditionEnd(rows, new Date())
+
+      if (!active.length && !past.length) {
+        setState({ kind: 'empty' })
+        return
+      }
+
+      setState({ kind: 'ready', active, past })
     }
 
     void run()

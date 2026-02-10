@@ -46,9 +46,15 @@ export function ApplicationOperationsPanel({
 }) {
   const status: ApplicationStatus | null = application?.status ?? null
   const applicationId: string | null = application?.id ?? null
+  const paymentStatus = application?.payment_status ?? null
+  const program = application?.program ?? null
+  const paymentMode =
+    program?.payment_mode ?? (program?.requires_payment_pre ? 'pre' : 'none')
+  const usesPaymentPending = paymentMode === 'post'
 
   const isReceived: boolean = status === 'received'
   const isInReview: boolean = status === 'in_review'
+  const isAdmitted: boolean = status === 'admitted'
   const isPaymentPending: boolean = status === 'payment_pending'
   const isEnrolled: boolean = status === 'enrolled'
   const isRejected: boolean = status === 'rejected'
@@ -59,18 +65,52 @@ export function ApplicationOperationsPanel({
   const lastCheckKeyRef = useRef<string>('')
 
   const phaseLabel: string = useMemo(() => {
-    if (!status) return '—'
+    if (!status) return '-'
     if (isReceived) return 'Recibido'
-    if (isInReview) return 'En revisión'
+    if (isInReview) return 'En revision'
+    if (isAdmitted) return 'Admitido'
     if (isPaymentPending) return 'Pago pendiente'
     if (isEnrolled) return 'Matriculado'
     if (isRejected) return 'Rechazado'
     return status
-  }, [status, isReceived, isInReview, isPaymentPending, isEnrolled, isRejected])
+  }, [
+    status,
+    isReceived,
+    isInReview,
+    isAdmitted,
+    isPaymentPending,
+    isEnrolled,
+    isRejected,
+  ])
+
+  const paymentBadge = useMemo(() => {
+    if (!paymentStatus) return null
+    if (paymentStatus === 'paid') {
+      return {
+        label: 'Pago confirmado',
+        className: 'bg-emerald-500/20 text-emerald-200 border-emerald-400/30',
+      }
+    }
+    if (paymentStatus === 'failed' || paymentStatus === 'canceled') {
+      return {
+        label: 'Pago rechazado',
+        className: 'bg-red-500/15 text-red-200 border-red-400/30',
+      }
+    }
+    return {
+      label: 'Pago pendiente',
+      className: 'bg-amber-500/15 text-amber-200 border-amber-400/30',
+    }
+  }, [paymentStatus])
 
   // Chequeo liviano de presencia de comprobante (sin abrir modal)
   useEffect(() => {
     if (!applicationId) {
+      setProofPresence('unknown')
+      return
+    }
+
+    if (!usesPaymentPending) {
       setProofPresence('unknown')
       return
     }
@@ -120,38 +160,56 @@ export function ApplicationOperationsPanel({
     return () => {
       cancelled = true
     }
-  }, [applicationId, status, isPaymentPending, isEnrolled])
+  }, [applicationId, status, isPaymentPending, isEnrolled, usesPaymentPending])
 
   const proofTriggerLabel: string = useMemo(() => {
+    if (!usesPaymentPending) return 'Comprobante (no aplica)'
     if (!isPaymentPending && !isEnrolled) return 'Comprobante (bloqueado)'
     if (proofPresence === 'present') return 'Ver comprobante'
     return 'Subir comprobante'
-  }, [isPaymentPending, isEnrolled, proofPresence])
+  }, [usesPaymentPending, isPaymentPending, isEnrolled, proofPresence])
 
   const canSetInReview: boolean =
     Boolean(applicationId) && isReceived && !isReviewLoading
 
-  const canAdmitToPaymentPending: boolean =
+  const canAdmit: boolean =
     Boolean(applicationId) && (isReceived || isInReview) && !isAdmitLoading
 
+  const admitTargetStatus: ApplicationStatus = usesPaymentPending
+    ? 'payment_pending'
+    : 'admitted'
+
   const canReject: boolean =
-    Boolean(applicationId) && (isReceived || isInReview) && !isRejectLoading
+    Boolean(applicationId) &&
+    (isReceived || isInReview || isAdmitted) &&
+    !isRejectLoading
 
   const canBackToReview: boolean =
-    Boolean(applicationId) && isPaymentPending && !isBackToReviewLoading
+    Boolean(applicationId) &&
+    ((usesPaymentPending && isPaymentPending) ||
+      (!usesPaymentPending && isAdmitted)) &&
+    !isBackToReviewLoading
 
-  const canBackToPaymentPending: boolean =
+  const canBackToPrevious: boolean =
     Boolean(applicationId) && isEnrolled && !isBackToPaymentPendingLoading
 
   const canOpenProofDialog: boolean =
-    Boolean(applicationId) && (isPaymentPending || isEnrolled)
+    usesPaymentPending &&
+    Boolean(applicationId) &&
+    (isPaymentPending || isEnrolled)
 
   const canEnrollNow: boolean =
+    usesPaymentPending &&
     Boolean(applicationId) &&
     isPaymentPending &&
     proofPresence === 'present' &&
     !isEnrollLoading
 
+  const canEnrollDirect: boolean =
+    !usesPaymentPending &&
+    Boolean(applicationId) &&
+    isAdmitted &&
+    !isEnrollLoading
   async function setStatus(nextStatus: ApplicationStatus): Promise<void> {
     await onUpdateStatus(nextStatus)
 
@@ -177,9 +235,16 @@ export function ApplicationOperationsPanel({
             </div>
           </div>
 
-          <Badge className="bg-white/10 text-white border border-white/10">
-            {phaseLabel}
-          </Badge>
+          <div className="flex flex-col items-end gap-2">
+            <Badge className="bg-white/10 text-white border border-white/10">
+              {phaseLabel}
+            </Badge>
+            {paymentBadge ? (
+              <Badge className={paymentBadge.className}>
+                {paymentBadge.label}
+              </Badge>
+            ) : null}
+          </div>
         </div>
       </CardHeader>
 
@@ -206,8 +271,8 @@ export function ApplicationOperationsPanel({
 
               <Button
                 className="w-full"
-                disabled={!canAdmitToPaymentPending}
-                onClick={() => setStatus('payment_pending')}
+                disabled={!canAdmit}
+                onClick={() => setStatus(admitTargetStatus)}
               >
                 {isAdmitLoading ? 'Admitiendo…' : 'Admitir'}
               </Button>
@@ -227,8 +292,8 @@ export function ApplicationOperationsPanel({
             <div className="space-y-2">
               <Button
                 className="w-full"
-                disabled={!canAdmitToPaymentPending}
-                onClick={() => setStatus('payment_pending')}
+                disabled={!canAdmit}
+                onClick={() => setStatus(admitTargetStatus)}
               >
                 {isAdmitLoading ? 'Admitiendo…' : 'Admitir'}
               </Button>
@@ -257,92 +322,162 @@ export function ApplicationOperationsPanel({
           <div className="flex items-center justify-between gap-2">
             <div className="text-sm font-semibold text-white">Fase 2</div>
             <Badge variant="outline" className="border-white/15 text-white/80">
-              {isPaymentPending ? 'Activa' : isEnrolled ? 'OK' : 'Pendiente'}
+              {usesPaymentPending
+                ? isPaymentPending
+                  ? 'Activa'
+                  : isEnrolled
+                    ? 'OK'
+                    : 'Pendiente'
+                : isAdmitted
+                  ? 'Activa'
+                  : isEnrolled
+                    ? 'OK'
+                    : 'Pendiente'}
             </Badge>
           </div>
 
           <div className="space-y-3">
-            {/* PAYMENT_PENDING: registrar/ver comprobante + volver a revisión + (si hay proof) matricular */}
-            {isPaymentPending ? (
+            {usesPaymentPending ? (
               <>
-                <PaymentProofDialog
-                  applicationId={applicationId}
-                  triggerLabel={proofTriggerLabel}
-                  showSuccess={showSuccess}
-                  showError={showError}
-                  disabled={!canOpenProofDialog}
-                  onProofPresenceChange={(hasProof: boolean) =>
-                    setProofPresence(hasProof ? 'present' : 'missing')
-                  }
-                />
-                <Separator className="border-white/10" />
-                <div className="text-xs text-white/50">Marcar como:</div>
-
-                <Button
-                  className="w-full"
-                  variant="outline"
-                  disabled={!canBackToReview}
-                  onClick={() => setStatus('in_review')}
-                >
-                  {isBackToReviewLoading ? 'Volviendo…' : 'En revisión'}
-                </Button>
-
-                {proofPresence === 'present' ? (
+                {/* PAYMENT_PENDING: registrar/ver comprobante + volver a revision + (si hay proof) matricular */}
+                {isPaymentPending ? (
                   <>
+                    <PaymentProofDialog
+                      applicationId={applicationId}
+                      triggerLabel={proofTriggerLabel}
+                      showSuccess={showSuccess}
+                      showError={showError}
+                      disabled={!canOpenProofDialog}
+                      onProofPresenceChange={(hasProof: boolean) =>
+                        setProofPresence(hasProof ? 'present' : 'missing')
+                      }
+                    />
                     <Separator className="border-white/10" />
+                    <div className="text-xs text-white/50">Marcar como:</div>
 
                     <Button
                       className="w-full"
-                      disabled={!canEnrollNow}
-                      onClick={() => setStatus('enrolled')}
+                      variant="outline"
+                      disabled={!canBackToReview}
+                      onClick={() => setStatus('in_review')}
                     >
-                      {isEnrollLoading ? 'Matriculando…' : 'Matricular'}
+                      {isBackToReviewLoading ? 'Volviendo...' : 'En revision'}
+                    </Button>
+
+                    {proofPresence === 'present' ? (
+                      <>
+                        <Separator className="border-white/10" />
+
+                        <Button
+                          className="w-full"
+                          disabled={!canEnrollNow}
+                          onClick={() => setStatus('enrolled')}
+                        >
+                          {isEnrollLoading ? 'Matriculando...' : 'Matricular'}
+                        </Button>
+                      </>
+                    ) : (
+                      <div className="text-xs text-white/50">
+                        Cuando cargues el comprobante, se habilita{' '}
+                        <span className="text-white">Matricular</span>.
+                      </div>
+                    )}
+                  </>
+                ) : null}
+
+                {/* ENROLLED: flujo inverso + opcional ver comprobante */}
+                {isEnrolled ? (
+                  <>
+                    <PaymentProofDialog
+                      applicationId={applicationId}
+                      triggerLabel="Ver comprobante"
+                      showSuccess={showSuccess}
+                      showError={showError}
+                      disabled={!canOpenProofDialog}
+                      onProofPresenceChange={(hasProof: boolean) =>
+                        setProofPresence(hasProof ? 'present' : 'missing')
+                      }
+                    />
+
+                    <Separator className="border-white/10" />
+                    <div className="text-xs text-white/50">Marcar como:</div>
+                    <Button
+                      className="w-full bg-[#00CCA4] text-black hover:bg-[#00e6b3] focus:ring-[#00e6b3]/50 cursor-pointer"
+                      disabled={!canBackToPrevious}
+                      onClick={() => setStatus('payment_pending')}
+                    >
+                      {isBackToPaymentPendingLoading
+                        ? 'Volviendo...'
+                        : 'Pendiente de pago'}
                     </Button>
                   </>
-                ) : (
+                ) : null}
+
+                {/* Otros estados: mensaje */}
+                {!isPaymentPending && !isEnrolled ? (
                   <div className="text-xs text-white/50">
-                    Cuando cargues el comprobante, se habilita{' '}
-                    <span className="text-white">Matricular</span>.
+                    Para registrar pago, primero debe ser{' '}
+                    <span className="text-white">Admitido</span>.
                   </div>
-                )}
+                ) : null}
               </>
-            ) : null}
-
-            {/* ENROLLED: flujo inverso + opcional ver comprobante */}
-            {isEnrolled ? (
+            ) : (
               <>
-                <PaymentProofDialog
-                  applicationId={applicationId}
-                  triggerLabel="Ver comprobante"
-                  showSuccess={showSuccess}
-                  showError={showError}
-                  disabled={!canOpenProofDialog}
-                  onProofPresenceChange={(hasProof: boolean) =>
-                    setProofPresence(hasProof ? 'present' : 'missing')
-                  }
-                />
+                {isAdmitted ? (
+                  <>
+                    <div className="text-xs text-white/50">Marcar como:</div>
 
-                <Separator className="border-white/10" />
-                <div className="text-xs text-white/50">Marcar como:</div>
-                <Button
-                  className="w-full bg-[#00CCA4] text-black hover:bg-[#00e6b3] focus:ring-[#00e6b3]/50 cursor-pointer"
-                  disabled={!canBackToPaymentPending}
-                  onClick={() => setStatus('payment_pending')}
-                >
-                  {isBackToPaymentPendingLoading
-                    ? 'Volviendo…'
-                    : 'Pendiente de pago'}
-                </Button>
+                    <Button
+                      className="w-full"
+                      variant="outline"
+                      disabled={!canBackToReview}
+                      onClick={() => setStatus('in_review')}
+                    >
+                      {isBackToReviewLoading ? 'Volviendo...' : 'En revision'}
+                    </Button>
+
+                    <Button
+                      className="w-full"
+                      disabled={!canEnrollDirect}
+                      onClick={() => setStatus('enrolled')}
+                    >
+                      {isEnrollLoading ? 'Matriculando...' : 'Matricular'}
+                    </Button>
+
+                    <Button
+                      className="w-full"
+                      variant="outline"
+                      disabled={!canReject}
+                      onClick={() => setStatus('rejected')}
+                    >
+                      {isRejectLoading ? 'Rechazando...' : 'Rechazar'}
+                    </Button>
+                  </>
+                ) : null}
+
+                {isEnrolled ? (
+                  <>
+                    <div className="text-xs text-white/50">Marcar como:</div>
+                    <Button
+                      className="w-full bg-[#00CCA4] text-black hover:bg-[#00e6b3] focus:ring-[#00e6b3]/50 cursor-pointer"
+                      disabled={!canBackToPrevious}
+                      onClick={() => setStatus('admitted')}
+                    >
+                      {isBackToPaymentPendingLoading
+                        ? 'Volviendo...'
+                        : 'Volver a admitido'}
+                    </Button>
+                  </>
+                ) : null}
+
+                {!isAdmitted && !isEnrolled ? (
+                  <div className="text-xs text-white/50">
+                    Para matricular, primero debe ser{' '}
+                    <span className="text-white">Admitido</span>.
+                  </div>
+                ) : null}
               </>
-            ) : null}
-
-            {/* Otros estados: mensaje */}
-            {!isPaymentPending && !isEnrolled ? (
-              <div className="text-xs text-white/50">
-                Para registrar pago, primero debe ser{' '}
-                <span className="text-white">Admitido</span>.
-              </div>
-            ) : null}
+            )}
           </div>
         </div>
       </CardContent>
