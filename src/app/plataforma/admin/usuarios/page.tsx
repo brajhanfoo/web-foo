@@ -113,13 +113,11 @@ export default function AdminUsersPage() {
     if (user.role === nextRole) return
 
     setBusy(user.id, true)
-    const { error } = await supabase
-      .from('profiles')
-      .update({ role: nextRole })
-      .eq('id', user.id)
-
+    const { error } = await supabase.rpc('set_role', {
+      _user_id: user.id,
+      _role: nextRole,
+    })
     setBusy(user.id, false)
-
     if (error) {
       showError('No se pudo actualizar el rol.', error.message)
       return
