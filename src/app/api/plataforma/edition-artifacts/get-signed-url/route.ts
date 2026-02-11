@@ -10,10 +10,7 @@ export async function GET(request: NextRequest) {
   const supabaseServer = await createClient()
   const { data: userRes, error: userErr } = await supabaseServer.auth.getUser()
   if (userErr || !userRes.user) {
-    return NextResponse.json(
-      { message: 'No autenticado' },
-      { status: 401 }
-    )
+    return NextResponse.json({ message: 'No autenticado' }, { status: 401 })
   }
 
   const { data: profileRow, error: profileErr } = await supabaseServer
@@ -63,11 +60,13 @@ export async function GET(request: NextRequest) {
   }
 
   const objectPath =
-    kind === 'certificate' ? row.certificate_object_path : row.feedback_object_path
+    kind === 'certificate'
+      ? row.certificate_object_path
+      : row.feedback_object_path
   const bucketId =
     kind === 'certificate'
-      ? row.certificate_bucket_id ?? DEFAULT_BUCKET_ID
-      : row.feedback_bucket_id ?? DEFAULT_BUCKET_ID
+      ? (row.certificate_bucket_id ?? DEFAULT_BUCKET_ID)
+      : (row.feedback_bucket_id ?? DEFAULT_BUCKET_ID)
 
   if (!objectPath) {
     return NextResponse.json(
@@ -76,8 +75,9 @@ export async function GET(request: NextRequest) {
     )
   }
 
-  const { data: signed, error: signedErr } =
-    await supabaseAdmin.storage.from(bucketId).createSignedUrl(objectPath, 3600)
+  const { data: signed, error: signedErr } = await supabaseAdmin.storage
+    .from(bucketId)
+    .createSignedUrl(objectPath, 3600)
 
   if (signedErr || !signed?.signedUrl) {
     return NextResponse.json(

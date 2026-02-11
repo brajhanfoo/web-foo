@@ -220,9 +220,7 @@ export default function AdminProgramsPage() {
         {loading ? (
           <div className="p-4 text-sm text-slate-400">Cargando…</div>
         ) : filtered.length === 0 ? (
-          <div className="p-4 text-sm text-slate-400">
-            No hay programas.
-          </div>
+          <div className="p-4 text-sm text-slate-400">No hay programas.</div>
         ) : (
           filtered.map((p) => (
             <div
@@ -254,20 +252,24 @@ export default function AdminProgramsPage() {
               <div className="col-span-1 flex justify-center  items-center ">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" aria-label="Abrir acciones">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      aria-label="Abrir acciones"
+                    >
                       <MoreVertical className="h-4 w-4" />
                     </Button>
                   </DropdownMenuTrigger>
 
-                <DropdownMenuContent
-                  align="end"
-                  className="w-48 bg-slate-900 border border-slate-800 text-slate-100"
-                >
+                  <DropdownMenuContent
+                    align="end"
+                    className="w-48 bg-slate-900 border border-slate-800 text-slate-100"
+                  >
                     {/* Gestionar */}
                     <DropdownMenuItem asChild>
                       <Link
                         href={`/plataforma/admin/programas/${p.id}`}
-                      className="flex items-center gap-2 text-slate-300"
+                        className="flex items-center gap-2 text-slate-300"
                       >
                         <ExternalLink className="h-4 w-4" />
                         Gestionar

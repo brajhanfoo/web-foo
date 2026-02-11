@@ -27,7 +27,10 @@ function resolvePaymentMode(program: ProgramRowSummary): ProgramPaymentMode {
   return program.requires_payment_pre ? 'pre' : 'none'
 }
 
-async function buildRedirect(_: { purpose: PaymentPurpose; programId: string }): Promise<string> {
+async function buildRedirect(_: {
+  purpose: PaymentPurpose
+  programId: string
+}): Promise<string> {
   return '/plataforma/talento/mis-postulaciones'
 }
 

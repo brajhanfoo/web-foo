@@ -7,7 +7,6 @@ import type {
 } from '@/types/programs'
 import type { PaymentStatus } from '@/types/payments'
 
-
 export type ApplicationStatus =
   | 'received'
   | 'in_review'

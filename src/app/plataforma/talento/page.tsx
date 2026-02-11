@@ -23,15 +23,12 @@ type ProfileRow = {
   document_number: string | null
 }
 
-type EnrollmentRow = {
+type ApplicationSummaryRow = {
   id: string
   program_id: string
   program_title: string | null
   status: string | null
 }
-
-// Ajustá esto si tu tabla se llama distinto
-const ENROLLMENTS_TABLE = 'talent_program_enrollments'
 
 function textOrEmpty(v: string | null | undefined) {
   return (v ?? '').trim()
@@ -77,7 +74,8 @@ export default function TalentHomePage() {
   const [loading, setLoading] = useState(true)
   const [userId, setUserId] = useState<string | null>(null)
   const [profile, setProfile] = useState<ProfileRow | null>(null)
-  const [enrollment, setEnrollment] = useState<EnrollmentRow | null>(null)
+  const [latestApplication, setLatestApplication] =
+    useState<ApplicationSummaryRow | null>(null)
 
   const showErrorRef = useRef(showError)
   useEffect(() => {
@@ -121,33 +119,41 @@ export default function TalentHomePage() {
 
       setProfile((prof ?? null) as ProfileRow | null)
 
-      // Inscripción (máximo 1)
-      // Si tu modelo es diferente, ajustá este select.
-      const { data: enr, error: enrErr } = await supabase
-        .from(ENROLLMENTS_TABLE)
-        .select('id, program_id, program_title, status')
-        .eq('talent_id', uid)
+      // Inscripción = existe al menos 1 application del usuario
+      const { data: apps, error: appsErr } = await supabase
+        .from('applications')
+        .select('id, program_id, status, created_at, programs(title)')
+        .eq('applicant_profile_id', uid)
         .order('created_at', { ascending: false })
         .limit(1)
 
       if (cancelled) return
 
-      if (enrErr) {
-        // No rompemos el dashboard si la tabla aún no existe/está distinta
-        setEnrollment(null)
+      if (appsErr) {
+        showErrorRef.current(
+          'No se pudieron cargar las inscripciones',
+          appsErr.message
+        )
+        setLatestApplication(null)
         setLoading(false)
         return
       }
 
-      const row = (Array.isArray(enr) && enr.length ? enr[0] : null) as any
-      setEnrollment(
+      const row = (Array.isArray(apps) && apps.length ? apps[0] : null) as {
+        id: string
+        program_id: string
+        status: string | null
+        programs?: { title?: string | null } | null
+      } | null
+
+      setLatestApplication(
         row
           ? {
               id: String(row.id),
               program_id: String(row.program_id),
               program_title:
-                typeof row.program_title === 'string'
-                  ? row.program_title
+                typeof row.programs?.title === 'string'
+                  ? row.programs?.title
                   : null,
               status: typeof row.status === 'string' ? row.status : null,
             }
@@ -170,10 +176,10 @@ export default function TalentHomePage() {
   const profileComplete = profilePct >= 100
 
   const enrolledCount = useMemo(() => {
-    // “NO PUEDE SER MÁS DE 1 NI MENOS DE 0”
-    const n = enrollment ? 1 : 0
+    // Mínimo para "tiene inscripciones": existe al menos 1 application
+    const n = latestApplication ? 1 : 0
     return Math.max(0, Math.min(1, n))
-  }, [enrollment])
+  }, [latestApplication])
 
   return (
     <div className="space-y-5">
@@ -224,10 +230,10 @@ export default function TalentHomePage() {
 
                 <div className="text-xl md:text-2xl font-semibold text-white">
                   ✅ Estás inscrito en{' '}
-                  {enrollment?.program_title ?? 'un programa'}.
+                  {latestApplication?.program_title ?? 'un programa'}.
                 </div>
                 <div className="text-sm text-white/60 mt-1">
-                  Seguimiento: {enrollment?.status ?? 'en curso'}.
+                  Seguimiento: {latestApplication?.status ?? 'en curso'}.
                 </div>
               </div>
 

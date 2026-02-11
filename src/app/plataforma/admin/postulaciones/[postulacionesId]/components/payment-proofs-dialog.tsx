@@ -258,9 +258,7 @@ export function PaymentProofDialog({
         </DialogHeader>
 
         {isLoading ? (
-          <div className="text-sm text-slate-400 bg-slate-900">
-            Cargando…
-          </div>
+          <div className="text-sm text-slate-400 bg-slate-900">Cargando…</div>
         ) : (
           <div className="space-y-4 bg-slate-900">
             {proof ? (

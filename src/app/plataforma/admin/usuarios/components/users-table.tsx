@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -95,14 +96,24 @@ export function UsersTable({
         return (
           <div
             key={user.id}
-            className="grid grid-cols-12 items-center border-b border-slate-800 last:border-b-0 bg-[#0B0D12]"
+            className="relative grid grid-cols-12 items-center border-b border-slate-800 last:border-b-0 bg-[#0B0D12] transition-colors hover:bg-slate-950/60"
           >
+            <Link
+              href={`/plataforma/admin/usuarios/${user.id}`}
+              className="absolute inset-0 z-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/80 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
+              aria-label={`Ver detalle de ${displayName(user)}`}
+            >
+              <span className="sr-only">{`Ver detalle de ${displayName(user)}`}</span>
+            </Link>
             <div className="col-span-4 px-3 py-3 min-w-0">
               <div className="font-medium text-slate-100 truncate">
                 {displayName(user)}
               </div>
               <div className="text-xs text-slate-400 truncate">
                 {user.email ?? '—'}
+              </div>
+              <div className="mt-1 text-[11px] text-emerald-300/80">
+                Ver detalle
               </div>
               {isSelf ? (
                 <div className="text-[11px] text-emerald-300/80 mt-1">
@@ -111,7 +122,7 @@ export function UsersTable({
               ) : null}
             </div>
 
-            <div className="col-span-3 px-3 py-3 min-w-0">
+            <div className="col-span-3 px-3 py-3 min-w-0 relative z-20">
               <Select
                 value={user.role}
                 onValueChange={(value) => onRoleChange(user, value as AppRole)}
@@ -150,7 +161,7 @@ export function UsersTable({
               {formatDate(user.created_at)}
             </div>
 
-            <div className="col-span-1 px-3 py-3 flex justify-end">
+            <div className="col-span-1 px-3 py-3 flex justify-end relative z-20">
               <Button
                 size="sm"
                 variant="outline"

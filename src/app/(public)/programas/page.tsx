@@ -103,7 +103,7 @@ export default async function PublicProgramsPage(): Promise<React.JSX.Element> {
       latestOpenEditionByProgram.get(program.id) ??
       latestEditionByProgram.get(program.id) ??
       null
-    const form = edition ? activeFormByEdition.get(edition.id) ?? null : null
+    const form = edition ? (activeFormByEdition.get(edition.id) ?? null) : null
     const status = computeProgramStatus({
       isPublished: program.is_published,
       edition,

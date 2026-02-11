@@ -1,4 +1,3 @@
-
 // src/app/plataforma/admin/programas/%5BprogramId%5D/ediciones/%5BeditionId%5D/page.tsx
 'use client'
 
@@ -29,12 +28,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from '@/components/ui/tabs'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   Select,
   SelectContent,
@@ -124,13 +118,14 @@ export default function AdminEditionDetailPage() {
   // Teams
   const [newTeamName, setNewTeamName] = useState('')
   const [teamSavingId, setTeamSavingId] = useState<string | null>(null)
-  const [teamToDelete, setTeamToDelete] = useState<ProgramEditionTeam | null>(null)
+  const [teamToDelete, setTeamToDelete] = useState<ProgramEditionTeam | null>(
+    null
+  )
 
   // Milestones
   const [milestoneModalOpen, setMilestoneModalOpen] = useState(false)
-  const [editingMilestone, setEditingMilestone] = useState<ProgramEditionMilestone | null>(
-    null
-  )
+  const [editingMilestone, setEditingMilestone] =
+    useState<ProgramEditionMilestone | null>(null)
   const [milestoneTitle, setMilestoneTitle] = useState('')
   const [milestoneMeetUrl, setMilestoneMeetUrl] = useState('')
   const [milestoneDriveUrl, setMilestoneDriveUrl] = useState('')
@@ -154,36 +149,40 @@ export default function AdminEditionDetailPage() {
   async function loadAll() {
     setLoading(true)
 
-    const [programResponse, editionResponse, teamsResponse, milestonesResponse] =
-      await Promise.all([
-        supabase
-          .from('programs')
-          .select('id, slug, title, description')
-          .eq('id', programId)
-          .maybeSingle(),
-        supabase
-          .from('program_editions')
-          .select(
-            'id, program_id, edition_name, starts_at, ends_at, is_open, created_at, updated_at'
-          )
-          .eq('id', editionId)
-          .maybeSingle(),
-        supabase
-          .from('program_edition_teams')
-          .select(
-            'id, edition_id, name, drive_url, classroom_url, slack_url, created_at, updated_at'
-          )
-          .eq('edition_id', editionId)
-          .order('name', { ascending: true }),
-        supabase
-          .from('program_edition_milestones')
-          .select(
-            'id, edition_id, title, meet_url, drive_url, starts_at, position, created_at, updated_at'
-          )
-          .eq('edition_id', editionId)
-          .order('position', { ascending: true })
-          .order('created_at', { ascending: true }),
-      ])
+    const [
+      programResponse,
+      editionResponse,
+      teamsResponse,
+      milestonesResponse,
+    ] = await Promise.all([
+      supabase
+        .from('programs')
+        .select('id, slug, title, description')
+        .eq('id', programId)
+        .maybeSingle(),
+      supabase
+        .from('program_editions')
+        .select(
+          'id, program_id, edition_name, starts_at, ends_at, is_open, created_at, updated_at'
+        )
+        .eq('id', editionId)
+        .maybeSingle(),
+      supabase
+        .from('program_edition_teams')
+        .select(
+          'id, edition_id, name, drive_url, classroom_url, slack_url, created_at, updated_at'
+        )
+        .eq('edition_id', editionId)
+        .order('name', { ascending: true }),
+      supabase
+        .from('program_edition_milestones')
+        .select(
+          'id, edition_id, title, meet_url, drive_url, starts_at, position, created_at, updated_at'
+        )
+        .eq('edition_id', editionId)
+        .order('position', { ascending: true })
+        .order('created_at', { ascending: true }),
+    ])
 
     if (programResponse.error || !programResponse.data) {
       showError('No se pudo cargar el programa.')
@@ -318,7 +317,9 @@ export default function AdminEditionDetailPage() {
       .maybeSingle()
 
     if (response.error || !response.data) {
-      showError(`No se pudo crear el equipo. ${safeString(response.error?.message)}`)
+      showError(
+        `No se pudo crear el equipo. ${safeString(response.error?.message)}`
+      )
       return
     }
 
@@ -341,7 +342,9 @@ export default function AdminEditionDetailPage() {
     setTeamSavingId(null)
 
     if (response.error) {
-      showError(`No se pudo guardar el equipo. ${safeString(response.error.message)}`)
+      showError(
+        `No se pudo guardar el equipo. ${safeString(response.error.message)}`
+      )
       return
     }
 
@@ -357,11 +360,15 @@ export default function AdminEditionDetailPage() {
       .eq('id', teamToDelete.id)
 
     if (response.error) {
-      showError(`No se pudo eliminar el equipo. ${safeString(response.error.message)}`)
+      showError(
+        `No se pudo eliminar el equipo. ${safeString(response.error.message)}`
+      )
       return
     }
 
-    setTeams((previous) => previous.filter((team) => team.id !== teamToDelete.id))
+    setTeams((previous) =>
+      previous.filter((team) => team.id !== teamToDelete.id)
+    )
     setTeamToDelete(null)
     showSuccess('Equipo eliminado.')
   }
@@ -420,7 +427,9 @@ export default function AdminEditionDetailPage() {
           .maybeSingle()
 
     if (response.error || !response.data) {
-      showError(`No se pudo guardar el hito. ${safeString(response.error?.message)}`)
+      showError(
+        `No se pudo guardar el hito. ${safeString(response.error?.message)}`
+      )
       return
     }
 
@@ -477,7 +486,11 @@ export default function AdminEditionDetailPage() {
       body: formData,
     })
 
-    const json = (await response.json()) as { ok?: boolean; message?: string; object_path?: string }
+    const json = (await response.json()) as {
+      ok?: boolean
+      message?: string
+      object_path?: string
+    }
 
     setUploading((previous) => ({ ...previous, [key]: false }))
 
@@ -506,7 +519,10 @@ export default function AdminEditionDetailPage() {
       `/api/plataforma/edition-artifacts/get-signed-url?application_id=${participantId}&kind=${kind}`
     )
 
-    const json = (await response.json()) as { signed_url?: string; message?: string }
+    const json = (await response.json()) as {
+      signed_url?: string
+      message?: string
+    }
 
     if (!response.ok || !json.signed_url) {
       showError(json?.message ?? 'No se pudo obtener el enlace.')
@@ -659,7 +675,11 @@ export default function AdminEditionDetailPage() {
               </div>
 
               <div className="flex items-center justify-end">
-                <Button onClick={saveEdition} disabled={saving} className="gap-2">
+                <Button
+                  onClick={saveEdition}
+                  disabled={saving}
+                  className="gap-2"
+                >
                   <Save className="h-4 w-4" />
                   Guardar edicion
                 </Button>
@@ -816,7 +836,9 @@ export default function AdminEditionDetailPage() {
                       className="rounded-lg border border-slate-800 bg-slate-900 p-4 space-y-3"
                     >
                       <div className="space-y-1">
-                        <div className="font-medium">{fullName(participant)}</div>
+                        <div className="font-medium">
+                          {fullName(participant)}
+                        </div>
                         <div className="text-xs text-slate-300">
                           {participant.applicant_profile?.email ?? 'Sin email'}
                         </div>
@@ -971,7 +993,9 @@ export default function AdminEditionDetailPage() {
                       className="rounded-lg border border-slate-800 bg-slate-900 p-4 space-y-3"
                     >
                       <div className="space-y-1">
-                        <div className="font-medium">{fullName(participant)}</div>
+                        <div className="font-medium">
+                          {fullName(participant)}
+                        </div>
                         <div className="text-xs text-slate-300">
                           {participant.applicant_profile?.email ?? 'Sin email'}
                         </div>
@@ -1000,7 +1024,11 @@ export default function AdminEditionDetailPage() {
                             onChange={(event) => {
                               const file = event.target.files?.[0]
                               if (file) {
-                                void uploadArtifact(participant.id, 'certificate', file)
+                                void uploadArtifact(
+                                  participant.id,
+                                  'certificate',
+                                  file
+                                )
                               }
                             }}
                           />
@@ -1017,7 +1045,9 @@ export default function AdminEditionDetailPage() {
                             <Button
                               variant="secondary"
                               size="sm"
-                              onClick={() => openArtifact(participant.id, 'feedback')}
+                              onClick={() =>
+                                openArtifact(participant.id, 'feedback')
+                              }
                             >
                               Ver feedback
                             </Button>
@@ -1031,7 +1061,11 @@ export default function AdminEditionDetailPage() {
                             onChange={(event) => {
                               const file = event.target.files?.[0]
                               if (file) {
-                                void uploadArtifact(participant.id, 'feedback', file)
+                                void uploadArtifact(
+                                  participant.id,
+                                  'feedback',
+                                  file
+                                )
                               }
                             }}
                           />
