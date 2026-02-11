@@ -67,7 +67,7 @@ export function AdminSidebar() {
   const displayName = rawName || (isBooting ? 'Cargando…' : 'Admin')
 
   return (
-    <aside className="flex min-h-screen w-64 flex-col border-r border-slate-800 bg-slate-900 p-4">
+    <aside className="flex h-full min-h-0 w-64 flex-col border-r border-slate-800 bg-slate-900 p-4 overflow-y-auto">
       <div className="mb-5">
         <div className="text-sm text-slate-300">Admin</div>
         <div className="text-base font-semibold text-slate-100">
