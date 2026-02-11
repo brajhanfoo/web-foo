@@ -28,8 +28,9 @@ export async function GET(request: NextRequest) {
 
   const isAdmin =
     profileRow.role === 'admin' || profileRow.role === 'super_admin'
+  const isTalent = profileRow.role === 'talent'
 
-  if (!isAdmin) {
+  if (!isAdmin && !isTalent) {
     return NextResponse.json({ message: 'Sin permisos' }, { status: 403 })
   }
 
@@ -44,10 +45,14 @@ export async function GET(request: NextRequest) {
     )
   }
 
-  const { data: row, error } = await supabaseServer
+  if (!isAdmin && kind !== 'certificate') {
+    return NextResponse.json({ message: 'Sin permisos' }, { status: 403 })
+  }
+
+  const { data: row, error } = await supabaseAdmin
     .from('applications')
     .select(
-      'certificate_bucket_id, certificate_object_path, feedback_bucket_id, feedback_object_path'
+      'applicant_profile_id, certificate_bucket_id, certificate_object_path, feedback_bucket_id, feedback_object_path'
     )
     .eq('id', applicationId)
     .maybeSingle()
@@ -57,6 +62,10 @@ export async function GET(request: NextRequest) {
       { message: 'Postulacion no encontrada' },
       { status: 404 }
     )
+  }
+
+  if (!isAdmin && row.applicant_profile_id !== userRes.user.id) {
+    return NextResponse.json({ message: 'Sin permisos' }, { status: 403 })
   }
 
   const objectPath =

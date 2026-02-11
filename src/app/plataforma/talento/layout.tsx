@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase/client'
 import { useToastEnhanced } from '@/hooks/use-toast-enhanced'
 import { TalentSidebar } from './components/talent-sidebar'
@@ -35,6 +35,7 @@ export default function TalentLayout({
   children: React.ReactNode
 }) {
   const router = useRouter()
+  const pathname = usePathname()
   const { showError } = useToastEnhanced()
 
   const [booting, setBooting] = useState(true)
@@ -78,8 +79,13 @@ export default function TalentLayout({
         return
       }
 
+      const canViewWorkspace =
+        (prof.role === 'admin' || prof.role === 'super_admin') &&
+        pathname.startsWith('/plataforma/talento/mis-postulaciones/') &&
+        pathname.endsWith('/workspace')
+
       // Gate por rol
-      if (prof.role !== 'talent') {
+      if (prof.role !== 'talent' && !canViewWorkspace) {
         setBooting(false)
         router.replace('/plataforma') // o a donde quieras enviar no-talents
         return
@@ -93,7 +99,7 @@ export default function TalentLayout({
     return () => {
       cancelled = true
     }
-  }, [router])
+  }, [pathname, router])
 
   const displayName = useMemo(() => buildName(profile, email), [profile, email])
 
