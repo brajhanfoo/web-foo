@@ -21,20 +21,7 @@ import {
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu'
 import { Button } from '@/components/ui/button'
-
-type ProgramRow = {
-  id: string
-  slug: string
-  title: string
-  description: string | null
-  is_published: boolean
-  payment_mode: ProgramPaymentMode | null
-  requires_payment_pre: boolean
-  payment_instructions: string | null
-  created_at: string
-}
-
-type ProgramPaymentMode = 'none' | 'pre' | 'post'
+import type { ProgramPaymentMode, ProgramRow } from '@/types/programs'
 
 function slugify(input: string) {
   return input
@@ -61,6 +48,7 @@ export default function AdminProgramsPage() {
   const [slug, setSlug] = useState('')
   const [description, setDescription] = useState('')
   const [paymentMode, setPaymentMode] = useState<ProgramPaymentMode>('none')
+  const [priceUsd, setPriceUsd] = useState('')
 
   const bootedReference = useRef(false)
 
@@ -69,7 +57,7 @@ export default function AdminProgramsPage() {
     const { data, error } = await supabase
       .from('programs')
       .select(
-        'id,slug,title,description,is_published,payment_mode,requires_payment_pre,created_at'
+        'id,slug,title,description,is_published,payment_mode,requires_payment_pre,price_usd,created_at'
       )
       .order('created_at', { ascending: false })
 
@@ -106,6 +94,7 @@ export default function AdminProgramsPage() {
     setSlug('')
     setDescription('')
     setPaymentMode('none')
+    setPriceUsd('')
   }
 
   function resolvePaymentMode(row: ProgramRow): ProgramPaymentMode {
@@ -124,6 +113,11 @@ export default function AdminProgramsPage() {
     setSlug(p.slug)
     setDescription(p.description ?? '')
     setPaymentMode(resolvePaymentMode(p))
+    setPriceUsd(
+      p.price_usd === null || p.price_usd === undefined
+        ? ''
+        : String(p.price_usd)
+    )
     setOpen(true)
   }
 
@@ -134,12 +128,23 @@ export default function AdminProgramsPage() {
     const s = (slug.trim() || slugify(t)).trim()
     if (!s) return showError('Slug inválido.')
 
+    const priceRaw = priceUsd.trim()
+    let priceValue: number | null = null
+    if (priceRaw) {
+      const parsed = Number(priceRaw)
+      if (!Number.isFinite(parsed) || parsed < 0) {
+        return showError('Precio invÃ¡lido.')
+      }
+      priceValue = parsed
+    }
+
     const payload = {
       title: t,
       slug: s,
       description: description.trim() || null,
       payment_mode: paymentMode,
       requires_payment_pre: paymentMode === 'pre',
+      price_usd: paymentMode === 'none' ? null : priceValue,
     }
 
     if (editing) {
@@ -174,10 +179,10 @@ export default function AdminProgramsPage() {
 
   return (
     <div className="p-6 space-y-5">
-      <div className="flex items-start justify-between gap-3 text-amber-50">
+      <div className="flex items-start justify-between gap-3 text-slate-100">
         <div>
           <h1 className="text-xl font-semibold">Programas</h1>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-slate-400">
             Crea/edita programas, publicalos y gestioná formularios por
             programa.
           </p>
@@ -195,13 +200,16 @@ export default function AdminProgramsPage() {
         <input
           value={search}
           onChange={(element) => setSearch(element.target.value)}
-          placeholder="Buscar por nombre/slug..."
-          className="w-full max-w-md rounded-md border px-3 py-2 text-sm text-[#6B7280]"
+          placeholder="Buscar por nombre/slug…"
+          name="program-search"
+          aria-label="Buscar programas"
+          autoComplete="off"
+          className="w-full max-w-md rounded-md border border-slate-800 bg-slate-900 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-400"
         />
       </div>
 
-      <div className="rounded-lg border overflow-hidden">
-        <div className="grid grid-cols-12 gap-0 border-b bg-black/60 text-xs text-[#6B7280] font-medium">
+      <div className="rounded-lg border border-slate-800 overflow-hidden">
+        <div className="grid grid-cols-12 gap-0 border-b border-slate-800 bg-slate-900/60 text-xs text-slate-400 font-medium">
           <div className="col-span-4 px-3 py-2">Programa</div>
           <div className="col-span-3 px-3 py-2">Slug</div>
           <div className="col-span-2 px-3 py-2">Pago</div>
@@ -210,21 +218,21 @@ export default function AdminProgramsPage() {
         </div>
 
         {loading ? (
-          <div className="p-4 text-sm text-muted-foreground">Cargando...</div>
+          <div className="p-4 text-sm text-slate-400">Cargando…</div>
         ) : filtered.length === 0 ? (
-          <div className="p-4 text-sm text-muted-foreground">
+          <div className="p-4 text-sm text-slate-400">
             No hay programas.
           </div>
         ) : (
           filtered.map((p) => (
             <div
               key={p.id}
-              className="grid grid-cols-12 border-b last:border-b-0 text-[#9CA3AF]"
+              className="grid grid-cols-12 border-b border-slate-800 last:border-b-0 text-slate-300"
             >
               <div className="col-span-4 px-3 py-3">
                 <div className="font-medium">{p.title}</div>
                 {p.description ? (
-                  <div className="text-xs text-muted-foreground line-clamp-2">
+                  <div className="text-xs text-slate-400 line-clamp-2">
                     {p.description}
                   </div>
                 ) : null}
@@ -246,17 +254,20 @@ export default function AdminProgramsPage() {
               <div className="col-span-1 flex justify-center  items-center ">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon">
+                    <Button variant="ghost" size="icon" aria-label="Abrir acciones">
                       <MoreVertical className="h-4 w-4" />
                     </Button>
                   </DropdownMenuTrigger>
 
-                  <DropdownMenuContent align="end" className="w-48  bg-black ">
+                <DropdownMenuContent
+                  align="end"
+                  className="w-48 bg-slate-900 border border-slate-800 text-slate-100"
+                >
                     {/* Gestionar */}
                     <DropdownMenuItem asChild>
                       <Link
                         href={`/plataforma/admin/programas/${p.id}`}
-                        className="flex items-center gap-2 text-[#9CA3AF] "
+                      className="flex items-center gap-2 text-slate-300"
                       >
                         <ExternalLink className="h-4 w-4" />
                         Gestionar
@@ -267,7 +278,7 @@ export default function AdminProgramsPage() {
                     {/* Editar */}
                     <DropdownMenuItem
                       onClick={() => openEdit(p)}
-                      className="flex items-center gap-2 text-[#9CA3AF]"
+                      className="flex items-center gap-2 text-slate-300"
                     >
                       <Pencil className="h-4 w-4" />
                       Editar
@@ -278,7 +289,7 @@ export default function AdminProgramsPage() {
                     {/* Publicar / Ocultar */}
                     <DropdownMenuItem
                       onClick={() => void togglePublished(p)}
-                      className="flex items-center gap-2 text-[#9CA3AF]"
+                      className="flex items-center gap-2 text-slate-300"
                     >
                       {p.is_published ? (
                         <EyeOff className="h-4 w-4" />
@@ -297,13 +308,13 @@ export default function AdminProgramsPage() {
 
       {/* Modal simple (sin shadcn para que sea copy/paste) */}
       {open ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="w-full max-w-xl rounded-lg bg-[#0F1117] border border-[#1F2937] shadow text-[#E5E7EB]">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900 p-4">
+          <div className="w-full max-w-xl rounded-lg bg-slate-900 border border-slate-800 shadow text-slate-100">
             <div className="p-4 border-b">
               <div className="text-lg font-semibold">
                 {editing ? 'Editar programa' : 'Nuevo programa'}
               </div>
-              <div className="text-sm text-[#E5E7EB]">
+              <div className="text-sm text-slate-200">
                 Definí si requiere pago previo y las instrucciones (si aplica).
               </div>
             </div>
@@ -328,7 +339,7 @@ export default function AdminProgramsPage() {
                   onChange={(element) => setSlug(element.target.value)}
                   className="w-full rounded-md border px-3 py-2 text-sm"
                 />
-                <div className="text-xs text-[#E5E7EB]">
+                <div className="text-xs text-slate-200">
                   Ej: smart-projects, project-academy
                 </div>
               </div>
@@ -351,12 +362,27 @@ export default function AdminProgramsPage() {
                   onChange={(element) =>
                     setPaymentMode(element.target.value as ProgramPaymentMode)
                   }
-                  className="w-full rounded-md border px-3 py-2 text-sm bg-black text-white"
+                  className="w-full rounded-md border px-3 py-2 text-sm bg-slate-900 text-slate-100"
                 >
                   <option value="none">Sin pago</option>
                   <option value="pre">Pago previo</option>
                   <option value="post">Pago posterior</option>
                 </select>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-sm font-medium">Precio (USD)</label>
+                <input
+                  value={priceUsd}
+                  onChange={(element) => setPriceUsd(element.target.value)}
+                  className="w-full rounded-md border px-3 py-2 text-sm"
+                  placeholder="Ej: 49.99"
+                  inputMode="decimal"
+                  disabled={paymentMode === 'none'}
+                />
+                <div className="text-xs text-slate-200">
+                  Dejalo vacÃ­o si no aplica.
+                </div>
               </div>
             </div>
 

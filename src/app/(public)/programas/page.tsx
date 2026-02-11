@@ -1,6 +1,11 @@
 import React from 'react'
 import { createClient } from '@/lib/supabase/server'
-import type { EditionRow, ProgramCardVM, ProgramRow } from './types/types'
+import type {
+  ApplicationFormRow,
+  EditionRow,
+  ProgramCardVM,
+  ProgramRow,
+} from './types/types'
 import { computeProgramStatus } from './utils'
 import { getProgramCardContent } from './content'
 import { ProgramsHero } from './components/ProgramHero'
@@ -47,9 +52,27 @@ export default async function PublicProgramsPage(): Promise<React.JSX.Element> {
     : { data: [] as unknown[] }
 
   const editions: EditionRow[] = (editionsData ?? []) as EditionRow[]
+  const editionIds: string[] = editions.map((e) => e.id)
+
+  const { data: formsData } = editionIds.length
+    ? await supabase
+        .from('application_forms')
+        .select(
+          'id, program_id, edition_id, is_active, opens_at, closes_at, created_at, updated_at'
+        )
+        .in('edition_id', editionIds)
+        .eq('is_active', true)
+        .order('created_at', { ascending: false })
+    : { data: [] as unknown[] }
+
+  const forms: ApplicationFormRow[] = (formsData ?? []) as ApplicationFormRow[]
 
   // última edición por programa
   const latestEditionByProgram: Map<string, EditionRow> = new Map<
+    string,
+    EditionRow
+  >()
+  const latestOpenEditionByProgram: Map<string, EditionRow> = new Map<
     string,
     EditionRow
   >()
@@ -57,13 +80,35 @@ export default async function PublicProgramsPage(): Promise<React.JSX.Element> {
     if (!latestEditionByProgram.has(ed.program_id)) {
       latestEditionByProgram.set(ed.program_id, ed)
     }
+    if (ed.is_open && !latestOpenEditionByProgram.has(ed.program_id)) {
+      latestOpenEditionByProgram.set(ed.program_id, ed)
+    }
   }
 
+  const activeFormByEdition: Map<string, ApplicationFormRow> = new Map<
+    string,
+    ApplicationFormRow
+  >()
+  for (const form of forms) {
+    if (!form.edition_id) continue
+    if (!activeFormByEdition.has(form.edition_id)) {
+      activeFormByEdition.set(form.edition_id, form)
+    }
+  }
+
+  const now = new Date()
+
   const items: ProgramCardVM[] = programs.map((program) => {
-    const edition = latestEditionByProgram.get(program.id) ?? null
+    const edition =
+      latestOpenEditionByProgram.get(program.id) ??
+      latestEditionByProgram.get(program.id) ??
+      null
+    const form = edition ? activeFormByEdition.get(edition.id) ?? null : null
     const status = computeProgramStatus({
       isPublished: program.is_published,
       edition,
+      form,
+      now,
     })
     const content = getProgramCardContent(program)
     return { program, edition, status, content }

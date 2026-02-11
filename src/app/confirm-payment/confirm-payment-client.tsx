@@ -184,13 +184,11 @@ ${(confirm.raw ?? '').slice(0, 1000)}...`
         setRedirectTo(persist.redirectTo ?? null)
         setIsPolling(false)
 
-        if (persist.redirectTo) {
-          timerRef.current = window.setTimeout(() => {
-            router.replace(
-              persist.redirectTo ?? '/plataforma/talento/programas'
-            )
-          }, 1200)
-        }
+        const redirectTarget =
+          persist.redirectTo ?? '/plataforma/talento/mis-postulaciones'
+        timerRef.current = window.setTimeout(() => {
+          router.replace(redirectTarget)
+        }, 1200)
 
         return
       }

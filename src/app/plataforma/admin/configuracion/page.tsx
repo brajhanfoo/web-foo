@@ -253,19 +253,19 @@ export default function AdminSettingsPage() {
     <div className="min-h-[calc(100vh-64px)] px-4 md:px-6 py-6">
       <div className="max-w-6xl mx-auto space-y-6">
         {/* Header estilo glass */}
-        <div className="rounded-2xl border border-white/10 bg-black/40 backdrop-blur-md p-4 md:p-5">
+        <div className="rounded-2xl border border-slate-800 bg-slate-900 backdrop-blur-md p-4 md:p-5">
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0">
-              <div className="text-lg md:text-xl font-semibold text-white">
+              <div className="text-lg md:text-xl font-semibold text-slate-100">
                 Configuración
               </div>
-              <div className="text-xs md:text-sm text-white/50 mt-1">
+              <div className="text-xs md:text-sm text-slate-400 mt-1">
                 Perfil y seguridad de tu cuenta
               </div>
             </div>
 
             <div className="flex items-center gap-2">
-              <Badge className="bg-white/10 text-white border border-white/10">
+              <Badge className="bg-slate-800 text-slate-100 border border-slate-800">
                 {profile?.primary_role ?? profile?.primary_role}
               </Badge>
               {profile?.profile_status ? (
@@ -278,14 +278,14 @@ export default function AdminSettingsPage() {
             </div>
           </div>
 
-          <Separator className="my-4 border-white/10" />
+          <Separator className="my-4 border-slate-800" />
 
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
             <div className="min-w-0">
-              <div className="text-white font-semibold truncate">
+              <div className="text-slate-100 font-semibold truncate">
                 {fullName}
               </div>
-              <div className="text-xs text-white/50 truncate">
+              <div className="text-xs text-slate-400 truncate">
                 {profile?.email ?? '—'}
               </div>
             </div>
@@ -293,176 +293,176 @@ export default function AdminSettingsPage() {
         </div>
 
         <Tabs defaultValue="perfil" className="w-full">
-          <TabsList className="bg-black/40 border border-white/10 backdrop-blur-md">
+          <TabsList className="bg-slate-900 border border-slate-800 backdrop-blur-md">
             <TabsTrigger value="perfil">Perfil</TabsTrigger>
             <TabsTrigger value="seguridad">Seguridad</TabsTrigger>
           </TabsList>
 
           {/* PERFIL */}
           <TabsContent value="perfil" className="mt-4">
-            <Card className="bg-black/40 border-white/10 backdrop-blur-md overflow-hidden">
+            <Card className="bg-slate-900 border-slate-800 backdrop-blur-md overflow-hidden">
               <CardHeader className="pb-3">
                 <CardTitle className="text-base">Datos de perfil</CardTitle>
-                <div className="text-xs text-white/50 mt-1">
+                <div className="text-xs text-slate-400 mt-1">
                   Editá tu información dentro del panel.
                 </div>
               </CardHeader>
 
               <CardContent className="space-y-5">
                 {isBootLoading ? (
-                  <div className="text-sm text-white/60">Cargando…</div>
+                  <div className="text-sm text-slate-300">Cargando…</div>
                 ) : (
                   <>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label className="text-xs text-white/60">Nombres</Label>
+                        <Label className="text-xs text-slate-300">Nombres</Label>
                         <Input
                           value={firstName}
                           onChange={(e) => setFirstName(e.target.value)}
-                          className="bg-black/30 border-white/10 text-white placeholder:text-white/30"
+                          className="bg-slate-900 border-slate-800 text-slate-100 placeholder:text-slate-400"
                           placeholder="Ej: Alex"
                         />
                       </div>
 
                       <div className="space-y-2">
-                        <Label className="text-xs text-white/60">
+                        <Label className="text-xs text-slate-300">
                           Apellidos
                         </Label>
                         <Input
                           value={lastName}
                           onChange={(e) => setLastName(e.target.value)}
-                          className="bg-black/30 border-white/10 text-white placeholder:text-white/30"
+                          className="bg-slate-900 border-slate-800 text-slate-100 placeholder:text-slate-400"
                           placeholder="Ej: Morgan"
                         />
                       </div>
 
                       <div className="space-y-2">
-                        <Label className="text-xs text-white/60">
+                        <Label className="text-xs text-slate-300">
                           Documento / ID
                         </Label>
                         <Input
                           value={documentNumber}
                           onChange={(e) => setDocumentNumber(e.target.value)}
-                          className="bg-black/30 border-white/10 text-white placeholder:text-white/30"
+                          className="bg-slate-900 border-slate-800 text-slate-100 placeholder:text-slate-400"
                           placeholder="1354480772"
                         />
                       </div>
 
                       <div className="space-y-2">
-                        <Label className="text-xs text-white/60">
+                        <Label className="text-xs text-slate-300">
                           WhatsApp (E.164)
                         </Label>
                         <Input
                           value={whatsapp}
                           onChange={(e) => setWhatsapp(e.target.value)}
-                          className="bg-black/30 border-white/10 text-white placeholder:text-white/30"
+                          className="bg-slate-900 border-slate-800 text-slate-100 placeholder:text-slate-400"
                           placeholder="+5939…"
                         />
                       </div>
 
                       <div className="space-y-2">
-                        <Label className="text-xs text-white/60">
+                        <Label className="text-xs text-slate-300">
                           País / Ubicación
                         </Label>
                         <Input
                           value={country}
                           onChange={(e) => setCountry(e.target.value)}
-                          className="bg-black/30 border-white/10 text-white placeholder:text-white/30"
+                          className="bg-slate-900 border-slate-800 text-slate-100 placeholder:text-slate-400"
                           placeholder="Ecuador"
                         />
                       </div>
 
                       <div className="space-y-2">
-                        <Label className="text-xs text-white/60">
+                        <Label className="text-xs text-slate-300">
                           Nivel de inglés
                         </Label>
                         <Input
                           value={englishLevel}
                           onChange={(e) => setEnglishLevel(e.target.value)}
-                          className="bg-black/30 border-white/10 text-white placeholder:text-white/30"
+                          className="bg-slate-900 border-slate-800 text-slate-100 placeholder:text-slate-400"
                           placeholder="B2 / C1 / Intermedio…"
                         />
                       </div>
 
                       <div className="space-y-2 md:col-span-2">
-                        <Label className="text-xs text-white/60">
+                        <Label className="text-xs text-slate-300">
                           Rol principal
                         </Label>
                         <Input
                           value={primaryRole}
                           onChange={(e) => setPrimaryRole(e.target.value)}
-                          className="bg-black/30 border-white/10 text-white placeholder:text-white/30"
+                          className="bg-slate-900 border-slate-800 text-slate-100 placeholder:text-slate-400"
                           placeholder="Ej: Product Manager"
                         />
                       </div>
 
                       <div className="space-y-2 md:col-span-2">
-                        <Label className="text-xs text-white/60">
+                        <Label className="text-xs text-slate-300">
                           Skills (separadas por coma)
                         </Label>
                         <Input
                           value={skillsCsv}
                           onChange={(e) => setSkillsCsv(e.target.value)}
-                          className="bg-black/30 border-white/10 text-white placeholder:text-white/30"
+                          className="bg-slate-900 border-slate-800 text-slate-100 placeholder:text-slate-400"
                           placeholder="react, next.js, tailwind, supabase"
                         />
                       </div>
 
                       <div className="space-y-2 md:col-span-2">
-                        <Label className="text-xs text-white/60">
+                        <Label className="text-xs text-slate-300">
                           Otras habilidades
                         </Label>
                         <Input
                           value={otherSkills}
                           onChange={(e) => setOtherSkills(e.target.value)}
-                          className="bg-black/30 border-white/10 text-white placeholder:text-white/30"
+                          className="bg-slate-900 border-slate-800 text-slate-100 placeholder:text-slate-400"
                           placeholder="Ej: Liderazgo, comunicación…"
                         />
                       </div>
 
                       <div className="space-y-2 md:col-span-2">
-                        <Label className="text-xs text-white/60">
+                        <Label className="text-xs text-slate-300">
                           LinkedIn
                         </Label>
                         <Input
                           value={linkedin}
                           onChange={(e) => setLinkedin(e.target.value)}
-                          className="bg-black/30 border-white/10 text-white placeholder:text-white/30"
+                          className="bg-slate-900 border-slate-800 text-slate-100 placeholder:text-slate-400"
                           placeholder="https://linkedin.com/in/…"
                         />
                       </div>
 
                       <div className="space-y-2 md:col-span-2">
-                        <Label className="text-xs text-white/60">
+                        <Label className="text-xs text-slate-300">
                           Portfolio
                         </Label>
                         <Input
                           value={portfolio}
                           onChange={(e) => setPortfolio(e.target.value)}
-                          className="bg-black/30 border-white/10 text-white placeholder:text-white/30"
+                          className="bg-slate-900 border-slate-800 text-slate-100 placeholder:text-slate-400"
                           placeholder="https://…"
                         />
                       </div>
 
                       <div className="space-y-2 md:col-span-2">
-                        <Label className="text-xs text-white/60">Email</Label>
+                        <Label className="text-xs text-slate-300">Email</Label>
                         <Input
                           value={profile?.email ?? ''}
                           disabled
-                          className="bg-black/20 border-white/10 text-white/70"
+                          className="bg-slate-900 border-slate-800 text-slate-300"
                           placeholder="—"
                         />
-                        <div className="text-xs text-white/40">
+                        <div className="text-xs text-slate-400">
                           *El email se administra desde Auth (no se edita aquí).
                         </div>
                       </div>
 
-                      <div className="md:col-span-2 flex items-center justify-between rounded-xl border border-white/10 bg-black/20 p-4">
+                      <div className="md:col-span-2 flex items-center justify-between rounded-xl border border-slate-800 bg-slate-900 p-4">
                         <div className="min-w-0">
-                          <div className="text-sm font-semibold text-white">
+                          <div className="text-sm font-semibold text-slate-100">
                             Marketing opt-in
                           </div>
-                          <div className="text-xs text-white/50 mt-1">
+                          <div className="text-xs text-slate-400 mt-1">
                             Acepto recibir novedades/actualizaciones.
                           </div>
                         </div>
@@ -473,7 +473,7 @@ export default function AdminSettingsPage() {
                       </div>
                     </div>
 
-                    <Separator className="border-white/10" />
+                    <Separator className="border-slate-800" />
 
                     <div className="flex items-center justify-end gap-2">
                       <Button
@@ -492,30 +492,30 @@ export default function AdminSettingsPage() {
 
           {/* SEGURIDAD */}
           <TabsContent value="seguridad" className="mt-4">
-            <Card className="bg-black/40 border-white/10 backdrop-blur-md overflow-hidden">
+            <Card className="bg-slate-900 border-slate-800 backdrop-blur-md overflow-hidden">
               <CardHeader className="pb-3">
                 <CardTitle className="text-base">Seguridad</CardTitle>
-                <div className="text-xs text-white/50 mt-1">
+                <div className="text-xs text-slate-400 mt-1">
                   Actualizá tu contraseña.
                 </div>
               </CardHeader>
 
               <CardContent className="space-y-5">
                 {isBootLoading ? (
-                  <div className="text-sm text-white/60">Cargando…</div>
+                  <div className="text-sm text-slate-300">Cargando…</div>
                 ) : (
                   <>
-                    <div className="rounded-xl border border-white/10 bg-black/20 p-4">
-                      <div className="text-sm font-semibold text-white">
+                    <div className="rounded-xl border border-slate-800 bg-slate-900 p-4">
+                      <div className="text-sm font-semibold text-slate-100">
                         Cambiar contraseña
                       </div>
-                      <div className="text-xs text-white/50 mt-1">
+                      <div className="text-xs text-slate-400 mt-1">
                         Mínimo 8 caracteres.
                       </div>
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                         <div className="space-y-2">
-                          <Label className="text-xs text-white/60">
+                          <Label className="text-xs text-slate-300">
                             Nueva contraseña
                           </Label>
                           <Input
@@ -531,10 +531,10 @@ export default function AdminSettingsPage() {
                                   : null
                               )
                             }}
-                            className={`bg-black/30 text-white placeholder:text-white/30 ${
+                            className={`bg-slate-900 text-slate-100 placeholder:text-slate-400 ${
                               passwordError
                                 ? 'border-red-500/70'
-                                : 'border-white/10'
+                                : 'border-slate-800'
                             }`}
                             placeholder="********"
                           />
@@ -546,7 +546,7 @@ export default function AdminSettingsPage() {
                         </div>
 
                         <div className="space-y-2">
-                          <Label className="text-xs text-white/60">
+                          <Label className="text-xs text-slate-300">
                             Repetir contraseña
                           </Label>
                           <Input
@@ -561,10 +561,10 @@ export default function AdminSettingsPage() {
                                   : null
                               )
                             }}
-                            className={`bg-black/30 text-white placeholder:text-white/30 ${
+                            className={`bg-slate-900 text-slate-100 placeholder:text-slate-400 ${
                               confirmPasswordError
                                 ? 'border-red-500/70'
-                                : 'border-white/10'
+                                : 'border-slate-800'
                             }`}
                             placeholder="********"
                           />
@@ -578,7 +578,7 @@ export default function AdminSettingsPage() {
 
                       <div className="flex items-center justify-end mt-4">
                         <Button
-                          className="bg-white text-black hover:bg-white/90"
+                          className="bg-slate-900 text-black hover:bg-slate-900/90"
                           onClick={changePassword}
                           disabled={!userId || isSavingPassword}
                         >

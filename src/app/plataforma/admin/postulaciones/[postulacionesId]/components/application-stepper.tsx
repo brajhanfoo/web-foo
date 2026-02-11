@@ -35,7 +35,7 @@ export function ApplicationStepper({ currentStep }: { currentStep: number }) {
               {index !== 0 && (
                 <div
                   className={`h-0.5 w-full ${
-                    leftLineIsGreen ? 'bg-[#00CCA4]' : 'bg-white/20'
+                    leftLineIsGreen ? 'bg-[#00CCA4]' : 'bg-slate-800'
                   }`}
                 />
               )}
@@ -48,8 +48,8 @@ export function ApplicationStepper({ currentStep }: { currentStep: number }) {
                     isCompleted
                       ? 'bg-[#00CCA4] text-black'
                       : isActive
-                        ? 'bg-white text-black font-bold'
-                        : 'bg-black border border-white/40 text-white/40',
+                        ? 'bg-slate-900 text-black font-bold'
+                        : 'bg-slate-900 border border-slate-300 text-slate-400',
                   ].join(' ')}
                 >
                   {isCompleted ? (
@@ -61,7 +61,7 @@ export function ApplicationStepper({ currentStep }: { currentStep: number }) {
 
                 <span
                   className={`text-xs text-center ${
-                    isActive || isCompleted ? 'text-white' : 'text-white/40'
+                    isActive || isCompleted ? 'text-slate-100' : 'text-slate-400'
                   }`}
                 >
                   {step.label}
@@ -72,7 +72,7 @@ export function ApplicationStepper({ currentStep }: { currentStep: number }) {
               {index !== STATUS_STEPS.length - 1 && (
                 <div
                   className={`h-0.5 w-full ${
-                    rightLineIsGreen ? 'bg-[#00CCA4]' : 'bg-white/20'
+                    rightLineIsGreen ? 'bg-[#00CCA4]' : 'bg-slate-800'
                   }`}
                 />
               )}

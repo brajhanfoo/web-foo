@@ -252,32 +252,32 @@ export function PaymentProofDialog({
         </Button>
       </DialogTrigger>
 
-      <DialogContent className="sm:max-w-[720px] bg-black/20 text-amber-50">
+      <DialogContent className="sm:max-w-[720px] bg-slate-900 text-slate-100">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
         </DialogHeader>
 
         {isLoading ? (
-          <div className="text-sm text-muted-foreground bg-black/20">
+          <div className="text-sm text-slate-400 bg-slate-900">
             Cargando…
           </div>
         ) : (
-          <div className="space-y-4 bg-black/20">
+          <div className="space-y-4 bg-slate-900">
             {proof ? (
               <>
-                <div className="flex items-center justify-between gap-2 bg-black/20">
+                <div className="flex items-center justify-between gap-2 bg-slate-900">
                   <div className="min-w-0">
                     <div className="text-sm font-semibold truncate">
                       {proof.original_filename ?? 'Comprobante'}
                     </div>
-                    <div className="text-xs text-muted-foreground mt-1">
+                    <div className="text-xs text-slate-400 mt-1">
                       {formatBytes(proof.size_bytes)} · {proof.mime_type}
                     </div>
                   </div>
                   <Badge variant="secondary">Cargado</Badge>
                 </div>
 
-                <div className="rounded-lg border p-3 bg-black/20">
+                <div className="rounded-lg border p-3 bg-slate-900">
                   {isImage(proof.mime_type) ? (
                     <div className="relative w-full h-[360px] overflow-hidden rounded-md">
                       <Image
@@ -346,7 +346,7 @@ export function PaymentProofDialog({
                 </div>
 
                 <div className="rounded-lg border p-3">
-                  <div className="text-xs text-muted-foreground mb-2">
+                  <div className="text-xs text-slate-400 mb-2">
                     Elegí un PDF o imagen (JPG/PNG/WEBP). Máximo 5 MB.
                   </div>
                   <Input ref={fileInputRef} type="file" accept=".pdf,image/*" />
@@ -354,7 +354,7 @@ export function PaymentProofDialog({
               </>
             ) : (
               <>
-                <div className="text-sm text-muted-foreground">
+                <div className="text-sm text-slate-400">
                   Todavía no hay comprobante cargado.
                 </div>
 
@@ -368,7 +368,7 @@ export function PaymentProofDialog({
                 </div>
 
                 <div className="rounded-lg border p-3">
-                  <div className="text-xs text-muted-foreground mb-2">
+                  <div className="text-xs text-slate-400 mb-2">
                     Elegí un PDF o imagen (JPG/PNG/WEBP). Máximo 5 MB.
                   </div>
                   <Input ref={fileInputRef} type="file" accept=".pdf,image/*" />

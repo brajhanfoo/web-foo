@@ -29,12 +29,15 @@ function SidebarLink({ href, label, Icon }: SidebarLinkProperties) {
       href={href}
       className={[
         'flex items-center gap-2 rounded-xl px-3 py-2 text-sm transition',
+        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/60 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900',
         isActive
-          ? 'bg-emerald-500/15 text-emerald-200'
-          : 'text-white/70 hover:text-white hover:bg-white/5',
+          ? 'bg-emerald-500/20 text-emerald-200'
+          : 'text-slate-300 hover:text-slate-100 hover:bg-slate-800',
       ].join(' ')}
     >
-      <Icon className="h-4 w-4" />
+      <span aria-hidden="true">
+        <Icon className="h-4 w-4" />
+      </span>
       <span>{label}</span>
     </Link>
   )
@@ -45,6 +48,7 @@ export function AdminSidebar() {
   const { showSuccess, showError } = useToastEnhanced()
 
   const profile = useAuthStore((state) => state.profile)
+  const isBooting = useAuthStore((state) => state.isBooting)
   const signOut = useAuthStore((state) => state.signOut)
 
   async function handleSignOut() {
@@ -57,15 +61,16 @@ export function AdminSidebar() {
     }
   }
 
-  const displayName = profile
+  const rawName = profile
     ? `${profile.first_name ?? ''} ${profile.last_name ?? ''}`.trim()
-    : 'Cargando...'
+    : ''
+  const displayName = rawName || (isBooting ? 'Cargando…' : 'Admin')
 
   return (
-    <aside className="flex h-[calc(100vh-80px)] w-64 flex-col border-r border-white/10 bg-white/[0.03] p-4">
+    <aside className="flex min-h-screen w-64 flex-col border-r border-slate-800 bg-slate-900 p-4">
       <div className="mb-5">
-        <div className="text-sm text-white/60">Admin</div>
-        <div className="text-base font-semibold text-white">{displayName}</div>
+        <div className="text-sm text-slate-300">Admin</div>
+        <div className="text-base font-semibold text-slate-100">{displayName}</div>
       </div>
 
       <nav className="space-y-2">
@@ -101,9 +106,11 @@ export function AdminSidebar() {
         <button
           type="button"
           onClick={handleSignOut}
-          className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm text-white/70 transition hover:bg-white/5 hover:text-white"
+          className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm text-slate-300 transition hover:bg-slate-800 hover:text-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/60 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900"
         >
-          <LogOut className="h-4 w-4" />
+          <span aria-hidden="true">
+            <LogOut className="h-4 w-4" />
+          </span>
           <span>Cerrar sesión</span>
         </button>
       </div>

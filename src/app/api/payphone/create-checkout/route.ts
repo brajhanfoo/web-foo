@@ -1,15 +1,14 @@
 ﻿import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { supabaseAdmin } from '@/lib/supabase/admin'
+import type { ProgramPaymentMode, ProgramRow } from '@/types/programs'
+import type { PaymentStatus } from '@/types/payments'
 
 export const runtime = 'nodejs'
 
 const DEFAULT_CURRENCY = 'USD'
 
 type PaymentPurpose = 'pre_enrollment' | 'tuition'
-type PaymentStatus = 'initiated' | 'pending' | 'paid' | 'failed' | 'canceled'
-type ProgramPaymentMode = 'none' | 'pre' | 'post'
-
 type CreateCheckoutInput = {
   programId: string
   editionId: string | null
@@ -35,14 +34,10 @@ type CreateCheckoutResponse = {
   reference?: string
 }
 
-type ProgramRow = {
-  id: string
-  slug: string
-  payment_mode: ProgramPaymentMode | null
-  requires_payment_pre: boolean
-  price_usd: string | null
-  created_at?: string
-}
+type ProgramRowSummary = Pick<
+  ProgramRow,
+  'id' | 'slug' | 'payment_mode' | 'requires_payment_pre' | 'price_usd'
+>
 
 type ApplicationRow = {
   id: string
@@ -102,12 +97,12 @@ function parseInput(body: unknown): CreateCheckoutInput | null {
   }
 }
 
-function resolvePaymentMode(program: ProgramRow): ProgramPaymentMode {
+function resolvePaymentMode(program: ProgramRowSummary): ProgramPaymentMode {
   if (program.payment_mode) return program.payment_mode
   return program.requires_payment_pre ? 'pre' : 'none'
 }
 
-function parsePriceToCents(priceUsd: string | null): number | null {
+function parsePriceToCents(priceUsd: string | number | null): number | null {
   if (!priceUsd) return null
   const parsed = Number(priceUsd)
   if (!Number.isFinite(parsed)) return null
@@ -220,7 +215,7 @@ export async function POST(
     )
   }
 
-  const program = programRow as ProgramRow
+  const program = programRow as ProgramRowSummary
   const paymentMode = resolvePaymentMode(program)
 
   if (purpose === 'pre_enrollment' && paymentMode !== 'pre') {

@@ -28,7 +28,13 @@ export default async function AdminLayout({
 
   // 3) layout visual (tu mismo layout)
   return (
-    <div className="min-h-screen bg-black">
+    <div className="min-h-screen bg-slate-950 text-slate-100" style={{ colorScheme: 'dark' }}>
+      <a
+        href="#admin-main"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:rounded-md focus:bg-slate-100 focus:px-3 focus:py-2 focus:text-sm focus:text-slate-900 focus:shadow"
+      >
+        Saltar al contenido
+      </a>
       <div className="flex">
         {/* Sidebar */}
         <div className="hidden lg:block">
@@ -38,7 +44,9 @@ export default async function AdminLayout({
         {/* Main */}
         <div className="flex-1 min-w-0">
           <AdminTopbar />
-          <main className="px-4 md:px-6 py-6">{children}</main>
+          <main id="admin-main" className="px-4 md:px-6 py-6">
+            {children}
+          </main>
         </div>
       </div>
     </div>

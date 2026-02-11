@@ -29,19 +29,19 @@ export function ApplicationWorkflowCard({
   // Si está cargando o no hay data, mostramos un fallback simple
   if (isLoading) {
     return (
-      <div className="bg-black/40 border border-white/10 backdrop-blur-md rounded-xl p-4">
-        <div className="text-sm text-white/60">Cargando…</div>
+      <div className="bg-slate-900 border border-slate-800 backdrop-blur-md rounded-xl p-4">
+        <div className="text-sm text-slate-300">Cargando…</div>
       </div>
     )
   }
 
   if (!application) {
     return (
-      <div className="bg-black/40 border border-white/10 backdrop-blur-md rounded-xl p-4 space-y-3">
-        <div className="text-sm text-white/70">No hay datos para mostrar.</div>
+      <div className="bg-slate-900 border border-slate-800 backdrop-blur-md rounded-xl p-4 space-y-3">
+        <div className="text-sm text-slate-300">No hay datos para mostrar.</div>
         <Button
           variant="secondary"
-          className="bg-white/10 hover:bg-white/15 border border-white/10 text-white"
+          className="bg-slate-800 hover:bg-slate-700 border border-slate-800 text-slate-100"
           asChild
         >
           <Link href="/plataforma/admin/postulaciones">Volver</Link>

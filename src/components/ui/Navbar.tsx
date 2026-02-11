@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname, useRouter } from 'next/navigation'
+import { supabase } from '@/lib/supabase/client'
 import { FaBars, FaTimes } from 'react-icons/fa'
 import { FiUsers } from 'react-icons/fi'
 
@@ -19,6 +20,8 @@ const navItems = [
 
 export default function Navbar({ logoSrc, logoAlt }: NavbarProperties) {
   const [menuOpen, setMenuOpen] = useState(false)
+  const [isAuthed, setIsAuthed] = useState(false)
+  const [authReady, setAuthReady] = useState(false)
   const pathname = usePathname()
   const router = useRouter()
 
@@ -29,9 +32,40 @@ export default function Navbar({ logoSrc, logoAlt }: NavbarProperties) {
     document.body.style.overflow = menuOpen ? 'hidden' : 'auto'
   }, [menuOpen])
 
+  useEffect(() => {
+    let active = true
+
+    const load = async () => {
+      const { data } = await supabase.auth.getUser()
+      if (!active) return
+      setIsAuthed(Boolean(data.user))
+      setAuthReady(true)
+    }
+
+    void load()
+
+    const { data: subscription } = supabase.auth.onAuthStateChange(
+      (_, session) => {
+        if (!active) return
+        setIsAuthed(Boolean(session?.user))
+        setAuthReady(true)
+      }
+    )
+
+    return () => {
+      active = false
+      subscription.subscription.unsubscribe()
+    }
+  }, [])
+
   const handleIngresarClick = () => {
     setMenuOpen(false)
     router.push('/ingresar')
+  }
+
+  const handlePanelClick = () => {
+    setMenuOpen(false)
+    router.push('/plataforma')
   }
 
   // 🔥 función active
@@ -65,7 +99,7 @@ export default function Navbar({ logoSrc, logoAlt }: NavbarProperties) {
               {/* underline */}
               <span
                 className={`
-                  absolute left-0 -bottom-1 h-[2px] bg-yellow transition-all duration-300
+                  absolute left-0 -bottom-1 h-[2px] bg-yellow transition-[width] duration-300
                   ${active ? 'w-full' : 'w-0 group-hover:w-full'}
                 `}
               />
@@ -76,12 +110,23 @@ export default function Navbar({ logoSrc, logoAlt }: NavbarProperties) {
 
       {/* BOTONES DESKTOP */}
       <div className="hidden md:flex items-center gap-4">
-        <button
-          onClick={handleIngresarClick}
-          className="text-white bg-white/20 hover:bg-white/30 px-5 py-2.5 rounded-md transition-colors duration-300 cursor-pointer"
-        >
-          Ingresar
-        </button>
+        {authReady ? (
+          isAuthed ? (
+            <button
+              onClick={handlePanelClick}
+              className="text-white bg-white/20 hover:bg-white/30 px-5 py-2.5 rounded-md transition-colors duration-300 cursor-pointer"
+            >
+              Mi panel
+            </button>
+          ) : (
+            <button
+              onClick={handleIngresarClick}
+              className="text-white bg-white/20 hover:bg-white/30 px-5 py-2.5 rounded-md transition-colors duration-300 cursor-pointer"
+            >
+              Ingresar
+            </button>
+          )
+        ) : null}
 
         {isProgramActive && (
           <button
@@ -97,6 +142,7 @@ export default function Navbar({ logoSrc, logoAlt }: NavbarProperties) {
       <button
         onClick={() => setMenuOpen(!menuOpen)}
         className="md:hidden text-2xl text-white z-50"
+        aria-label={menuOpen ? 'Cerrar menu' : 'Abrir menu'}
       >
         {menuOpen ? <FaTimes /> : <FaBars />}
       </button>
@@ -136,12 +182,23 @@ export default function Navbar({ logoSrc, logoAlt }: NavbarProperties) {
             </button>
           )}
 
-          <button
-            onClick={handleIngresarClick}
-            className="w-full text-center text-white bg-white/20 hover:bg-white/30 text-lg py-3 px-4 rounded-md transition-colors duration-300 cursor-pointer"
-          >
-            Ingresar
-          </button>
+          {authReady ? (
+            isAuthed ? (
+              <button
+                onClick={handlePanelClick}
+                className="w-full text-center text-white bg-white/20 hover:bg-white/30 text-lg py-3 px-4 rounded-md transition-colors duration-300 cursor-pointer"
+              >
+                Mi panel
+              </button>
+            ) : (
+              <button
+                onClick={handleIngresarClick}
+                className="w-full text-center text-white bg-white/20 hover:bg-white/30 text-lg py-3 px-4 rounded-md transition-colors duration-300 cursor-pointer"
+              >
+                Ingresar
+              </button>
+            )
+          ) : null}
         </div>
       </div>
     </nav>

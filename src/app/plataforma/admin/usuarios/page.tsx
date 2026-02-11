@@ -189,7 +189,7 @@ export default function AdminUsersPage() {
 
   return (
     <div className="space-y-6">
-      <Card className="border border-white/10 bg-[#0F1117] text-white">
+      <Card className="border border-slate-800 bg-slate-900 text-slate-100">
         <CardHeader>
           <CardTitle>Usuarios</CardTitle>
           <CardDescription>

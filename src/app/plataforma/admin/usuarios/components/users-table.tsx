@@ -59,7 +59,7 @@ export function UsersTable({
 }) {
   if (loading) {
     return (
-      <div className="rounded-lg border border-white/10 bg-white/[0.02] p-4 text-sm text-white/60">
+      <div className="rounded-lg border border-slate-800 bg-slate-900 p-4 text-sm text-slate-300">
         Cargando usuarios…
       </div>
     )
@@ -67,7 +67,7 @@ export function UsersTable({
 
   if (!rows.length) {
     return (
-      <div className="rounded-lg border border-white/10 bg-white/[0.02] p-6 text-sm text-white/60">
+      <div className="rounded-lg border border-slate-800 bg-slate-900 p-6 text-sm text-slate-300">
         No hay usuarios para mostrar.
       </div>
     )
@@ -75,10 +75,10 @@ export function UsersTable({
 
   return (
     <div
-      className="rounded-lg border border-white/10 overflow-hidden"
+      className="rounded-lg border border-slate-800 overflow-hidden"
       style={{ contentVisibility: 'auto' }}
     >
-      <div className="grid grid-cols-12 gap-0 border-b border-white/10 bg-black/60 text-xs text-white/60 font-medium">
+      <div className="grid grid-cols-12 gap-0 border-b border-slate-800 bg-slate-900/60 text-xs text-slate-300 font-medium">
         <div className="col-span-4 px-3 py-2">Usuario</div>
         <div className="col-span-3 px-3 py-2">Rol</div>
         <div className="col-span-2 px-3 py-2">Estado</div>
@@ -95,13 +95,13 @@ export function UsersTable({
         return (
           <div
             key={user.id}
-            className="grid grid-cols-12 items-center border-b border-white/10 last:border-b-0 bg-[#0B0D12]"
+            className="grid grid-cols-12 items-center border-b border-slate-800 last:border-b-0 bg-[#0B0D12]"
           >
             <div className="col-span-4 px-3 py-3 min-w-0">
-              <div className="font-medium text-white truncate">
+              <div className="font-medium text-slate-100 truncate">
                 {displayName(user)}
               </div>
-              <div className="text-xs text-white/50 truncate">
+              <div className="text-xs text-slate-400 truncate">
                 {user.email ?? '—'}
               </div>
               {isSelf ? (
@@ -118,7 +118,7 @@ export function UsersTable({
                 disabled={!canEdit}
               >
                 <SelectTrigger
-                  className="h-9 bg-black/30 border-white/10 text-white"
+                  className="h-9 bg-slate-900 border-slate-800 text-slate-100"
                   aria-label={`Cambiar rol de ${displayName(user)}`}
                 >
                   <SelectValue />
@@ -139,14 +139,14 @@ export function UsersTable({
                   'border',
                   active
                     ? 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30'
-                    : 'bg-white/5 text-white/60 border-white/10',
+                    : 'bg-slate-900 text-slate-300 border-slate-800',
                 ].join(' ')}
               >
                 {active ? 'Activo' : 'Desactivado'}
               </Badge>
             </div>
 
-            <div className="col-span-2 px-3 py-3 text-sm text-white/60 min-w-0">
+            <div className="col-span-2 px-3 py-3 text-sm text-slate-300 min-w-0">
               {formatDate(user.created_at)}
             </div>
 
@@ -154,7 +154,7 @@ export function UsersTable({
               <Button
                 size="sm"
                 variant="outline"
-                className="border-white/10 bg-black/30 text-white/80 hover:bg-white/10"
+                className="border-slate-800 bg-slate-900 text-slate-200 hover:bg-slate-800"
                 disabled={!canEdit}
                 onClick={() => onToggleActive(user)}
                 title={active ? 'Desactivar' : 'Activar'}

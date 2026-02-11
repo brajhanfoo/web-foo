@@ -1,18 +1,15 @@
 ﻿import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { supabaseAdmin } from '@/lib/supabase/admin'
+import type { ProgramPaymentMode, ProgramRow } from '@/types/programs'
 
 export const runtime = 'nodejs'
 
 type PaymentPurpose = 'pre_enrollment' | 'tuition'
-type ProgramPaymentMode = 'none' | 'pre' | 'post'
-
-type ProgramRow = {
-  id: string
-  slug: string
-  payment_mode: ProgramPaymentMode | null
-  requires_payment_pre: boolean
-}
+type ProgramRowSummary = Pick<
+  ProgramRow,
+  'id' | 'slug' | 'payment_mode' | 'requires_payment_pre'
+>
 
 type PaymentRow = {
   id: string
@@ -25,30 +22,13 @@ type PaymentRow = {
 
 type Body = { clientTxId: string; id: number }
 
-function resolvePaymentMode(program: ProgramRow): ProgramPaymentMode {
+function resolvePaymentMode(program: ProgramRowSummary): ProgramPaymentMode {
   if (program.payment_mode) return program.payment_mode
   return program.requires_payment_pre ? 'pre' : 'none'
 }
 
-async function buildRedirect(params: {
-  purpose: PaymentPurpose
-  programId: string
-}): Promise<string | null> {
-  if (params.purpose === 'tuition') {
-    return '/plataforma/talento/mis-postulaciones'
-  }
-
-  const { data: program } = await supabaseAdmin
-    .from('programs')
-    .select('slug')
-    .eq('id', params.programId)
-    .maybeSingle()
-
-  if (program?.slug) {
-    return `/plataforma/talento/programas/${program.slug}/postular`
-  }
-
-  return '/plataforma/talento/programas'
+async function buildRedirect(_: { purpose: PaymentPurpose; programId: string }): Promise<string> {
+  return '/plataforma/talento/mis-postulaciones'
 }
 
 export async function POST(req: NextRequest) {
@@ -127,7 +107,7 @@ export async function POST(req: NextRequest) {
       .eq('id', p.program_id)
       .maybeSingle()
 
-    const program = (programRow as ProgramRow | null) ?? null
+    const program = (programRow as ProgramRowSummary | null) ?? null
     const mode = program ? resolvePaymentMode(program) : 'none'
 
     const updatePayload: Record<string, unknown> = {

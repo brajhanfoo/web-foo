@@ -30,7 +30,7 @@ export function UsersToolbar({
   filteredCount: number
 }) {
   return (
-    <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-white/10 bg-white/[0.02] p-4">
+    <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-slate-800 bg-slate-900 p-4">
       <div className="flex flex-wrap items-center gap-3">
         <div className="w-full min-w-[220px] max-w-xs">
           <Input
@@ -40,13 +40,13 @@ export function UsersToolbar({
             name="users_search"
             aria-label="Buscar usuarios"
             autoComplete="off"
-            className="bg-black/30 border-white/10 text-white placeholder:text-white/40"
+            className="bg-slate-900 border-slate-800 text-slate-100 placeholder:text-slate-400"
           />
         </div>
 
         <Select value={roleFilter} onValueChange={onRoleFilterChange}>
           <SelectTrigger
-            className="w-[180px] bg-black/30 border-white/10 text-white"
+            className="w-[180px] bg-slate-900 border-slate-800 text-slate-100"
             aria-label="Filtrar por rol"
           >
             <SelectValue placeholder="Filtrar por rol" />
@@ -59,7 +59,7 @@ export function UsersToolbar({
         </Select>
       </div>
 
-      <Badge className="bg-white/10 text-white border border-white/10">
+      <Badge className="bg-slate-800 text-slate-100 border border-slate-800">
         {filteredCount} de {totalCount}
       </Badge>
     </div>

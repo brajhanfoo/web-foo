@@ -205,7 +205,7 @@ export default function TalentHomePage() {
 
               <Button
                 className="bg-[#00CCA4] text-black hover:bg-[#00b695]"
-                onClick={() => router.push('/plataforma/talento/programas')}
+                onClick={() => router.push('/plataforma/talento/explorar')}
               >
                 Explorar Programas →
               </Button>
@@ -234,7 +234,7 @@ export default function TalentHomePage() {
               <Button
                 variant="secondary"
                 className="bg-white/10 hover:bg-white/15 border border-white/10 text-white"
-                onClick={() => router.push('/plataforma/talento/programas')}
+                onClick={() => router.push('/plataforma/talento/explorar')}
               >
                 Ver programa →
               </Button>
@@ -268,7 +268,7 @@ export default function TalentHomePage() {
               <Button
                 variant="secondary"
                 className="bg-white/10 hover:bg-white/15 border border-white/10 text-white"
-                onClick={() => router.push('/plataforma/talento/programas')}
+                onClick={() => router.push('/plataforma/talento/explorar')}
               >
                 Ver →
               </Button>
