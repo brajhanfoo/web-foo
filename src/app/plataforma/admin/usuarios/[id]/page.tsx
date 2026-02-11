@@ -210,7 +210,11 @@ export default function AdminUserDetailPage() {
       setApplications((appsRes.data ?? []) as ApplicationRow[])
     }
 
-    if (paymentsRes && typeof paymentsRes === 'object' && 'error' in paymentsRes) {
+    if (
+      paymentsRes &&
+      typeof paymentsRes === 'object' &&
+      'error' in paymentsRes
+    ) {
       const message =
         paymentsRes.error instanceof Error
           ? paymentsRes.error.message
@@ -229,7 +233,8 @@ export default function AdminUserDetailPage() {
   }, [loadAll])
 
   const displayName = useMemo(() => {
-    const name = `${profile?.first_name ?? ''} ${profile?.last_name ?? ''}`.trim()
+    const name =
+      `${profile?.first_name ?? ''} ${profile?.last_name ?? ''}`.trim()
     return name || profile?.email || 'Usuario'
   }, [profile?.first_name, profile?.last_name, profile?.email])
 
@@ -273,7 +278,9 @@ export default function AdminUserDetailPage() {
             <h1 className="text-xl font-semibold text-slate-100">
               {displayName}
             </h1>
-            <div className="text-sm text-slate-400">{textOrDash(profile.email)}</div>
+            <div className="text-sm text-slate-400">
+              {textOrDash(profile.email)}
+            </div>
           </div>
         </div>
 
@@ -367,9 +374,7 @@ export default function AdminUserDetailPage() {
               <div>
                 <div className="text-xs text-slate-400">Skills</div>
                 <div className="text-sm text-slate-100">
-                  {profile.skills?.length
-                    ? profile.skills.join(', ')
-                    : '—'}
+                  {profile.skills?.length ? profile.skills.join(', ') : '—'}
                 </div>
               </div>
               <div>
@@ -534,4 +539,4 @@ export default function AdminUserDetailPage() {
       </Card>
     </div>
   )
-}
+}

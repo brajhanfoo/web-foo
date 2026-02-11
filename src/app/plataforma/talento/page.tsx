@@ -139,14 +139,12 @@ export default function TalentHomePage() {
         return
       }
 
-      const row = (Array.isArray(apps) && apps.length ? apps[0] : null) as
-        | {
-            id: string
-            program_id: string
-            status: string | null
-            programs?: { title?: string | null } | null
-          }
-        | null
+      const row = (Array.isArray(apps) && apps.length ? apps[0] : null) as {
+        id: string
+        program_id: string
+        status: string | null
+        programs?: { title?: string | null } | null
+      } | null
 
       setLatestApplication(
         row

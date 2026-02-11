@@ -4,7 +4,7 @@ import { supabaseAdmin } from '@/lib/supabase/admin'
 
 export async function GET(
   _request: NextRequest,
-  { params }: { params: { id?: string } }
+  { params }: { params: Promise<{ id?: string }> }
 ) {
   const supabaseServer = await createClient()
   const { data: userRes, error: userErr } = await supabaseServer.auth.getUser()
@@ -16,7 +16,8 @@ export async function GET(
     )
   }
 
-  const targetId = String(params?.id ?? '').trim()
+  const { id } = await params
+  const targetId = String(id ?? '').trim()
   if (!targetId) {
     return NextResponse.json(
       { ok: false, message: 'Falta id' },
