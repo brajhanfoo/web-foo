@@ -125,9 +125,7 @@ export async function GET(
   if (appRow.edition_id) {
     const { data: milestonesRows, error: milestonesErr } = await supabaseAdmin
       .from('program_edition_milestones')
-      .select(
-        'id, title, meet_url, drive_url, starts_at, position, created_at'
-      )
+      .select('id, title, meet_url, drive_url, starts_at, position, created_at')
       .eq('edition_id', appRow.edition_id)
       .order('position', { ascending: true, nullsFirst: false })
       .order('starts_at', { ascending: true, nullsFirst: false })
@@ -144,9 +142,11 @@ export async function GET(
   }
 
   const program = appRow.programs as { title?: string | null } | null
-  const edition = appRow.program_editions as
-    | { edition_name?: string | null; starts_at?: string | null; ends_at?: string | null }
-    | null
+  const edition = appRow.program_editions as {
+    edition_name?: string | null
+    starts_at?: string | null
+    ends_at?: string | null
+  } | null
 
   return NextResponse.json({
     ok: true,

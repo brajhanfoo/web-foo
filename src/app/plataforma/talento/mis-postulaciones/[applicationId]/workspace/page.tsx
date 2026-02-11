@@ -218,9 +218,7 @@ export default function WorkspacePage() {
           <Button
             variant="secondary"
             className="bg-white/10 hover:bg-white/15 border border-white/10 text-white"
-            onClick={() =>
-              router.push('/plataforma/talento/mis-postulaciones')
-            }
+            onClick={() => router.push('/plataforma/talento/mis-postulaciones')}
           >
             Ir a mis postulaciones
           </Button>
@@ -288,9 +286,7 @@ export default function WorkspacePage() {
               Edicion: {editionName}
             </div>
             {editionRange ? (
-              <div className="text-sm text-white/70">
-                {editionRange}
-              </div>
+              <div className="text-sm text-white/70">{editionRange}</div>
             ) : null}
           </div>
           <Badge className="border border-emerald-500/30 bg-emerald-500/10 text-emerald-200">
@@ -320,9 +316,7 @@ export default function WorkspacePage() {
                     <div className="text-sm font-semibold text-white">
                       {data.team.name}
                     </div>
-                    <div className="text-xs text-white/60">
-                      Equipo asignado
-                    </div>
+                    <div className="text-xs text-white/60">Equipo asignado</div>
                   </div>
                 </div>
 
@@ -362,7 +356,9 @@ export default function WorkspacePage() {
         {showCertificate ? (
           <Card className="border bg-background/10">
             <CardHeader className="pb-3">
-              <CardTitle className="text-base text-white">Certificado</CardTitle>
+              <CardTitle className="text-base text-white">
+                Certificado
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="flex items-center gap-2">
@@ -398,9 +394,7 @@ export default function WorkspacePage() {
         </CardHeader>
         <CardContent>
           {!data.milestones.length ? (
-            <div className="text-sm text-white/70">
-              No hay hitos todavia.
-            </div>
+            <div className="text-sm text-white/70">No hay hitos todavia.</div>
           ) : (
             <div
               className="rounded-lg border border-white/10 overflow-hidden"
