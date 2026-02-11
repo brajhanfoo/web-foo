@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase/client'
 import { getSiteUrl } from '@/lib/site-url'
 import { getErrorMessage } from '@/types/error'
 import { getPasswordError } from '@/lib/validation/password'
+import { BsExclamationCircle } from "react-icons/bs";
 
 import { useToastEnhanced } from '@/hooks/use-toast-enhanced'
 
@@ -126,165 +127,175 @@ export function RegisterForm() {
   }
 
   return (
-    <div className="w-full max-w-md">
-      <div className="rounded-2xl border border-emerald-400/20 bg-white/5 backdrop-blur-xl shadow-[0_0_0_1px_rgba(0,204,164,0.12),0_20px_60px_rgba(0,0,0,0.65)]">
-        <div className="p-6 md:p-7">
-          <h2 className="text-lg font-semibold text-white">
-            Comienza tu entrenamiento
-          </h2>
-          <p className="mt-1 text-sm text-white/60">
-            Regístrate para acceder a la plataforma.
-          </p>
+   <div className="w-full max-w-md">
+  <div className="relative rounded-3xl border border-emerald-400/20 bg-gradient-to-br from-emerald-500/10 via-transparent to-purple-500/10 p-[1px] shadow-[0_0_40px_rgba(16,185,129,0.15)]">
+    <div className="rounded-3xl bg-black/70 backdrop-blur-xl p-7 md:p-8">
+      <h2 className="text-2xl font-semibold tracking-tight text-white">
+        Comienza tu entrenamiento
+      </h2>
+      <p className="mt-2 text-sm text-gray-400">
+        Regístrate para acceder a la plataforma.
+      </p>
 
-          <div className="mt-4 rounded-xl border border-emerald-400/20 bg-emerald-400/10 px-4 py-3 text-sm text-white/80">
-            <span className="font-medium text-emerald-300">Importante:</span>{' '}
-            Completa tus datos reales. Luego podrás completar tu perfil
-            profesional.
-          </div>
-
-          <form onSubmit={handleSubmit} className="mt-5 space-y-4">
-            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-              <input
-                className="w-full rounded-xl bg-black/30 border border-white/10 px-4 py-3 text-white outline-none focus:border-emerald-400/60 placeholder:text-white/40"
-                placeholder="Nombre"
-                value={registerFormState.firstName}
-                onChange={(event) =>
-                  updateRegisterFormField('firstName', event.target.value)
-                }
-                required
-              />
-              <input
-                className="w-full rounded-xl bg-black/30 border border-white/10 px-4 py-3 text-white outline-none focus:border-emerald-400/60 placeholder:text-white/40"
-                placeholder="Apellido"
-                value={registerFormState.lastName}
-                onChange={(event) =>
-                  updateRegisterFormField('lastName', event.target.value)
-                }
-                required
-              />
-            </div>
-
-            <input
-              type="email"
-              className="w-full rounded-xl bg-black/30 border border-white/10 px-4 py-3 text-white outline-none focus:border-emerald-400/60 placeholder:text-white/40"
-              placeholder="Email"
-              value={registerFormState.email}
-              onChange={(event) =>
-                updateRegisterFormField('email', event.target.value)
-              }
-              required
-            />
-
-            <input
-              type="password"
-              className={`w-full rounded-xl bg-black/30 border px-4 py-3 text-white outline-none focus:border-emerald-400/60 placeholder:text-white/40 ${
-                passwordError ? 'border-red-500/70' : 'border-white/10'
-              }`}
-              placeholder="Contraseña"
-              value={registerFormState.password}
-              onChange={(event) => {
-                const next = event.target.value
-                updateRegisterFormField('password', next)
-                setPasswordError(getPasswordError(next))
-                setConfirmPasswordError(
-                  registerFormState.confirmPassword &&
-                    next !== registerFormState.confirmPassword
-                    ? 'Las contraseñas no coinciden.'
-                    : null
-                )
-              }}
-              required
-            />
-            {passwordError ? (
-              <p className="text-xs text-red-400">{passwordError}</p>
-            ) : null}
-
-            <input
-              type="password"
-              className={`w-full rounded-xl bg-black/30 border px-4 py-3 text-white outline-none focus:border-emerald-400/60 placeholder:text-white/40 ${
-                confirmPasswordError ? 'border-red-500/70' : 'border-white/10'
-              }`}
-              placeholder="Confirmación de contraseña"
-              value={registerFormState.confirmPassword}
-              onChange={(event) => {
-                const next = event.target.value
-                updateRegisterFormField('confirmPassword', next)
-                setConfirmPasswordError(
-                  next && next !== registerFormState.password
-                    ? 'Las contraseñas no coinciden.'
-                    : null
-                )
-              }}
-              required
-            />
-            {confirmPasswordError ? (
-              <p className="text-xs text-red-400">{confirmPasswordError}</p>
-            ) : null}
-
-            <label className="flex items-start gap-2 text-sm text-white/70">
-              <input
-                type="checkbox"
-                className="mt-1"
-                checked={registerFormState.hasAcceptedTerms}
-                onChange={(event) =>
-                  updateRegisterFormField(
-                    'hasAcceptedTerms',
-                    event.target.checked
-                  )
-                }
-              />
-              <span>
-                He leido y acepto los{' '}
-                <a
-                  href="/terminos-y-condiciones"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-emerald-400 underline hover:text-emerald-300"
-                >
-                  Terminos y condiciones
-                </a>
-                .
-              </span>
-            </label>
-
-            <label className="flex items-start gap-2 text-sm text-white/70">
-              <input
-                type="checkbox"
-                className="mt-1"
-                checked={registerFormState.marketingOptIn}
-                onChange={(event) =>
-                  updateRegisterFormField(
-                    'marketingOptIn',
-                    event.target.checked
-                  )
-                }
-              />
-              <span>
-                Quiero recibir comunicaciones y novedades de marketing.
-              </span>
-            </label>
-
-            <button
-              disabled={isSubmitting}
-              className="w-full rounded-xl py-3 font-semibold text-black bg-emerald-500 hover:bg-emerald-400 disabled:opacity-60"
-            >
-              {isSubmitting ? 'Creando cuenta...' : 'Crear cuenta'}
-            </button>
-
-            <button
-              type="button"
-              onClick={() => router.push('/ingresar')}
-              className="w-full text-sm text-white/70 hover:text-white"
-            >
-              ¿Ya tienes cuenta? <span className="underline">Ingresar</span>
-            </button>
-
-            <p className="text-[11px] text-white/45">
-              Al registrarte, aceptas nuestras políticas y términos.
-            </p>
-          </form>
+      {/* Alert */}
+      <div className="mt-6 flex gap-3 rounded-2xl border border-yellow-400/30 bg-[#BDBE0B]/10 px-4 py-3 text-sm text-yellow-100">
+        <BsExclamationCircle className="mt-0.5 text-[#BDBE0B] text-[35px]" />
+        <div>
+          <span className="font-semibold text-[#BDBE0B]">
+            Importante:
+          </span>{' '}
+          Para postular a programas, deberás completar tu perfil profesional
+          después de registrarte.
         </div>
       </div>
+
+      <form onSubmit={handleSubmit} className="mt-7 space-y-5">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <input
+            className="w-full rounded-xl bg-black/40 border border-white/10 px-4 py-3 text-white placeholder:text-white/30 outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/20 transition"
+            placeholder="Nombre"
+            value={registerFormState.firstName}
+            onChange={(event) =>
+              updateRegisterFormField('firstName', event.target.value)
+            }
+            required
+          />
+          <input
+            className="w-full rounded-xl bg-black/40 border border-white/10 px-4 py-3 text-white placeholder:text-white/30 outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/20 transition"
+            placeholder="Apellido"
+            value={registerFormState.lastName}
+            onChange={(event) =>
+              updateRegisterFormField('lastName', event.target.value)
+            }
+            required
+          />
+        </div>
+
+        <input
+          type="email"
+          className="w-full rounded-xl bg-black/40 border border-white/10 px-4 py-3 text-white placeholder:text-white/30 outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/20 transition"
+          placeholder="Correo electrónico"
+          value={registerFormState.email}
+          onChange={(event) =>
+            updateRegisterFormField('email', event.target.value)
+          }
+          required
+        />
+
+        <input
+          type="password"
+          className={`w-full rounded-xl bg-black/40 border px-4 py-3 text-white placeholder:text-white/30 outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/20 transition ${
+            passwordError ? 'border-red-500/70' : 'border-white/10'
+          }`}
+          placeholder="Contraseña"
+          value={registerFormState.password}
+          onChange={(event) => {
+            const next = event.target.value
+            updateRegisterFormField('password', next)
+            setPasswordError(getPasswordError(next))
+            setConfirmPasswordError(
+              registerFormState.confirmPassword &&
+                next !== registerFormState.confirmPassword
+                ? 'Las contraseñas no coinciden.'
+                : null
+            )
+          }}
+          required
+        />
+        {passwordError && (
+          <p className="text-xs text-red-400">{passwordError}</p>
+        )}
+
+        <input
+          type="password"
+          className={`w-full rounded-xl bg-black/40 border px-4 py-3 text-white placeholder:text-white/30 outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/20 transition ${
+            confirmPasswordError ? 'border-red-500/70' : 'border-white/10'
+          }`}
+          placeholder="Confirmación de contraseña"
+          value={registerFormState.confirmPassword}
+          onChange={(event) => {
+            const next = event.target.value
+            updateRegisterFormField('confirmPassword', next)
+            setConfirmPasswordError(
+              next && next !== registerFormState.password
+                ? 'Las contraseñas no coinciden.'
+                : null
+            )
+          }}
+          required
+        />
+        {confirmPasswordError && (
+          <p className="text-xs text-red-400">{confirmPasswordError}</p>
+        )}
+
+        <label className="flex items-start gap-3 text-sm text-gray-400">
+          <input
+            type="checkbox"
+            className="mt-1 accent-emerald-400"
+            checked={registerFormState.hasAcceptedTerms}
+            onChange={(event) =>
+              updateRegisterFormField(
+                'hasAcceptedTerms',
+                event.target.checked
+              )
+            }
+          />
+          <span>
+            He leído y acepto los{' '}
+            <a
+              href="/terminos-y-condiciones"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-emerald-400 hover:underline"
+            >
+              términos y condiciones
+            </a>
+            .
+          </span>
+        </label>
+
+        <label className="flex items-start gap-3 text-sm text-gray-400">
+          <input
+            type="checkbox"
+            className="mt-1 accent-emerald-400"
+            checked={registerFormState.marketingOptIn}
+            onChange={(event) =>
+              updateRegisterFormField(
+                'marketingOptIn',
+                event.target.checked
+              )
+            }
+          />
+          <span>
+            Quiero recibir novedades y comunicaciones.
+          </span>
+        </label>
+
+        <button
+          disabled={isSubmitting}
+          className="w-full rounded-xl py-3 font-semibold text-black bg-[#00CCA4] hover:opacity-90 transition disabled:opacity-60 cursor-pointer"
+        >
+          {isSubmitting ? 'Creando cuenta…' : 'Crear cuenta'}
+        </button>
+
+        <div className="text-center text-sm text-gray-400">
+          ¿Ya tienes cuenta?{' '}
+          <button
+            type="button"
+            onClick={() => router.push('/ingresar')}
+            className="text-emerald-400 hover:underline cursor-pointer transition"
+          >
+            Ingresar
+          </button>
+        </div>
+
+        <p className="text-[11px] text-gray-500 text-center">
+          Al crear tu cuenta, aceptas nuestros términos y políticas.
+        </p>
+      </form>
     </div>
+  </div>
+</div>
+
   )
 }
