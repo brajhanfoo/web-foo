@@ -209,7 +209,9 @@ export function CurrentApplicationHero(props: { app: ApplicationRow }) {
               className="gap-2 bg-black hover:bg-amber-500/10 text-amber-50"
               asChild
             >
-              <Link href="#">
+              <Link
+                href={`/plataforma/talento/mis-postulaciones/${props.app.id}/workspace`}
+              >
                 Ir al espacio de trabajo <ExternalLink className="h-4 w-4" />
               </Link>
             </Button>

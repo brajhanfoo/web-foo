@@ -8,7 +8,10 @@ import { Badge } from '@/components/ui/badge'
 function titleFromPath(pathname: string): string {
   if (pathname === '/plataforma/talento') return 'Panel de Postulante'
   if (pathname.startsWith('/plataforma/talento/explorar')) return 'Explorar'
-  if (pathname.startsWith('/plataforma/talento/postulaciones'))
+  if (
+    pathname.startsWith('/plataforma/talento/postulaciones') ||
+    pathname.startsWith('/plataforma/talento/mis-postulaciones')
+  )
     return 'Mis Postulaciones'
   if (pathname.startsWith('/plataforma/talento/perfil'))
     return 'Mi Perfil Profesional'
