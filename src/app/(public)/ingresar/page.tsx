@@ -3,7 +3,6 @@
 import { Suspense, useEffect, useId, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase/client'
-import { mapSupabaseAuthErrorToEs } from '@/lib/supabase/auth-errors'
 import { useToastEnhanced } from '@/hooks/use-toast-enhanced'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
@@ -11,6 +10,15 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 
 const RESEND_COOLDOWN_MS = 45_000
+
+function formatRetryMinutes(seconds: number) {
+  const minutes = Math.max(1, Math.ceil(seconds / 60))
+  if (minutes >= 60) {
+    const hours = Math.ceil(minutes / 60)
+    return hours === 1 ? '1 hora' : `${hours} horas`
+  }
+  return minutes === 1 ? '1 minuto' : `${minutes} minutos`
+}
 
 type ResendResponse =
   | {
@@ -20,10 +28,23 @@ type ResendResponse =
     }
   | {
       success: false
-      error: {
-        title: string
-        description?: string
-      }
+      retry_after_seconds?: number
+    }
+
+type LoginSession = {
+  access_token: string
+  refresh_token: string
+}
+
+type LoginResponse =
+  | {
+      success: true
+      session: LoginSession
+    }
+  | {
+      success: false
+      message?: string
+      retry_after_seconds?: number
     }
 
 function safeRedirectTo(value: string | null) {
@@ -78,33 +99,69 @@ function LoginForm() {
     setIsSubmitting(true)
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
       })
-      if (error) {
-        const mapped = mapSupabaseAuthErrorToEs(error)
-        showError(mapped.title, mapped.description)
-        if (mapped.code === 'email-not-confirmed') {
-          setNeedsEmailConfirmation(true)
-        }
+
+      const payload = (await response
+        .json()
+        .catch(() => null)) as LoginResponse | null
+
+      if (response.status === 429) {
+        const retryAfter =
+          payload && !payload.success
+            ? Number(payload.retry_after_seconds ?? 60)
+            : 60
+        showError(
+          'Demasiados intentos',
+          `Intenta nuevamente en ${formatRetryMinutes(retryAfter)}.`
+        )
         return
       }
 
-      if (data.user && !data.user.email_confirmed_at) {
-        await supabase.auth.signOut()
+      if (!response.ok || !payload || !payload.success) {
+        const message =
+          payload && !payload.success && payload.message
+            ? payload.message
+            : 'Correo o contraseña incorrectos.'
         showError(
-          'Cuenta no verificada',
-          'Confirma tu correo para poder iniciar sesión. Revisa tu bandeja de entrada o spam.'
+          message,
+          'Revisa tus credenciales e intenta nuevamente.'
         )
-        setNeedsEmailConfirmation(true)
+        if (email.trim()) setNeedsEmailConfirmation(true)
+        return
+      }
+
+      const session = payload.session
+      if (!session?.access_token || !session?.refresh_token) {
+        showError(
+          'No se pudo iniciar sesión',
+          'Intenta nuevamente en unos minutos.'
+        )
+        return
+      }
+
+      const { error } = await supabase.auth.setSession({
+        access_token: session.access_token,
+        refresh_token: session.refresh_token,
+      })
+
+      if (error) {
+        showError(
+          'No se pudo iniciar sesión',
+          'Intenta nuevamente en unos minutos.'
+        )
         return
       }
 
       router.replace(redirectTo)
-    } catch (error: unknown) {
-      const mapped = mapSupabaseAuthErrorToEs(error)
-      showError(mapped.title, mapped.description)
+    } catch {
+      showError(
+        'No se pudo iniciar sesión',
+        'Intenta nuevamente en unos minutos.'
+      )
     } finally {
       setIsSubmitting(false)
     }
@@ -132,25 +189,38 @@ function LoginForm() {
         .json()
         .catch(() => null)) as ResendResponse | null
 
-      if (!response.ok || !payload) {
-        const mapped = mapSupabaseAuthErrorToEs(undefined, 'resend')
-        showError(mapped.title, mapped.description)
+      if (response.status === 429) {
+        const retryAfter =
+          payload && !payload.success
+            ? Number(payload.retry_after_seconds ?? 60)
+            : 60
+        const seconds = Math.min(Math.max(retryAfter, 1), 600)
+        setCooldownUntil(Date.now() + seconds * 1000)
+        showError(
+          'Demasiados intentos',
+          `Intenta nuevamente en ${formatRetryMinutes(seconds)}.`
+        )
         return
       }
 
-      if (!payload.success) {
-        showError(payload.error.title, payload.error.description)
+      if (!response.ok || !payload || !payload.success) {
+        showError(
+          'No se pudo reenviar el correo',
+          'Intenta nuevamente en unos minutos.'
+        )
         return
       }
 
       showSuccess(
-        payload.message,
+        payload.message ?? 'Si el correo existe, enviaremos un enlace.',
         payload.description ?? 'Revisa tu bandeja de entrada o spam.'
       )
       setCooldownUntil(Date.now() + RESEND_COOLDOWN_MS)
-    } catch (error: unknown) {
-      const mapped = mapSupabaseAuthErrorToEs(error, 'resend')
-      showError(mapped.title, mapped.description)
+    } catch {
+      showError(
+        'No se pudo reenviar el correo',
+        'Intenta nuevamente en unos minutos.'
+      )
     } finally {
       setIsResending(false)
     }

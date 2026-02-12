@@ -1,11 +1,22 @@
 'use client'
 
 import { useState } from 'react'
-import { supabase } from '@/lib/supabase/client'
-import { getSiteUrl } from '@/lib/site-url'
 
 const GENERIC_MESSAGE =
   'Si el correo está registrado, recibirás un enlace para recuperar tu contraseña.'
+
+function formatRetryMinutes(seconds: number) {
+  const minutes = Math.max(1, Math.ceil(seconds / 60))
+  if (minutes >= 60) {
+    const hours = Math.ceil(minutes / 60)
+    return hours === 1 ? '1 hora' : `${hours} horas`
+  }
+  return minutes === 1 ? '1 minuto' : `${minutes} minutos`
+}
+
+type ResetPasswordResponse =
+  | { success: true; message?: string }
+  | { success: false; retry_after_seconds?: number }
 
 export default function ResetPasswordPage() {
   const [email, setEmail] = useState('')
@@ -14,23 +25,34 @@ export default function ResetPasswordPage() {
   async function send() {
     setMsg(null)
 
-    const siteUrl = getSiteUrl()
-    if (!siteUrl) {
-      setMsg('Configura NEXT_PUBLIC_SITE_URL en el entorno.')
-      return
-    }
-
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${siteUrl}/api/auth/confirm?next=/update-password`,
+    const response = await fetch('/api/auth/reset-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email }),
     })
 
-    if (error) {
-      // No revelamos si el correo existe para evitar enumeración.
-      setMsg(GENERIC_MESSAGE)
+    const payload = (await response
+      .json()
+      .catch(() => null)) as ResetPasswordResponse | null
+
+    if (response.status === 429) {
+      const retryAfter =
+        payload && !payload.success
+          ? Number(payload.retry_after_seconds ?? 60)
+          : 60
+      setMsg(
+        `Demasiados intentos. Intenta nuevamente en ${formatRetryMinutes(
+          retryAfter
+        )}.`
+      )
       return
     }
 
-    setMsg(GENERIC_MESSAGE)
+    setMsg(
+      payload && payload.success && payload.message
+        ? payload.message
+        : GENERIC_MESSAGE
+    )
   }
 
   return (
