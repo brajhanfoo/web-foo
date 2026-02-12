@@ -98,9 +98,9 @@ function ConfirmClient() {
           body: JSON.stringify({ code, next: nextPath }),
         })
 
-        const payload = (await response.json().catch(() => null)) as
-          | ConfirmResponse
-          | null
+        const payload = (await response
+          .json()
+          .catch(() => null)) as ConfirmResponse | null
 
         if (cancelled) return
 
@@ -118,7 +118,9 @@ function ConfirmClient() {
         }
 
         setStatus('success')
-        setMessage('Cuenta confirmada correctamente. Inicia sesión para continuar.')
+        setMessage(
+          'Cuenta confirmada correctamente. Inicia sesión para continuar.'
+        )
       } catch {
         if (cancelled) return
         await resolveMissingOrError()

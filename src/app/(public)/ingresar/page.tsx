@@ -128,9 +128,9 @@ function LoginForm() {
         body: JSON.stringify({ email: trimmedEmail }),
       })
 
-      const payload = (await response.json().catch(() => null)) as
-        | ResendResponse
-        | null
+      const payload = (await response
+        .json()
+        .catch(() => null)) as ResendResponse | null
 
       if (!response.ok || !payload) {
         const mapped = mapSupabaseAuthErrorToEs(undefined, 'resend')

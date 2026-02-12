@@ -750,10 +750,10 @@ export default function ProgramsPage() {
           <CardContent className="flex flex-col gap-4 p-4 md:flex-row md:items-center md:justify-between">
             <div className="flex items-start gap-3">
               <div className="mt-0.5 h-9 w-9 rounded-full bg-emerald-500/15 flex items-center justify-center">
-                  <HelpCircle
-                    className="h-5 w-5 text-emerald-300"
-                    aria-hidden="true"
-                  />
+                <HelpCircle
+                  className="h-5 w-5 text-emerald-300"
+                  aria-hidden="true"
+                />
               </div>
               <div className="space-y-0.5">
                 <div className="font-medium">{helpTitle}</div>

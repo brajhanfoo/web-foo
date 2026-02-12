@@ -157,9 +157,7 @@ export function UsersTable({
             </div>
 
             <div className="col-span-2 px-3 py-3">
-              <Badge
-                className={['border', statusClasses].join(' ')}
-              >
+              <Badge className={['border', statusClasses].join(' ')}>
                 {statusLabel}
               </Badge>
             </div>

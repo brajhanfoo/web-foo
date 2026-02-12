@@ -40,9 +40,7 @@ function normalizeAuthError(error: unknown) {
   if (typeof error === 'object') {
     const candidate = error as ErrorLike
     const message =
-      typeof candidate.message === 'string'
-        ? candidate.message
-        : ''
+      typeof candidate.message === 'string' ? candidate.message : ''
     const status =
       typeof candidate.status === 'number' ? candidate.status : undefined
     const code = typeof candidate.code === 'string' ? candidate.code : ''

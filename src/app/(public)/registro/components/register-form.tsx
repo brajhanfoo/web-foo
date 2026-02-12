@@ -82,7 +82,10 @@ export function RegisterForm() {
     }
 
     if (!registerFormState.hasAcceptedTerms) {
-      showError('Debes aceptar los términos', 'Marca el checkbox para continuar.')
+      showError(
+        'Debes aceptar los términos',
+        'Marca el checkbox para continuar.'
+      )
       return
     }
 
@@ -242,7 +245,10 @@ export function RegisterForm() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor={confirmPasswordId} className="text-white/70 text-sm">
+              <Label
+                htmlFor={confirmPasswordId}
+                className="text-white/70 text-sm"
+              >
                 Confirmación de contraseña
               </Label>
               <Input

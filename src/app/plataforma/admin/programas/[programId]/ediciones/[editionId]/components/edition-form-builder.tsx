@@ -61,6 +61,8 @@ type FormLinkItem = {
 }
 
 type FormField = FormInputField | FormLinkItem
+type FormInputPatch = Partial<Omit<FormInputField, 'type'>>
+type FormLinkPatch = Partial<Omit<FormLinkItem, 'type'>>
 
 type FormSchema = {
   title: string
@@ -151,7 +153,10 @@ function isSafeLinkUrl(value: string): boolean {
   return false
 }
 
-function createInputField(type: FieldTypeInput, label?: string): FormInputField {
+function createInputField(
+  type: FieldTypeInput,
+  label?: string
+): FormInputField {
   const nextLabel = label?.trim() ? label : getDefaultLabelForType(type)
   const name = toFieldName(nextLabel)
   return {
@@ -185,14 +190,12 @@ function buildInputFieldFromExisting(
     ? field.label
     : getDefaultLabelForType(nextType)
   const name =
-    field.type !== 'link' && field.name.trim()
-      ? field.name
-      : toFieldName(label)
+    field.type !== 'link' && field.name.trim() ? field.name : toFieldName(label)
   const placeholder =
     nextType === 'checkbox'
       ? undefined
       : field.type !== 'link'
-        ? field.placeholder ?? ''
+        ? (field.placeholder ?? '')
         : ''
   const required =
     nextType === 'checkbox'
@@ -226,10 +229,8 @@ function buildLinkFieldFromExisting(field: FormField): FormLinkItem {
     type: 'link',
     label: field.label?.trim() ? field.label : getDefaultLabelForType('link'),
     url: field.type === 'link' ? field.url : '',
-    description:
-      field.type === 'link' ? field.description ?? '' : undefined,
-    openInNewTab:
-      field.type === 'link' ? field.openInNewTab ?? true : true,
+    description: field.type === 'link' ? (field.description ?? '') : undefined,
+    openInNewTab: field.type === 'link' ? (field.openInNewTab ?? true) : true,
   }
 }
 
@@ -270,7 +271,8 @@ function parseSchema(schema: unknown): FormSchema | null {
           type: 'link',
           label,
           url,
-          description: typeof description === 'string' ? description : undefined,
+          description:
+            typeof description === 'string' ? description : undefined,
           openInNewTab:
             typeof openInNewTab === 'boolean' ? openInNewTab : undefined,
         })
@@ -578,14 +580,19 @@ export function EditionFormBuilder(props: {
 
   // ---------- Form builder helpers ----------
   function addField(type: FieldType) {
-    const next =
-      type === 'link' ? createLinkField() : createInputField(type)
+    const next = type === 'link' ? createLinkField() : createInputField(type)
     setFields((previous) => [...previous, next])
   }
 
-  function updateField(id: string, patch: Partial<FormField>) {
+  function updateField(id: string, patch: FormInputPatch | FormLinkPatch) {
     setFields((previous) =>
-      previous.map((f) => (f.id === id ? { ...f, ...patch } : f))
+      previous.map((field) => {
+        if (field.id !== id) return field
+        if (field.type === 'link') {
+          return { ...field, ...patch } as FormLinkItem
+        }
+        return { ...field, ...patch } as FormInputField
+      })
     )
   }
 
@@ -990,7 +997,9 @@ export function EditionFormBuilder(props: {
                   <div className="flex items-center gap-3 pt-6">
                     <Switch
                       checked={Boolean(f.required)}
-                      onCheckedChange={(v) => updateField(f.id, { required: v })}
+                      onCheckedChange={(v) =>
+                        updateField(f.id, { required: v })
+                      }
                       aria-label={`${f.label || 'Campo'} requerido`}
                     />
                     <div className="text-sm">

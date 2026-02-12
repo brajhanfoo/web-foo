@@ -151,7 +151,8 @@ function parseSchema(schema: unknown): FormSchema | null {
           type: 'link',
           label,
           url,
-          description: typeof description === 'string' ? description : undefined,
+          description:
+            typeof description === 'string' ? description : undefined,
           openInNewTab:
             typeof openInNewTab === 'boolean' ? openInNewTab : undefined,
         })
