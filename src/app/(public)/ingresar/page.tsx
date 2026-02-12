@@ -1,5 +1,5 @@
 'use client'
-import { HiRocketLaunch } from 'react-icons/hi2'
+import { HiRocketLaunch, HiEye, HiEyeSlash } from 'react-icons/hi2'
 import { Suspense, useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase/client'
@@ -13,6 +13,7 @@ function LoginForm() {
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
+  const [showPassword, setShowPassword] = useState(false)
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
@@ -75,37 +76,37 @@ function LoginForm() {
     <div className="min-h-[calc(100vh-80px)] bg-black px-4 flex items-center justify-center">
       <div className="w-full max-w-6xl grid lg:grid-cols-2 gap-10">
         {/* Panel izquierdo */}
-<div className="hidden md:flex flex-col justify-center">
-  <h1 className="text-5xl font-bold tracking-tight text-white leading-tight">
-    Impulsa tu{' '}
-    <span className="bg-gradient-to-r from-emerald-400 to-lime-400 bg-clip-text text-transparent">
-      carrera tech
-    </span>
-    .
-  </h1>
+        <div className="hidden md:flex flex-col justify-center">
+          <h1 className="text-5xl font-bold tracking-tight text-white leading-tight">
+            Impulsa tu{' '}
+            <span className="bg-gradient-to-r from-emerald-400 to-lime-400 bg-clip-text text-transparent">
+              carrera tech
+            </span>
+            .
+          </h1>
 
-  <p className="mt-6 max-w-lg text-lg text-gray-400 leading-relaxed">
-    Ingresa a tu espacio de trabajo y continúa tu evolución profesional.
-    Accede a tu perfil, mentorías y red de contactos.
-  </p>
+          <p className="mt-6 max-w-lg text-lg text-gray-400 leading-relaxed">
+            Ingresa a tu espacio de trabajo y continúa tu evolución profesional.
+            Accede a tu perfil, mentorías y red de contactos.
+          </p>
 
-  <div className="mt-10 max-w-xl rounded-2xl border border-white/10 bg-gradient-to-r from-white/5 to-transparent p-5 backdrop-blur-sm">
-    <div className="flex items-start gap-4">
-      <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-purple-500/10 border border-purple-500/20">
-        <HiRocketLaunch className="text-purple-400 text-xl" />
-      </div>
+          <div className="mt-10 max-w-xl rounded-2xl border border-white/10 bg-gradient-to-r from-white/5 to-transparent p-5 backdrop-blur-sm">
+            <div className="flex items-start gap-4">
+              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-purple-500/10 border border-purple-500/20">
+                <HiRocketLaunch className="text-purple-400 text-xl" />
+              </div>
 
-      <div>
-        <h3 className="text-sm font-semibold text-white">
-          Acceso Inmediato
-        </h3>
-        <p className="mt-1 text-sm text-gray-400">
-          Retoma tu aprendizaje donde lo dejaste.
-        </p>
-      </div>
-    </div>
-  </div>
-</div>
+              <div>
+                <h3 className="text-sm font-semibold text-white">
+                  Acceso Inmediato
+                </h3>
+                <p className="mt-1 text-sm text-gray-400">
+                  Retoma tu aprendizaje donde lo dejaste.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
 
 
         {/* Panel derecho */}
@@ -132,14 +133,29 @@ function LoginForm() {
 
             <div>
               <label className="text-sm text-white/70">Contraseña</label>
-              <input
-                type="password"
-                className="mt-2 w-full rounded-xl bg-black/40 border border-white/10 px-4 py-3 text-white placeholder:text-white/30 outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/20 transition"
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
-                placeholder="••••••••"
-                required
-              />
+
+              <div className="relative mt-2">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  className="w-full rounded-xl bg-black/40 border border-white/10 px-4 py-3 pr-12 text-white placeholder:text-white/30 outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/20 transition"
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                  placeholder="••••••••"
+                  required
+                />
+
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  className="absolute inset-y-0 right-0 flex items-center pr-4 text-white/40 hover:text-emerald-400 transition"
+                >
+                  {showPassword ? (
+                    <HiEyeSlash className="text-lg" />
+                  ) : (
+                    <HiEye className="text-lg" />
+                  )}
+                </button>
+              </div>
 
               <div className="mt-2 flex justify-end">
                 <button
