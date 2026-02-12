@@ -12,6 +12,13 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
 import { Check } from 'lucide-react'
 import skillsCatalog from '@/data/skills.json'
@@ -48,6 +55,74 @@ function buildFullName(p: ProfileRow | null) {
 }
 
 const availableSkills = skillsCatalog as string[]
+const OTHER_ROLE_OPTION = 'Otro'
+
+const COUNTRY_OPTIONS = [
+  'Argentina',
+  'Bolivia',
+  'Brasil',
+  'Chile',
+  'Colombia',
+  'Costa Rica',
+  'Cuba',
+  'República Dominicana',
+  'Ecuador',
+  'El Salvador',
+  'Guatemala',
+  'Honduras',
+  'México',
+  'Nicaragua',
+  'Panamá',
+  'Paraguay',
+  'Perú',
+  'Puerto Rico',
+  'Uruguay',
+  'Venezuela',
+  'Estados Unidos',
+  'España',
+]
+
+const ENGLISH_LEVEL_OPTIONS = [
+  'A1 - Básico',
+  'A2 - Básico',
+  'B1 - Intermedio',
+  'B2 - Intermedio alto',
+  'C1 - Avanzado',
+  'C2 - Nativo/Bilingüe',
+]
+
+const PRIMARY_ROLE_OPTIONS = [
+  'Product Manager',
+  'Project Manager',
+  'UX/UI Designer',
+  'Product Designer',
+  'Frontend Developer',
+  'Backend Developer',
+  'Full Stack Developer',
+  'Mobile Developer',
+  'QA / QA Automation',
+  'Data Analyst',
+  'Data Scientist',
+  'Data Engineer',
+  'DevOps Engineer',
+  'Cloud Engineer',
+  'Cybersecurity Analyst',
+  'AI/ML Engineer',
+  'Scrum Master',
+  'Business Analyst',
+  'Technical Writer',
+  'Solutions Architect',
+  'Engineering Manager',
+  'QA Engineer',
+  'Site Reliability Engineer',
+  'Salesforce Developer',
+  'Systems Analyst',
+  OTHER_ROLE_OPTION,
+]
+
+const PRIMARY_ROLE_SET = new Set(
+  PRIMARY_ROLE_OPTIONS.filter((role) => role !== OTHER_ROLE_OPTION)
+)
 
 export default function AdminSettingsPage() {
   const { showError, showSuccess } = useToastEnhanced()
@@ -63,7 +138,9 @@ export default function AdminSettingsPage() {
   const [linkedin, setLinkedin] = useState('')
   const [portfolio, setPortfolio] = useState('')
   const [country, setCountry] = useState('')
-  const [primaryRole, setPrimaryRole] = useState('')
+  const [primaryRoleOption, setPrimaryRoleOption] = useState('')
+  const [primaryRoleOther, setPrimaryRoleOther] = useState('')
+  const [primaryRoleError, setPrimaryRoleError] = useState<string | null>(null)
   const [englishLevel, setEnglishLevel] = useState('')
   const [documentNumber, setDocumentNumber] = useState('')
   const [selectedSkills, setSelectedSkills] = useState<string[]>([])
@@ -150,9 +227,26 @@ export default function AdminSettingsPage() {
       setWhatsapp(textOrEmpty(next?.whatsapp_e164))
       setLinkedin(textOrEmpty(next?.linkedin_url))
       setPortfolio(textOrEmpty(next?.portfolio_url))
-      setCountry(textOrEmpty(next?.country_residence))
-      setPrimaryRole(textOrEmpty(next?.primary_role))
-      setEnglishLevel(textOrEmpty(next?.english_level))
+      const nextCountry = textOrEmpty(next?.country_residence)
+      const nextPrimaryRole = textOrEmpty(next?.primary_role)
+      const nextEnglishLevel = textOrEmpty(next?.english_level)
+
+      setCountry(nextCountry)
+      setEnglishLevel(nextEnglishLevel)
+
+      if (nextPrimaryRole && PRIMARY_ROLE_SET.has(nextPrimaryRole)) {
+        setPrimaryRoleOption(nextPrimaryRole)
+        setPrimaryRoleOther('')
+        setPrimaryRoleError(null)
+      } else if (nextPrimaryRole) {
+        setPrimaryRoleOption(OTHER_ROLE_OPTION)
+        setPrimaryRoleOther(nextPrimaryRole)
+        setPrimaryRoleError(null)
+      } else {
+        setPrimaryRoleOption('')
+        setPrimaryRoleOther('')
+        setPrimaryRoleError(null)
+      }
       setDocumentNumber(textOrEmpty(next?.document_number))
       setSelectedSkills(Array.isArray(next?.skills) ? next?.skills : [])
       setOtherSkills(textOrEmpty(next?.other_skills))
@@ -168,10 +262,37 @@ export default function AdminSettingsPage() {
   }, [])
 
   const fullName = useMemo(() => buildFullName(profile), [profile])
+  const countryOptions = useMemo(() => {
+    if (country && !COUNTRY_OPTIONS.includes(country)) {
+      return [country, ...COUNTRY_OPTIONS]
+    }
+    return COUNTRY_OPTIONS
+  }, [country])
+  const englishOptions = useMemo(() => {
+    if (englishLevel && !ENGLISH_LEVEL_OPTIONS.includes(englishLevel)) {
+      return [englishLevel, ...ENGLISH_LEVEL_OPTIONS]
+    }
+    return ENGLISH_LEVEL_OPTIONS
+  }, [englishLevel])
 
   async function saveProfile() {
     if (!userId) return
+    if (primaryRoleOption === OTHER_ROLE_OPTION) {
+      const value = primaryRoleOther.trim()
+      if (!value) {
+        setPrimaryRoleError('Indica tu rol principal.')
+        showError('Rol principal requerido', 'Completa tu rol principal.')
+        return
+      }
+    }
+
+    setPrimaryRoleError(null)
     setIsSavingProfile(true)
+
+    const resolvedPrimaryRole =
+      primaryRoleOption === OTHER_ROLE_OPTION
+        ? primaryRoleOther.trim()
+        : primaryRoleOption.trim()
 
     const payload = {
       first_name: firstName.trim() || null,
@@ -180,7 +301,7 @@ export default function AdminSettingsPage() {
       linkedin_url: linkedin.trim() || null,
       portfolio_url: portfolio.trim() || null,
       country_residence: country.trim() || null,
-      primary_role: primaryRole.trim() || null,
+      primary_role: resolvedPrimaryRole || null,
       english_level: englishLevel.trim() || null,
       document_number: documentNumber.trim() || null,
       skills: selectedSkills.length ? selectedSkills : null,
@@ -351,36 +472,98 @@ export default function AdminSettingsPage() {
                         <Label className="text-xs text-white/60">
                           País / Ubicación
                         </Label>
-                        <Input
-                          value={country}
-                          onChange={(e) => setCountry(e.target.value)}
-                          className="bg-black/30 border-white/10 text-white placeholder:text-white/30"
-                          placeholder="Ecuador"
-                        />
+                        <Select value={country} onValueChange={setCountry}>
+                          <SelectTrigger className="bg-black/30 border-white/10 text-white">
+                            <SelectValue placeholder="Selecciona…" />
+                          </SelectTrigger>
+                          <SelectContent className="max-h-64">
+                            {countryOptions.map((option) => (
+                              <SelectItem key={option} value={option}>
+                                {option}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </div>
 
                       <div className="space-y-2">
                         <Label className="text-xs text-white/60">
                           Nivel de inglés
                         </Label>
-                        <Input
+                        <Select
                           value={englishLevel}
-                          onChange={(e) => setEnglishLevel(e.target.value)}
-                          className="bg-black/30 border-white/10 text-white placeholder:text-white/30"
-                          placeholder="B2 / C1 / Intermedio…"
-                        />
+                          onValueChange={setEnglishLevel}
+                        >
+                          <SelectTrigger className="bg-black/30 border-white/10 text-white">
+                            <SelectValue placeholder="Selecciona…" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {englishOptions.map((option) => (
+                              <SelectItem key={option} value={option}>
+                                {option}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </div>
 
                       <div className="space-y-2 md:col-span-2">
                         <Label className="text-xs text-white/60">
                           Rol principal
                         </Label>
-                        <Input
-                          value={primaryRole}
-                          onChange={(e) => setPrimaryRole(e.target.value)}
-                          className="bg-black/30 border-white/10 text-white placeholder:text-white/30"
-                          placeholder="Ej: Product Manager"
-                        />
+                        <Select
+                          value={primaryRoleOption}
+                          onValueChange={(value) => {
+                            setPrimaryRoleOption(value)
+                            if (value !== OTHER_ROLE_OPTION) {
+                              setPrimaryRoleOther('')
+                              setPrimaryRoleError(null)
+                            } else if (!primaryRoleOther.trim()) {
+                              setPrimaryRoleError('Indica tu rol principal.')
+                            }
+                          }}
+                        >
+                          <SelectTrigger className="bg-black/30 border-white/10 text-white">
+                            <SelectValue placeholder="Selecciona…" />
+                          </SelectTrigger>
+                          <SelectContent className="max-h-64">
+                            {PRIMARY_ROLE_OPTIONS.map((option) => (
+                              <SelectItem key={option} value={option}>
+                                {option}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        {primaryRoleOption === OTHER_ROLE_OPTION ? (
+                          <div className="space-y-2 animate-in fade-in slide-in-from-top-2">
+                            <Label className="text-xs text-white/60">
+                              Especifica tu rol
+                            </Label>
+                            <Input
+                              value={primaryRoleOther}
+                              onChange={(event) => {
+                                const next = event.target.value
+                                setPrimaryRoleOther(next)
+                                setPrimaryRoleError(
+                                  next.trim()
+                                    ? null
+                                    : 'Indica tu rol principal.'
+                                )
+                              }}
+                              className={`bg-black/30 text-white placeholder:text-white/30 ${
+                                primaryRoleError
+                                  ? 'border-red-500/70'
+                                  : 'border-white/10'
+                              }`}
+                              placeholder="Ej: Salesforce Administrator"
+                            />
+                            {primaryRoleError ? (
+                              <p className="text-xs text-red-400">
+                                {primaryRoleError}
+                              </p>
+                            ) : null}
+                          </div>
+                        ) : null}
                       </div>
 
                       <div className="space-y-2 md:col-span-2">
@@ -492,7 +675,17 @@ export default function AdminSettingsPage() {
                         onClick={saveProfile}
                         disabled={!userId || isSavingProfile}
                       >
-                        {isSavingProfile ? 'Guardando…' : 'Guardar cambios'}
+                        {isSavingProfile ? (
+                          <span className="inline-flex items-center gap-2">
+                            <span
+                              className="h-4 w-4 animate-spin rounded-full border-2 border-black/30 border-t-black"
+                              aria-hidden="true"
+                            />
+                            Guardando…
+                          </span>
+                        ) : (
+                          'Guardar cambios'
+                        )}
                       </Button>
                     </div>
                   </>

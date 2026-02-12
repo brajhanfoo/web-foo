@@ -16,6 +16,7 @@ import {
 import {
   StepExperience,
   type FormField,
+  type FormInputField,
   type FormValuesMap,
   type FormValue,
 } from '@/app/plataforma/talento/explorar/[slug]/postular/components/step-experience'
@@ -29,7 +30,7 @@ import type {
   ProgramRow,
 } from '@/types/programs'
 
-type FieldType =
+type FieldTypeInput =
   | 'text'
   | 'textarea'
   | 'email'
@@ -41,15 +42,26 @@ type FieldType =
 
 type SchemaFieldOption = { value: string; label: string }
 
-type SchemaField = {
+type SchemaInputField = {
   id: string
-  type: FieldType
+  type: FieldTypeInput
   label: string
   name: string
   placeholder?: string
   required?: boolean
   options?: SchemaFieldOption[]
 }
+
+type SchemaLinkField = {
+  id: string
+  type: 'link'
+  label: string
+  url: string
+  description?: string
+  openInNewTab?: boolean
+}
+
+type SchemaField = SchemaInputField | SchemaLinkField
 
 type FormSchema = {
   title: string
@@ -61,6 +73,19 @@ type StepIdentifier = 1 | 2 | 3
 
 function safeString(value: unknown): string {
   return typeof value === 'string' ? value : ''
+}
+
+function isInputFieldType(value: unknown): value is FieldTypeInput {
+  return (
+    value === 'text' ||
+    value === 'textarea' ||
+    value === 'email' ||
+    value === 'phone' ||
+    value === 'number' ||
+    value === 'select' ||
+    value === 'checkbox' ||
+    value === 'date'
+  )
 }
 
 function resolvePaymentMode(program: ProgramRow): ProgramPaymentMode {
@@ -104,18 +129,40 @@ function parseSchema(schema: unknown): FormSchema | null {
       const row = fieldUnknown as Record<string, unknown>
 
       const id = row['id']
-      const name = row['name']
       const type = row['type']
       const label = row['label']
 
       if (
         typeof id !== 'string' ||
-        typeof name !== 'string' ||
         typeof type !== 'string' ||
         typeof label !== 'string'
       ) {
         return accumulator
       }
+
+      if (type === 'link') {
+        const url = row['url']
+        if (typeof url !== 'string') return accumulator
+        const description = row['description']
+        const openInNewTab = row['openInNewTab']
+
+        accumulator.push({
+          id,
+          type: 'link',
+          label,
+          url,
+          description:
+            typeof description === 'string' ? description : undefined,
+          openInNewTab:
+            typeof openInNewTab === 'boolean' ? openInNewTab : undefined,
+        })
+        return accumulator
+      }
+
+      if (!isInputFieldType(type)) return accumulator
+
+      const name = row['name']
+      if (typeof name !== 'string') return accumulator
 
       const placeholder = row['placeholder']
       const required = row['required']
@@ -152,7 +199,7 @@ function parseSchema(schema: unknown): FormSchema | null {
       accumulator.push({
         id,
         name,
-        type: type as FieldType,
+        type,
         label,
         placeholder: typeof placeholder === 'string' ? placeholder : undefined,
         required: typeof required === 'boolean' ? required : undefined,
@@ -204,6 +251,31 @@ const ROLE_OPTIONS: RoleOption[] = [
 ]
 
 function mapSchemaFieldToStepField(field: SchemaField): FormField {
+  if (field.type === 'link') {
+    return {
+      id: field.id,
+      type: 'link',
+      label: field.label,
+      url: field.url,
+      description: field.description,
+      openInNewTab: field.openInNewTab,
+    }
+  }
+
+  return {
+    id: field.id,
+    name: field.name,
+    label: field.label,
+    type: field.type,
+    placeholder: field.placeholder,
+    required: field.required,
+    options: field.options,
+  }
+}
+
+function mapSchemaInputFieldToStepField(
+  field: SchemaInputField
+): FormInputField {
   return {
     id: field.id,
     name: field.name,
@@ -381,6 +453,7 @@ export default function ProgramPostularPage() {
 
     const initialValues: FormValuesMap = {}
     for (const field of parsedSchema?.fields ?? []) {
+      if (field.type === 'link') continue
       initialValues[field.name] = field.type === 'checkbox' ? false : ''
     }
     setValues(initialValues)
@@ -397,8 +470,11 @@ export default function ProgramPostularPage() {
   }, [program, form, schema, edition])
 
   const fieldByName = useMemo(() => {
-    const map = new Map<string, SchemaField>()
-    for (const field of schema?.fields ?? []) map.set(field.name, field)
+    const map = new Map<string, SchemaInputField>()
+    for (const field of schema?.fields ?? []) {
+      if (field.type === 'link') continue
+      map.set(field.name, field)
+    }
     return map
   }, [schema])
 
@@ -415,18 +491,18 @@ export default function ProgramPostularPage() {
     fieldByName.get('turno_maniana') ?? null,
     fieldByName.get('turno_tarde') ?? null,
     fieldByName.get('turno_noche') ?? null,
-  ].filter((x): x is SchemaField => Boolean(x))
+  ].filter((x): x is SchemaInputField => Boolean(x))
 
   const termsField = fieldByName.get('acepto_terminos') ?? null
   const quorumField = fieldByName.get('acepto_quorum') ?? null
   const availabilityField = fieldByName.get('acepto_disponibilidad') ?? null
-  const commitmentFields: FormField[] = [
+  const commitmentFields: FormInputField[] = [
     termsField,
     quorumField,
     availabilityField,
   ]
-    .filter((field): field is SchemaField => Boolean(field))
-    .map(mapSchemaFieldToStepField)
+    .filter((field): field is SchemaInputField => Boolean(field))
+    .map(mapSchemaInputFieldToStepField)
 
   const reservedFieldNames = new Set(
     [
@@ -440,7 +516,9 @@ export default function ProgramPostularPage() {
   )
 
   const extraFields = (schema?.fields ?? [])
-    .filter((field) => !reservedFieldNames.has(field.name))
+    .filter((field) =>
+      field.type === 'link' ? true : !reservedFieldNames.has(field.name)
+    )
     .map(mapSchemaFieldToStepField)
   function handleChangeValue(name: string, value: FormValue) {
     setValues((previous) => ({ ...previous, [name]: value }))
@@ -490,6 +568,7 @@ export default function ProgramPostularPage() {
       }
 
       for (const field of extraFields) {
+        if (field.type === 'link') continue
         if (!field.required) continue
         const value = values[field.name]
         if (field.type === 'checkbox') {
@@ -955,17 +1034,21 @@ export default function ProgramPostularPage() {
       {step === 2 ? (
         <StepExperience
           experienceField={
-            experienceField ? mapSchemaFieldToStepField(experienceField) : null
+            experienceField
+              ? mapSchemaInputFieldToStepField(experienceField)
+              : null
           }
           technologiesField={
             technologiesField
-              ? mapSchemaFieldToStepField(technologiesField)
+              ? mapSchemaInputFieldToStepField(technologiesField)
               : null
           }
           motivationField={
-            motivationField ? mapSchemaFieldToStepField(motivationField) : null
+            motivationField
+              ? mapSchemaInputFieldToStepField(motivationField)
+              : null
           }
-          shiftFields={shiftFields.map(mapSchemaFieldToStepField)}
+          shiftFields={shiftFields.map(mapSchemaInputFieldToStepField)}
           extraFields={extraFields}
           values={values}
           onChangeValue={handleChangeValue}

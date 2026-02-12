@@ -12,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, ExternalLink } from 'lucide-react'
 
 export type FormFieldType =
   | 'text'
@@ -26,7 +26,7 @@ export type FormFieldType =
 
 export type FormFieldOption = { value: string; label: string }
 
-export type FormField = {
+export type FormInputField = {
   id: string
   type: FormFieldType
   label: string
@@ -35,6 +35,17 @@ export type FormField = {
   required?: boolean
   options?: FormFieldOption[]
 }
+
+export type FormLinkItem = {
+  id: string
+  type: 'link'
+  label: string
+  url: string
+  description?: string
+  openInNewTab?: boolean
+}
+
+export type FormField = FormInputField | FormLinkItem
 
 export type FormValue = string | boolean
 export type FormValuesMap = Record<string, FormValue>
@@ -54,21 +65,23 @@ export function StepExperience({
   onBack,
   onNext,
 }: {
-  experienceField: FormField | null
-  technologiesField: FormField | null
-  motivationField: FormField | null
-  shiftFields: FormField[]
+  experienceField: FormInputField | null
+  technologiesField: FormInputField | null
+  motivationField: FormInputField | null
+  shiftFields: FormInputField[]
   extraFields: FormField[]
   values: FormValuesMap
   onChangeValue: (name: string, value: FormValue) => void
   onBack: () => void
   onNext: () => void
 }) {
+  const extraLinkFields = extraFields.filter(isLinkField)
   const extraCheckboxFields = extraFields.filter(
-    (field) => field.type === 'checkbox'
+    (field): field is FormInputField => field.type === 'checkbox'
   )
   const extraInputFields = extraFields.filter(
-    (field) => field.type !== 'checkbox'
+    (field): field is FormInputField =>
+      field.type !== 'checkbox' && field.type !== 'link'
   )
 
   return (
@@ -91,12 +104,16 @@ export function StepExperience({
                 <Select
                   value={safeString(values[experienceField.name])}
                   onValueChange={(v) => onChangeValue(experienceField.name, v)}
+                  name={experienceField.name}
                 >
-                  <SelectTrigger className="h-12 rounded-xl border-white/10 bg-black/30 text-white">
+                  <SelectTrigger
+                    className="h-12 rounded-xl border-white/10 bg-black/30 text-white"
+                    aria-label={experienceField.label}
+                  >
                     <SelectValue
                       placeholder={
                         experienceField.placeholder ??
-                        'Selecciona tu rango de experiencia'
+                        'Selecciona tu rango de experiencia…'
                       }
                     />
                   </SelectTrigger>
@@ -111,13 +128,16 @@ export function StepExperience({
               ) : (
                 <Input
                   className="h-12 rounded-xl border-white/10 bg-black/30 text-white placeholder:text-white/30"
+                  name={experienceField.name}
+                  aria-label={experienceField.label}
+                  autoComplete="off"
                   value={safeString(values[experienceField.name])}
                   onChange={(e) =>
                     onChangeValue(experienceField.name, e.target.value)
                   }
                   placeholder={
                     experienceField.placeholder ??
-                    'Selecciona tu rango de experiencia'
+                    'Selecciona tu rango de experiencia…'
                   }
                 />
               )}
@@ -128,13 +148,16 @@ export function StepExperience({
             <FieldBlock label={technologiesField.label}>
               <Textarea
                 className="min-h-[110px] rounded-xl border-white/10 bg-black/30 text-white placeholder:text-white/30"
+                name={technologiesField.name}
+                aria-label={technologiesField.label}
+                autoComplete="off"
                 value={safeString(values[technologiesField.name])}
                 onChange={(e) =>
                   onChangeValue(technologiesField.name, e.target.value)
                 }
                 placeholder={
                   technologiesField.placeholder ??
-                  'Ej: React.js, Tailwind CSS, TypeScript, Git, Figma...'
+                  'Ej: React.js, Tailwind CSS, TypeScript, Git, Figma…'
                 }
               />
             </FieldBlock>
@@ -144,13 +167,16 @@ export function StepExperience({
             <FieldBlock label={motivationField.label}>
               <Textarea
                 className="min-h-[110px] rounded-xl border-white/10 bg-black/30 text-white placeholder:text-white/30"
+                name={motivationField.name}
+                aria-label={motivationField.label}
+                autoComplete="off"
                 value={safeString(values[motivationField.name])}
                 onChange={(e) =>
                   onChangeValue(motivationField.name, e.target.value)
                 }
                 placeholder={
                   motivationField.placeholder ??
-                  'Cuéntanos qué buscas aprender o fortalecer en esta experiencia...'
+                  'Cuéntanos qué buscas aprender o fortalecer en esta experiencia…'
                 }
               />
             </FieldBlock>
@@ -162,6 +188,14 @@ export function StepExperience({
                 <FieldBlock key={field.name} label={field.label}>
                   {renderField(field, values, onChangeValue)}
                 </FieldBlock>
+              ))}
+            </div>
+          ) : null}
+
+          {extraLinkFields.length ? (
+            <div className="space-y-3">
+              {extraLinkFields.map((field) => (
+                <LinkField key={field.id} field={field} />
               ))}
             </div>
           ) : null}
@@ -245,14 +279,14 @@ export function StepExperience({
           className="border border-white/10 bg-white/5 text-white hover:bg-white/10"
           onClick={onBack}
         >
-          <ArrowLeft className="mr-2 h-4 w-4" />
+          <ArrowLeft className="mr-2 h-4 w-4" aria-hidden="true" />
           Anterior
         </Button>
 
         <button
           type="button"
           onClick={onNext}
-          className="inline-flex items-center gap-2 rounded-xl bg-emerald-400 px-5 py-3 text-sm font-semibold text-black transition hover:brightness-110"
+          className="inline-flex items-center gap-2 rounded-xl bg-emerald-400 px-5 py-3 text-sm font-semibold text-black transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/60"
         >
           Siguiente
           <span aria-hidden>→</span>
@@ -263,7 +297,7 @@ export function StepExperience({
 }
 
 function renderField(
-  field: FormField,
+  field: FormInputField,
   values: FormValuesMap,
   onChangeValue: (name: string, value: FormValue) => void
 ) {
@@ -272,9 +306,13 @@ function renderField(
       <Select
         value={safeString(values[field.name])}
         onValueChange={(v) => onChangeValue(field.name, v)}
+        name={field.name}
       >
-        <SelectTrigger className="h-12 rounded-xl border-white/10 bg-black/30 text-white">
-          <SelectValue placeholder={field.placeholder ?? 'Selecciona'} />
+        <SelectTrigger
+          className="h-12 rounded-xl border-white/10 bg-black/30 text-white"
+          aria-label={field.label}
+        >
+          <SelectValue placeholder={field.placeholder ?? 'Selecciona…'} />
         </SelectTrigger>
         <SelectContent>
           {field.options.map((o) => (
@@ -291,6 +329,9 @@ function renderField(
     return (
       <Textarea
         className="min-h-[110px] rounded-xl border-white/10 bg-black/30 text-white placeholder:text-white/30"
+        name={field.name}
+        aria-label={field.label}
+        autoComplete="off"
         value={safeString(values[field.name])}
         onChange={(e) => onChangeValue(field.name, e.target.value)}
         placeholder={field.placeholder ?? ''}
@@ -321,11 +362,46 @@ function renderField(
       className="h-12 rounded-xl border-white/10 bg-black/30 text-white placeholder:text-white/30"
       type={inputType}
       inputMode={inputMode}
+      name={field.name}
+      aria-label={field.label}
+      autoComplete="off"
+      spellCheck={field.type === 'email' ? false : undefined}
       value={safeString(values[field.name])}
       onChange={(e) => onChangeValue(field.name, e.target.value)}
       placeholder={field.placeholder ?? ''}
     />
   )
+}
+
+function LinkField({ field }: { field: FormLinkItem }) {
+  const openInNewTab = field.openInNewTab !== false
+  return (
+    <div className="rounded-2xl border border-emerald-400/20 bg-black/30 p-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0">
+          <div className="text-sm font-semibold text-white">{field.label}</div>
+          {field.description ? (
+            <div className="mt-1 text-xs text-white/55">
+              {field.description}
+            </div>
+          ) : null}
+        </div>
+        <a
+          className="inline-flex items-center gap-2 rounded-xl border border-emerald-400/40 bg-emerald-400/10 px-3 py-2 text-xs font-semibold text-emerald-300 transition hover:bg-emerald-400/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/60"
+          href={field.url}
+          target={openInNewTab ? '_blank' : undefined}
+          rel={openInNewTab ? 'noopener noreferrer' : undefined}
+        >
+          Abrir enlace
+          <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
+        </a>
+      </div>
+    </div>
+  )
+}
+
+function isLinkField(field: FormField): field is FormLinkItem {
+  return field.type === 'link'
 }
 
 function FieldBlock({

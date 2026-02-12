@@ -29,7 +29,7 @@ import {
 
 import { Save, Trash2, GripVertical } from 'lucide-react'
 
-type FieldType =
+type FieldTypeInput =
   | 'text'
   | 'textarea'
   | 'email'
@@ -39,15 +39,30 @@ type FieldType =
   | 'checkbox'
   | 'date'
 
-type FormField = {
+type FieldType = FieldTypeInput | 'link'
+
+type FormInputField = {
   id: string
-  type: FieldType
+  type: FieldTypeInput
   label: string
   name: string
   placeholder?: string
   required?: boolean
   options?: { value: string; label: string }[] // select
 }
+
+type FormLinkItem = {
+  id: string
+  type: 'link'
+  label: string
+  url: string
+  description?: string
+  openInNewTab?: boolean
+}
+
+type FormField = FormInputField | FormLinkItem
+type FormInputPatch = Partial<Omit<FormInputField, 'type'>>
+type FormLinkPatch = Partial<Omit<FormLinkItem, 'type'>>
 
 type FormSchema = {
   title: string
@@ -57,6 +72,10 @@ type FormSchema = {
 
 const DEFAULT_SCHEMA_TITLE = 'Formulario de Postulacion'
 const DEFAULT_SCHEMA_DESCRIPTION = 'Completa los campos solicitados.'
+const DEFAULT_SELECT_OPTIONS = [
+  { value: 'opcion_1', label: 'Opcion 1' },
+  { value: 'opcion_2', label: 'Opcion 2' },
+]
 
 function safeString(value: unknown): string {
   if (typeof value === 'string') return value
@@ -89,6 +108,18 @@ function toFieldName(label: string) {
   )
 }
 
+function getDefaultLabelForType(type: FieldType): string {
+  if (type === 'email') return 'Email'
+  if (type === 'phone') return 'Telefono'
+  if (type === 'textarea') return 'Descripcion'
+  if (type === 'number') return 'Numero'
+  if (type === 'date') return 'Fecha'
+  if (type === 'checkbox') return 'Acepto terminos'
+  if (type === 'select') return 'Seleccionar opcion'
+  if (type === 'link') return 'Enlace'
+  return 'Nuevo campo'
+}
+
 function createDefaultFields(): FormField[] {
   return []
 }
@@ -97,7 +128,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null
 }
 
-function isFieldType(value: unknown): value is FieldType {
+function isInputFieldType(value: unknown): value is FieldTypeInput {
   return (
     value === 'text' ||
     value === 'textarea' ||
@@ -108,6 +139,99 @@ function isFieldType(value: unknown): value is FieldType {
     value === 'checkbox' ||
     value === 'date'
   )
+}
+
+function isSafeLinkUrl(value: string): boolean {
+  const trimmed = value.trim()
+  if (!trimmed) return false
+  if (trimmed.startsWith('//')) return false
+  const lower = trimmed.toLowerCase()
+  if (lower.startsWith('javascript:')) return false
+  if (lower.startsWith('https://')) return true
+  if (lower.startsWith('mailto:')) return true
+  if (trimmed.startsWith('/')) return true
+  return false
+}
+
+function createInputField(
+  type: FieldTypeInput,
+  label?: string
+): FormInputField {
+  const nextLabel = label?.trim() ? label : getDefaultLabelForType(type)
+  const name = toFieldName(nextLabel)
+  return {
+    id: uid('field'),
+    type,
+    label: nextLabel,
+    name,
+    placeholder: type === 'checkbox' ? undefined : '',
+    required: type !== 'checkbox',
+    options: type === 'select' ? DEFAULT_SELECT_OPTIONS : undefined,
+  }
+}
+
+function createLinkField(label?: string): FormLinkItem {
+  const nextLabel = label?.trim() ? label : getDefaultLabelForType('link')
+  return {
+    id: uid('link'),
+    type: 'link',
+    label: nextLabel,
+    url: '',
+    description: '',
+    openInNewTab: true,
+  }
+}
+
+function buildInputFieldFromExisting(
+  field: FormField,
+  nextType: FieldTypeInput
+): FormInputField {
+  const label = field.label?.trim()
+    ? field.label
+    : getDefaultLabelForType(nextType)
+  const name =
+    field.type !== 'link' && field.name.trim() ? field.name : toFieldName(label)
+  const placeholder =
+    nextType === 'checkbox'
+      ? undefined
+      : field.type !== 'link'
+        ? (field.placeholder ?? '')
+        : ''
+  const required =
+    nextType === 'checkbox'
+      ? false
+      : field.type !== 'link'
+        ? Boolean(field.required)
+        : true
+
+  const next: FormInputField = {
+    id: field.id,
+    type: nextType,
+    label,
+    name,
+    placeholder,
+    required,
+  }
+
+  if (nextType === 'select') {
+    next.options =
+      field.type === 'select' && field.options?.length
+        ? field.options
+        : DEFAULT_SELECT_OPTIONS
+  }
+
+  return next
+}
+
+function buildLinkFieldFromExisting(field: FormField): FormLinkItem {
+  return {
+    id: field.id,
+    type: 'link',
+    label: field.label?.trim() ? field.label : getDefaultLabelForType('link'),
+    url: field.type === 'link' ? field.url : '',
+    description: field.type === 'link' ? (field.description ?? '') : undefined,
+    openInNewTab: field.type === 'link' ? (field.openInNewTab ?? true) : true,
+  }
 }
 
 function parseSchema(schema: unknown): FormSchema | null {
@@ -130,16 +254,35 @@ function parseSchema(schema: unknown): FormSchema | null {
       const id = fieldUnknown['id']
       const type = fieldUnknown['type']
       const label = fieldUnknown['label']
-      const name = fieldUnknown['name']
 
-      if (
-        typeof id !== 'string' ||
-        typeof label !== 'string' ||
-        typeof name !== 'string' ||
-        !isFieldType(type)
-      ) {
+      if (typeof id !== 'string' || typeof label !== 'string') {
         return acc
       }
+
+      if (type === 'link') {
+        const url = fieldUnknown['url']
+        if (typeof url !== 'string') return acc
+
+        const description = fieldUnknown['description']
+        const openInNewTab = fieldUnknown['openInNewTab']
+
+        acc.push({
+          id,
+          type: 'link',
+          label,
+          url,
+          description:
+            typeof description === 'string' ? description : undefined,
+          openInNewTab:
+            typeof openInNewTab === 'boolean' ? openInNewTab : undefined,
+        })
+        return acc
+      }
+
+      if (!isInputFieldType(type)) return acc
+
+      const name = fieldUnknown['name']
+      if (typeof name !== 'string') return acc
 
       const placeholder = fieldUnknown['placeholder']
       const required = fieldUnknown['required']
@@ -306,15 +449,27 @@ export function EditionFormBuilder(props: {
 
     const names = new Set<string>()
     for (const f of fields) {
+      if (!f.label.trim())
+        return showError('Todos los campos deben tener label.')
+
+      if (f.type === 'link') {
+        const url = f.url.trim()
+        if (!url)
+          return showError(`El enlace "${f.label || f.id}" necesita URL.`)
+        if (!isSafeLinkUrl(url)) {
+          return showError(
+            `El enlace "${f.label || f.id}" debe usar https://, mailto: o una ruta relativa (/…).`
+          )
+        }
+        continue
+      }
+
       const name = f.name.trim()
       if (!name)
         return showError(`Hay un campo sin "name". (${f.label || f.id})`)
       if (names.has(name))
         return showError(`Hay campos con el mismo name: "${name}"`)
       names.add(name)
-
-      if (!f.label.trim())
-        return showError('Todos los campos deben tener label.')
 
       const forbidden = new Set([
         'first_name',
@@ -425,46 +580,31 @@ export function EditionFormBuilder(props: {
 
   // ---------- Form builder helpers ----------
   function addField(type: FieldType) {
-    const nextLabel =
-      type === 'email'
-        ? 'Email'
-        : type === 'phone'
-          ? 'Telefono'
-          : type === 'textarea'
-            ? 'Descripcion'
-            : type === 'number'
-              ? 'Numero'
-              : type === 'date'
-                ? 'Fecha'
-                : type === 'checkbox'
-                  ? 'Acepto terminos'
-                  : type === 'select'
-                    ? 'Seleccionar opcion'
-                    : 'Nuevo campo'
-
-    const name = toFieldName(nextLabel)
-    const base: FormField = {
-      id: uid('field'),
-      type,
-      label: nextLabel,
-      name,
-      placeholder: type === 'checkbox' ? undefined : '',
-      required: type !== 'checkbox',
-    }
-
-    if (type === 'select') {
-      base.options = [
-        { value: 'opcion_1', label: 'Opcion 1' },
-        { value: 'opcion_2', label: 'Opcion 2' },
-      ]
-    }
-
-    setFields((previous) => [...previous, base])
+    const next = type === 'link' ? createLinkField() : createInputField(type)
+    setFields((previous) => [...previous, next])
   }
 
-  function updateField(id: string, patch: Partial<FormField>) {
+  function updateField(id: string, patch: FormInputPatch | FormLinkPatch) {
     setFields((previous) =>
-      previous.map((f) => (f.id === id ? { ...f, ...patch } : f))
+      previous.map((field) => {
+        if (field.id !== id) return field
+        if (field.type === 'link') {
+          return { ...field, ...patch } as FormLinkItem
+        }
+        return { ...field, ...patch } as FormInputField
+      })
+    )
+  }
+
+  function updateFieldType(id: string, nextType: FieldType) {
+    setFields((previous) =>
+      previous.map((field) => {
+        if (field.id !== id) return field
+        if (nextType === 'link') {
+          return buildLinkFieldFromExisting(field)
+        }
+        return buildInputFieldFromExisting(field, nextType)
+      })
     )
   }
 
@@ -541,7 +681,7 @@ export function EditionFormBuilder(props: {
         <CardHeader>
           <CardTitle>Formulario de postulacion</CardTitle>
           <CardDescription className="text-slate-300">
-            Cargando formulario...
+            Cargando formulario…
           </CardDescription>
         </CardHeader>
       </Card>
@@ -580,6 +720,7 @@ export function EditionFormBuilder(props: {
               <Label htmlFor="formVersion">Version (auto)</Label>
               <Input
                 id="formVersion"
+                autoComplete="off"
                 value={nextVersionLabel}
                 disabled
                 aria-readonly="true"
@@ -608,9 +749,10 @@ export function EditionFormBuilder(props: {
               <Label htmlFor="formOpensAt">Apertura (ISO opcional)</Label>
               <Input
                 id="formOpensAt"
+                autoComplete="off"
                 value={newFormOpensAt}
                 onChange={(element) => setNewFormOpensAt(element.target.value)}
-                placeholder="2026-01-20T12:00:00Z..."
+                placeholder="2026-01-20T12:00:00Z…"
               />
             </div>
 
@@ -618,9 +760,10 @@ export function EditionFormBuilder(props: {
               <Label htmlFor="formClosesAt">Cierre (ISO opcional)</Label>
               <Input
                 id="formClosesAt"
+                autoComplete="off"
                 value={newFormClosesAt}
                 onChange={(element) => setNewFormClosesAt(element.target.value)}
-                placeholder="2026-02-20T23:59:59Z..."
+                placeholder="2026-02-20T23:59:59Z…"
               />
             </div>
           </div>
@@ -633,6 +776,7 @@ export function EditionFormBuilder(props: {
             <Label htmlFor="schemaTitle">Titulo del formulario</Label>
             <Input
               id="schemaTitle"
+              autoComplete="off"
               value={schemaTitle}
               onChange={(element) => setSchemaTitle(element.target.value)}
               placeholder="Ej: Postulacion Project Academy"
@@ -642,9 +786,10 @@ export function EditionFormBuilder(props: {
             <Label htmlFor="schemaDescription">Descripcion (opcional)</Label>
             <Input
               id="schemaDescription"
+              autoComplete="off"
               value={schemaDescription}
               onChange={(element) => setSchemaDescription(element.target.value)}
-              placeholder="Ej: Completa tus datos para postular..."
+              placeholder="Ej: Completa tus datos para postular…"
             />
           </div>
         </div>
@@ -698,6 +843,14 @@ export function EditionFormBuilder(props: {
           >
             + Checkbox
           </Button>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => addField('link')}
+            className="border-slate-800 bg-slate-900 text-slate-100"
+          >
+            + Enlace
+          </Button>
         </div>
 
         <div className="space-y-3">
@@ -713,7 +866,7 @@ export function EditionFormBuilder(props: {
                     aria-hidden="true"
                   />
                   <div className="font-medium">
-                    Campo {index + 1}:{' '}
+                    {f.type === 'link' ? 'Enlace' : 'Campo'} {index + 1}:{' '}
                     <span className="text-slate-400">{f.type}</span>
                   </div>
                 </div>
@@ -754,31 +907,51 @@ export function EditionFormBuilder(props: {
                   <Label htmlFor={`field_${f.id}_label`}>Label</Label>
                   <Input
                     id={`field_${f.id}_label`}
+                    autoComplete="off"
                     value={f.label}
                     onChange={(element) =>
                       updateField(f.id, { label: element.target.value })
                     }
-                    placeholder="Ej: Empresa..."
+                    placeholder="Ej: Empresa…"
                   />
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor={`field_${f.id}_name`}>Nombre (key)</Label>
-                  <Input
-                    id={`field_${f.id}_name`}
-                    spellCheck={false}
-                    value={f.name}
-                    onChange={(element) =>
-                      updateField(f.id, {
-                        name: toFieldName(element.target.value),
-                      })
-                    }
-                    placeholder="Ej: company..."
-                  />
-                  <div className="text-xs text-slate-400">
-                    Se guarda como key. Evita nombres reservados del perfil.
+                {f.type === 'link' ? (
+                  <div className="space-y-2">
+                    <Label htmlFor={`field_${f.id}_url`}>URL</Label>
+                    <Input
+                      id={`field_${f.id}_url`}
+                      type="url"
+                      inputMode="url"
+                      spellCheck={false}
+                      autoComplete="off"
+                      value={f.url}
+                      onChange={(element) =>
+                        updateField(f.id, { url: element.target.value })
+                      }
+                      placeholder="https://ejemplo.com/…"
+                    />
                   </div>
-                </div>
+                ) : (
+                  <div className="space-y-2">
+                    <Label htmlFor={`field_${f.id}_name`}>Nombre (key)</Label>
+                    <Input
+                      id={`field_${f.id}_name`}
+                      spellCheck={false}
+                      autoComplete="off"
+                      value={f.name}
+                      onChange={(element) =>
+                        updateField(f.id, {
+                          name: toFieldName(element.target.value),
+                        })
+                      }
+                      placeholder="Ej: company…"
+                    />
+                    <div className="text-xs text-slate-400">
+                      Se guarda como key. Evita nombres reservados del perfil.
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="grid gap-4 md:grid-cols-2">
@@ -786,18 +959,7 @@ export function EditionFormBuilder(props: {
                   <Label htmlFor={`field_${f.id}_type`}>Tipo</Label>
                   <Select
                     value={f.type}
-                    onValueChange={(v) =>
-                      updateField(f.id, {
-                        type: v as FieldType,
-                        options:
-                          v === 'select'
-                            ? (f.options ?? [
-                                { value: 'opcion_1', label: 'Opcion 1' },
-                                { value: 'opcion_2', label: 'Opcion 2' },
-                              ])
-                            : undefined,
-                      })
-                    }
+                    onValueChange={(v) => updateFieldType(f.id, v as FieldType)}
                   >
                     <SelectTrigger id={`field_${f.id}_type`}>
                       <SelectValue />
@@ -809,29 +971,69 @@ export function EditionFormBuilder(props: {
                       <SelectItem value="date">Fecha</SelectItem>
                       <SelectItem value="select">Select</SelectItem>
                       <SelectItem value="checkbox">Checkbox</SelectItem>
+                      <SelectItem value="link">Enlace</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
-                <div className="flex items-center gap-3 pt-6">
-                  <Switch
-                    checked={Boolean(f.required)}
-                    onCheckedChange={(v) => updateField(f.id, { required: v })}
-                    aria-label={`${f.label || 'Campo'} requerido`}
-                  />
-                  <div className="text-sm">
-                    {f.required ? 'Requerido' : 'Opcional'}
+                {f.type === 'link' ? (
+                  <div className="flex items-center gap-3 pt-6">
+                    <Switch
+                      id={`field_${f.id}_open_in_new_tab`}
+                      checked={f.openInNewTab !== false}
+                      onCheckedChange={(v) =>
+                        updateField(f.id, { openInNewTab: v })
+                      }
+                      aria-label={`${f.label || 'Enlace'} abre en nueva pestaña`}
+                    />
+                    <Label
+                      htmlFor={`field_${f.id}_open_in_new_tab`}
+                      className="text-sm"
+                    >
+                      Abrir en nueva pestaña
+                    </Label>
                   </div>
-                </div>
+                ) : (
+                  <div className="flex items-center gap-3 pt-6">
+                    <Switch
+                      checked={Boolean(f.required)}
+                      onCheckedChange={(v) =>
+                        updateField(f.id, { required: v })
+                      }
+                      aria-label={`${f.label || 'Campo'} requerido`}
+                    />
+                    <div className="text-sm">
+                      {f.required ? 'Requerido' : 'Opcional'}
+                    </div>
+                  </div>
+                )}
               </div>
 
-              {f.type !== 'checkbox' ? (
+              {f.type === 'link' ? (
+                <div className="space-y-2">
+                  <Label htmlFor={`field_${f.id}_description`}>
+                    Descripcion (opcional)
+                  </Label>
+                  <Input
+                    id={`field_${f.id}_description`}
+                    autoComplete="off"
+                    value={f.description ?? ''}
+                    onChange={(element) =>
+                      updateField(f.id, { description: element.target.value })
+                    }
+                    placeholder="Ej: PDF con terminos y condiciones…"
+                  />
+                </div>
+              ) : null}
+
+              {f.type !== 'link' && f.type !== 'checkbox' ? (
                 <div className="space-y-2">
                   <Label htmlFor={`field_${f.id}_placeholder`}>
                     Placeholder (opcional)
                   </Label>
                   <Input
                     id={`field_${f.id}_placeholder`}
+                    autoComplete="off"
                     value={f.placeholder ?? ''}
                     onChange={(element) =>
                       updateField(f.id, { placeholder: element.target.value })
@@ -869,13 +1071,14 @@ export function EditionFormBuilder(props: {
                           </Label>
                           <Input
                             id={`field_${f.id}_opt_${optIndex}_value`}
+                            autoComplete="off"
                             value={opt.value}
                             onChange={(element) =>
                               updateSelectOption(f.id, optIndex, {
                                 value: toFieldName(element.target.value),
                               })
                             }
-                            placeholder="opcion_1..."
+                            placeholder="opcion_1…"
                           />
                         </div>
                         <div className="space-y-1">
@@ -887,13 +1090,14 @@ export function EditionFormBuilder(props: {
                           </Label>
                           <Input
                             id={`field_${f.id}_opt_${optIndex}_label`}
+                            autoComplete="off"
                             value={opt.label}
                             onChange={(element) =>
                               updateSelectOption(f.id, optIndex, {
                                 label: element.target.value,
                               })
                             }
-                            placeholder="Opcion 1..."
+                            placeholder="Opcion 1…"
                           />
                         </div>
                         <Button

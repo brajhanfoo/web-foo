@@ -1,15 +1,21 @@
 'use client'
 
-import { useState } from 'react'
+import { useId, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase/client'
 import { getSiteUrl } from '@/lib/site-url'
-import { getErrorMessage } from '@/types/error'
 import { getPasswordError } from '@/lib/validation/password'
-import { BsExclamationCircle } from "react-icons/bs";
 
+import { mapSupabaseAuthErrorToEs } from '@/lib/supabase/auth-errors'
 import { useToastEnhanced } from '@/hooks/use-toast-enhanced'
+import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { BsExclamationCircle } from "react-icons/bs";
 import { HiEye, HiEyeSlash } from 'react-icons/hi2'
+
 
 
 const CURRENT_TERMS_VERSION = '2026-01-19'
@@ -27,6 +33,14 @@ type RegisterFormState = {
 export function RegisterForm() {
   const router = useRouter()
   const { showError, showSuccess } = useToastEnhanced()
+
+  const firstNameId = useId()
+  const lastNameId = useId()
+  const emailId = useId()
+  const passwordId = useId()
+  const confirmPasswordId = useId()
+  const termsId = useId()
+  const marketingId = useId()
 
   const [registerFormState, setRegisterFormState] = useState<RegisterFormState>(
     {
@@ -61,10 +75,10 @@ export function RegisterForm() {
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
 
-    const passwordError = getPasswordError(registerFormState.password)
-    if (passwordError) {
-      setPasswordError(passwordError)
-      showError('Contrasena invalida', passwordError)
+    const nextPasswordError = getPasswordError(registerFormState.password)
+    if (nextPasswordError) {
+      setPasswordError(nextPasswordError)
+      showError('Contraseña inválida', nextPasswordError)
       return
     }
 
@@ -76,7 +90,7 @@ export function RegisterForm() {
 
     if (!registerFormState.hasAcceptedTerms) {
       showError(
-        'Debes aceptar los terminos',
+        'Debes aceptar los términos',
         'Marca el checkbox para continuar.'
       )
       return
@@ -98,7 +112,7 @@ export function RegisterForm() {
 
       const emailRedirectUrl = `${siteUrl}/auth/confirm?next=/plataforma`
 
-      const { error: signUpError } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email: registerFormState.email,
         password: registerFormState.password,
         options: {
@@ -114,17 +128,26 @@ export function RegisterForm() {
         },
       })
 
-      if (signUpError) throw signUpError
+      if (error) {
+        const mapped = mapSupabaseAuthErrorToEs(error, 'signup')
+        showError(mapped.title, mapped.description)
+        return
+      }
 
-      showSuccess(
-        'Cuenta creada',
-        'Revisa tu correo para verificar tu email y luego inicia sesión.'
-      )
+      if (data.user && !data.session) {
+        showSuccess(
+          'Revisa tu correo',
+          'Te enviamos un enlace para confirmar tu cuenta.'
+        )
+        router.push('/ingresar')
+        return
+      }
 
-      // Opcional: llevar a /ingresar
-      router.push('/ingresar')
+      showSuccess('Cuenta creada', 'Ya puedes ingresar a la plataforma.')
+      router.push('/plataforma')
     } catch (error: unknown) {
-      showError('No se pudo crear la cuenta', getErrorMessage(error))
+      const mapped = mapSupabaseAuthErrorToEs(error, 'signup')
+      showError(mapped.title, mapped.description)
     } finally {
       setIsSubmitting(false)
     }
@@ -132,9 +155,9 @@ export function RegisterForm() {
 
   return (
     <div className="w-full max-w-md">
-      <div className="relative rounded-3xl border border-emerald-400/20 bg-gradient-to-br from-emerald-500/10 via-transparent to-purple-500/10 p-[1px] shadow-[0_0_40px_rgba(16,185,129,0.15)]">
-        <div className="rounded-3xl bg-black/70 backdrop-blur-xl p-7 md:p-8">
-          <h2 className="text-2xl font-semibold tracking-tight text-white">
+      <Card className="rounded-2xl border border-emerald-400/20 bg-white/5 backdrop-blur-xl shadow-[0_0_0_1px_rgba(0,204,164,0.12),0_20px_60px_rgba(0,0,0,0.65)] text-white">
+        <div className="p-6 md:p-7">
+          <h2 className="text-lg font-semibold text-white">
             Comienza tu entrenamiento
           </h2>
           <p className="mt-2 text-sm text-gray-400">
@@ -153,45 +176,67 @@ export function RegisterForm() {
             </div>
           </div>
 
-          <form onSubmit={handleSubmit} className="mt-7 space-y-5">
-            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-              <input
-                className="w-full rounded-xl bg-black/40 border border-white/10 px-4 py-3 text-white placeholder:text-white/30 outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/20 transition"
-                placeholder="Nombre"
-                value={registerFormState.firstName}
+          <form onSubmit={handleSubmit} className="mt-5 space-y-4">
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor={firstNameId} className="text-white/70 text-sm">
+                  Nombre
+                </Label>
+                <Input
+                  id={firstNameId}
+                  className="h-11 rounded-xl bg-black/30 border-white/10 text-white placeholder:text-white/40 focus-visible:ring-emerald-400/60"
+                  placeholder="Nombre"
+                  value={registerFormState.firstName}
+                  onChange={(event) =>
+                    updateRegisterFormField('firstName', event.target.value)
+                  }
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor={lastNameId} className="text-white/70 text-sm">
+                  Apellido
+                </Label>
+                <Input
+                  id={lastNameId}
+                  className="h-11 rounded-xl bg-black/30 border-white/10 text-white placeholder:text-white/40 focus-visible:ring-emerald-400/60"
+                  placeholder="Apellido"
+                  value={registerFormState.lastName}
+                  onChange={(event) =>
+                    updateRegisterFormField('lastName', event.target.value)
+                  }
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor={emailId} className="text-white/70 text-sm">
+                Email
+              </Label>
+              <Input
+                id={emailId}
+                type="email"
+                className="h-11 rounded-xl bg-black/30 border-white/10 text-white placeholder:text-white/40 focus-visible:ring-emerald-400/60"
+                placeholder="tu@email.com"
+                value={registerFormState.email}
                 onChange={(event) =>
-                  updateRegisterFormField('firstName', event.target.value)
-                }
-                required
-              />
-              <input
-                className="w-full rounded-xl bg-black/40 border border-white/10 px-4 py-3 text-white placeholder:text-white/30 outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/20 transition"
-                placeholder="Apellido"
-                value={registerFormState.lastName}
-                onChange={(event) =>
-                  updateRegisterFormField('lastName', event.target.value)
+                  updateRegisterFormField('email', event.target.value)
                 }
                 required
               />
             </div>
 
-            <input
-              type="email"
-              className="w-full rounded-xl bg-black/40 border border-white/10 px-4 py-3 text-white placeholder:text-white/30 outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/20 transition"
-              placeholder="Correo electrónico"
-              value={registerFormState.email}
-              onChange={(event) =>
-                updateRegisterFormField('email', event.target.value)
-              }
-              required
-            />
-
-            {/* Password */}
-            <div className="relative">
-              <input
-                type={showPassword ? 'text' : 'password'}
-                className={`w-full rounded-xl bg-black/40 border px-4 py-3 pr-12 text-white placeholder:text-white/30 outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/20 transition ${passwordError ? 'border-red-500/70' : 'border-white/10'
-                  }`}
+            <div className="space-y-2">
+              <Label htmlFor={passwordId} className="text-white/70 text-sm">
+                Contraseña
+              </Label>
+              <Input
+                id={passwordId}
+                type="password"
+                className={`h-11 rounded-xl bg-black/30 border text-white placeholder:text-white/40 focus-visible:ring-emerald-400/60 ${
+                  passwordError ? 'border-red-500/70' : 'border-white/10'
+                }`}
                 placeholder="Contraseña"
                 value={registerFormState.password}
                 onChange={(event) => {
@@ -207,29 +252,24 @@ export function RegisterForm() {
                 }}
                 required
               />
-
-              <button
-                type="button"
-                onClick={() => setShowPassword((prev) => !prev)}
-                className="absolute inset-y-0 right-0 flex items-center pr-4 text-white/40 hover:text-emerald-400 transition"
-              >
-                {showPassword ? (
-                  <HiEyeSlash className="text-lg" />
-                ) : (
-                  <HiEye className="text-lg" />
-                )}
-              </button>
+              {passwordError ? (
+                <p className="text-xs text-red-400">{passwordError}</p>
+              ) : null}
             </div>
-            {passwordError && (
-              <p className="text-xs text-red-400">{passwordError}</p>
-            )}
 
-            {/* Confirm Password */}
-            <div className="relative">
-              <input
-                type={showConfirmPassword ? 'text' : 'password'}
-                className={`w-full rounded-xl bg-black/40 border px-4 py-3 pr-12 text-white placeholder:text-white/30 outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/20 transition ${confirmPasswordError ? 'border-red-500/70' : 'border-white/10'
-                  }`}
+            <div className="space-y-2">
+              <Label
+                htmlFor={confirmPasswordId}
+                className="text-white/70 text-sm"
+              >
+                Confirmación de contraseña
+              </Label>
+              <Input
+                id={confirmPasswordId}
+                type="password"
+                className={`h-11 rounded-xl bg-black/30 border text-white placeholder:text-white/40 focus-visible:ring-emerald-400/60 ${
+                  confirmPasswordError ? 'border-red-500/70' : 'border-white/10'
+                }`}
                 placeholder="Confirmación de contraseña"
                 value={registerFormState.confirmPassword}
                 onChange={(event) => {
@@ -243,38 +283,21 @@ export function RegisterForm() {
                 }}
                 required
               />
-
-              <button
-                type="button"
-                onClick={() =>
-                  setShowConfirmPassword((prev) => !prev)
-                }
-                className="absolute inset-y-0 right-0 flex items-center pr-4 text-white/40 hover:text-emerald-400 transition"
-              >
-                {showConfirmPassword ? (
-                  <HiEyeSlash className="text-lg" />
-                ) : (
-                  <HiEye className="text-lg" />
-                )}
-              </button>
+              {confirmPasswordError ? (
+                <p className="text-xs text-red-400">{confirmPasswordError}</p>
+              ) : null}
             </div>
-            {confirmPasswordError && (
-              <p className="text-xs text-red-400">{confirmPasswordError}</p>
-            )}
 
-            <label className="flex items-start gap-3 text-sm text-gray-400">
-              <input
-                type="checkbox"
-                className="mt-1 accent-emerald-400"
+            <div className="flex items-start gap-2 text-sm text-white/70">
+              <Checkbox
+                id={termsId}
                 checked={registerFormState.hasAcceptedTerms}
-                onChange={(event) =>
-                  updateRegisterFormField(
-                    'hasAcceptedTerms',
-                    event.target.checked
-                  )
+                onCheckedChange={(checked) =>
+                  updateRegisterFormField('hasAcceptedTerms', checked === true)
                 }
+                className="mt-1 border-white/20 data-[state=checked]:bg-emerald-500 data-[state=checked]:text-black"
               />
-              <span>
+              <Label htmlFor={termsId} className="leading-relaxed">
                 He leído y acepto los{' '}
                 <a
                   href="/terminos-y-condiciones"
@@ -282,53 +305,49 @@ export function RegisterForm() {
                   rel="noopener noreferrer"
                   className="text-emerald-400 hover:underline"
                 >
-                  términos y condiciones
+                  Términos y condiciones
                 </a>
                 .
-              </span>
-            </label>
-
-            <label className="flex items-start gap-3 text-sm text-gray-400">
-              <input
-                type="checkbox"
-                className="mt-1 accent-emerald-400"
-                checked={registerFormState.marketingOptIn}
-                onChange={(event) =>
-                  updateRegisterFormField(
-                    'marketingOptIn',
-                    event.target.checked
-                  )
-                }
-              />
-              <span>
-                Quiero recibir novedades y comunicaciones.
-              </span>
-            </label>
-
-            <button
-              disabled={isSubmitting}
-              className="w-full rounded-xl py-3 font-semibold text-black bg-[#00CCA4] hover:opacity-90 transition disabled:opacity-60 cursor-pointer"
-            >
-              {isSubmitting ? 'Creando cuenta…' : 'Crear cuenta'}
-            </button>
-
-            <div className="text-center text-sm text-gray-400">
-              ¿Ya tienes cuenta?{' '}
-              <button
-                type="button"
-                onClick={() => router.push('/ingresar')}
-                className="text-emerald-400 hover:underline cursor-pointer transition"
-              >
-                Ingresar
-              </button>
+              </Label>
             </div>
+
+            <div className="flex items-start gap-2 text-sm text-white/70">
+              <Checkbox
+                id={marketingId}
+                checked={registerFormState.marketingOptIn}
+                onCheckedChange={(checked) =>
+                  updateRegisterFormField('marketingOptIn', checked === true)
+                }
+                className="mt-1 border-white/20 data-[state=checked]:bg-emerald-500 data-[state=checked]:text-black"
+              />
+              <Label htmlFor={marketingId} className="leading-relaxed">
+                Quiero recibir comunicaciones y novedades de marketing.
+              </Label>
+            </div>
+
+            <Button
+              type="submit"
+              disabled={isSubmitting}
+              className="w-full h-11 rounded-xl bg-emerald-500 text-black hover:bg-emerald-400"
+            >
+              {isSubmitting ? 'Creando cuenta...' : 'Crear cuenta'}
+            </Button>
+
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => router.push('/ingresar')}
+              className="w-full text-sm text-white/70 hover:text-white hover:bg-white/5"
+            >
+              ¿Ya tienes cuenta? <span className="underline">Ingresar</span>
+            </Button>
 
             <p className="text-[11px] text-gray-500 text-center">
               Al crear tu cuenta, aceptas nuestros términos y políticas.
             </p>
           </form>
         </div>
-      </div>
+      </Card>
     </div>
 
   )

@@ -5,7 +5,11 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { ArrowLeft, FileText, Send } from 'lucide-react'
-import type { FormField, FormValuesMap, FormValue } from './step-experience'
+import type {
+  FormInputField,
+  FormValuesMap,
+  FormValue,
+} from './step-experience'
 
 export function StepCommitment({
   appliedRoleTitle,
@@ -19,7 +23,7 @@ export function StepCommitment({
 }: {
   appliedRoleTitle: string
   declaredLevelLabel?: string
-  commitmentFields: FormField[]
+  commitmentFields: FormInputField[]
   values: FormValuesMap
   onChangeValue: (name: string, value: FormValue) => void
   onBack: () => void
@@ -34,7 +38,10 @@ export function StepCommitment({
             variant="outline"
             className="border-white/10 bg-white/[0.03] text-white"
           >
-            <FileText className="mr-2 h-4 w-4 text-emerald-200" />
+            <FileText
+              className="mr-2 h-4 w-4 text-emerald-200"
+              aria-hidden="true"
+            />
             Postulando como:&nbsp;
             <span className="font-semibold text-emerald-200">
               {appliedRoleTitle || '—'}
@@ -100,7 +107,7 @@ export function StepCommitment({
           className="border border-white/10 bg-white/5 text-white hover:bg-white/10"
           onClick={onBack}
         >
-          <ArrowLeft className="mr-2 h-4 w-4" />
+          <ArrowLeft className="mr-2 h-4 w-4" aria-hidden="true" />
           Volver al paso anterior
         </Button>
 
@@ -109,11 +116,11 @@ export function StepCommitment({
           onClick={onSubmit}
           disabled={isSubmitting}
           className={cn(
-            'inline-flex items-center gap-2 rounded-xl bg-emerald-400 px-6 py-3 text-sm font-semibold text-black transition hover:brightness-110',
+            'inline-flex items-center gap-2 rounded-xl bg-emerald-400 px-6 py-3 text-sm font-semibold text-black transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/60',
             isSubmitting && 'opacity-70'
           )}
         >
-          <Send className="h-4 w-4" />
+          <Send className="h-4 w-4" aria-hidden="true" />
           {isSubmitting ? 'Enviando…' : 'Enviar postulación'}
         </button>
       </div>

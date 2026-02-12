@@ -76,16 +76,37 @@ function parsePriceToCents(priceUsd: string | number | null): number | null {
   return Math.round(parsed * 100)
 }
 
+const USD_FORMATTER = new Intl.NumberFormat('es-EC', {
+  style: 'currency',
+  currency: 'USD',
+  currencyDisplay: 'code',
+  maximumFractionDigits: 2,
+})
+
+const DATE_FORMATTER = new Intl.DateTimeFormat('es-EC', {
+  day: '2-digit',
+  month: '2-digit',
+  year: 'numeric',
+  timeZone: 'UTC',
+})
+
+function formatUsd(priceUsd: string | number | null): string | null {
+  if (priceUsd === null || priceUsd === undefined) return null
+  const parsed = Number(priceUsd)
+  if (!Number.isFinite(parsed)) return null
+  if (parsed <= 0) return 'Gratis'
+  return USD_FORMATTER.format(parsed)
+}
+
 function parseIsoDateOnlyToDM(value: string): string {
   // Espera "YYYY-MM-DD" o "YYYY-MM-DDTHH:mm:ssZ"
   const s = value.trim()
   if (!s) return ''
   const d = s.slice(0, 10)
   if (!/^\d{4}-\d{2}-\d{2}$/.test(d)) return ''
-  const year = d.slice(0, 4)
-  const month = d.slice(5, 7)
-  const day = d.slice(8, 10)
-  return `${day}/${month}/${year}`
+  const date = new Date(`${d}T00:00:00Z`)
+  if (Number.isNaN(date.getTime())) return ''
+  return DATE_FORMATTER.format(date)
 }
 
 function isFormOpen(form: ApplicationFormRow, now: Date): boolean {
@@ -420,7 +441,9 @@ export default function ProgramsPage() {
     <div className="min-h-dvh bg-black px-6 py-8">
       <div className="mx-auto w-full max-w-5xl space-y-8">
         <div className="space-y-1">
-          <h1 className="text-2xl font-semibold text-amber-50">Programas</h1>
+          <h1 className="text-2xl font-semibold text-amber-50 text-balance">
+            Programas
+          </h1>
           <p className="text-sm text-white/60">
             Elige un programa para ver detalles o iniciar tu postulación.
           </p>
@@ -444,6 +467,7 @@ export default function ProgramsPage() {
               const isOpen = p.status === 'open'
               const isClosed = p.status === 'closed'
               const paymentMode = resolvePaymentMode(p)
+              const priceLabel = formatUsd(p.price_usd)
               const paidPre = hasPaidPre(p.id, p.edition?.id ?? null)
               const applied = hasApplied(p.id, p.edition?.id ?? null)
 
@@ -453,7 +477,7 @@ export default function ProgramsPage() {
                 </Badge>
               ) : isClosed ? (
                 <Badge className="bg-white/5 text-white/70 border border-white/10 gap-2">
-                  <Lock className="h-3.5 w-3.5" />
+                  <Lock className="h-3.5 w-3.5" aria-hidden="true" />
                   {statusLabel(p.status)}
                 </Badge>
               ) : (
@@ -488,7 +512,7 @@ export default function ProgramsPage() {
                     <span className="flex-1 text-center">
                       PAGAR E INSCRIBIRME
                     </span>
-                    <CreditCard className="h-4 w-4" />
+                    <CreditCard className="h-4 w-4" aria-hidden="true" />
                   </Button>
                 ) : (
                   <Button
@@ -498,7 +522,7 @@ export default function ProgramsPage() {
                     <span className="flex-1 text-center">
                       INICIAR POSTULACIÓN
                     </span>
-                    <ArrowRight className="h-4 w-4" />
+                    <ArrowRight className="h-4 w-4" aria-hidden="true" />
                   </Button>
                 )
               ) : isClosed ? (
@@ -516,7 +540,7 @@ export default function ProgramsPage() {
                     <span className="flex-1 text-center">
                       VER DETALLES DEL PROGRAMA
                     </span>
-                    <ArrowRight className="h-4 w-4" />
+                    <ArrowRight className="h-4 w-4" aria-hidden="true" />
                   </Link>
                 </Button>
               ) : (
@@ -543,7 +567,7 @@ export default function ProgramsPage() {
                     <span className="flex-1 text-center">
                       VER EN MIS POSTULACIONES
                     </span>
-                    <ArrowRight className="h-4 w-4" />
+                    <ArrowRight className="h-4 w-4" aria-hidden="true" />
                   </Link>
                 </Button>
               )
@@ -597,6 +621,7 @@ export default function ProgramsPage() {
                               // icono amarillo cuando abierto
                               isOpen ? 'text-amber-300' : 'text-emerald-300',
                             ].join(' ')}
+                            aria-hidden="true"
                           />
                         ) : (
                           <Users
@@ -604,6 +629,7 @@ export default function ProgramsPage() {
                               'h-5 w-5',
                               isOpen ? 'text-amber-300' : 'text-[#9CA3AF]',
                             ].join(' ')}
+                            aria-hidden="true"
                           />
                         )}
                       </div>
@@ -645,7 +671,10 @@ export default function ProgramsPage() {
                       )}
 
                       <div className="flex items-center gap-2">
-                        <Calendar className="h-4 w-4 text-white/50" />
+                        <Calendar
+                          className="h-4 w-4 text-white/50"
+                          aria-hidden="true"
+                        />
                         <span className="text-white/60">
                           {paymentMode === 'pre'
                             ? 'Pago previo requerido'
@@ -655,13 +684,26 @@ export default function ProgramsPage() {
                         </span>
                       </div>
 
+                      {priceLabel ? (
+                        <div className="flex items-center gap-2">
+                          <CreditCard
+                            className="h-4 w-4 text-white/50"
+                            aria-hidden="true"
+                          />
+                          <span className="text-white/60">{priceLabel}</span>
+                        </div>
+                      ) : null}
+
                       <Link
                         href={`/programas/${p.slug}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-2 text-white/70 hover:text-white"
                       >
-                        <ArrowRight className="h-4 w-4 rotate-[-45deg]" />
+                        <ArrowRight
+                          className="h-4 w-4 rotate-[-45deg]"
+                          aria-hidden="true"
+                        />
                         <span className="underline underline-offset-4">
                           Ver detalles del programa
                         </span>
@@ -708,7 +750,10 @@ export default function ProgramsPage() {
           <CardContent className="flex flex-col gap-4 p-4 md:flex-row md:items-center md:justify-between">
             <div className="flex items-start gap-3">
               <div className="mt-0.5 h-9 w-9 rounded-full bg-emerald-500/15 flex items-center justify-center">
-                <HelpCircle className="h-5 w-5 text-emerald-300" />
+                <HelpCircle
+                  className="h-5 w-5 text-emerald-300"
+                  aria-hidden="true"
+                />
               </div>
               <div className="space-y-0.5">
                 <div className="font-medium">{helpTitle}</div>

@@ -33,7 +33,8 @@ export default function AdminHomePage() {
             asChild
           >
             <Link href="/plataforma/admin/configuracion">
-              Configuracion <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
+              Configuracion{' '}
+              <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
             </Link>
           </Button>
         </div>
@@ -176,9 +177,7 @@ export default function AdminHomePage() {
               className="w-full border-slate-800 bg-slate-900 text-slate-200 hover:bg-slate-800"
               asChild
             >
-              <Link href="/plataforma/admin/usuarios">
-                Revisar Permisos
-              </Link>
+              <Link href="/plataforma/admin/usuarios">Revisar Permisos</Link>
             </Button>
           </CardContent>
         </Card>

@@ -23,6 +23,18 @@ import { UsersToolbar } from './components/users-toolbar'
 
 const ROLE_OPTIONS: AppRole[] = ['talent', 'super_admin']
 
+type AdminUsersRpcRow = {
+  user_id: string
+  email: string | null
+  first_name: string | null
+  last_name: string | null
+  role: AppRole | null
+  is_active: boolean | null
+  profile_status: string | null
+  created_at: string
+  email_confirmed_at: string | null
+}
+
 function safeText(value: string | null | undefined): string {
   return (value ?? '').trim()
 }
@@ -63,12 +75,9 @@ export default function AdminUsersPage() {
 
   async function loadUsers() {
     setLoading(true)
-    const { data, error } = await supabase
-      .from('profiles')
-      .select(
-        'id, first_name, last_name, email, role, is_active, profile_status, created_at'
-      )
-      .order('created_at', { ascending: false })
+    const { data, error } = await supabase.rpc(
+      'admin_list_users_with_email_status'
+    )
 
     if (error) {
       showError('No se pudieron cargar usuarios.', error.message)
@@ -77,11 +86,18 @@ export default function AdminUsersPage() {
       return
     }
 
-    const cleaned = (data ?? []).map((row) => ({
-      ...row,
-      role: (row.role ?? 'talent') as AppRole,
-      is_active: row.is_active ?? true,
-    })) as UserRow[]
+    const cleaned =
+      (data as AdminUsersRpcRow[] | null)?.map((row) => ({
+        id: row.user_id,
+        email: row.email,
+        first_name: row.first_name,
+        last_name: row.last_name,
+        role: (row.role ?? 'talent') as AppRole,
+        is_active: row.is_active ?? true,
+        profile_status: row.profile_status ?? null,
+        created_at: row.created_at,
+        email_confirmed_at: row.email_confirmed_at ?? null,
+      })) ?? []
     setRows(cleaned)
     setLoading(false)
   }
