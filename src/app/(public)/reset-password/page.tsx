@@ -4,6 +4,9 @@ import { useState } from 'react'
 import { supabase } from '@/lib/supabase/client'
 import { getSiteUrl } from '@/lib/site-url'
 
+const GENERIC_MESSAGE =
+  'Si el correo está registrado, recibirás un enlace para recuperar tu contraseña.'
+
 export default function ResetPasswordPage() {
   const [email, setEmail] = useState('')
   const [msg, setMsg] = useState<string | null>(null)
@@ -22,15 +25,16 @@ export default function ResetPasswordPage() {
     })
 
     if (error) {
-      setMsg(error.message)
-    } else {
-      setMsg('Te enviamos un correo para restablecer tu contraseña.')
+      // No revelamos si el correo existe para evitar enumeración.
+      setMsg(GENERIC_MESSAGE)
+      return
     }
+
+    setMsg(GENERIC_MESSAGE)
   }
 
   return (
     <div className="bg-black min-h-screen flex items-center justify-center">
-      {' '}
       <div className="p-6 max-w-md mx-auto bg-gray-900 rounded-3xl text-amber-50">
         <h1 className="text-xl font-semibold">Recuperar contraseña</h1>
 

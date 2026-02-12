@@ -53,7 +53,6 @@ function calcProfileCompletion(p: ProfileRow | null) {
     isNonEmpty(p?.country_residence),
     isNonEmpty(p?.whatsapp_e164),
     isNonEmpty(p?.linkedin_url),
-    isNonEmpty(p?.portfolio_url),
     isNonEmpty(p?.primary_role),
     isNonEmptyArray(p?.skills),
     isNonEmpty(p?.english_level),
@@ -233,7 +232,21 @@ export default function TalentHomePage() {
                   {latestApplication?.program_title ?? 'un programa'}.
                 </div>
                 <div className="text-sm text-white/60 mt-1">
-                  Seguimiento: {latestApplication?.status ?? 'en curso'}.
+                  Seguimiento:{' '}
+                  {latestApplication?.status === 'received'
+                    ? 'recibido'
+                    : latestApplication?.status === 'in_review'
+                      ? 'en revisión'
+                      : latestApplication?.status === 'approved'
+                        ? 'aprobado'
+                        : latestApplication?.status === 'payment_pending'
+                          ? 'pendiente de pago'
+                          : latestApplication?.status === 'enrolled'
+                            ? 'matriculado'
+                            : latestApplication?.status === 'rejected'
+                              ? 'rechazado'
+                              : 'en curso'}
+                  .
                 </div>
               </div>
 

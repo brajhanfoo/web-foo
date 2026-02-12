@@ -23,6 +23,7 @@ export type UserRow = {
   is_active: boolean
   profile_status: string | null
   created_at: string
+  email_confirmed_at: string | null
 }
 
 function formatDate(value: string): string {
@@ -91,7 +92,18 @@ export function UsersTable({
         const isBusy = Boolean(busyIds[user.id])
         const isSelf = currentUserId === user.id
         const canEdit = !isSelf && !isBusy
-        const active = Boolean(user.is_active)
+        const isActive = Boolean(user.is_active)
+        const isVerified = Boolean(user.email_confirmed_at)
+        const statusLabel = !isVerified
+          ? 'No verificado'
+          : isActive
+            ? 'Activo'
+            : 'Desactivado'
+        const statusClasses = !isVerified
+          ? 'bg-amber-500/10 text-amber-300 border-amber-500/30'
+          : isActive
+            ? 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30'
+            : 'bg-slate-900 text-slate-300 border-slate-800'
 
         return (
           <div
@@ -146,14 +158,9 @@ export function UsersTable({
 
             <div className="col-span-2 px-3 py-3">
               <Badge
-                className={[
-                  'border',
-                  active
-                    ? 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30'
-                    : 'bg-slate-900 text-slate-300 border-slate-800',
-                ].join(' ')}
+                className={['border', statusClasses].join(' ')}
               >
-                {active ? 'Activo' : 'Desactivado'}
+                {statusLabel}
               </Badge>
             </div>
 
@@ -168,16 +175,16 @@ export function UsersTable({
                 className="border-slate-800 bg-slate-900 text-slate-200 hover:bg-slate-800"
                 disabled={!canEdit}
                 onClick={() => onToggleActive(user)}
-                title={active ? 'Desactivar' : 'Activar'}
-                aria-label={active ? 'Desactivar usuario' : 'Activar usuario'}
+                title={isActive ? 'Desactivar' : 'Activar'}
+                aria-label={isActive ? 'Desactivar usuario' : 'Activar usuario'}
               >
-                {active ? (
+                {isActive ? (
                   <UserX className="h-4 w-4" aria-hidden="true" />
                 ) : (
                   <UserCheck className="h-4 w-4" aria-hidden="true" />
                 )}
                 <span className="sr-only">
-                  {active ? 'Desactivar' : 'Activar'}
+                  {isActive ? 'Desactivar' : 'Activar'}
                 </span>
               </Button>
             </div>
