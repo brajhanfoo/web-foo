@@ -1,6 +1,7 @@
 'use client'
 
 import { Suspense, useEffect, useId, useState } from 'react'
+import { HiRocketLaunch, HiEye, HiEyeSlash } from 'react-icons/hi2'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase/client'
 import { mapSupabaseAuthErrorToEs } from '@/lib/supabase/auth-errors'
@@ -43,10 +44,14 @@ function LoginForm() {
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isResending, setIsResending] = useState(false)
   const [needsEmailConfirmation, setNeedsEmailConfirmation] = useState(false)
   const [cooldownUntil, setCooldownUntil] = useState<number | null>(null)
+  const [loading, setLoading] = useState(false)
+  const [message, setMessage] = useState<string | null>(null)
+  const [showPassword, setShowPassword] = useState(false)
 
   useEffect(() => {
     let cancelled = false
@@ -93,6 +98,7 @@ function LoginForm() {
 
       if (data.user && !data.user.email_confirmed_at) {
         await supabase.auth.signOut()
+
         showError(
           'Cuenta no verificada',
           'Confirma tu correo para poder iniciar sesión. Revisa tu bandeja de entrada o spam.'
@@ -170,11 +176,27 @@ function LoginForm() {
           <h1 className="text-3xl font-semibold text-amber-50">
             Impulsa tu <span className="text-emerald-400">carrera tech</span>.
           </h1>
-          <p className="mt-3 text-white/70">
+
+          <p className="mt-6 max-w-lg text-lg text-gray-400 leading-relaxed">
             Ingresa a tu espacio de trabajo y continúa tu evolución profesional.
+            Accede a tu perfil, mentorías y red de contactos.
           </p>
-          <div className="mt-6 text-sm text-white/70">
-            ✨ Acceso inmediato · Mentorías · Programas · Red de contactos
+
+          <div className="mt-10 max-w-xl rounded-2xl border border-white/10 bg-gradient-to-r from-white/5 to-transparent p-5 backdrop-blur-sm">
+            <div className="flex items-start gap-4">
+              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-purple-500/10 border border-purple-500/20">
+                <HiRocketLaunch className="text-purple-400 text-xl" />
+              </div>
+
+              <div>
+                <h3 className="text-sm font-semibold text-white">
+                  Acceso Inmediato
+                </h3>
+                <p className="mt-1 text-sm text-gray-400">
+                  Retoma tu aprendizaje donde lo dejaste.
+                </p>
+              </div>
+            </div>
           </div>
         </Card>
 
@@ -222,6 +244,7 @@ function LoginForm() {
                   variant="link"
                   className="px-0 text-xs text-white/60 hover:text-white"
                   onClick={() => router.push('/reset-password')}
+                  className="text-xs text-white/50 hover:text-emerald-400 transition cursor-pointer"
                 >
                   ¿Olvidaste tu contraseña?
                 </Button>
@@ -267,8 +290,8 @@ export default function LoginPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-[calc(100vh-80px)] flex items-center justify-center px-4 bg-black">
-          <div className="text-white">Cargando...</div>
+        <div className="min-h-[calc(100vh-80px)] flex items-center justify-center bg-black">
+          <div className="text-white/70 animate-pulse">Cargando…</div>
         </div>
       }
     >
