@@ -296,7 +296,9 @@ export default function ProgramsPage() {
     }
     const vm: ProgramCardVM[] = programs.map((p) => {
       const edition =
-        bestEditionByProgram.get(p.id) ?? latestEditionByProgram.get(p.id) ?? null
+        bestEditionByProgram.get(p.id) ??
+        latestEditionByProgram.get(p.id) ??
+        null
       const editionForm = edition
         ? (latestFormByEdition.get(edition.id) ?? null)
         : null
@@ -307,7 +309,7 @@ export default function ProgramsPage() {
       const hasEnded = Boolean(endsAtDate && todayDate > endsAtDate)
       const startsAllowed = !startsAtDate || todayDate <= startsAtDate
 
-      const editionOpen = Boolean(edition) && edition.is_open && startsAllowed
+      const editionOpen = edition ? edition.is_open && startsAllowed : false
       const formOpen = form ? isFormOpen(form, now) : false
       const open = Boolean(edition) && !hasEnded && editionOpen && formOpen
 
@@ -489,7 +491,9 @@ export default function ProgramsPage() {
               const priceLabel = formatUsd(p.price_usd)
               const paidPre = hasPaidPre(p.id, p.edition?.id ?? null)
               const applied = hasApplied(p.id, p.edition?.id ?? null)
-              const endsAtDate = p.edition ? toDateOnly(p.edition.ends_at) : null
+              const endsAtDate = p.edition
+                ? toDateOnly(p.edition.ends_at)
+                : null
               const hasEnded = Boolean(endsAtDate && todayDate > endsAtDate)
               const hasEdition = Boolean(p.edition)
               const isOpen = p.status === 'open' && !hasEnded
