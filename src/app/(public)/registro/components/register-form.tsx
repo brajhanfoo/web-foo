@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase/client'
 import { getSiteUrl } from '@/lib/site-url'
 import { getPasswordError } from '@/lib/validation/password'
+
 import { mapSupabaseAuthErrorToEs } from '@/lib/supabase/auth-errors'
 import { useToastEnhanced } from '@/hooks/use-toast-enhanced'
 import { Button } from '@/components/ui/button'
@@ -12,6 +13,10 @@ import { Card } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { BsExclamationCircle } from "react-icons/bs";
+import { HiEye, HiEyeSlash } from 'react-icons/hi2'
+
+
 
 const CURRENT_TERMS_VERSION = '2026-01-19'
 
@@ -54,6 +59,8 @@ export function RegisterForm() {
   const [confirmPasswordError, setConfirmPasswordError] = useState<
     string | null
   >(null)
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 
   function updateRegisterFormField<K extends keyof RegisterFormState>(
     fieldName: K,
@@ -153,14 +160,20 @@ export function RegisterForm() {
           <h2 className="text-lg font-semibold text-white">
             Comienza tu entrenamiento
           </h2>
-          <p className="mt-1 text-sm text-white/60">
+          <p className="mt-2 text-sm text-gray-400">
             Regístrate para acceder a la plataforma.
           </p>
 
-          <div className="mt-4 rounded-xl border border-emerald-400/20 bg-emerald-400/10 px-4 py-3 text-sm text-white/80">
-            <span className="font-medium text-emerald-300">Importante:</span>{' '}
-            Completa tus datos reales. Luego podrás completar tu perfil
-            profesional.
+          {/* Alert */}
+          <div className="mt-6 flex gap-3 rounded-2xl border border-yellow-400/30 bg-[#BDBE0B]/10 px-4 py-3 text-sm text-yellow-100">
+            <BsExclamationCircle className="mt-0.5 text-[#BDBE0B] text-[35px]" />
+            <div>
+              <span className="font-semibold text-[#BDBE0B]">
+                Importante:
+              </span>{' '}
+              Para postular a programas, deberás completar tu perfil profesional
+              después de registrarte.
+            </div>
           </div>
 
           <form onSubmit={handleSubmit} className="mt-5 space-y-4">
@@ -290,7 +303,7 @@ export function RegisterForm() {
                   href="/terminos-y-condiciones"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-emerald-400 underline hover:text-emerald-300"
+                  className="text-emerald-400 hover:underline"
                 >
                   Términos y condiciones
                 </a>
@@ -329,12 +342,13 @@ export function RegisterForm() {
               ¿Ya tienes cuenta? <span className="underline">Ingresar</span>
             </Button>
 
-            <p className="text-[11px] text-white/45">
-              Al registrarte, aceptas nuestras políticas y términos.
+            <p className="text-[11px] text-gray-500 text-center">
+              Al crear tu cuenta, aceptas nuestros términos y políticas.
             </p>
           </form>
         </div>
       </Card>
     </div>
+
   )
 }
