@@ -51,7 +51,6 @@ export function CurrentApplicationHero(props: { app: ApplicationRow }) {
 
   // Header line estilo: "Project Academy - Batch 1 | FRONTEND DEVELOPER"
   const topLeftText = headerLine(programTitle, role)
-
   const topRight = (
     <Badge
       className={['uppercase', 'border', badgeClass(props.app.status)].join(
@@ -66,14 +65,42 @@ export function CurrentApplicationHero(props: { app: ApplicationRow }) {
     return (
       <ShellCard
         status="received"
-        topLeft={programTitle}
+        className="
+    rounded-2xl
+    border border-blue-500/25
+    bg-[linear-gradient(to_right,rgba(0,0,0,1),rgba(10,22,45,0.85),rgba(0,0,0,1))]
+    shadow-[0_8px_30px_rgba(0,0,0,0.35)]
+  "
+        topLeft={
+          <span className="text-white font-semibold tracking-wide">
+            {programTitle}
+          </span>
+        }
         topRight={topRight}
-        icon={<Clock3 className="h-5 w-5 text-[#60A5FA]" />}
+        icon={
+          <div className="
+      flex items-center justify-center
+      h-14 w-14 rounded-2xl
+      bg-black/80
+      border border-blue-500/30
+    ">
+            <Clock3 className="h-6 w-6 text-[#60A5FA]" />
+          </div>
+        }
         title="Postulación recibida"
         description="Hemos recibido tu ficha correctamente. Nuestro equipo de admisión comenzará a revisarla pronto."
-        bottomLeft={<span>Postulado: {appliedAt}</span>}
-        bottomRight={<span className={roleTextClass()}>{role || '—'}</span>}
+        bottomLeft={
+          <span className="text-xs text-white/40">
+            Postulado: {appliedAt}
+          </span>
+        }
+        bottomRight={
+          <span className={roleTextClass()}>
+            {role || '—'}
+          </span>
+        }
       />
+
     )
   }
 
@@ -81,18 +108,65 @@ export function CurrentApplicationHero(props: { app: ApplicationRow }) {
     return (
       <ShellCard
         status="in_review"
-        topLeft={topLeftText}
+        className="
+    rounded-2xl
+    border border-orange-500/25
+    bg-[linear-gradient(to_right,rgba(0,0,0,1),rgba(30,18,8,0.9),rgba(0,0,0,1))]
+    shadow-[0_8px_30px_rgba(0,0,0,0.35)]
+  "
+        topLeft={
+          <div className="flex items-center gap-3 text-sm md:text-base">
+
+            {/* Programa */}
+            <span className="text-white font-semibold tracking-wide">
+              {programTitle}
+            </span>
+
+            {/* Separador */}
+            {role && (
+              <>
+                <span className="text-white/30">·</span>
+
+                {/* Rol */}
+                <span className="text-orange-400 font-medium tracking-wide">
+                  {role}
+                </span>
+              </>
+            )}
+          </div>
+        }
         topRight={
-          <span className="text-xs text-muted-foreground">
+          <span className="text-xs text-white/40">
             Postulado: {appliedAt}
           </span>
         }
-        icon={<ClipboardClock className="h-5 w-5 text-orange-300" />}
+        icon={
+          <div
+            className="
+        flex items-center justify-center
+        h-14 w-14 rounded-xl
+        bg-black/80
+        border border-orange-500/20
+      "
+          >
+            <ClipboardClock className="h-6 w-6 text-orange-400" />
+          </div>
+        }
         title="Estado: EN REVISIÓN"
         description="Estamos validando tu perfil para el programa seleccionado. Nuestro equipo está revisando tu portafolio y experiencia técnica."
-        bottomLeft={<span> </span>}
+        bottomLeft={<span />}
         bottomRight={
-          <Badge className="border border-orange-500/30 bg-orange-500/10 text-orange-400">
+          <Badge
+            className="
+        bg-orange-500/10
+        border border-orange-500/30
+        text-orange-400
+        px-4 py-1.5
+        rounded-lg
+        text-xs
+        tracking-wide
+      "
+          >
             Revisión en curso…
           </Badge>
         }
@@ -141,7 +215,7 @@ export function CurrentApplicationHero(props: { app: ApplicationRow }) {
               <>
                 <Button
                   className={[
-                    'h-11 w-full justify-center gap-2',
+                    'h-11 w-full justify-center gap-2 cursor-pointer',
                     'bg-emerald-400/90 text-black hover:bg-emerald-400',
                     'shadow-[0_0_25px_rgba(52,211,153,0.25)]',
                   ].join(' ')}

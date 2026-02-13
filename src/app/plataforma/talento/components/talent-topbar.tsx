@@ -30,7 +30,7 @@ function initialsFromName(name: string) {
 export function TalentTopBar({
   displayName,
   rightActionLabel = 'Editar perfil',
-  rightActionHref = '/plataforma/talents/perfil',
+  rightActionHref = '/plataforma/talento/perfil',
 }: {
   displayName: string
   rightActionLabel?: string
@@ -54,7 +54,7 @@ export function TalentTopBar({
         <div className="flex items-center gap-3">
           <Button
             variant="secondary"
-            className="bg-white/10 hover:bg-white/15 border border-white/10 text-white"
+            className="bg-white/10 hover:bg-white/15 border border-white/10 text-white cursor-pointer"
             onClick={() => router.push(rightActionHref)}
           >
             {rightActionLabel}

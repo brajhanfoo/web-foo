@@ -11,6 +11,7 @@ import { ArrowRight, CheckCircle2 } from 'lucide-react'
 import type { PastCompletedItem, ViewState } from '../types'
 import { CurrentApplicationHero } from './current-application-hero'
 import { PastCompletedCard } from './past-completed-card'
+import { HiOutlineBriefcase } from "react-icons/hi";
 
 export function MisPostulacionesView(props: {
   state: ViewState
@@ -46,18 +47,49 @@ export function MisPostulacionesView(props: {
       ) : null}
 
       {props.state.kind === 'empty' ? (
-        <Card className="border bg-background/10">
-          <CardContent className="py-10">
-            <div className="text-sm text-muted-foreground">
-              Aún no tienes postulaciones registradas.
+        <Card className="border border-white/10 bg-black rounded-2xl">
+          <CardContent className="py-16 px-6">
+
+            <div className="flex flex-col items-center text-center">
+
+              {/* Icono opcional */}
+              <div className="mb-6 text-[#00CCA4]">
+                <HiOutlineBriefcase className="h-10 w-10 opacity-80" />
+              </div>
+
+              {/* Título */}
+              <h3 className="text-lg md:text-xl font-semibold text-white">
+                Aún no tienes postulaciones activas
+              </h3>
+
+              {/* Descripción */}
+              <p className="mt-3 max-w-md text-sm text-white/60">
+                Cuando te postules a un programa, aquí podrás hacer seguimiento
+                de tu proceso y estado de selección.
+              </p>
+
+              {/* Botón */}
+              <div className="mt-8">
+                <Button
+                  asChild
+                  className="
+            cursor-pointer
+            bg-[#00CCA4]
+            text-black
+            hover:bg-[#00E0B3]
+            h-10 px-6
+            transition-all duration-300
+          "
+                >
+                  <Link href="/plataforma/talento/explorar" className="flex items-center gap-2">
+                    Explorar programas
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
+                </Button>
+              </div>
+
             </div>
-            <div className="mt-4">
-              <Button className="gap-2" asChild>
-                <Link href="/plataforma">
-                  Explorar programas <ArrowRight className="h-4 w-4" />
-                </Link>
-              </Button>
-            </div>
+
           </CardContent>
         </Card>
       ) : null}

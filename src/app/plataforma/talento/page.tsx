@@ -7,7 +7,10 @@ import { useToastEnhanced } from '@/hooks/use-toast-enhanced'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Separator } from '@/components/ui/separator'
+// import { Separator } from '@/components/ui/separator'
+import { HiOutlineCodeBracketSquare, HiOutlineUserCircle, HiOutlineLifebuoy } from 'react-icons/hi2'
+
+
 
 type ProfileRow = {
   id: string
@@ -148,14 +151,14 @@ export default function TalentHomePage() {
       setLatestApplication(
         row
           ? {
-              id: String(row.id),
-              program_id: String(row.program_id),
-              program_title:
-                typeof row.programs?.title === 'string'
-                  ? row.programs?.title
-                  : null,
-              status: typeof row.status === 'string' ? row.status : null,
-            }
+            id: String(row.id),
+            program_id: String(row.program_id),
+            program_title:
+              typeof row.programs?.title === 'string'
+                ? row.programs?.title
+                : null,
+            status: typeof row.status === 'string' ? row.status : null,
+          }
           : null
       )
 
@@ -183,207 +186,231 @@ export default function TalentHomePage() {
   return (
     <div className="space-y-5">
       {/* Banner */}
-      <Card className="bg-black/40 border-white/10 backdrop-blur-md overflow-hidden">
-        <CardContent className="p-5 md:p-6">
+      <Card
+        className={`relative overflow-hidden rounded-3xl border transition-all duration-300
+  ${enrolledCount === 0
+            ? 'border-[#77039F]/40 bg-gradient-to-r from-black via-[#120018] to-black'
+            : 'border-[#BDBE0B]/40 bg-gradient-to-r from-black via-[#151600] to-black'
+          }`}
+      >
+        <CardContent className="p-6 md:p-8">
+
           {loading ? (
             <div className="text-sm text-white/60">Cargando…</div>
           ) : enrolledCount === 0 ? (
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+
+            /* ---------- SIN INSCRIPCIÓN ---------- */
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+
               <div>
-                <div className="flex items-center gap-2 mb-2">
-                  <Badge className="bg-white/10 text-white border border-white/10">
+                <div className="flex items-center gap-2 mb-4">
+                  <Badge className="bg-white/5 text-white border border-white/10">
                     Estado: Nuevo
                   </Badge>
-                  <Badge className="bg-emerald-500/10 text-emerald-200 border border-emerald-500/20">
+
+                  <Badge className="bg-[#00CCA4]/10 text-[#00CCA4] border border-[#00CCA4]/30">
                     Sin inscripción
                   </Badge>
                 </div>
 
-                <div className="text-xl md:text-2xl font-semibold text-white">
-                  🚀 Aún no estás inscrito en ningún programa.
-                </div>
-                <div className="text-sm text-white/60 mt-1">
-                  Explora nuestros entornos de simulación y comienza a validar
-                  tu seniority.
-                </div>
+                <h2 className="text-2xl md:text-3xl font-semibold text-white leading-tight">
+                  Aún no estás inscrito en ningún programa.
+                </h2>
+
+                <p className="mt-3 text-sm md:text-base text-white/60 max-w-xl">
+                  Explora nuestros entornos de simulación y comienza a validar tu seniority.
+                </p>
               </div>
 
               <Button
-                className="bg-[#00CCA4] text-black hover:bg-[#00b695]"
+                className="cursor-pointer bg-[#00CCA4] text-black hover:bg-[#00E0B3] transition-all duration-300 shadow-[0_0_30px_rgba(0,204,164,0.45)]"
                 onClick={() => router.push('/plataforma/talento/explorar')}
               >
                 Explorar Programas →
               </Button>
             </div>
+
           ) : (
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+
+            /* ---------- INSCRITO ---------- */
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+
               <div>
-                <div className="flex items-center gap-2 mb-2">
-                  <Badge className="bg-white/10 text-white border border-white/10">
+                <div className="flex items-center gap-2 mb-4">
+                  <Badge className="bg-white/5 text-white border border-white/10">
                     Estado: Activo
                   </Badge>
-                  <Badge className="bg-emerald-500/10 text-emerald-200 border border-emerald-500/20">
+
+                  <Badge className="bg-[#BDBE0B]/10 text-[#BDBE0B] border border-[#BDBE0B]/30">
                     Inscrito
                   </Badge>
                 </div>
 
-                <div className="text-xl md:text-2xl font-semibold text-white">
-                  ✅ Estás inscrito en{' '}
-                  {latestApplication?.program_title ?? 'un programa'}.
-                </div>
-                <div className="text-sm text-white/60 mt-1">
-                  Seguimiento:{' '}
-                  {latestApplication?.status === 'received'
-                    ? 'recibido'
-                    : latestApplication?.status === 'in_review'
-                      ? 'en revisión'
-                      : latestApplication?.status === 'approved'
-                        ? 'aprobado'
-                        : latestApplication?.status === 'payment_pending'
-                          ? 'pendiente de pago'
-                          : latestApplication?.status === 'enrolled'
-                            ? 'matriculado'
-                            : latestApplication?.status === 'rejected'
-                              ? 'rechazado'
-                              : 'en curso'}
-                  .
-                </div>
+                <h2 className="text-2xl md:text-3xl font-semibold text-white leading-tight">
+                  Estás inscrito en {latestApplication?.program_title ?? 'un programa'}.
+                </h2>
+
+                <p className="mt-3 text-sm md:text-base text-white/60">
+                  Seguimiento en proceso.
+                </p>
               </div>
 
               <Button
-                variant="secondary"
-                className="bg-white/10 hover:bg-white/15 border border-white/10 text-white"
-                onClick={() => router.push('/plataforma/talento/explorar')}
+                className="cursor-pointer bg-[#BDBE0B] text-black hover:bg-[#d6d712] transition-all duration-300 shadow-[0_0_30px_rgba(189,190,11,0.45)]"
+                onClick={() => router.push('/plataforma/talento/mis-postulaciones')}
               >
-                Ver programa →
+                Ver mis postulaciones →
               </Button>
             </div>
           )}
         </CardContent>
       </Card>
 
+
       {/* Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {/* Mis Programas */}
-        <Card className="bg-black/40 border-white/10 backdrop-blur-md overflow-hidden">
+
+        {/* ================= MIS PROGRAMAS ================= */}
+        <Card className="bg-black border border-white/10 rounded-xl">
           <CardContent className="p-5">
-            <div className="text-[11px] text-white/50 uppercase tracking-widest">
-              Dashboard
-            </div>
-            <div className="mt-1 text-sm font-semibold text-white">
-              Mis Programas
-            </div>
 
-            <Separator className="my-4 border-white/10" />
-
-            <div className="flex items-end justify-between gap-3">
+            <div className="flex items-start justify-between">
               <div>
-                <div className="text-3xl font-semibold text-white">
+                <div className="text-[10px] text-white/40 uppercase tracking-widest">
+                  Dashboard
+                </div>
+                <div className="mt-1 text-sm font-semibold text-white">
+                  Mis Programas
+                </div>
+              </div>
+
+              <HiOutlineCodeBracketSquare className="text-xl text-[#00CCA4]" />
+            </div>
+
+            <div className="mt-6 flex items-end justify-between">
+              <div>
+                <div className="text-4xl font-semibold text-white">
                   {enrolledCount}
                 </div>
-                <div className="text-xs text-white/50 mt-1">Activos</div>
+                <div className="text-xs text-[#00CCA4] mt-1">
+                  Activos
+                </div>
               </div>
 
               <Button
-                variant="secondary"
-                className="bg-white/10 hover:bg-white/15 border border-white/10 text-white"
+                className="cursor-pointer
+  border border-[#00CCA4]
+  text-[#00CCA4]
+  bg-transparent
+  hover:bg-[#00CCA4]
+  hover:text-black
+  h-9 px-4 transition-all duration-300"
                 onClick={() => router.push('/plataforma/talento/explorar')}
               >
                 Ver →
               </Button>
             </div>
 
-            {enrolledCount > 1 ? (
-              <div className="mt-3 text-xs text-amber-200">
-                ⚠️ Tenés más de 1 inscripción (esto no debería pasar).
-              </div>
-            ) : null}
           </CardContent>
         </Card>
 
-        {/* Perfil */}
-        <Card
-          className={[
-            'border backdrop-blur-md overflow-hidden',
-            profileComplete
-              ? 'bg-black/40 border-white/10'
-              : 'bg-amber-500/5 border-amber-500/20',
-          ].join(' ')}
-        >
+        {/* ================= PERFIL ================= */}
+        <Card className="bg-black border border-white/10 rounded-xl">
           <CardContent className="p-5">
-            <div className="text-[11px] text-white/50 uppercase tracking-widest">
-              Profile Strength
-            </div>
-            <div className="mt-1 text-sm font-semibold text-white">
-              Mi Perfil Profesional
+
+            <div className="flex items-start justify-between">
+              <div>
+                <div className="text-[10px] text-white/40 uppercase tracking-widest">
+                  Profile Strength
+                </div>
+                <div className="mt-1 text-sm font-semibold text-white">
+                  Mi Perfil Profesional
+                </div>
+              </div>
+
+              <HiOutlineUserCircle className="text-xl text-[#77039F]" />
             </div>
 
-            <Separator className="my-4 border-white/10" />
-
-            <div className="flex items-center justify-between gap-3">
-              <div className="text-3xl font-semibold text-white">
+            <div className="mt-6 flex items-center justify-between">
+              <div className="text-2xl font-semibold text-white">
                 {profilePct}%
               </div>
-              {!profileComplete ? (
-                <Badge className="bg-amber-500/10 text-amber-200 border border-amber-500/20">
-                  Aún incompleto
-                </Badge>
-              ) : (
-                <Badge className="bg-emerald-500/10 text-emerald-200 border border-emerald-500/20">
-                  Completo
-                </Badge>
+
+              {!profileComplete && (
+                <span className="text-xs text-red-400 border border-red-400/30 px-2 py-1 rounded-md">
+                  ⚠ Incompleto
+                </span>
               )}
             </div>
 
-            <div className="mt-4 h-2 w-full rounded-full bg-white/10 overflow-hidden">
+            {/* Barra progreso estilo original */}
+            <div className="mt-3 h-1.5 w-full rounded-full bg-white/10 overflow-hidden">
               <div
-                className={[
-                  'h-full rounded-full transition-all',
-                  profileComplete ? 'bg-emerald-400/80' : 'bg-amber-400/80',
-                ].join(' ')}
+                className="h-full bg-[#77039F] transition-all duration-500"
                 style={{ width: `${Math.max(0, Math.min(100, profilePct))}%` }}
               />
             </div>
 
-            <div className="mt-4 flex justify-end">
+            <div className="mt-5 flex justify-end">
               <Button
-                className="bg-white text-black hover:bg-white/90"
+                className="cursor-pointer
+  border border-[#77039F]
+  text-[#77039F]
+  bg-transparent
+  hover:bg-[#77039F]
+  hover:text-white
+  h-9 px-4 transition-all duration-300"
                 onClick={() => router.push('/plataforma/talento/perfil')}
               >
-                Completar / Editar →
+                Editar →
               </Button>
             </div>
+
           </CardContent>
         </Card>
 
-        {/* Soporte */}
-        <Card className="bg-black/40 border-white/10 backdrop-blur-md overflow-hidden">
+        {/* ================= SOPORTE ================= */}
+        <Card className="bg-black border border-white/10 rounded-xl">
           <CardContent className="p-5">
-            <div className="text-[11px] text-white/50 uppercase tracking-widest">
-              Help Center
-            </div>
-            <div className="mt-1 text-sm font-semibold text-white">
-              Soporte / Ayuda
+
+            <div className="flex items-start justify-between">
+              <div>
+                <div className="text-[10px] text-white/40 uppercase tracking-widest">
+                  Help Center
+                </div>
+                <div className="mt-1 text-sm font-semibold text-white">
+                  Soporte / Ayuda
+                </div>
+              </div>
+
+              <HiOutlineLifebuoy className="text-xl text-[#BDBE0B]" />
             </div>
 
-            <Separator className="my-4 border-white/10" />
-
-            <div className="text-sm text-white/60">
+            <div className="mt-6 text-sm text-white/60">
               ¿Tienes dudas sobre tu proceso?
             </div>
 
-            <div className="mt-4 flex justify-end">
+            <div className="mt-5 flex justify-end">
               <Button
-                variant="secondary"
-                className="bg-white/10 hover:bg-white/15 border border-white/10 text-white"
+                className="cursor-pointer
+  border border-[#BDBE0B]
+  text-[#BDBE0B]
+  bg-transparent
+  hover:bg-[#BDBE0B]
+  hover:text-black
+  h-9 px-4 transition-all duration-300"
                 onClick={() => router.push('/plataforma/talento/soporte')}
               >
                 Abrir →
               </Button>
             </div>
+
           </CardContent>
         </Card>
+
       </div>
+
+
     </div>
   )
 }

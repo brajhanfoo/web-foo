@@ -506,7 +506,7 @@ export default function ProgramsPage() {
               const action = isOpen ? (
                 paymentMode === 'pre' && !paidPre ? (
                   <Button
-                    className="w-full bg-amber-400 text-black hover:bg-amber-400/90"
+                    className="w-full bg-[#BDBE0B] text-black hover:bg-[#BDBE0B]/90 cursor-pointer"
                     onClick={() => openCheckoutFor(p)}
                   >
                     <span className="flex-1 text-center">
@@ -516,7 +516,7 @@ export default function ProgramsPage() {
                   </Button>
                 ) : (
                   <Button
-                    className="w-full bg-[#00CCA4] text-black hover:bg-[#00CCA4]/90"
+                    className="w-full bg-[#00CCA4] text-black hover:bg-[#00CCA4]/90 cursor-pointer"
                     onClick={() => void goToPostulationOrRedirect(p.slug)}
                   >
                     <span className="flex-1 text-center">
@@ -619,7 +619,7 @@ export default function ProgramsPage() {
                             className={[
                               'h-5 w-5',
                               // icono amarillo cuando abierto
-                              isOpen ? 'text-amber-300' : 'text-emerald-300',
+                              isOpen ? 'text-[#BDBE0B]' : 'text-emerald-300',
                             ].join(' ')}
                             aria-hidden="true"
                           />
@@ -627,7 +627,7 @@ export default function ProgramsPage() {
                           <Users
                             className={[
                               'h-5 w-5',
-                              isOpen ? 'text-amber-300' : 'text-[#9CA3AF]',
+                              isOpen ? 'text-[#BDBE0B]' : 'text-[#9CA3AF]',
                             ].join(' ')}
                             aria-hidden="true"
                           />
@@ -765,7 +765,7 @@ export default function ProgramsPage() {
               <Button
                 asChild
                 variant="outline"
-                className="border-white/10 bg-transparent text-white/80 hover:bg-white/5"
+                className="border-white/10 bg-transparent text-white/80 hover:bg-white/5 hover:text-white"
               >
                 <Link href="/plataforma/ayuda">Centro de ayuda</Link>
               </Button>
