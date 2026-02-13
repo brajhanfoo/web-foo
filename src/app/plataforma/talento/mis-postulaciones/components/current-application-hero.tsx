@@ -78,29 +78,24 @@ export function CurrentApplicationHero(props: { app: ApplicationRow }) {
         }
         topRight={topRight}
         icon={
-          <div className="
+          <div
+            className="
       flex items-center justify-center
       h-14 w-14 rounded-2xl
       bg-black/80
       border border-blue-500/30
-    ">
+    "
+          >
             <Clock3 className="h-6 w-6 text-[#60A5FA]" />
           </div>
         }
         title="Postulación recibida"
         description="Hemos recibido tu ficha correctamente. Nuestro equipo de admisión comenzará a revisarla pronto."
         bottomLeft={
-          <span className="text-xs text-white/40">
-            Postulado: {appliedAt}
-          </span>
+          <span className="text-xs text-white/40">Postulado: {appliedAt}</span>
         }
-        bottomRight={
-          <span className={roleTextClass()}>
-            {role || '—'}
-          </span>
-        }
+        bottomRight={<span className={roleTextClass()}>{role || '—'}</span>}
       />
-
     )
   }
 
@@ -116,7 +111,6 @@ export function CurrentApplicationHero(props: { app: ApplicationRow }) {
   "
         topLeft={
           <div className="flex items-center gap-3 text-sm md:text-base">
-
             {/* Programa */}
             <span className="text-white font-semibold tracking-wide">
               {programTitle}
@@ -136,9 +130,7 @@ export function CurrentApplicationHero(props: { app: ApplicationRow }) {
           </div>
         }
         topRight={
-          <span className="text-xs text-white/40">
-            Postulado: {appliedAt}
-          </span>
+          <span className="text-xs text-white/40">Postulado: {appliedAt}</span>
         }
         icon={
           <div

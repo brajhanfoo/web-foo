@@ -13,12 +13,8 @@ import { Card } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { BsExclamationCircle } from "react-icons/bs"
-import { HiEye, HiEyeSlash } from "react-icons/hi2";
-
-
-
-
+import { BsExclamationCircle } from 'react-icons/bs'
+import { HiEye, HiEyeSlash } from 'react-icons/hi2'
 
 const CURRENT_TERMS_VERSION = '2026-01-19'
 
@@ -159,10 +155,7 @@ export function RegisterForm() {
     <div className="w-full max-w-md">
       <Card className="rounded-3xl border border-[#77039F]/30 bg-[#0D0D0D] backdrop-blur-xl shadow-[0_0_60px_#77039F20] text-white">
         <div className="p-7">
-
-          <h2 className="text-xl font-semibold">
-            Comienza tu entrenamiento
-          </h2>
+          <h2 className="text-xl font-semibold">Comienza tu entrenamiento</h2>
           <p className="mt-2 text-sm text-white/50">
             Regístrate para acceder a la plataforma.
           </p>
@@ -171,16 +164,13 @@ export function RegisterForm() {
           <div className="mt-6 flex gap-4 rounded-2xl border border-[#BDBE0B]/40 bg-[#BDBE0B]/10 px-4 py-4 text-sm">
             <BsExclamationCircle className="text-[#BDBE0B] text-2xl mt-1" />
             <div className="text-white/70">
-              <span className="font-semibold text-[#BDBE0B]">
-                Importante:
-              </span>{" "}
+              <span className="font-semibold text-[#BDBE0B]">Importante:</span>{' '}
               Para postular a programas, deberás completar tu perfil profesional
               después de registrarte.
             </div>
           </div>
 
           <form onSubmit={handleSubmit} className="mt-6 space-y-5">
-
             {/* Nombre / Apellido */}
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <Input
@@ -212,9 +202,7 @@ export function RegisterForm() {
               placeholder="tu@email.com"
               className="h-11 rounded-xl bg-black border border-white/10 text-white placeholder:text-white/30 focus:border-[#77039F] focus:ring-2 focus:ring-[#77039F]/40 transition"
               value={registerFormState.email}
-              onChange={(e) =>
-                updateRegisterFormField('email', e.target.value)
-              }
+              onChange={(e) => updateRegisterFormField('email', e.target.value)}
               required
             />
 
@@ -222,10 +210,11 @@ export function RegisterForm() {
             <div className="relative">
               <Input
                 id={passwordId}
-                type={showPassword ? "text" : "password"}
+                type={showPassword ? 'text' : 'password'}
                 placeholder="Contraseña"
-                className={`h-11 rounded-xl bg-black border pr-12 text-white placeholder:text-white/30 focus:border-[#77039F] focus:ring-2 focus:ring-[#77039F]/40 transition ${passwordError ? "border-red-500/70" : "border-white/10"
-                  }`}
+                className={`h-11 rounded-xl bg-black border pr-12 text-white placeholder:text-white/30 focus:border-[#77039F] focus:ring-2 focus:ring-[#77039F]/40 transition ${
+                  passwordError ? 'border-red-500/70' : 'border-white/10'
+                }`}
                 value={registerFormState.password}
                 onChange={(event) => {
                   const next = event.target.value
@@ -243,7 +232,7 @@ export function RegisterForm() {
 
               <button
                 type="button"
-                onClick={() => setShowPassword(prev => !prev)}
+                onClick={() => setShowPassword((prev) => !prev)}
                 className="absolute inset-y-0 right-4 flex items-center text-white/40 hover:text-[#00CCA4] transition cursor-pointer"
               >
                 {showPassword ? <HiEyeSlash /> : <HiEye />}
@@ -258,10 +247,11 @@ export function RegisterForm() {
             <div className="relative">
               <Input
                 id={confirmPasswordId}
-                type={showConfirmPassword ? "text" : "password"}
+                type={showConfirmPassword ? 'text' : 'password'}
                 placeholder="Confirmación de contraseña"
-                className={`h-11 rounded-xl bg-black border pr-12 text-white placeholder:text-white/30 focus:border-[#77039F] focus:ring-2 focus:ring-[#77039F]/40 transition ${confirmPasswordError ? "border-red-500/70" : "border-white/10"
-                  }`}
+                className={`h-11 rounded-xl bg-black border pr-12 text-white placeholder:text-white/30 focus:border-[#77039F] focus:ring-2 focus:ring-[#77039F]/40 transition ${
+                  confirmPasswordError ? 'border-red-500/70' : 'border-white/10'
+                }`}
                 value={registerFormState.confirmPassword}
                 onChange={(event) => {
                   const next = event.target.value
@@ -277,7 +267,7 @@ export function RegisterForm() {
 
               <button
                 type="button"
-                onClick={() => setShowConfirmPassword(prev => !prev)}
+                onClick={() => setShowConfirmPassword((prev) => !prev)}
                 className="absolute inset-y-0 right-4 flex items-center text-white/40 hover:text-[#00CCA4] transition cursor-pointer"
               >
                 {showConfirmPassword ? <HiEyeSlash /> : <HiEye />}
@@ -299,7 +289,7 @@ export function RegisterForm() {
                 className="mt-1 border-white/20 data-[state=checked]:bg-[#00CCA4] data-[state=checked]:text-black"
               />
               <Label htmlFor={termsId} className="leading-relaxed">
-                He leído y acepto los{" "}
+                He leído y acepto los{' '}
                 <a
                   href="/terminos-y-condiciones"
                   target="_blank"
@@ -307,7 +297,8 @@ export function RegisterForm() {
                   className="text-[#00CCA4] hover:underline"
                 >
                   Términos y condiciones
-                </a>.
+                </a>
+                .
               </Label>
             </div>
 
@@ -341,13 +332,13 @@ export function RegisterForm() {
               onClick={() => router.push('/ingresar')}
               className="w-full text-sm text-white/50 hover:text-white hover:bg-white/5 transition cursor-pointer"
             >
-              ¿Ya tienes cuenta? <span className="underline text-[#BDBE0B]">Ingresar</span>
+              ¿Ya tienes cuenta?{' '}
+              <span className="underline text-[#BDBE0B]">Ingresar</span>
             </Button>
 
             <p className="text-[11px] text-white/40 text-center">
               Al crear tu cuenta, aceptas nuestros términos y políticas.
             </p>
-
           </form>
         </div>
       </Card>

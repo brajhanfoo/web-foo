@@ -11,7 +11,7 @@ import { ArrowRight, CheckCircle2 } from 'lucide-react'
 import type { PastCompletedItem, ViewState } from '../types'
 import { CurrentApplicationHero } from './current-application-hero'
 import { PastCompletedCard } from './past-completed-card'
-import { HiOutlineBriefcase } from "react-icons/hi";
+import { HiOutlineBriefcase } from 'react-icons/hi'
 
 export function MisPostulacionesView(props: {
   state: ViewState
@@ -49,9 +49,7 @@ export function MisPostulacionesView(props: {
       {props.state.kind === 'empty' ? (
         <Card className="border border-white/10 bg-black rounded-2xl">
           <CardContent className="py-16 px-6">
-
             <div className="flex flex-col items-center text-center">
-
               {/* Icono opcional */}
               <div className="mb-6 text-[#00CCA4]">
                 <HiOutlineBriefcase className="h-10 w-10 opacity-80" />
@@ -81,15 +79,16 @@ export function MisPostulacionesView(props: {
             transition-all duration-300
           "
                 >
-                  <Link href="/plataforma/talento/explorar" className="flex items-center gap-2">
+                  <Link
+                    href="/plataforma/talento/explorar"
+                    className="flex items-center gap-2"
+                  >
                     Explorar programas
                     <ArrowRight className="h-4 w-4" />
                   </Link>
                 </Button>
               </div>
-
             </div>
-
           </CardContent>
         </Card>
       ) : null}

@@ -8,9 +8,11 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 // import { Separator } from '@/components/ui/separator'
-import { HiOutlineCodeBracketSquare, HiOutlineUserCircle, HiOutlineLifebuoy } from 'react-icons/hi2'
-
-
+import {
+  HiOutlineCodeBracketSquare,
+  HiOutlineUserCircle,
+  HiOutlineLifebuoy,
+} from 'react-icons/hi2'
 
 type ProfileRow = {
   id: string
@@ -151,14 +153,14 @@ export default function TalentHomePage() {
       setLatestApplication(
         row
           ? {
-            id: String(row.id),
-            program_id: String(row.program_id),
-            program_title:
-              typeof row.programs?.title === 'string'
-                ? row.programs?.title
-                : null,
-            status: typeof row.status === 'string' ? row.status : null,
-          }
+              id: String(row.id),
+              program_id: String(row.program_id),
+              program_title:
+                typeof row.programs?.title === 'string'
+                  ? row.programs?.title
+                  : null,
+              status: typeof row.status === 'string' ? row.status : null,
+            }
           : null
       )
 
@@ -188,20 +190,18 @@ export default function TalentHomePage() {
       {/* Banner */}
       <Card
         className={`relative overflow-hidden rounded-3xl border transition-all duration-300
-  ${enrolledCount === 0
-            ? 'border-[#77039F]/40 bg-gradient-to-r from-black via-[#120018] to-black'
-            : 'border-[#BDBE0B]/40 bg-gradient-to-r from-black via-[#151600] to-black'
-          }`}
+  ${
+    enrolledCount === 0
+      ? 'border-[#77039F]/40 bg-gradient-to-r from-black via-[#120018] to-black'
+      : 'border-[#BDBE0B]/40 bg-gradient-to-r from-black via-[#151600] to-black'
+  }`}
       >
         <CardContent className="p-6 md:p-8">
-
           {loading ? (
             <div className="text-sm text-white/60">Cargando…</div>
           ) : enrolledCount === 0 ? (
-
             /* ---------- SIN INSCRIPCIÓN ---------- */
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-
               <div>
                 <div className="flex items-center gap-2 mb-4">
                   <Badge className="bg-white/5 text-white border border-white/10">
@@ -218,7 +218,8 @@ export default function TalentHomePage() {
                 </h2>
 
                 <p className="mt-3 text-sm md:text-base text-white/60 max-w-xl">
-                  Explora nuestros entornos de simulación y comienza a validar tu seniority.
+                  Explora nuestros entornos de simulación y comienza a validar
+                  tu seniority.
                 </p>
               </div>
 
@@ -229,12 +230,9 @@ export default function TalentHomePage() {
                 Explorar Programas →
               </Button>
             </div>
-
           ) : (
-
             /* ---------- INSCRITO ---------- */
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-
               <div>
                 <div className="flex items-center gap-2 mb-4">
                   <Badge className="bg-white/5 text-white border border-white/10">
@@ -247,7 +245,8 @@ export default function TalentHomePage() {
                 </div>
 
                 <h2 className="text-2xl md:text-3xl font-semibold text-white leading-tight">
-                  Estás inscrito en {latestApplication?.program_title ?? 'un programa'}.
+                  Estás inscrito en{' '}
+                  {latestApplication?.program_title ?? 'un programa'}.
                 </h2>
 
                 <p className="mt-3 text-sm md:text-base text-white/60">
@@ -257,7 +256,9 @@ export default function TalentHomePage() {
 
               <Button
                 className="cursor-pointer bg-[#BDBE0B] text-black hover:bg-[#d6d712] transition-all duration-300 shadow-[0_0_30px_rgba(189,190,11,0.45)]"
-                onClick={() => router.push('/plataforma/talento/mis-postulaciones')}
+                onClick={() =>
+                  router.push('/plataforma/talento/mis-postulaciones')
+                }
               >
                 Ver mis postulaciones →
               </Button>
@@ -266,14 +267,11 @@ export default function TalentHomePage() {
         </CardContent>
       </Card>
 
-
       {/* Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-
         {/* ================= MIS PROGRAMAS ================= */}
         <Card className="bg-black border border-white/10 rounded-xl">
           <CardContent className="p-5">
-
             <div className="flex items-start justify-between">
               <div>
                 <div className="text-[10px] text-white/40 uppercase tracking-widest">
@@ -292,9 +290,7 @@ export default function TalentHomePage() {
                 <div className="text-4xl font-semibold text-white">
                   {enrolledCount}
                 </div>
-                <div className="text-xs text-[#00CCA4] mt-1">
-                  Activos
-                </div>
+                <div className="text-xs text-[#00CCA4] mt-1">Activos</div>
               </div>
 
               <Button
@@ -310,14 +306,12 @@ export default function TalentHomePage() {
                 Ver →
               </Button>
             </div>
-
           </CardContent>
         </Card>
 
         {/* ================= PERFIL ================= */}
         <Card className="bg-black border border-white/10 rounded-xl">
           <CardContent className="p-5">
-
             <div className="flex items-start justify-between">
               <div>
                 <div className="text-[10px] text-white/40 uppercase tracking-widest">
@@ -365,14 +359,12 @@ export default function TalentHomePage() {
                 Editar →
               </Button>
             </div>
-
           </CardContent>
         </Card>
 
         {/* ================= SOPORTE ================= */}
         <Card className="bg-black border border-white/10 rounded-xl">
           <CardContent className="p-5">
-
             <div className="flex items-start justify-between">
               <div>
                 <div className="text-[10px] text-white/40 uppercase tracking-widest">
@@ -404,13 +396,9 @@ export default function TalentHomePage() {
                 Abrir →
               </Button>
             </div>
-
           </CardContent>
         </Card>
-
       </div>
-
-
     </div>
   )
 }

@@ -15,17 +15,17 @@ const RESEND_COOLDOWN_MS = 45_000
 
 type ResendResponse =
   | {
-    success: true
-    message: string
-    description?: string
-  }
-  | {
-    success: false
-    error: {
-      title: string
+      success: true
+      message: string
       description?: string
     }
-  }
+  | {
+      success: false
+      error: {
+        title: string
+        description?: string
+      }
+    }
 
 function safeRedirectTo(value: string | null) {
   if (!value) return '/plataforma'
@@ -50,8 +50,6 @@ function LoginForm() {
   const [isResending, setIsResending] = useState(false)
   const [needsEmailConfirmation, setNeedsEmailConfirmation] = useState(false)
   const [cooldownUntil, setCooldownUntil] = useState<number | null>(null)
-
-
 
   useEffect(() => {
     let cancelled = false
@@ -171,17 +169,14 @@ function LoginForm() {
 
   return (
     <div className="relative min-h-[calc(100vh-80px)] flex items-center justify-center px-4 bg-black overflow-hidden">
-
       {/* Background decorativo */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_30%,#77039F22,transparent_40%),radial-gradient(circle_at_80%_70%,#00CCA422,transparent_40%)] pointer-events-none" />
 
       <div className="relative w-full max-w-5xl grid md:grid-cols-2 gap-10 items-stretch">
-
         {/* PANEL IZQUIERDO */}
         <Card className="hidden md:flex flex-col justify-center rounded-3xl p-10 bg-[#0D0D0D] border border-[#77039F]/30 text-white shadow-[0_0_60px_#77039F20]">
           <h1 className="text-4xl font-bold leading-tight">
-            Impulsa tu{" "}
-            <span className="text-[#00CCA4]">carrera tech</span>.
+            Impulsa tu <span className="text-[#00CCA4]">carrera tech</span>.
           </h1>
 
           <p className="mt-6 max-w-lg text-lg text-white/60 leading-relaxed">
@@ -209,17 +204,13 @@ function LoginForm() {
 
         {/* LOGIN */}
         <Card className="rounded-3xl p-8 bg-[#0D0D0D] border border-white/10 text-white shadow-[0_0_50px_#77039F20] backdrop-blur-xl">
-
-          <h2 className="text-2xl font-semibold">
-            Te damos la bienvenida
-          </h2>
+          <h2 className="text-2xl font-semibold">Te damos la bienvenida</h2>
 
           <p className="text-white/50 text-sm mt-1">
             Ingresa tus credenciales para acceder.
           </p>
 
           <form onSubmit={onSubmit} className="mt-8 space-y-5">
-
             {/* EMAIL */}
             <div className="space-y-2">
               <Label htmlFor={emailId} className="text-sm text-white/70">
@@ -281,7 +272,6 @@ function LoginForm() {
               </div>
             </div>
 
-
             {/* BOTÓN PRINCIPAL */}
             <Button
               type="submit"
@@ -311,7 +301,7 @@ function LoginForm() {
               onClick={() => router.push('/registro')}
               className="w-full text-sm text-white/60 hover:text-white hover:bg-white/5 transition"
             >
-              ¿No tienes cuenta?{" "}
+              ¿No tienes cuenta?{' '}
               <span className="underline text-[#BDBE0B] ml-1 cursor-pointer">
                 Regístrate
               </span>

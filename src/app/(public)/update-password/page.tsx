@@ -4,7 +4,13 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase/client'
 import { getPasswordError } from '@/lib/validation/password'
-import { HiOutlineShieldCheck, HiArrowLeft, HiCheck, HiEye, HiEyeSlash } from 'react-icons/hi2'
+import {
+  HiOutlineShieldCheck,
+  HiArrowLeft,
+  HiCheck,
+  HiEye,
+  HiEyeSlash,
+} from 'react-icons/hi2'
 
 export default function UpdatePasswordPage() {
   const router = useRouter()
@@ -87,7 +93,6 @@ export default function UpdatePasswordPage() {
 
       setPhase('done')
       // setTimeout(() => router.replace('/ingresar'), 400)
-
     } catch (e: any) {
       setPhase('ready')
       setMessage(e?.message ?? 'No se pudo actualizar la contraseña.')
@@ -96,20 +101,14 @@ export default function UpdatePasswordPage() {
 
   return (
     <div className="relative min-h-screen bg-black flex items-center justify-center px-4 overflow-hidden">
-
       {/* Fondo decorativo */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_30%,#77039F22,transparent_40%),radial-gradient(circle_at_80%_70%,#00CCA422,transparent_40%)] pointer-events-none" />
 
       <div className="relative w-full max-w-6xl grid lg:grid-cols-2 gap-14 items-center">
-
         {/* Panel izquierdo */}
         <div className="hidden lg:flex flex-col justify-center text-white">
           <h1 className="text-5xl font-bold leading-tight tracking-tight">
-            Crea una{" "}
-            <span className="text-[#00CCA4]">
-              nueva contraseña
-            </span>
-            .
+            Crea una <span className="text-[#00CCA4]">nueva contraseña</span>.
           </h1>
 
           <p className="mt-6 max-w-xl text-lg text-white/60 leading-relaxed">
@@ -137,10 +136,7 @@ export default function UpdatePasswordPage() {
 
         {/* Panel derecho */}
         <div className="rounded-3xl border border-[#77039F]/30 bg-[#0D0D0D] p-8 shadow-[0_0_60px_#77039F20] backdrop-blur-xl text-white">
-
-          <h2 className="text-2xl font-semibold">
-            Restablecer contraseña
-          </h2>
+          <h2 className="text-2xl font-semibold">Restablecer contraseña</h2>
 
           <p className="mt-2 text-sm text-white/50">
             {phase === 'validating'
@@ -164,13 +160,13 @@ export default function UpdatePasswordPage() {
 
           {phase === 'ready' && (
             <div className="mt-8 space-y-5">
-
               {/* Nueva contraseña */}
               <div className="relative">
                 <input
                   type={showPassword ? 'text' : 'password'}
-                  className={`w-full rounded-xl bg-black border px-4 py-3 pr-12 text-white placeholder:text-white/30 outline-none focus:border-[#77039F] focus:ring-2 focus:ring-[#77039F]/40 transition ${passwordError ? 'border-red-500/70' : 'border-white/10'
-                    }`}
+                  className={`w-full rounded-xl bg-black border px-4 py-3 pr-12 text-white placeholder:text-white/30 outline-none focus:border-[#77039F] focus:ring-2 focus:ring-[#77039F]/40 transition ${
+                    passwordError ? 'border-red-500/70' : 'border-white/10'
+                  }`}
                   value={password}
                   onChange={(e) => {
                     const next = e.target.value
@@ -199,19 +195,18 @@ export default function UpdatePasswordPage() {
               </div>
 
               {passwordError && (
-                <p className="text-xs text-red-400">
-                  {passwordError}
-                </p>
+                <p className="text-xs text-red-400">{passwordError}</p>
               )}
 
               {/* Confirmar contraseña */}
               <div className="relative">
                 <input
                   type={showConfirmPassword ? 'text' : 'password'}
-                  className={`w-full rounded-xl bg-black border px-4 py-3 pr-12 text-white placeholder:text-white/30 outline-none focus:border-[#77039F] focus:ring-2 focus:ring-[#77039F]/40 transition ${confirmPasswordError
+                  className={`w-full rounded-xl bg-black border px-4 py-3 pr-12 text-white placeholder:text-white/30 outline-none focus:border-[#77039F] focus:ring-2 focus:ring-[#77039F]/40 transition ${
+                    confirmPasswordError
                       ? 'border-red-500/70'
                       : 'border-white/10'
-                    }`}
+                  }`}
                   value={password2}
                   onChange={(e) => {
                     const next = e.target.value
@@ -227,9 +222,7 @@ export default function UpdatePasswordPage() {
 
                 <button
                   type="button"
-                  onClick={() =>
-                    setShowConfirmPassword((prev) => !prev)
-                  }
+                  onClick={() => setShowConfirmPassword((prev) => !prev)}
                   className="absolute inset-y-0 right-4 flex items-center text-white/40 hover:text-[#00CCA4] transition cursor-pointer"
                 >
                   {showConfirmPassword ? (
@@ -241,9 +234,7 @@ export default function UpdatePasswordPage() {
               </div>
 
               {confirmPasswordError && (
-                <p className="text-xs text-red-400">
-                  {confirmPasswordError}
-                </p>
+                <p className="text-xs text-red-400">{confirmPasswordError}</p>
               )}
 
               <button
@@ -263,16 +254,13 @@ export default function UpdatePasswordPage() {
                   Volver al inicio de sesión
                 </button>
               </div>
-
             </div>
           )}
 
           {/* Modal éxito */}
           {phase === 'done' && (
             <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/85 backdrop-blur-md">
-
               <div className="relative w-full max-w-md mx-4 rounded-3xl border border-[#77039F]/30 bg-[#0D0D0D] p-10 text-center shadow-[0_0_80px_#00CCA455]">
-
                 <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-[#00CCA4]/20 border border-[#00CCA4]/40 shadow-[0_0_60px_#00CCA455]">
                   <HiCheck className="text-5xl text-[#00CCA4]" />
                 </div>
@@ -282,8 +270,8 @@ export default function UpdatePasswordPage() {
                 </h2>
 
                 <p className="mt-4 text-white/60 leading-relaxed">
-                  Tu contraseña ha sido restablecida correctamente.
-                  Ya puedes acceder con tus nuevas credenciales.
+                  Tu contraseña ha sido restablecida correctamente. Ya puedes
+                  acceder con tus nuevas credenciales.
                 </p>
 
                 <button
@@ -306,7 +294,6 @@ export default function UpdatePasswordPage() {
               </button>
             </div>
           )}
-
         </div>
       </div>
     </div>

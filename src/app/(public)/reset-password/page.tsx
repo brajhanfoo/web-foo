@@ -36,20 +36,14 @@ export default function ResetPasswordPage() {
 
   return (
     <div className="relative min-h-screen bg-black flex items-center justify-center px-4 overflow-hidden">
-
       {/* Fondo decorativo */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_30%,#77039F22,transparent_40%),radial-gradient(circle_at_80%_70%,#00CCA422,transparent_40%)] pointer-events-none" />
 
       <div className="relative w-full max-w-6xl grid lg:grid-cols-2 gap-14 items-center">
-
         {/* Panel izquierdo */}
         <div className="hidden lg:flex flex-col justify-center text-white">
           <h1 className="text-5xl font-bold leading-tight tracking-tight">
-            Recupera tu{" "}
-            <span className="text-[#00CCA4]">
-              acceso
-            </span>
-            .
+            Recupera tu <span className="text-[#00CCA4]">acceso</span>.
           </h1>
 
           <p className="mt-6 max-w-xl text-lg text-white/60 leading-relaxed">
@@ -78,7 +72,6 @@ export default function ResetPasswordPage() {
 
         {/* Panel derecho */}
         <div className="rounded-3xl border border-[#77039F]/30 bg-[#0D0D0D] p-8 shadow-[0_0_60px_#77039F20] backdrop-blur-xl">
-
           <h2 className="text-2xl font-semibold text-white">
             ¿Olvidaste tu contraseña?
           </h2>
@@ -89,7 +82,6 @@ export default function ResetPasswordPage() {
           </p>
 
           <div className="mt-8 space-y-5">
-
             <input
               type="email"
               className="w-full rounded-xl bg-black border border-white/10 px-4 py-3 text-white placeholder:text-white/30 outline-none focus:border-[#77039F] focus:ring-2 focus:ring-[#77039F]/40 transition"
@@ -120,10 +112,8 @@ export default function ResetPasswordPage() {
                 Volver a Iniciar Sesión
               </button>
             </div>
-
           </div>
         </div>
-
       </div>
     </div>
   )
