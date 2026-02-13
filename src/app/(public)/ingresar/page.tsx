@@ -15,17 +15,17 @@ const RESEND_COOLDOWN_MS = 45_000
 
 type ResendResponse =
   | {
-      success: true
-      message: string
+    success: true
+    message: string
+    description?: string
+  }
+  | {
+    success: false
+    error: {
+      title: string
       description?: string
     }
-  | {
-      success: false
-      error: {
-        title: string
-        description?: string
-      }
-    }
+  }
 
 function safeRedirectTo(value: string | null) {
   if (!value) return '/plataforma'
@@ -44,14 +44,14 @@ function LoginForm() {
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
 
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isResending, setIsResending] = useState(false)
   const [needsEmailConfirmation, setNeedsEmailConfirmation] = useState(false)
   const [cooldownUntil, setCooldownUntil] = useState<number | null>(null)
-  const [loading, setLoading] = useState(false)
-  const [message, setMessage] = useState<string | null>(null)
-  const [showPassword, setShowPassword] = useState(false)
+
+
 
   useEffect(() => {
     let cancelled = false
@@ -170,29 +170,36 @@ function LoginForm() {
       : 'Reenviar correo de verificación'
 
   return (
-    <div className="min-h-[calc(100vh-80px)] flex items-center justify-center px-4 bg-black">
-      <div className="w-full max-w-5xl grid md:grid-cols-2 gap-8 items-stretch">
-        <Card className="hidden md:flex flex-col justify-center rounded-2xl p-8 bg-white/5 border border-white/10 text-white">
-          <h1 className="text-3xl font-semibold text-amber-50">
-            Impulsa tu <span className="text-emerald-400">carrera tech</span>.
+    <div className="relative min-h-[calc(100vh-80px)] flex items-center justify-center px-4 bg-black overflow-hidden">
+
+      {/* Background decorativo */}
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_30%,#77039F22,transparent_40%),radial-gradient(circle_at_80%_70%,#00CCA422,transparent_40%)] pointer-events-none" />
+
+      <div className="relative w-full max-w-5xl grid md:grid-cols-2 gap-10 items-stretch">
+
+        {/* PANEL IZQUIERDO */}
+        <Card className="hidden md:flex flex-col justify-center rounded-3xl p-10 bg-[#0D0D0D] border border-[#77039F]/30 text-white shadow-[0_0_60px_#77039F20]">
+          <h1 className="text-4xl font-bold leading-tight">
+            Impulsa tu{" "}
+            <span className="text-[#00CCA4]">carrera tech</span>.
           </h1>
 
-          <p className="mt-6 max-w-lg text-lg text-gray-400 leading-relaxed">
+          <p className="mt-6 max-w-lg text-lg text-white/60 leading-relaxed">
             Ingresa a tu espacio de trabajo y continúa tu evolución profesional.
             Accede a tu perfil, mentorías y red de contactos.
           </p>
 
-          <div className="mt-10 max-w-xl rounded-2xl border border-white/10 bg-gradient-to-r from-white/5 to-transparent p-5 backdrop-blur-sm">
+          <div className="mt-12 max-w-xl rounded-2xl border border-[#77039F]/30 bg-gradient-to-br from-[#77039F]/20 to-transparent p-6 backdrop-blur-sm">
             <div className="flex items-start gap-4">
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-purple-500/10 border border-purple-500/20">
-                <HiRocketLaunch className="text-purple-400 text-xl" />
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#77039F]/30 border border-[#77039F]/40">
+                <HiRocketLaunch className="text-[#BDBE0B] text-xl" />
               </div>
 
               <div>
                 <h3 className="text-sm font-semibold text-white">
-                  Acceso Inmediato
+                  Acceso inmediato
                 </h3>
-                <p className="mt-1 text-sm text-gray-400">
+                <p className="mt-1 text-sm text-white/60">
                   Retoma tu aprendizaje donde lo dejaste.
                 </p>
               </div>
@@ -200,13 +207,20 @@ function LoginForm() {
           </div>
         </Card>
 
-        <Card className="rounded-2xl p-6 md:p-8 bg-black/40 border border-white/10 text-white backdrop-blur">
-          <h2 className="text-xl font-semibold">Bienvenido de nuevo</h2>
-          <p className="text-white/60 text-sm mt-1">
+        {/* LOGIN */}
+        <Card className="rounded-3xl p-8 bg-[#0D0D0D] border border-white/10 text-white shadow-[0_0_50px_#77039F20] backdrop-blur-xl">
+
+          <h2 className="text-2xl font-semibold">
+            Te damos la bienvenida
+          </h2>
+
+          <p className="text-white/50 text-sm mt-1">
             Ingresa tus credenciales para acceder.
           </p>
 
-          <form onSubmit={onSubmit} className="mt-6 space-y-4">
+          <form onSubmit={onSubmit} className="mt-8 space-y-5">
+
+            {/* EMAIL */}
             <div className="space-y-2">
               <Label htmlFor={emailId} className="text-sm text-white/70">
                 Email
@@ -214,7 +228,7 @@ function LoginForm() {
               <Input
                 id={emailId}
                 type="email"
-                className="h-11 rounded-xl bg-white/5 border-white/10 text-white placeholder:text-white/40 focus-visible:ring-emerald-400/60"
+                className="h-12 rounded-xl bg-black border border-white/10 text-white placeholder:text-white/30 focus-visible:ring-2 focus-visible:ring-[#77039F]/60 focus-visible:border-[#77039F]"
                 value={email}
                 onChange={(event) => {
                   setEmail(event.target.value)
@@ -225,59 +239,82 @@ function LoginForm() {
               />
             </div>
 
+            {/* PASSWORD */}
             <div className="space-y-2">
               <Label htmlFor={passwordId} className="text-sm text-white/70">
                 Contraseña
               </Label>
-              <Input
-                id={passwordId}
-                type="password"
-                className="h-11 rounded-xl bg-white/5 border-white/10 text-white placeholder:text-white/40 focus-visible:ring-emerald-400/60"
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
-                placeholder="••••••••"
-                required
-              />
+
+              <div className="relative">
+                <Input
+                  id={passwordId}
+                  type={showPassword ? 'text' : 'password'}
+                  className="h-12 rounded-xl bg-black border border-white/10 text-white placeholder:text-white/30 pr-12 focus-visible:ring-2 focus-visible:ring-[#77039F]/60 focus-visible:border-[#77039F]"
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                  placeholder="••••••••"
+                  required
+                />
+
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  className="absolute inset-y-0 right-3 flex items-center text-white/40 hover:text-[#00CCA4] transition"
+                >
+                  {showPassword ? (
+                    <HiEyeSlash className="text-lg" />
+                  ) : (
+                    <HiEye className="text-lg" />
+                  )}
+                </button>
+              </div>
+
               <div className="flex justify-end">
                 <Button
                   type="button"
                   variant="link"
-                  className="px-0 text-xs text-white/60 hover:text-white"
+                  className="px-0 text-xs text-white/50 hover:text-[#00CCA4] transition cursor-pointer"
                   onClick={() => router.push('/reset-password')}
-                  className="text-xs text-white/50 hover:text-emerald-400 transition cursor-pointer"
                 >
                   ¿Olvidaste tu contraseña?
                 </Button>
               </div>
             </div>
 
+
+            {/* BOTÓN PRINCIPAL */}
             <Button
               type="submit"
               disabled={isSubmitting}
-              className="w-full h-11 rounded-xl bg-emerald-500 text-black hover:bg-emerald-400"
+              className="w-full h-12 rounded-xl bg-[#00CCA4] text-black font-semibold hover:bg-[#00E0B3] transition shadow-[0_0_25px_#00CCA455] cursor-pointer"
             >
               {isSubmitting ? 'Iniciando...' : 'Iniciar sesión'}
             </Button>
 
+            {/* REENVÍO VERIFICACIÓN */}
             {needsEmailConfirmation ? (
               <Button
                 type="button"
                 variant="outline"
                 disabled={isResending || isCooldownActive || !email.trim()}
                 onClick={resendVerification}
-                className="w-full h-11 rounded-xl border-white/10 bg-white/5 text-white/80 hover:bg-white/10"
+                className="w-full h-12 rounded-xl border border-[#77039F]/40 bg-[#77039F]/10 text-white hover:bg-[#77039F]/20 transition cursor-pointer"
               >
                 {resendLabel}
               </Button>
             ) : null}
 
+            {/* REGISTRO */}
             <Button
               type="button"
               variant="ghost"
               onClick={() => router.push('/registro')}
-              className="w-full text-sm text-white/70 hover:text-white hover:bg-white/5"
+              className="w-full text-sm text-white/60 hover:text-white hover:bg-white/5 transition"
             >
-              ¿No tienes cuenta? <span className="underline">Regístrate</span>
+              ¿No tienes cuenta?{" "}
+              <span className="underline text-[#BDBE0B] ml-1 cursor-pointer">
+                Regístrate
+              </span>
             </Button>
           </form>
         </Card>

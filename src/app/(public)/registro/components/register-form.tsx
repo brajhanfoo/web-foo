@@ -13,8 +13,10 @@ import { Card } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { BsExclamationCircle } from "react-icons/bs";
-import { HiEye, HiEyeSlash } from 'react-icons/hi2'
+import { BsExclamationCircle } from "react-icons/bs"
+import { HiEye, HiEyeSlash } from "react-icons/hi2";
+
+
 
 
 
@@ -155,89 +157,75 @@ export function RegisterForm() {
 
   return (
     <div className="w-full max-w-md">
-      <Card className="rounded-2xl border border-emerald-400/20 bg-white/5 backdrop-blur-xl shadow-[0_0_0_1px_rgba(0,204,164,0.12),0_20px_60px_rgba(0,0,0,0.65)] text-white">
-        <div className="p-6 md:p-7">
-          <h2 className="text-lg font-semibold text-white">
+      <Card className="rounded-3xl border border-[#77039F]/30 bg-[#0D0D0D] backdrop-blur-xl shadow-[0_0_60px_#77039F20] text-white">
+        <div className="p-7">
+
+          <h2 className="text-xl font-semibold">
             Comienza tu entrenamiento
           </h2>
-          <p className="mt-2 text-sm text-gray-400">
+          <p className="mt-2 text-sm text-white/50">
             Regístrate para acceder a la plataforma.
           </p>
 
           {/* Alert */}
-          <div className="mt-6 flex gap-3 rounded-2xl border border-yellow-400/30 bg-[#BDBE0B]/10 px-4 py-3 text-sm text-yellow-100">
-            <BsExclamationCircle className="mt-0.5 text-[#BDBE0B] text-[35px]" />
-            <div>
+          <div className="mt-6 flex gap-4 rounded-2xl border border-[#BDBE0B]/40 bg-[#BDBE0B]/10 px-4 py-4 text-sm">
+            <BsExclamationCircle className="text-[#BDBE0B] text-2xl mt-1" />
+            <div className="text-white/70">
               <span className="font-semibold text-[#BDBE0B]">
                 Importante:
-              </span>{' '}
+              </span>{" "}
               Para postular a programas, deberás completar tu perfil profesional
               después de registrarte.
             </div>
           </div>
 
-          <form onSubmit={handleSubmit} className="mt-5 space-y-4">
-            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor={firstNameId} className="text-white/70 text-sm">
-                  Nombre
-                </Label>
-                <Input
-                  id={firstNameId}
-                  className="h-11 rounded-xl bg-black/30 border-white/10 text-white placeholder:text-white/40 focus-visible:ring-emerald-400/60"
-                  placeholder="Nombre"
-                  value={registerFormState.firstName}
-                  onChange={(event) =>
-                    updateRegisterFormField('firstName', event.target.value)
-                  }
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor={lastNameId} className="text-white/70 text-sm">
-                  Apellido
-                </Label>
-                <Input
-                  id={lastNameId}
-                  className="h-11 rounded-xl bg-black/30 border-white/10 text-white placeholder:text-white/40 focus-visible:ring-emerald-400/60"
-                  placeholder="Apellido"
-                  value={registerFormState.lastName}
-                  onChange={(event) =>
-                    updateRegisterFormField('lastName', event.target.value)
-                  }
-                  required
-                />
-              </div>
-            </div>
+          <form onSubmit={handleSubmit} className="mt-6 space-y-5">
 
-            <div className="space-y-2">
-              <Label htmlFor={emailId} className="text-white/70 text-sm">
-                Email
-              </Label>
+            {/* Nombre / Apellido */}
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <Input
-                id={emailId}
-                type="email"
-                className="h-11 rounded-xl bg-black/30 border-white/10 text-white placeholder:text-white/40 focus-visible:ring-emerald-400/60"
-                placeholder="tu@email.com"
-                value={registerFormState.email}
-                onChange={(event) =>
-                  updateRegisterFormField('email', event.target.value)
+                id={firstNameId}
+                placeholder="Nombre"
+                className="h-11 rounded-xl bg-black border border-white/10 text-white placeholder:text-white/30 focus:border-[#77039F] focus:ring-2 focus:ring-[#77039F]/40 transition"
+                value={registerFormState.firstName}
+                onChange={(e) =>
+                  updateRegisterFormField('firstName', e.target.value)
+                }
+                required
+              />
+              <Input
+                id={lastNameId}
+                placeholder="Apellido"
+                className="h-11 rounded-xl bg-black border border-white/10 text-white placeholder:text-white/30 focus:border-[#77039F] focus:ring-2 focus:ring-[#77039F]/40 transition"
+                value={registerFormState.lastName}
+                onChange={(e) =>
+                  updateRegisterFormField('lastName', e.target.value)
                 }
                 required
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor={passwordId} className="text-white/70 text-sm">
-                Contraseña
-              </Label>
+            {/* Email */}
+            <Input
+              id={emailId}
+              type="email"
+              placeholder="tu@email.com"
+              className="h-11 rounded-xl bg-black border border-white/10 text-white placeholder:text-white/30 focus:border-[#77039F] focus:ring-2 focus:ring-[#77039F]/40 transition"
+              value={registerFormState.email}
+              onChange={(e) =>
+                updateRegisterFormField('email', e.target.value)
+              }
+              required
+            />
+
+            {/* Password */}
+            <div className="relative">
               <Input
                 id={passwordId}
-                type="password"
-                className={`h-11 rounded-xl bg-black/30 border text-white placeholder:text-white/40 focus-visible:ring-emerald-400/60 ${
-                  passwordError ? 'border-red-500/70' : 'border-white/10'
-                }`}
+                type={showPassword ? "text" : "password"}
                 placeholder="Contraseña"
+                className={`h-11 rounded-xl bg-black border pr-12 text-white placeholder:text-white/30 focus:border-[#77039F] focus:ring-2 focus:ring-[#77039F]/40 transition ${passwordError ? "border-red-500/70" : "border-white/10"
+                  }`}
                 value={registerFormState.password}
                 onChange={(event) => {
                   const next = event.target.value
@@ -252,25 +240,28 @@ export function RegisterForm() {
                 }}
                 required
               />
-              {passwordError ? (
-                <p className="text-xs text-red-400">{passwordError}</p>
-              ) : null}
+
+              <button
+                type="button"
+                onClick={() => setShowPassword(prev => !prev)}
+                className="absolute inset-y-0 right-4 flex items-center text-white/40 hover:text-[#00CCA4] transition cursor-pointer"
+              >
+                {showPassword ? <HiEyeSlash /> : <HiEye />}
+              </button>
             </div>
 
-            <div className="space-y-2">
-              <Label
-                htmlFor={confirmPasswordId}
-                className="text-white/70 text-sm"
-              >
-                Confirmación de contraseña
-              </Label>
+            {passwordError && (
+              <p className="text-xs text-red-400">{passwordError}</p>
+            )}
+
+            {/* Confirm Password */}
+            <div className="relative">
               <Input
                 id={confirmPasswordId}
-                type="password"
-                className={`h-11 rounded-xl bg-black/30 border text-white placeholder:text-white/40 focus-visible:ring-emerald-400/60 ${
-                  confirmPasswordError ? 'border-red-500/70' : 'border-white/10'
-                }`}
+                type={showConfirmPassword ? "text" : "password"}
                 placeholder="Confirmación de contraseña"
+                className={`h-11 rounded-xl bg-black border pr-12 text-white placeholder:text-white/30 focus:border-[#77039F] focus:ring-2 focus:ring-[#77039F]/40 transition ${confirmPasswordError ? "border-red-500/70" : "border-white/10"
+                  }`}
                 value={registerFormState.confirmPassword}
                 onChange={(event) => {
                   const next = event.target.value
@@ -283,52 +274,63 @@ export function RegisterForm() {
                 }}
                 required
               />
-              {confirmPasswordError ? (
-                <p className="text-xs text-red-400">{confirmPasswordError}</p>
-              ) : null}
+
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword(prev => !prev)}
+                className="absolute inset-y-0 right-4 flex items-center text-white/40 hover:text-[#00CCA4] transition cursor-pointer"
+              >
+                {showConfirmPassword ? <HiEyeSlash /> : <HiEye />}
+              </button>
             </div>
 
-            <div className="flex items-start gap-2 text-sm text-white/70">
+            {confirmPasswordError && (
+              <p className="text-xs text-red-400">{confirmPasswordError}</p>
+            )}
+
+            {/* Terms */}
+            <div className="flex items-start gap-3 text-sm text-white/70">
               <Checkbox
                 id={termsId}
                 checked={registerFormState.hasAcceptedTerms}
                 onCheckedChange={(checked) =>
                   updateRegisterFormField('hasAcceptedTerms', checked === true)
                 }
-                className="mt-1 border-white/20 data-[state=checked]:bg-emerald-500 data-[state=checked]:text-black"
+                className="mt-1 border-white/20 data-[state=checked]:bg-[#00CCA4] data-[state=checked]:text-black"
               />
               <Label htmlFor={termsId} className="leading-relaxed">
-                He leído y acepto los{' '}
+                He leído y acepto los{" "}
                 <a
                   href="/terminos-y-condiciones"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-emerald-400 hover:underline"
+                  className="text-[#00CCA4] hover:underline"
                 >
                   Términos y condiciones
-                </a>
-                .
+                </a>.
               </Label>
             </div>
 
-            <div className="flex items-start gap-2 text-sm text-white/70">
+            {/* Marketing */}
+            <div className="flex items-start gap-3 text-sm text-white/70">
               <Checkbox
                 id={marketingId}
                 checked={registerFormState.marketingOptIn}
                 onCheckedChange={(checked) =>
                   updateRegisterFormField('marketingOptIn', checked === true)
                 }
-                className="mt-1 border-white/20 data-[state=checked]:bg-emerald-500 data-[state=checked]:text-black"
+                className="mt-1 border-white/20 data-[state=checked]:bg-[#00CCA4] data-[state=checked]:text-black"
               />
               <Label htmlFor={marketingId} className="leading-relaxed">
-                Quiero recibir comunicaciones y novedades de marketing.
+                Quiero recibir comunicaciones y novedades.
               </Label>
             </div>
 
+            {/* CTA */}
             <Button
               type="submit"
               disabled={isSubmitting}
-              className="w-full h-11 rounded-xl bg-emerald-500 text-black hover:bg-emerald-400"
+              className="w-full h-11 rounded-xl font-semibold text-black bg-[#00CCA4] hover:bg-[#00E0B3] transition shadow-[0_0_25px_#00CCA455] cursor-pointer disabled:opacity-60"
             >
               {isSubmitting ? 'Creando cuenta...' : 'Crear cuenta'}
             </Button>
@@ -337,18 +339,18 @@ export function RegisterForm() {
               type="button"
               variant="ghost"
               onClick={() => router.push('/ingresar')}
-              className="w-full text-sm text-white/70 hover:text-white hover:bg-white/5"
+              className="w-full text-sm text-white/50 hover:text-white hover:bg-white/5 transition cursor-pointer"
             >
-              ¿Ya tienes cuenta? <span className="underline">Ingresar</span>
+              ¿Ya tienes cuenta? <span className="underline text-[#BDBE0B]">Ingresar</span>
             </Button>
 
-            <p className="text-[11px] text-gray-500 text-center">
+            <p className="text-[11px] text-white/40 text-center">
               Al crear tu cuenta, aceptas nuestros términos y políticas.
             </p>
+
           </form>
         </div>
       </Card>
     </div>
-
   )
 }
