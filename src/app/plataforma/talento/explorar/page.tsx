@@ -109,6 +109,22 @@ function parseIsoDateOnlyToDM(value: string): string {
   return DATE_FORMATTER.format(date)
 }
 
+function toDateOnly(value: string | null | undefined): string | null {
+  if (!value) return null
+  const trimmed = value.trim()
+  if (!trimmed) return null
+  const dateOnly = trimmed.slice(0, 10)
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(dateOnly)) return null
+  return dateOnly
+}
+
+function getTodayDateOnly(now: Date): string {
+  const year = now.getFullYear()
+  const month = String(now.getMonth() + 1).padStart(2, '0')
+  const day = String(now.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
 function isFormOpen(form: ApplicationFormRow, now: Date): boolean {
   if (!form.is_active) return false
 
@@ -244,16 +260,23 @@ export default function ProgramsPage() {
 
     const editions = (editionsResponse.data ?? []) as EditionRow[]
     const forms = (formsResponse.data ?? []) as ApplicationFormRow[]
+    const now = new Date()
+    const todayDate = getTodayDateOnly(now)
 
-    // última edición por programa (por created_at desc)
+    // mejor edición por programa (prioridad: ends_at vigente, luego latest)
     const latestEditionByProgram = new Map<string, EditionRow>()
-    const latestOpenEditionByProgram = new Map<string, EditionRow>()
+    const bestEditionByProgram = new Map<string, EditionRow>()
     for (const ed of editions) {
       if (!latestEditionByProgram.has(ed.program_id)) {
         latestEditionByProgram.set(ed.program_id, ed)
       }
-      if (ed.is_open && !latestOpenEditionByProgram.has(ed.program_id)) {
-        latestOpenEditionByProgram.set(ed.program_id, ed)
+      const endsAtDate = toDateOnly(ed.ends_at)
+      if (
+        endsAtDate &&
+        todayDate <= endsAtDate &&
+        !bestEditionByProgram.has(ed.program_id)
+      ) {
+        bestEditionByProgram.set(ed.program_id, ed)
       }
     }
 
@@ -271,11 +294,9 @@ export default function ProgramsPage() {
         latestFormByProgram.set(f.program_id, f)
       }
     }
-
-    const now = new Date()
     const vm: ProgramCardVM[] = programs.map((p) => {
       const edition =
-        latestOpenEditionByProgram.get(p.id) ??
+        bestEditionByProgram.get(p.id) ??
         latestEditionByProgram.get(p.id) ??
         null
       const editionForm = edition
@@ -283,16 +304,16 @@ export default function ProgramsPage() {
         : null
       const form = editionForm ?? latestFormByProgram.get(p.id) ?? null
 
-      // Si no está publicado: lo tratamos como "soon"
-      if (!p.is_published) {
-        return { ...p, edition, form, status: 'soon' }
-      }
+      const startsAtDate = edition ? toDateOnly(edition.starts_at) : null
+      const endsAtDate = edition ? toDateOnly(edition.ends_at) : null
+      const hasEnded = Boolean(endsAtDate && todayDate > endsAtDate)
+      const startsAllowed = !startsAtDate || todayDate <= startsAtDate
 
-      const editionOpen = edition ? edition.is_open : true
+      const editionOpen = edition ? edition.is_open && startsAllowed : false
       const formOpen = form ? isFormOpen(form, now) : false
-      const open = editionOpen && formOpen
+      const open = Boolean(edition) && !hasEnded && editionOpen && formOpen
 
-      // Si está publicado pero no cumple condiciones -> cerrado
+      // Si no cumple condiciones -> cerrado
       return { ...p, edition, form, status: open ? 'open' : 'closed' }
     })
 
@@ -437,6 +458,8 @@ export default function ProgramsPage() {
     )
   }
 
+  const todayDate = getTodayDateOnly(new Date())
+
   return (
     <div className="min-h-dvh bg-black px-6 py-8">
       <div className="mx-auto w-full max-w-5xl space-y-8">
@@ -464,25 +487,27 @@ export default function ProgramsPage() {
           <div className="grid gap-6 md:grid-cols-2">
             {items.map((p) => {
               const iconKind = pickProgramIcon(p.slug)
-              const isOpen = p.status === 'open'
-              const isClosed = p.status === 'closed'
               const paymentMode = resolvePaymentMode(p)
               const priceLabel = formatUsd(p.price_usd)
               const paidPre = hasPaidPre(p.id, p.edition?.id ?? null)
               const applied = hasApplied(p.id, p.edition?.id ?? null)
+              const endsAtDate = p.edition
+                ? toDateOnly(p.edition.ends_at)
+                : null
+              const hasEnded = Boolean(endsAtDate && todayDate > endsAtDate)
+              const hasEdition = Boolean(p.edition)
+              const isOpen = p.status === 'open' && !hasEnded
+              const badgeStatus: ProgramStatus = isOpen ? 'open' : 'closed'
+              const canShowApplied = applied && hasEdition && !hasEnded
 
               const badge = isOpen ? (
                 <Badge className="bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
-                  {statusLabel(p.status)}
-                </Badge>
-              ) : isClosed ? (
-                <Badge className="bg-white/5 text-white/70 border border-white/10 gap-2">
-                  <Lock className="h-3.5 w-3.5" aria-hidden="true" />
-                  {statusLabel(p.status)}
+                  {statusLabel(badgeStatus)}
                 </Badge>
               ) : (
-                <Badge className="bg-white/5 text-white/70 border border-white/10">
-                  {statusLabel(p.status)}
+                <Badge className="bg-white/5 text-white/70 border border-white/10 gap-2">
+                  <Lock className="h-3.5 w-3.5" aria-hidden="true" />
+                  {statusLabel(badgeStatus)}
                 </Badge>
               )
 
@@ -525,35 +550,7 @@ export default function ProgramsPage() {
                     <ArrowRight className="h-4 w-4" aria-hidden="true" />
                   </Button>
                 )
-              ) : isClosed ? (
-                <Button
-                  asChild
-                  variant="outline"
-                  className="w-full border-white/10 bg-transparent text-white/80 hover:bg-white/5"
-                >
-                  <Link
-                    href={`/programas/${p.slug}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex w-full items-center justify-between"
-                  >
-                    <span className="flex-1 text-center">
-                      VER DETALLES DEL PROGRAMA
-                    </span>
-                    <ArrowRight className="h-4 w-4" aria-hidden="true" />
-                  </Link>
-                </Button>
-              ) : (
-                <Button
-                  variant="outline"
-                  className="w-full border-white/10 bg-transparent text-white/60"
-                  disabled
-                >
-                  <span className="flex-1 text-center">
-                    UNIRME A LA LISTA DE ESPERA
-                  </span>
-                </Button>
-              )
+              ) : null
 
               const appliedAction = (
                 <Button
@@ -571,6 +568,7 @@ export default function ProgramsPage() {
                   </Link>
                 </Button>
               )
+              const primaryAction = canShowApplied ? appliedAction : action
 
               return (
                 <Card
@@ -710,7 +708,7 @@ export default function ProgramsPage() {
                       </Link>
                     </div>
 
-                    {applied ? appliedAction : action}
+                    {primaryAction}
                   </CardContent>
 
                   {/* Glow lateral extra (verde+amarillo) solo abierto */}
