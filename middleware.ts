@@ -11,6 +11,7 @@ function isPublicPath(pathname: string): boolean {
     '/project-academy',
     '/registro',
     '/ingresar',
+    '/auth/callback',
     '/reset-password',
     '/update-password',
     '/terminos-y-condiciones',
