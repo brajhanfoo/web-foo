@@ -23,6 +23,7 @@ export type ProgramEditionTeam = {
 export type ProgramEditionMilestone = {
   id: string
   edition_id: string
+  team_id: string
   title: string
   meet_url: string | null
   drive_url: string | null

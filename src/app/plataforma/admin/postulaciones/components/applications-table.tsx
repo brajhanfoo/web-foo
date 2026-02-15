@@ -61,6 +61,11 @@ function statusBadgeClasses(status: ApplicationStatus): Record<string, string> {
       className: 'bg-yellow-500/15 text-yellow-200 border-yellow-400/20',
       label: 'En revisión',
     }
+  if (status === 'payment_pending')
+    return {
+      className: 'bg-orange-500/15 text-orange-200 border-orange-400/20',
+      label: 'Pago pendiente',
+    }
   if (status === 'rejected')
     return {
       className: 'bg-red-500/15 text-red-300 border-red-400/20',
@@ -110,6 +115,7 @@ function statusLabel(status: ApplicationStatus | 'all'): string {
   if (status === 'received') return 'Recibido'
   if (status === 'in_review') return 'En revisión'
   if (status === 'approved') return 'Aprobado'
+  if (status === 'payment_pending') return 'Pago pendiente'
   if (status === 'enrolled') return 'Matriculado'
   if (status === 'rejected') return 'Rechazado'
   return status

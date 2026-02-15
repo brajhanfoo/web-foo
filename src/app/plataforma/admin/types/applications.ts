@@ -4,6 +4,7 @@ export type ApplicationStatus =
   | 'approved'
   | 'rejected'
   | 'enrolled'
+  | 'payment_pending'
 
 export type ApplicationRowForAdminTable = {
   id: string

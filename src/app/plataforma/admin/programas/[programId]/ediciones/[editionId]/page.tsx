@@ -20,14 +20,6 @@ import { Textarea } from '@/components/ui/textarea'
 import { Switch } from '@/components/ui/switch'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
   Select,
@@ -42,7 +34,6 @@ import { ArrowLeft, ExternalLink, Plus, Save, Trash2 } from 'lucide-react'
 import { EditionFormBuilder } from './components/edition-form-builder'
 import type {
   ApplicationParticipantRow,
-  ProgramEditionMilestone,
   ProgramEditionTeam,
   ProgramParticipantRole,
 } from '@/types/program-editions'
@@ -105,7 +96,6 @@ export default function AdminEditionDetailPage() {
   const [program, setProgram] = useState<ProgramRowBase | null>(null)
   const [edition, setEdition] = useState<EditionRow | null>(null)
   const [teams, setTeams] = useState<ProgramEditionTeam[]>([])
-  const [milestones, setMilestones] = useState<ProgramEditionMilestone[]>([])
   const [participants, setParticipants] = useState<ParticipantRow[]>([])
   const [hasActiveForm, setHasActiveForm] = useState(false)
 
@@ -121,16 +111,6 @@ export default function AdminEditionDetailPage() {
   const [teamToDelete, setTeamToDelete] = useState<ProgramEditionTeam | null>(
     null
   )
-
-  // Milestones
-  const [milestoneModalOpen, setMilestoneModalOpen] = useState(false)
-  const [editingMilestone, setEditingMilestone] =
-    useState<ProgramEditionMilestone | null>(null)
-  const [milestoneTitle, setMilestoneTitle] = useState('')
-  const [milestoneMeetUrl, setMilestoneMeetUrl] = useState('')
-  const [milestoneDriveUrl, setMilestoneDriveUrl] = useState('')
-  const [milestoneStartsAt, setMilestoneStartsAt] = useState('')
-  const [milestonePosition, setMilestonePosition] = useState('')
 
   // Participants
   const [participantSavingId, setParticipantSavingId] = useState<string | null>(
@@ -149,12 +129,8 @@ export default function AdminEditionDetailPage() {
   async function loadAll() {
     setLoading(true)
 
-    const [
-      programResponse,
-      editionResponse,
-      teamsResponse,
-      milestonesResponse,
-    ] = await Promise.all([
+    const [programResponse, editionResponse, teamsResponse] =
+      await Promise.all([
       supabase
         .from('programs')
         .select('id, slug, title, description')
@@ -174,14 +150,6 @@ export default function AdminEditionDetailPage() {
         )
         .eq('edition_id', editionId)
         .order('name', { ascending: true }),
-      supabase
-        .from('program_edition_milestones')
-        .select(
-          'id, edition_id, title, meet_url, drive_url, starts_at, position, created_at, updated_at'
-        )
-        .eq('edition_id', editionId)
-        .order('position', { ascending: true })
-        .order('created_at', { ascending: true }),
     ])
 
     if (programResponse.error || !programResponse.data) {
@@ -202,7 +170,6 @@ export default function AdminEditionDetailPage() {
     }
 
     setTeams((teamsResponse.data ?? []) as ProgramEditionTeam[])
-    setMilestones((milestonesResponse.data ?? []) as ProgramEditionMilestone[])
 
     const participantsResponse = await supabase
       .from('applications')
@@ -373,70 +340,6 @@ export default function AdminEditionDetailPage() {
     showSuccess('Equipo eliminado.')
   }
 
-  function openMilestoneModal(milestone?: ProgramEditionMilestone) {
-    if (milestone) {
-      setEditingMilestone(milestone)
-      setMilestoneTitle(milestone.title)
-      setMilestoneMeetUrl(milestone.meet_url ?? '')
-      setMilestoneDriveUrl(milestone.drive_url ?? '')
-      setMilestoneStartsAt(milestone.starts_at ?? '')
-      setMilestonePosition(
-        typeof milestone.position === 'number' ? String(milestone.position) : ''
-      )
-    } else {
-      setEditingMilestone(null)
-      setMilestoneTitle('')
-      setMilestoneMeetUrl('')
-      setMilestoneDriveUrl('')
-      setMilestoneStartsAt('')
-      setMilestonePosition('')
-    }
-    setMilestoneModalOpen(true)
-  }
-
-  async function saveMilestone() {
-    const title = milestoneTitle.trim()
-    if (!title) return showError('El titulo es obligatorio.')
-
-    const positionRaw = milestonePosition.trim()
-    const positionValue = positionRaw ? Number(positionRaw) : null
-    if (positionRaw && !Number.isFinite(positionValue)) {
-      return showError('Posicion invalida.')
-    }
-
-    const payload = {
-      edition_id: editionId,
-      title,
-      meet_url: milestoneMeetUrl.trim() || null,
-      drive_url: milestoneDriveUrl.trim() || null,
-      starts_at: toDateOnlyOrNull(milestoneStartsAt),
-      position: positionValue,
-    }
-
-    const response = editingMilestone
-      ? await supabase
-          .from('program_edition_milestones')
-          .update(payload)
-          .eq('id', editingMilestone.id)
-          .select('*')
-          .maybeSingle()
-      : await supabase
-          .from('program_edition_milestones')
-          .insert(payload)
-          .select('*')
-          .maybeSingle()
-
-    if (response.error || !response.data) {
-      showError(
-        `No se pudo guardar el hito. ${safeString(response.error?.message)}`
-      )
-      return
-    }
-
-    setMilestoneModalOpen(false)
-    showSuccess(editingMilestone ? 'Hito actualizado.' : 'Hito creado.')
-    await loadAll()
-  }
 
   async function updateParticipant(
     participantId: string,
@@ -598,9 +501,6 @@ export default function AdminEditionDetailPage() {
           </TabsTrigger>
           <TabsTrigger value="equipos" className={tabsListClass}>
             Equipos
-          </TabsTrigger>
-          <TabsTrigger value="hitos" className={tabsListClass}>
-            Hitos
           </TabsTrigger>
           <TabsTrigger value="post" className={tabsListClass}>
             Post-edicion
@@ -796,19 +696,34 @@ export default function AdminEditionDetailPage() {
                           />
                         </div>
 
-                        <div className="flex items-center justify-between gap-2">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
                           <Button
-                            onClick={() => saveTeam(team)}
-                            disabled={teamSavingId === team.id}
+                            asChild
+                            variant="secondary"
+                            size="sm"
+                            className="gap-2"
                           >
-                            Guardar
+                            <Link
+                              href={`/plataforma/admin/programas/${programId}/ediciones/${editionId}/equipos/${team.id}`}
+                            >
+                              <ExternalLink className="h-4 w-4" />
+                              Hitos
+                            </Link>
                           </Button>
-                          <Button
-                            variant="destructive"
-                            onClick={() => setTeamToDelete(team)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
+                          <div className="flex items-center gap-2">
+                            <Button
+                              onClick={() => saveTeam(team)}
+                              disabled={teamSavingId === team.id}
+                            >
+                              Guardar
+                            </Button>
+                            <Button
+                              variant="destructive"
+                              onClick={() => setTeamToDelete(team)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </div>
                       </div>
                     ))
@@ -914,60 +829,6 @@ export default function AdminEditionDetailPage() {
               </CardContent>
             </Card>
           </div>
-        </TabsContent>
-
-        <TabsContent value="hitos">
-          <Card className="bg-slate-900 border-slate-800 text-slate-100">
-            <CardHeader>
-              <div className="flex items-center justify-between gap-2">
-                <div>
-                  <CardTitle>Hitos de la edicion</CardTitle>
-                  <CardDescription className="text-slate-300">
-                    Crea hitos con enlaces de meet/drive.
-                  </CardDescription>
-                </div>
-                <Button onClick={() => openMilestoneModal()} className="gap-2">
-                  <Plus className="h-4 w-4" /> Nuevo hito
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {milestones.length === 0 ? (
-                <div className="text-sm text-slate-300">
-                  Todavia no hay hitos.
-                </div>
-              ) : (
-                milestones.map((milestone) => (
-                  <div
-                    key={milestone.id}
-                    className="rounded-lg border border-slate-800 bg-slate-900 p-4 space-y-2"
-                  >
-                    <div className="flex items-start justify-between gap-2">
-                      <div>
-                        <div className="font-medium">{milestone.title}</div>
-                        <div className="text-xs text-slate-300">
-                          {formatDateRange(milestone.starts_at, null)}
-                        </div>
-                      </div>
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        onClick={() => openMilestoneModal(milestone)}
-                      >
-                        Editar
-                      </Button>
-                    </div>
-                    <div className="text-xs text-slate-300">
-                      Meet: {milestone.meet_url ?? '—'}
-                    </div>
-                    <div className="text-xs text-slate-300">
-                      Drive: {milestone.drive_url ?? '—'}
-                    </div>
-                  </div>
-                ))
-              )}
-            </CardContent>
-          </Card>
         </TabsContent>
 
         <TabsContent value="post">
@@ -1104,74 +965,6 @@ export default function AdminEditionDetailPage() {
           </Card>
         </TabsContent>
       </Tabs>
-
-      <Dialog open={milestoneModalOpen} onOpenChange={setMilestoneModalOpen}>
-        <DialogContent className="border border-slate-800 bg-slate-900 text-slate-100">
-          <DialogHeader>
-            <DialogTitle>
-              {editingMilestone ? 'Editar hito' : 'Nuevo hito'}
-            </DialogTitle>
-            <DialogDescription className="text-slate-300">
-              Define el titulo y enlaces necesarios.
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label>Titulo</Label>
-              <Input
-                value={milestoneTitle}
-                onChange={(event) => setMilestoneTitle(event.target.value)}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Meet / Videollamada</Label>
-              <Input
-                value={milestoneMeetUrl}
-                onChange={(event) => setMilestoneMeetUrl(event.target.value)}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Drive</Label>
-              <Input
-                value={milestoneDriveUrl}
-                onChange={(event) => setMilestoneDriveUrl(event.target.value)}
-              />
-            </div>
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="space-y-2">
-                <Label>Fecha</Label>
-                <Input
-                  type="date"
-                  value={milestoneStartsAt}
-                  onChange={(event) => setMilestoneStartsAt(event.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Posicion</Label>
-                <Input
-                  value={milestonePosition}
-                  onChange={(event) => setMilestonePosition(event.target.value)}
-                  inputMode="numeric"
-                  placeholder="0"
-                />
-              </div>
-            </div>
-          </div>
-
-          <DialogFooter className="gap-2">
-            <Button
-              variant="secondary"
-              onClick={() => setMilestoneModalOpen(false)}
-            >
-              Cancelar
-            </Button>
-            <Button onClick={saveMilestone}>
-              {editingMilestone ? 'Guardar cambios' : 'Crear hito'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
       <ConfirmDialog
         open={Boolean(teamToDelete)}
