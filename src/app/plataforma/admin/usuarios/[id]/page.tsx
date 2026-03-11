@@ -49,6 +49,7 @@ type ApplicationRow = {
 
 type PaymentRow = {
   id: string
+  provider: string
   status: string
   purpose: string
   amount_cents: number
@@ -500,24 +501,28 @@ export default function AdminUserDetailPage() {
               style={{ contentVisibility: 'auto' }}
             >
               <div className="grid grid-cols-12 gap-0 border-b border-slate-800 bg-slate-900/60 text-xs text-slate-300 font-medium">
-                <div className="col-span-4 px-3 py-2">Programa</div>
+                <div className="col-span-3 px-3 py-2">Programa</div>
+                <div className="col-span-2 px-3 py-2">Proveedor</div>
                 <div className="col-span-2 px-3 py-2">Estado</div>
                 <div className="col-span-2 px-3 py-2">Monto</div>
                 <div className="col-span-2 px-3 py-2">Propósito</div>
-                <div className="col-span-2 px-3 py-2">Fecha</div>
+                <div className="col-span-1 px-3 py-2">Fecha</div>
               </div>
               {payments.map((row) => (
                 <div
                   key={row.id}
                   className="grid grid-cols-12 items-center border-b border-slate-800 last:border-b-0 bg-slate-950"
                 >
-                  <div className="col-span-4 px-3 py-3">
+                  <div className="col-span-3 px-3 py-3">
                     <div className="text-sm font-medium text-slate-100">
                       {row.programs?.title ?? 'Programa'}
                     </div>
                     <div className="text-xs text-slate-400">
                       {row.edition_id ? `Edición ${row.edition_id}` : '—'}
                     </div>
+                  </div>
+                  <div className="col-span-2 px-3 py-3 text-sm text-slate-300">
+                    {row.provider ?? 'payphone'}
                   </div>
                   <div className="col-span-2 px-3 py-3 text-sm text-slate-300">
                     {row.status}
@@ -528,7 +533,7 @@ export default function AdminUserDetailPage() {
                   <div className="col-span-2 px-3 py-3 text-sm text-slate-300">
                     {row.purpose}
                   </div>
-                  <div className="col-span-2 px-3 py-3 text-sm text-slate-300">
+                  <div className="col-span-1 px-3 py-3 text-sm text-slate-300">
                     {formatDate(row.paid_at ?? row.created_at)}
                   </div>
                 </div>

@@ -129,28 +129,29 @@ export default function AdminEditionDetailPage() {
   async function loadAll() {
     setLoading(true)
 
-    const [programResponse, editionResponse, teamsResponse] =
-      await Promise.all([
-      supabase
-        .from('programs')
-        .select('id, slug, title, description')
-        .eq('id', programId)
-        .maybeSingle(),
-      supabase
-        .from('program_editions')
-        .select(
-          'id, program_id, edition_name, starts_at, ends_at, is_open, created_at, updated_at'
-        )
-        .eq('id', editionId)
-        .maybeSingle(),
-      supabase
-        .from('program_edition_teams')
-        .select(
-          'id, edition_id, name, drive_url, classroom_url, slack_url, created_at, updated_at'
-        )
-        .eq('edition_id', editionId)
-        .order('name', { ascending: true }),
-    ])
+    const [programResponse, editionResponse, teamsResponse] = await Promise.all(
+      [
+        supabase
+          .from('programs')
+          .select('id, slug, title, description')
+          .eq('id', programId)
+          .maybeSingle(),
+        supabase
+          .from('program_editions')
+          .select(
+            'id, program_id, edition_name, starts_at, ends_at, is_open, created_at, updated_at'
+          )
+          .eq('id', editionId)
+          .maybeSingle(),
+        supabase
+          .from('program_edition_teams')
+          .select(
+            'id, edition_id, name, drive_url, classroom_url, slack_url, created_at, updated_at'
+          )
+          .eq('edition_id', editionId)
+          .order('name', { ascending: true }),
+      ]
+    )
 
     if (programResponse.error || !programResponse.data) {
       showError('No se pudo cargar el programa.')
@@ -339,7 +340,6 @@ export default function AdminEditionDetailPage() {
     setTeamToDelete(null)
     showSuccess('Equipo eliminado.')
   }
-
 
   async function updateParticipant(
     participantId: string,

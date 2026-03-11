@@ -51,7 +51,7 @@ export async function GET(
   const { data: payments, error: paymentsErr } = await supabaseAdmin
     .from('payments')
     .select(
-      'id, status, purpose, amount_cents, currency, program_id, edition_id, created_at, paid_at, programs(title)'
+      'id, provider, status, purpose, amount_cents, currency, program_id, edition_id, created_at, paid_at, programs(title)'
     )
     .or(`user_id.eq.${targetId},profile_id.eq.${targetId}`)
     .order('created_at', { ascending: false })

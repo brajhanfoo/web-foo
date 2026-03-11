@@ -1,16 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+
 import { supabaseAdmin } from '@/lib/supabase/admin'
-import type { ProgramPaymentMode, ProgramRow } from '@/types/programs'
+import {
+  buildMercadoPagoUrls,
+  createMercadoPagoPreferenceClient,
+  getMercadoPagoPublicKey,
+} from '@/lib/payments/mercadopago'
+import { createClient } from '@/lib/supabase/server'
 import type { PaymentProvider, PaymentStatus } from '@/types/payments'
+import type { ProgramPaymentMode, ProgramRow } from '@/types/programs'
 
 export const runtime = 'nodejs'
 
 const DEFAULT_CURRENCY = 'USD'
-const PAYPHONE_PROVIDER: PaymentProvider = 'payphone'
+const MERCADO_PAGO_PROVIDER: PaymentProvider = 'mercado_pago'
 
 type PaymentPurpose = 'pre_enrollment' | 'tuition'
-type CreateCheckoutInput = {
+type CreatePreferenceInput = {
   programId: string
   editionId: string | null
   purpose: PaymentPurpose
@@ -18,26 +24,21 @@ type CreateCheckoutInput = {
   amountCents: number
 }
 
-type CreateCheckoutResponse = {
+type CreatePreferenceResponse = {
   ok: boolean
   message?: string
   paymentId?: string
   status?: PaymentStatus
   alreadyPaid?: boolean
-  clientTxId?: string
-  token?: string
-  storeId?: string
-  amount?: number
-  amountWithoutTax?: number
-  amountWithTax?: number
-  tax?: number
-  currency?: string
-  reference?: string
+  preferenceId?: string
+  initPoint?: string
+  sandboxInitPoint?: string
+  publicKey?: string
 }
 
 type ProgramRowSummary = Pick<
   ProgramRow,
-  'id' | 'slug' | 'payment_mode' | 'requires_payment_pre' | 'price_usd'
+  'id' | 'title' | 'slug' | 'payment_mode' | 'requires_payment_pre' | 'price_usd'
 >
 
 type ApplicationRow = {
@@ -51,9 +52,14 @@ type PaymentRow = {
   id: string
   status: PaymentStatus
   edition_id: string | null
-  client_transaction_id: string | null
-  payphone_transaction_id: string | null
   provider: PaymentProvider
+}
+
+type MercadoPagoUrls = {
+  success: string
+  failure: string
+  pending: string
+  notification: string
 }
 
 function isRecord(v: unknown): v is Record<string, unknown> {
@@ -75,7 +81,7 @@ function asNumber(v: unknown): number | null {
   return null
 }
 
-function parseInput(body: unknown): CreateCheckoutInput | null {
+function parseInput(body: unknown): CreatePreferenceInput | null {
   if (!isRecord(body)) return null
 
   const programId = asString(body['programId'])
@@ -99,6 +105,75 @@ function parseInput(body: unknown): CreateCheckoutInput | null {
   }
 }
 
+function parseAbsoluteUrl(value: string): URL | null {
+  try {
+    return new URL(value)
+  } catch {
+    return null
+  }
+}
+
+function isLocalHost(hostname: string): boolean {
+  const normalized = hostname.trim().toLowerCase()
+  return (
+    normalized === 'localhost' ||
+    normalized === '127.0.0.1' ||
+    normalized === '::1' ||
+    normalized.endsWith('.local')
+  )
+}
+
+function validateMercadoPagoUrls(urls: MercadoPagoUrls): string | null {
+  const entries: Array<[keyof MercadoPagoUrls, string]> = [
+    ['success', urls.success],
+    ['failure', urls.failure],
+    ['pending', urls.pending],
+    ['notification', urls.notification],
+  ]
+
+  for (const [name, value] of entries) {
+    const parsed = parseAbsoluteUrl(value)
+    if (!parsed) {
+      return `La URL ${name} de Mercado Pago no es valida.`
+    }
+
+    if (parsed.protocol !== 'https:') {
+      return `La URL ${name} de Mercado Pago debe usar https.`
+    }
+
+    if (isLocalHost(parsed.hostname)) {
+      return `La URL ${name} de Mercado Pago no puede apuntar a localhost.`
+    }
+  }
+
+  return null
+}
+
+function extractErrorMessage(error: unknown): string | null {
+  if (typeof error === 'string') {
+    const normalized = error.trim()
+    return normalized || null
+  }
+
+  if (error instanceof Error) {
+    const normalized = error.message.trim()
+    return normalized || null
+  }
+
+  if (!isRecord(error)) return null
+
+  const direct = asString(error['message'])
+  if (direct) return direct
+
+  const cause = error['cause']
+  if (isRecord(cause)) {
+    const causeMessage = asString(cause['message'])
+    if (causeMessage) return causeMessage
+  }
+
+  return null
+}
+
 function resolvePaymentMode(program: ProgramRowSummary): ProgramPaymentMode {
   if (program.payment_mode) return program.payment_mode
   return program.requires_payment_pre ? 'pre' : 'none'
@@ -111,13 +186,60 @@ function parsePriceToCents(priceUsd: string | number | null): number | null {
   return Math.round(parsed * 100)
 }
 
-function buildReference(purpose: PaymentPurpose, programSlug: string): string {
-  const base = purpose === 'pre_enrollment' ? 'Pre-inscripcion' : 'Matricula'
-  return `${base} ${programSlug}`.slice(0, 70)
+function buildPreferenceTitle(params: {
+  purpose: PaymentPurpose
+  programTitle: string
+  programSlug: string
+}): string {
+  const kind =
+    params.purpose === 'pre_enrollment' ? 'Pre-inscripción' : 'Matrícula'
+  const title = params.programTitle.trim() || params.programSlug.trim()
+  return `${kind} ${title}`.trim().slice(0, 120)
 }
 
-function buildClientTxId(paymentId: string): string {
-  return paymentId
+function pickString(raw: unknown, key: string): string | null {
+  if (!isRecord(raw)) return null
+  const value = raw[key]
+  if (typeof value !== 'string') return null
+  const trimmed = value.trim()
+  return trimmed || null
+}
+
+function buildPreferenceBody(params: {
+  purpose: PaymentPurpose
+  amountCents: number
+  paymentId: string
+  programTitle: string
+  programSlug: string
+  urls: {
+    success: string
+    failure: string
+    pending: string
+    notification: string
+  }
+}): Record<string, unknown> {
+  return {
+    items: [
+      {
+        title: buildPreferenceTitle({
+          purpose: params.purpose,
+          programTitle: params.programTitle,
+          programSlug: params.programSlug,
+        }),
+        quantity: 1,
+        currency_id: DEFAULT_CURRENCY,
+        unit_price: params.amountCents / 100,
+      },
+    ],
+    external_reference: params.paymentId,
+    back_urls: {
+      success: params.urls.success,
+      failure: params.urls.failure,
+      pending: params.urls.pending,
+    },
+    auto_return: 'approved',
+    notification_url: params.urls.notification,
+  }
 }
 
 async function findExistingPaid(params: {
@@ -128,9 +250,7 @@ async function findExistingPaid(params: {
 }): Promise<PaymentRow | null> {
   let q = supabaseAdmin
     .from('payments')
-    .select(
-      'id,status,edition_id,client_transaction_id,payphone_transaction_id,provider'
-    )
+    .select('id,status,edition_id,provider')
     .eq('user_id', params.userId)
     .eq('program_id', params.programId)
     .eq('purpose', params.purpose)
@@ -156,9 +276,7 @@ async function findReusableOpen(params: {
 }): Promise<PaymentRow | null> {
   let q = supabaseAdmin
     .from('payments')
-    .select(
-      'id,status,edition_id,client_transaction_id,payphone_transaction_id,provider'
-    )
+    .select('id,status,edition_id,provider')
     .eq('user_id', params.userId)
     .eq('program_id', params.programId)
     .eq('purpose', params.purpose)
@@ -185,9 +303,7 @@ async function findOpenOtherProvider(params: {
 }): Promise<PaymentRow | null> {
   let q = supabaseAdmin
     .from('payments')
-    .select(
-      'id,status,edition_id,client_transaction_id,payphone_transaction_id,provider'
-    )
+    .select('id,status,edition_id,provider')
     .eq('user_id', params.userId)
     .eq('program_id', params.programId)
     .eq('purpose', params.purpose)
@@ -205,9 +321,42 @@ async function findOpenOtherProvider(params: {
   return data as PaymentRow
 }
 
+function isMissingCheckoutUrlColumn(error: unknown): boolean {
+  if (!error || typeof error !== 'object') return false
+  const message = String((error as { message?: unknown }).message ?? '')
+    .trim()
+    .toLowerCase()
+  return message.includes('checkout_url')
+}
+
+async function updatePaymentPendingWithOptionalCheckout(params: {
+  paymentId: string
+  checkoutUrl: string
+}) {
+  const firstTry = await supabaseAdmin
+    .from('payments')
+    .update({
+      status: 'pending',
+      checkout_url: params.checkoutUrl,
+    })
+    .eq('id', params.paymentId)
+    .eq('provider', MERCADO_PAGO_PROVIDER)
+
+  if (!firstTry.error) return { error: null as unknown }
+  if (!isMissingCheckoutUrlColumn(firstTry.error)) return firstTry
+
+  const fallback = await supabaseAdmin
+    .from('payments')
+    .update({ status: 'pending' })
+    .eq('id', params.paymentId)
+    .eq('provider', MERCADO_PAGO_PROVIDER)
+
+  return fallback
+}
+
 export async function POST(
   request: NextRequest
-): Promise<NextResponse<CreateCheckoutResponse>> {
+): Promise<NextResponse<CreatePreferenceResponse>> {
   const supabaseServer = await createClient()
   const { data: userRes, error: userErr } = await supabaseServer.auth.getUser()
 
@@ -218,7 +367,7 @@ export async function POST(
     )
   }
 
-  let payload: CreateCheckoutInput | null = null
+  let payload: CreatePreferenceInput | null = null
   try {
     payload = parseInput((await request.json()) as unknown)
   } catch {
@@ -237,7 +386,7 @@ export async function POST(
 
   const { data: programRow, error: programErr } = await supabaseAdmin
     .from('programs')
-    .select('id, slug, payment_mode, requires_payment_pre, price_usd')
+    .select('id, title, slug, payment_mode, requires_payment_pre, price_usd')
     .eq('id', programId)
     .maybeSingle()
 
@@ -333,14 +482,24 @@ export async function POST(
     )
   }
 
-  const token =
-    process.env.PAYPHONE_TOKEN ?? process.env.NEXT_PUBLIC_PAYPHONE_TOKEN
-  const storeId = process.env.NEXT_PUBLIC_PAYPHONE_STORE_ID
-  if (!token || !storeId) {
+  const urls = buildMercadoPagoUrls()
+  if (!urls) {
     return NextResponse.json(
       {
         ok: false,
-        message: 'Configura PAYPHONE_TOKEN y NEXT_PUBLIC_PAYPHONE_STORE_ID',
+        message:
+          'Configura NEXT_PUBLIC_SITE_URL para poder construir back_urls y notification_url.',
+      },
+      { status: 500 }
+    )
+  }
+
+  const urlsValidationError = validateMercadoPagoUrls(urls)
+  if (urlsValidationError) {
+    return NextResponse.json(
+      {
+        ok: false,
+        message: `${urlsValidationError} Configura NEXT_PUBLIC_SITE_URL con un dominio publico HTTPS (ej: tunel ngrok o URL de Vercel).`,
       },
       { status: 500 }
     )
@@ -351,7 +510,7 @@ export async function POST(
     programId,
     editionId: resolvedEditionId,
     purpose,
-    provider: PAYPHONE_PROVIDER,
+    provider: MERCADO_PAGO_PROVIDER,
   })
 
   if (openOtherProvider) {
@@ -370,7 +529,7 @@ export async function POST(
     programId,
     editionId: resolvedEditionId,
     purpose,
-    provider: PAYPHONE_PROVIDER,
+    provider: MERCADO_PAGO_PROVIDER,
   })
 
   if (openRow) {
@@ -378,14 +537,14 @@ export async function POST(
       .from('payments')
       .update({ status: 'canceled' })
       .eq('id', openRow.id)
-      .eq('provider', PAYPHONE_PROVIDER)
+      .eq('provider', MERCADO_PAGO_PROVIDER)
   }
 
   const { data: inserted, error: insertErr } = await supabaseAdmin
     .from('payments')
     .insert({
       user_id: userId,
-      provider: PAYPHONE_PROVIDER,
+      provider: MERCADO_PAGO_PROVIDER,
       program_id: programId,
       edition_id: resolvedEditionId,
       application_id: applicationId,
@@ -394,7 +553,6 @@ export async function POST(
       amount_cents: amountCents,
       currency: DEFAULT_CURRENCY,
       client_transaction_id: null,
-      payphone_transaction_id: null,
     })
     .select('id')
     .maybeSingle()
@@ -407,49 +565,107 @@ export async function POST(
   }
 
   const paymentId = inserted.id as string
-  const clientTxId = buildClientTxId(paymentId)
-  const reference = buildReference(purpose, program.slug)
 
-  const { error: updateErr } = await supabaseAdmin
-    .from('payments')
-    .update({ status: 'pending', client_transaction_id: clientTxId })
-    .eq('id', paymentId)
-    .eq('provider', PAYPHONE_PROVIDER)
+  try {
+    const preferenceClient = createMercadoPagoPreferenceClient()
+    const preferenceBody = buildPreferenceBody({
+      purpose,
+      amountCents,
+      paymentId,
+      programTitle: program.title,
+      programSlug: program.slug,
+      urls,
+    })
 
-  if (updateErr) {
+    const preferenceResponse = await preferenceClient.create({
+      body: preferenceBody as never,
+    })
+
+    const preferenceId = pickString(preferenceResponse, 'id')
+    const initPoint =
+      pickString(preferenceResponse, 'init_point') ??
+      pickString(preferenceResponse, 'initPoint')
+    const sandboxInitPoint =
+      pickString(preferenceResponse, 'sandbox_init_point') ??
+      pickString(preferenceResponse, 'sandboxInitPoint')
+    const checkoutUrl = initPoint ?? sandboxInitPoint
+
+    if (!preferenceId || !checkoutUrl) {
+      await supabaseAdmin
+        .from('payments')
+        .update({
+          status: 'failed',
+          error_message: 'Mercado Pago no devolvió preference_id o init_point.',
+        })
+        .eq('id', paymentId)
+        .eq('provider', MERCADO_PAGO_PROVIDER)
+
+      return NextResponse.json(
+        {
+          ok: false,
+          message:
+            'Mercado Pago no devolvió datos válidos de checkout para este intento.',
+        },
+        { status: 502 }
+      )
+    }
+
+    const updatePending = await updatePaymentPendingWithOptionalCheckout({
+      paymentId,
+      checkoutUrl,
+    })
+
+    if (updatePending.error) {
+      return NextResponse.json(
+        { ok: false, message: 'No se pudo actualizar el pago' },
+        { status: 500 }
+      )
+    }
+
+    await supabaseAdmin.from('mercadopago_payments').upsert(
+      {
+        payment_id: paymentId,
+        preference_id: preferenceId,
+        external_reference: paymentId,
+        mp_status: 'pending',
+        last_synced_at: new Date().toISOString(),
+        raw_preference_response: preferenceResponse,
+      },
+      { onConflict: 'payment_id' }
+    )
+
     return NextResponse.json(
-      { ok: false, message: 'No se pudo actualizar el pago' },
-      { status: 500 }
+      {
+        ok: true,
+        paymentId,
+        status: 'pending',
+        preferenceId,
+        initPoint: initPoint ?? undefined,
+        sandboxInitPoint: sandboxInitPoint ?? undefined,
+        publicKey: getMercadoPagoPublicKey(),
+      },
+      { status: 200 }
+    )
+  } catch (error) {
+    const normalizedErrorMessage =
+      extractErrorMessage(error) ??
+      'No se pudo crear la preferencia de Mercado Pago.'
+
+    await supabaseAdmin
+      .from('payments')
+      .update({
+        status: 'failed',
+        error_message: normalizedErrorMessage,
+      })
+      .eq('id', paymentId)
+      .eq('provider', MERCADO_PAGO_PROVIDER)
+
+    return NextResponse.json(
+      {
+        ok: false,
+        message: normalizedErrorMessage,
+      },
+      { status: 502 }
     )
   }
-
-  await supabaseAdmin.from('payphone_payments').upsert(
-    {
-      payment_id: paymentId,
-      transaction_id: null,
-      reference,
-      raw_payload: {
-        created_from: 'payphone_create_checkout',
-      },
-    },
-    { onConflict: 'payment_id' }
-  )
-
-  return NextResponse.json(
-    {
-      ok: true,
-      paymentId,
-      status: 'pending',
-      clientTxId,
-      token,
-      storeId,
-      amount: amountCents,
-      amountWithoutTax: amountCents,
-      amountWithTax: 0,
-      tax: 0,
-      currency: DEFAULT_CURRENCY,
-      reference,
-    },
-    { status: 200 }
-  )
 }

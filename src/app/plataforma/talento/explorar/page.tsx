@@ -27,7 +27,7 @@ import {
   HelpCircle,
   CreditCard,
 } from 'lucide-react'
-import { PayphoneCheckoutModal } from '@/components/payments/payphone-checkout-modal'
+import { PaymentMethodModal } from '@/components/payments/payment-method-modal'
 import type { ApplicationFormRow } from '@/types/program-editions'
 import type {
   EditionRow,
@@ -722,7 +722,7 @@ export default function ProgramsPage() {
         )}
 
         {checkoutProgram ? (
-          <PayphoneCheckoutModal
+          <PaymentMethodModal
             open={checkoutOpen}
             onOpenChange={(open) => {
               if (!open) setCheckoutOpen(false)

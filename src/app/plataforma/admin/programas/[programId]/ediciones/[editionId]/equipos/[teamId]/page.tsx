@@ -402,9 +402,7 @@ export default function AdminTeamDetailPage() {
         </CardHeader>
         <CardContent className="space-y-4">
           {milestones.length === 0 ? (
-            <div className="text-sm text-slate-300">
-              Todavia no hay hitos.
-            </div>
+            <div className="text-sm text-slate-300">Todavia no hay hitos.</div>
           ) : (
             milestones.map((milestone) => (
               <div
