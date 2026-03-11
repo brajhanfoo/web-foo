@@ -155,10 +155,7 @@ function LoginForm() {
         setIsGoogleSubmitting(false)
       }
     } catch (error: unknown) {
-      showError(
-        'No se pudo iniciar sesión con Google.',
-        'Intenta nuevamente.'
-      )
+      showError('No se pudo iniciar sesión con Google.', 'Intenta nuevamente.')
       setIsGoogleSubmitting(false)
     }
   }

@@ -1,9 +1,12 @@
-﻿import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import type { ProgramPaymentMode, ProgramRow } from '@/types/programs'
+import type { PaymentProvider } from '@/types/payments'
 
 export const runtime = 'nodejs'
+
+const PAYPHONE_PROVIDER: PaymentProvider = 'payphone'
 
 type PaymentPurpose = 'pre_enrollment' | 'tuition'
 type ProgramRowSummary = Pick<
@@ -14,6 +17,7 @@ type ProgramRowSummary = Pick<
 type PaymentRow = {
   id: string
   user_id: string
+  provider: PaymentProvider
   status: 'initiated' | 'pending' | 'paid' | 'failed' | 'canceled'
   program_id: string
   application_id: string | null
@@ -64,8 +68,9 @@ export async function POST(req: NextRequest) {
 
   const { data: payment, error } = await supabaseAdmin
     .from('payments')
-    .select('id,user_id,status,program_id,application_id,purpose')
+    .select('id,user_id,provider,status,program_id,application_id,purpose')
     .eq('client_transaction_id', clientTxId)
+    .eq('provider', PAYPHONE_PROVIDER)
     .maybeSingle()
 
   if (error || !payment) {
@@ -102,6 +107,20 @@ export async function POST(req: NextRequest) {
       payphone_transaction_id: String(transactionIdNum),
     })
     .eq('id', p.id)
+    .eq('provider', PAYPHONE_PROVIDER)
+
+  await supabaseAdmin.from('payphone_payments').upsert(
+    {
+      payment_id: p.id,
+      transaction_id: String(transactionIdNum),
+      raw_payload: {
+        persisted_from: 'payphone_persist_approved',
+        transaction_id: transactionIdNum,
+        client_transaction_id: clientTxId,
+      },
+    },
+    { onConflict: 'payment_id' }
+  )
 
   if (p.application_id) {
     const { data: programRow } = await supabaseAdmin

@@ -6,7 +6,7 @@ import { useParams, useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase/client'
 import { useAuthStore } from '@/stores/auth-stores'
 import { useToastEnhanced } from '@/hooks/use-toast-enhanced'
-import { PayphoneCheckoutModal } from '@/components/payments/payphone-checkout-modal'
+import { PaymentMethodModal } from '@/components/payments/payment-method-modal'
 import { Button } from '@/components/ui/button'
 
 import {
@@ -971,7 +971,7 @@ export default function ProgramPostularPage() {
             ) : null}
           </div>
 
-          <PayphoneCheckoutModal
+          <PaymentMethodModal
             open={checkoutOpen}
             onOpenChange={setCheckoutOpen}
             programId={program.id}

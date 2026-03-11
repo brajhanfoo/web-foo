@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { useState } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { PayphoneCheckoutModal } from '@/components/payments/payphone-checkout-modal'
+import { PaymentMethodModal } from '@/components/payments/payment-method-modal'
 
 import {
   ArrowRight,
@@ -221,7 +221,7 @@ export function CurrentApplicationHero(props: { app: ApplicationRow }) {
                     Falta configurar el precio del programa.
                   </div>
                 ) : null}
-                <PayphoneCheckoutModal
+                <PaymentMethodModal
                   open={checkoutOpen}
                   onOpenChange={setCheckoutOpen}
                   programId={props.app.program_id}
