@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
-import { useSearchParams } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { Loader2 } from 'lucide-react'
 
 import { Badge } from '@/components/ui/badge'
@@ -26,6 +26,7 @@ type StatusApiResponse =
         mp_status: string | null
         status_detail: string | null
       } | null
+      nextUrl: string | null
     }
   | { ok: false; message: string }
 
@@ -74,6 +75,7 @@ function canonicalBadge(status: PaymentStatus | null): {
 }
 
 export function MercadoPagoReturnState(props: { variant: ReturnVariant }) {
+  const router = useRouter()
   const searchParams = useSearchParams()
 
   const externalReference = searchParams.get('external_reference')
@@ -88,6 +90,8 @@ export function MercadoPagoReturnState(props: { variant: ReturnVariant }) {
     null
   )
   const [statusDetail, setStatusDetail] = useState<string | null>(null)
+  const [nextUrl, setNextUrl] = useState<string | null>(null)
+  const [pollTick, setPollTick] = useState(0)
 
   const fetchUrl = useMemo(() => {
     const query = new URLSearchParams()
@@ -100,6 +104,7 @@ export function MercadoPagoReturnState(props: { variant: ReturnVariant }) {
 
   useEffect(() => {
     let cancelled = false
+    let retryTimer: ReturnType<typeof setTimeout> | null = null
 
     const run = async () => {
       if (!fetchUrl) {
@@ -131,7 +136,17 @@ export function MercadoPagoReturnState(props: { variant: ReturnVariant }) {
 
         setCanonicalStatus(json.payment.status)
         setStatusDetail(json.mercadopago?.status_detail ?? null)
+        setNextUrl(json.nextUrl ?? null)
         setIsLoading(false)
+
+        if (
+          !cancelled &&
+          (json.payment.status === 'pending' || json.payment.status === 'initiated')
+        ) {
+          retryTimer = setTimeout(() => {
+            setPollTick((prev) => prev + 1)
+          }, 3500)
+        }
       } catch (error) {
         if (cancelled) return
         setErrorMessage(
@@ -141,6 +156,7 @@ export function MercadoPagoReturnState(props: { variant: ReturnVariant }) {
         )
         setCanonicalStatus(null)
         setStatusDetail(null)
+        setNextUrl(null)
         setIsLoading(false)
       }
     }
@@ -148,16 +164,31 @@ export function MercadoPagoReturnState(props: { variant: ReturnVariant }) {
     void run()
     return () => {
       cancelled = true
+      if (retryTimer) clearTimeout(retryTimer)
     }
-  }, [fetchUrl])
+  }, [fetchUrl, pollTick])
+
+  useEffect(() => {
+    if (canonicalStatus !== 'paid' || !nextUrl) return
+
+    const redirectTimer = setTimeout(() => {
+      router.replace(nextUrl)
+    }, 1200)
+
+    return () => clearTimeout(redirectTimer)
+  }, [canonicalStatus, nextUrl, router])
 
   const badge = canonicalBadge(canonicalStatus)
 
   return (
     <div className="min-h-dvh bg-black px-6 py-10">
       <div className="mx-auto w-full max-w-2xl space-y-4 rounded-2xl border border-white/10 bg-black/60 p-6 text-white">
-        <h1 className="text-xl font-semibold">{titleByVariant(props.variant)}</h1>
-        <p className="text-sm text-white/70">{subtitleByVariant(props.variant)}</p>
+        <h1 className="text-xl font-semibold">
+          {titleByVariant(props.variant)}
+        </h1>
+        <p className="text-sm text-white/70">
+          {subtitleByVariant(props.variant)}
+        </p>
 
         <div className="rounded-lg border border-white/10 bg-white/5 p-3 text-xs text-white/70">
           Estado recibido por query param (informativo):{' '}
@@ -173,7 +204,15 @@ export function MercadoPagoReturnState(props: { variant: ReturnVariant }) {
           </div>
         ) : null}
 
-        {!isLoading ? <Badge className={badge.className}>{badge.label}</Badge> : null}
+        {!isLoading ? (
+          <Badge className={badge.className}>{badge.label}</Badge>
+        ) : null}
+
+        {canonicalStatus === 'paid' && nextUrl ? (
+          <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-3 text-sm text-emerald-200">
+            Pago confirmado. Redirigiendo al siguiente paso...
+          </div>
+        ) : null}
 
         {statusDetail ? (
           <div className="rounded-lg border border-white/10 bg-white/5 p-3 text-xs text-white/70">
@@ -188,7 +227,10 @@ export function MercadoPagoReturnState(props: { variant: ReturnVariant }) {
         ) : null}
 
         <div className="flex flex-col gap-2 sm:flex-row">
-          <Button asChild className="bg-[#00CCA4] text-black hover:bg-[#00CCA4]/90">
+          <Button
+            asChild
+            className="bg-[#00CCA4] text-black hover:bg-[#00CCA4]/90"
+          >
             <Link href="/plataforma/talento/mis-postulaciones">
               Ir a mis postulaciones
             </Link>
@@ -201,4 +243,3 @@ export function MercadoPagoReturnState(props: { variant: ReturnVariant }) {
     </div>
   )
 }
-

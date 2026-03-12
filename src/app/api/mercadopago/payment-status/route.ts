@@ -14,8 +14,14 @@ type PaymentRow = {
   status: PaymentStatus
   provider: PaymentProvider
   purpose: PaymentPurpose
+  program_id: string
+  edition_id: string | null
   application_id: string | null
   paid_at: string | null
+}
+
+type ProgramSlugRow = {
+  slug: string
 }
 
 function clean(value: string | null): string | null {
@@ -74,7 +80,9 @@ export async function GET(request: NextRequest) {
     request.nextUrl.searchParams.get('external_reference')
   )
   const preferenceId = clean(request.nextUrl.searchParams.get('preference_id'))
-  const mercadoPagoPaymentId = clean(request.nextUrl.searchParams.get('payment_id'))
+  const mercadoPagoPaymentId = clean(
+    request.nextUrl.searchParams.get('payment_id')
+  )
 
   const paymentId = await resolvePaymentId({
     externalReference,
@@ -91,7 +99,9 @@ export async function GET(request: NextRequest) {
 
   const { data: paymentData, error: paymentErr } = await supabaseAdmin
     .from('payments')
-    .select('id,user_id,status,provider,purpose,application_id,paid_at')
+    .select(
+      'id,user_id,status,provider,purpose,program_id,edition_id,application_id,paid_at'
+    )
     .eq('id', paymentId)
     .eq('provider', MERCADO_PAGO_PROVIDER)
     .maybeSingle()
@@ -111,6 +121,26 @@ export async function GET(request: NextRequest) {
     )
   }
 
+  let nextUrl: string | null = null
+  if (payment.status === 'paid') {
+    if (payment.purpose === 'pre_enrollment') {
+      const { data: programRow } = await supabaseAdmin
+        .from('programs')
+        .select('slug')
+        .eq('id', payment.program_id)
+        .maybeSingle()
+
+      const program = (programRow as ProgramSlugRow | null) ?? null
+      if (program?.slug) {
+        nextUrl = `/plataforma/talento/explorar/${program.slug}/postular`
+      }
+    }
+
+    if (!nextUrl) {
+      nextUrl = '/plataforma/talento/mis-postulaciones'
+    }
+  }
+
   const { data: mpDetail } = await supabaseAdmin
     .from('mercadopago_payments')
     .select(
@@ -127,12 +157,14 @@ export async function GET(request: NextRequest) {
         status: payment.status,
         provider: payment.provider,
         purpose: payment.purpose,
+        program_id: payment.program_id,
+        edition_id: payment.edition_id,
         application_id: payment.application_id,
         paid_at: payment.paid_at,
       },
       mercadopago: mpDetail ?? null,
+      nextUrl,
     },
     { status: 200 }
   )
 }
-
