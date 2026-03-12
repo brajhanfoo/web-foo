@@ -3,10 +3,12 @@ import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import {
   createMercadoPagoPaymentClient,
+  getMercadoPagoRuntimeDebugInfo,
+  getMercadoPagoWebhookSecret,
+  resolveMercadoPagoWebhookTopic,
   mapMercadoPagoStatusToPaymentStatus,
   resolveMercadoPagoDataId,
   validateMercadoPagoSignature,
-  getMercadoPagoWebhookSecret,
 } from '@/lib/payments/mercadopago'
 import type { PaymentProvider, PaymentStatus } from '@/types/payments'
 import type { ProgramPaymentMode, ProgramRow } from '@/types/programs'
@@ -62,7 +64,28 @@ function normalizeBoolean(v: unknown): boolean | null {
   return null
 }
 
-function resolvePaymentMode(program: ProgramRowSummary | null): ProgramPaymentMode {
+function extractErrorMessage(error: unknown, fallback: string): string {
+  if (error instanceof Error) {
+    const message = error.message.trim()
+    return message || fallback
+  }
+
+  if (typeof error === 'string') {
+    const message = error.trim()
+    return message || fallback
+  }
+
+  if (isRecord(error)) {
+    const direct = normalizeString(error['message'])
+    if (direct) return direct
+  }
+
+  return fallback
+}
+
+function resolvePaymentMode(
+  program: ProgramRowSummary | null
+): ProgramPaymentMode {
   if (!program) return 'none'
   if (program.payment_mode) return program.payment_mode
   return program.requires_payment_pre ? 'pre' : 'none'
@@ -105,18 +128,50 @@ async function markWebhookEvent(params: {
     .eq('id', params.eventId)
 }
 
-function readEventMetadata(payload: unknown): {
+function resolveWebhookEventMetadata(params: {
+  payload: unknown
+  requestUrl: URL
+  requestIdHeader: string | null
+}): {
+  webhookTopic: 'payment' | 'merchant_order' | 'unknown'
   eventType: string | null
   providerEventId: string | null
+  providerResourceId: string | null
 } {
-  if (!isRecord(payload)) return { eventType: null, providerEventId: null }
+  const webhookTopic = resolveMercadoPagoWebhookTopic(
+    params.requestUrl,
+    params.payload
+  )
 
-  const action = normalizeString(payload['action'])
-  const type = normalizeString(payload['type'])
-  const eventType = action ?? type
-  const providerEventId = normalizeNumberToString(payload['id'])
+  let eventType: string | null = null
+  let providerEventId: string | null = null
+  let providerResourceId = resolveMercadoPagoDataId(
+    params.requestUrl,
+    params.payload
+  )
 
-  return { eventType, providerEventId }
+  const queryLegacyId = normalizeString(params.requestUrl.searchParams.get('id'))
+  if (!providerResourceId && webhookTopic === 'merchant_order' && queryLegacyId) {
+    providerResourceId = queryLegacyId
+  }
+
+  if (isRecord(params.payload)) {
+    const action = normalizeString(params.payload['action'])
+    const type = normalizeString(params.payload['type'])
+    eventType = action ?? type
+    providerEventId = normalizeNumberToString(params.payload['id'])
+  }
+
+  if (!eventType) {
+    if (webhookTopic === 'payment') eventType = 'payment.webhook'
+    if (webhookTopic === 'merchant_order') eventType = 'merchant_order.webhook'
+  }
+
+  if (!providerEventId) {
+    providerEventId = normalizeString(params.requestIdHeader)
+  }
+
+  return { webhookTopic, eventType, providerEventId, providerResourceId }
 }
 
 function extractMercadoPagoFields(payment: unknown): {
@@ -183,7 +238,8 @@ async function findInternalPaymentId(params: {
       .eq('provider', MERCADO_PAGO_PROVIDER)
       .maybeSingle()
 
-    if (paymentByExternalReference?.id) return String(paymentByExternalReference.id)
+    if (paymentByExternalReference?.id)
+      return String(paymentByExternalReference.id)
   }
 
   if (params.mercadoPagoPaymentId) {
@@ -218,13 +274,43 @@ export async function POST(request: NextRequest) {
     payload = {}
   }
 
-  const { eventType, providerEventId } = readEventMetadata(payload)
-  const providerResourceId = resolveMercadoPagoDataId(requestUrl, payload)
+  const webhookMetadata = resolveWebhookEventMetadata({
+    payload,
+    requestUrl,
+    requestIdHeader: request.headers.get('x-request-id'),
+  })
+  const { webhookTopic, eventType, providerEventId, providerResourceId } =
+    webhookMetadata
+
+  let webhookSecret = ''
+  try {
+    const runtimeDebug = getMercadoPagoRuntimeDebugInfo()
+    webhookSecret = getMercadoPagoWebhookSecret()
+    console.info('[MercadoPago][webhook] runtime', {
+      env: runtimeDebug.env,
+      hasAccessToken: runtimeDebug.hasAccessToken,
+      hasWebhookSecret: runtimeDebug.hasWebhookSecret,
+      baseUrl: runtimeDebug.baseUrl,
+      webhookTopic,
+      providerEventId,
+      providerResourceId,
+    })
+  } catch (error) {
+    const message = extractErrorMessage(
+      error,
+      "MERCADOPAGO_ENV debe ser 'test' o 'production'."
+    )
+    console.error('[MercadoPago][webhook] invalid environment config', {
+      message,
+    })
+    return NextResponse.json({ ok: false, message }, { status: 500 })
+  }
+
   const signature = validateMercadoPagoSignature({
     signatureHeader: request.headers.get('x-signature'),
     requestIdHeader: request.headers.get('x-request-id'),
     dataId: providerResourceId,
-    secret: getMercadoPagoWebhookSecret(),
+    secret: webhookSecret,
   })
 
   if (providerEventId) {
@@ -268,11 +354,31 @@ export async function POST(request: NextRequest) {
   const eventId = String(insertedEvent?.id ?? '')
   if (!eventId) return NextResponse.json({ ok: true }, { status: 200 })
 
+  if (webhookTopic === 'merchant_order') {
+    await markWebhookEvent({
+      eventId,
+      processed: true,
+      processingError:
+        'Evento merchant_order ignorado para cierre de pagos canonicos.',
+    })
+    return NextResponse.json({ ok: true, ignored: true }, { status: 200 })
+  }
+
+  if (webhookTopic !== 'payment') {
+    await markWebhookEvent({
+      eventId,
+      processed: true,
+      processingError: 'Evento webhook no soportado para procesamiento.',
+    })
+    return NextResponse.json({ ok: true, ignored: true }, { status: 200 })
+  }
+
   if (!signature.signatureValid) {
     await markWebhookEvent({
       eventId,
       processed: true,
-      processingError: 'Firma inválida en webhook de Mercado Pago.',
+      processingError:
+        'Firma invalida en webhook de Mercado Pago. Revisa MERCADOPAGO_WEBHOOK_SECRET y MERCADOPAGO_ENV.',
     })
     return NextResponse.json({ ok: true }, { status: 200 })
   }
@@ -281,7 +387,7 @@ export async function POST(request: NextRequest) {
     await markWebhookEvent({
       eventId,
       processed: true,
-      processingError: 'Webhook recibido sin data.id.',
+      processingError: 'Webhook de payment recibido sin id de recurso.',
     })
     return NextResponse.json({ ok: true }, { status: 200 })
   }
@@ -294,10 +400,10 @@ export async function POST(request: NextRequest) {
     await markWebhookEvent({
       eventId,
       processed: true,
-      processingError:
-        error instanceof Error
-          ? error.message
-          : 'No se pudo consultar pago en Mercado Pago.',
+      processingError: extractErrorMessage(
+        error,
+        'No se pudo consultar pago en Mercado Pago.'
+      ),
     })
     return NextResponse.json({ ok: true }, { status: 200 })
   }
@@ -314,7 +420,7 @@ export async function POST(request: NextRequest) {
       eventId,
       processed: true,
       processingError:
-        'No se encontró el pago interno para external_reference/preference_id/mercadopago_payment_id.',
+        'No se encontro el pago interno para external_reference/preference_id/mercadopago_payment_id.',
     })
     return NextResponse.json({ ok: true }, { status: 200 })
   }
@@ -331,7 +437,7 @@ export async function POST(request: NextRequest) {
       eventId,
       processed: true,
       paymentId,
-      processingError: 'No se encontró pago canónico provider=mercado_pago.',
+      processingError: 'No se encontro pago canonico provider=mercado_pago.',
     })
     return NextResponse.json({ ok: true }, { status: 200 })
   }
@@ -418,4 +524,3 @@ export async function POST(request: NextRequest) {
 
   return NextResponse.json({ ok: true }, { status: 200 })
 }
-

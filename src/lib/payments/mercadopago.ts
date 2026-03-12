@@ -6,6 +6,9 @@ import { MercadoPagoConfig, Payment, Preference } from 'mercadopago'
 import { getSiteUrl } from '@/lib/site-url'
 import type { PaymentStatus } from '@/types/payments'
 
+export type MercadoPagoWebhookTopic = 'payment' | 'merchant_order' | 'unknown'
+export type MercadoPagoEnv = 'test' | 'production'
+
 type SignatureParts = {
   ts: string | null
   v1: string | null
@@ -22,11 +25,16 @@ function normalizeEnv(value: string | null | undefined): string {
   return (value ?? '').trim()
 }
 
-function isProductionMercadoPagoEnv(): boolean {
+export function resolveMercadoPagoEnv(): MercadoPagoEnv {
   const explicit = normalizeEnv(process.env.MERCADOPAGO_ENV).toLowerCase()
-  if (explicit === 'production' || explicit === 'prod') return true
-  if (explicit === 'test' || explicit === 'sandbox') return false
-  return process.env.NODE_ENV === 'production'
+  if (explicit === 'test' || explicit === 'sandbox') return 'test'
+  if (explicit === 'production' || explicit === 'prod') return 'production'
+
+  throw new Error("MERCADOPAGO_ENV debe ser 'test' o 'production'.")
+}
+
+function isProductionMercadoPagoEnv(): boolean {
+  return resolveMercadoPagoEnv() === 'production'
 }
 
 function firstNonEmpty(values: Array<string | undefined>): string {
@@ -100,6 +108,28 @@ export function getMercadoPagoBaseUrl(): string {
   return siteUrl ? normalizeBaseUrl(siteUrl) : ''
 }
 
+export function getMercadoPagoRuntimeDebugInfo(): {
+  env: MercadoPagoEnv
+  hasAccessToken: boolean
+  hasPublicKey: boolean
+  hasWebhookSecret: boolean
+  baseUrl: string
+} {
+  const env = resolveMercadoPagoEnv()
+  const accessToken = getMercadoPagoAccessToken()
+  const publicKey = getMercadoPagoPublicKey()
+  const webhookSecret = getMercadoPagoWebhookSecret()
+  const baseUrl = getMercadoPagoBaseUrl()
+
+  return {
+    env,
+    hasAccessToken: Boolean(accessToken),
+    hasPublicKey: Boolean(publicKey),
+    hasWebhookSecret: Boolean(webhookSecret),
+    baseUrl,
+  }
+}
+
 export function createMercadoPagoConfig(): MercadoPagoConfig {
   const accessToken = getMercadoPagoAccessToken()
   if (!accessToken) {
@@ -161,7 +191,7 @@ function parseMercadoPagoSignatureHeader(value: string | null): SignatureParts {
   let v1: string | null = null
 
   for (const rawEntry of entries) {
-    const [rawKey, rawVal] = rawEntry.split('=')
+    const [rawKey, rawVal] = rawEntry.split('=', 2)
     const key = normalizeEnv(rawKey).toLowerCase()
     const parsedValue = normalizeEnv(rawVal)
     if (!key || !parsedValue) continue
@@ -173,16 +203,26 @@ function parseMercadoPagoSignatureHeader(value: string | null): SignatureParts {
   return { ts, v1 }
 }
 
+function normalizeIdForSignature(value: string | null): string | null {
+  if (!value) return null
+  const trimmed = value.trim()
+  if (!trimmed) return null
+  return /[A-Z]/.test(trimmed) ? trimmed.toLowerCase() : trimmed
+}
+
 function buildManifest(params: {
   dataId: string | null
   requestId: string | null
   ts: string | null
 }): string {
   const segments: string[] = []
+  const normalizedDataId = normalizeIdForSignature(params.dataId)
+  const normalizedRequestId = normalizeEnv(params.requestId)
+  const normalizedTs = normalizeEnv(params.ts)
 
-  if (params.dataId) segments.push(`id:${params.dataId};`)
-  if (params.requestId) segments.push(`request-id:${params.requestId};`)
-  if (params.ts) segments.push(`ts:${params.ts};`)
+  if (normalizedDataId) segments.push(`id:${normalizedDataId};`)
+  if (normalizedRequestId) segments.push(`request-id:${normalizedRequestId};`)
+  if (normalizedTs) segments.push(`ts:${normalizedTs};`)
 
   return segments.join('')
 }
@@ -235,11 +275,33 @@ export function resolveMercadoPagoDataId(
   requestUrl: URL,
   payload: unknown
 ): string | null {
-  const fromQuery = normalizeEnv(requestUrl.searchParams.get('data.id') ?? '')
-  if (fromQuery) return fromQuery
+  const fromDataIdQuery = normalizeEnv(requestUrl.searchParams.get('data.id'))
+  if (fromDataIdQuery) return fromDataIdQuery
+
+  const queryTopic = normalizeEnv(requestUrl.searchParams.get('topic'))
+    .toLowerCase()
+    .trim()
+  const queryType = normalizeEnv(requestUrl.searchParams.get('type'))
+    .toLowerCase()
+    .trim()
+  const fromLegacyIdQuery = normalizeEnv(requestUrl.searchParams.get('id'))
+  if (
+    fromLegacyIdQuery &&
+    (queryTopic === 'payment' || queryType === 'payment')
+  ) {
+    return fromLegacyIdQuery
+  }
 
   if (!payload || typeof payload !== 'object') return null
   const candidate = payload as Record<string, unknown>
+
+  const bodyType = normalizeEnv(
+    typeof candidate['type'] === 'string' ? candidate['type'] : ''
+  )
+    .toLowerCase()
+    .trim()
+  if (bodyType === 'payment' && fromLegacyIdQuery) return fromLegacyIdQuery
+
   const dataCandidate = candidate['data']
   if (!dataCandidate || typeof dataCandidate !== 'object') return null
 
@@ -251,4 +313,42 @@ export function resolveMercadoPagoDataId(
   }
 
   return null
+}
+
+export function resolveMercadoPagoWebhookTopic(
+  requestUrl: URL,
+  payload: unknown
+): MercadoPagoWebhookTopic {
+  const queryTopic = normalizeEnv(requestUrl.searchParams.get('topic'))
+    .toLowerCase()
+    .trim()
+  if (queryTopic === 'payment') return 'payment'
+  if (queryTopic === 'merchant_order') return 'merchant_order'
+
+  const queryType = normalizeEnv(requestUrl.searchParams.get('type'))
+    .toLowerCase()
+    .trim()
+  if (queryType === 'payment') return 'payment'
+  if (queryType === 'merchant_order') return 'merchant_order'
+
+  if (payload && typeof payload === 'object') {
+    const candidate = payload as Record<string, unknown>
+    const bodyType = normalizeEnv(
+      typeof candidate['type'] === 'string' ? candidate['type'] : ''
+    )
+      .toLowerCase()
+      .trim()
+    if (bodyType === 'payment') return 'payment'
+    if (bodyType === 'merchant_order') return 'merchant_order'
+
+    const action = normalizeEnv(
+      typeof candidate['action'] === 'string' ? candidate['action'] : ''
+    )
+      .toLowerCase()
+      .trim()
+    if (action.startsWith('payment.')) return 'payment'
+    if (action.startsWith('merchant_order.')) return 'merchant_order'
+  }
+
+  return 'unknown'
 }

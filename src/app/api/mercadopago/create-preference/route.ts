@@ -38,7 +38,12 @@ type CreatePreferenceResponse = {
 
 type ProgramRowSummary = Pick<
   ProgramRow,
-  'id' | 'title' | 'slug' | 'payment_mode' | 'requires_payment_pre' | 'price_usd'
+  | 'id'
+  | 'title'
+  | 'slug'
+  | 'payment_mode'
+  | 'requires_payment_pre'
+  | 'price_usd'
 >
 
 type ApplicationRow = {
