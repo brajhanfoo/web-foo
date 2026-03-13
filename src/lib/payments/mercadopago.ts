@@ -7,6 +7,10 @@ import type { PaymentStatus } from '@/types/payments'
 
 export type MercadoPagoWebhookTopic = 'payment' | 'merchant_order' | 'unknown'
 export type MercadoPagoEnv = 'test' | 'production'
+export type MercadoPagoNamedSecret = {
+  source: string
+  value: string
+}
 export type MercadoPagoConfig = {
   accessToken: string
 }
@@ -97,6 +101,25 @@ function firstNonEmptyWithSource(
   }
 }
 
+function nonEmptyNamedSecrets(
+  values: Array<{ name: string; value: string | undefined }>
+): MercadoPagoNamedSecret[] {
+  const seen = new Set<string>()
+  const out: MercadoPagoNamedSecret[] = []
+
+  for (const entry of values) {
+    const normalized = normalizeEnv(entry.value)
+    if (!normalized || seen.has(normalized)) continue
+    seen.add(normalized)
+    out.push({
+      source: entry.name,
+      value: normalized,
+    })
+  }
+
+  return out
+}
+
 export function getMercadoPagoAccessToken(): string {
   if (isProductionMercadoPagoEnv()) {
     return firstNonEmpty([
@@ -163,6 +186,32 @@ export function getMercadoPagoWebhookSecretSource(): string | null {
       value: process.env.MERCADOPAGO_WEBHOOK_SECRET,
     },
   ]).source
+}
+
+export function getMercadoPagoWebhookSecretsForValidation(): MercadoPagoNamedSecret[] {
+  if (isProductionMercadoPagoEnv()) {
+    return nonEmptyNamedSecrets([
+      {
+        name: 'MERCADOPAGO_WEBHOOK_SECRET_PROD',
+        value: process.env.MERCADOPAGO_WEBHOOK_SECRET_PROD,
+      },
+      {
+        name: 'MERCADOPAGO_WEBHOOK_SECRET',
+        value: process.env.MERCADOPAGO_WEBHOOK_SECRET,
+      },
+    ])
+  }
+
+  return nonEmptyNamedSecrets([
+    {
+      name: 'MERCADOPAGO_WEBHOOK_SECRET_TEST',
+      value: process.env.MERCADOPAGO_WEBHOOK_SECRET_TEST,
+    },
+    {
+      name: 'MERCADOPAGO_WEBHOOK_SECRET',
+      value: process.env.MERCADOPAGO_WEBHOOK_SECRET,
+    },
+  ])
 }
 
 function normalizeBaseUrl(url: string): string {
@@ -550,10 +599,9 @@ export function validateMercadoPagoSignature(params: {
 }): SignatureValidation {
   const signature = parseMercadoPagoSignatureHeader(params.signatureHeader)
   const requestId = normalizeEnv(params.requestIdHeader)
-  const allIds = [
-    params.dataId,
-    ...(params.alternativeDataIds ?? []),
-  ].filter((id): id is string => Boolean(normalizeEnv(id)))
+  const allIds = [params.dataId, ...(params.alternativeDataIds ?? [])].filter(
+    (id): id is string => Boolean(normalizeEnv(id))
+  )
   const manifestData = buildManifestCandidates({
     dataIds: allIds,
     requestId: requestId || null,
