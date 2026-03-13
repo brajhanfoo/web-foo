@@ -174,9 +174,11 @@ function resolveWebhookEventMetadata(params: {
       .toLowerCase()
       .trim() === 'payment'
   const hasResourcePayload =
-    isRecord(params.payload) && normalizeString(params.payload['resource']) !== null
+    isRecord(params.payload) &&
+    normalizeString(params.payload['resource']) !== null
   const hasActionPayload =
-    isRecord(params.payload) && normalizeString(params.payload['action']) !== null
+    isRecord(params.payload) &&
+    normalizeString(params.payload['action']) !== null
   const hasTypePayload =
     isRecord(params.payload) && normalizeString(params.payload['type']) !== null
 
@@ -189,7 +191,9 @@ function resolveWebhookEventMetadata(params: {
 
   if (!eventType) {
     if (webhookTopic === 'payment') {
-      eventType = isLegacyPaymentFeed ? 'payment.legacy_feed' : 'payment.webhook'
+      eventType = isLegacyPaymentFeed
+        ? 'payment.legacy_feed'
+        : 'payment.webhook'
     }
     if (webhookTopic === 'merchant_order') eventType = 'merchant_order.webhook'
   }
@@ -443,10 +447,9 @@ export async function POST(request: NextRequest) {
   }
 
   if (!signature || !signature.signatureValid) {
-    const signatureIssue =
-      !signature
-        ? 'Webhook rechazado: validacion de firma no ejecutada.'
-        : signature.reason === 'missing_secret'
+    const signatureIssue = !signature
+      ? 'Webhook rechazado: validacion de firma no ejecutada.'
+      : signature.reason === 'missing_secret'
         ? 'Webhook rechazado: falta configurar MERCADOPAGO_WEBHOOK_SECRET para este entorno.'
         : signature.reason === 'missing_signature'
           ? 'Webhook rechazado: falta x-signature (v1) en el request.'
@@ -457,8 +460,7 @@ export async function POST(request: NextRequest) {
     await markWebhookEvent({
       eventId,
       processed: true,
-      processingError:
-        `${signatureIssue} reason=${signature?.reason ?? 'not_checked'}; provider_resource_id=${providerResourceId ?? 'null'}; manifest=${signature?.manifest || 'n/a'}`,
+      processingError: `${signatureIssue} reason=${signature?.reason ?? 'not_checked'}; provider_resource_id=${providerResourceId ?? 'null'}; manifest=${signature?.manifest || 'n/a'}`,
     })
     return NextResponse.json({ ok: true }, { status: 200 })
   }
