@@ -65,6 +65,12 @@ function normalizeBoolean(v: unknown): boolean | null {
   return null
 }
 
+function isEnabledEnvFlag(value: string | undefined): boolean {
+  if (!value) return false
+  const normalized = value.trim().toLowerCase()
+  return normalized === 'true' || normalized === '1' || normalized === 'yes'
+}
+
 function extractErrorMessage(error: unknown, fallback: string): string {
   if (error instanceof Error) {
     const message = error.message.trim()
@@ -303,6 +309,7 @@ async function findInternalPaymentId(params: {
 
 export async function POST(request: NextRequest) {
   const requestUrl = new URL(request.url)
+  const requestIdHeader = request.headers.get('x-request-id')
   const bodyText = await request.text()
 
   let payload: unknown = {}
@@ -326,20 +333,31 @@ export async function POST(request: NextRequest) {
   } = webhookMetadata
 
   let webhookSecrets: MercadoPagoNamedSecret[] = []
+  let resolvedMercadoPagoEnv: 'test' | 'production' = 'test'
+  let allowTestWebhookWithoutSignature = false
   try {
     const runtimeDebug = getMercadoPagoRuntimeDebugInfo()
+    resolvedMercadoPagoEnv = runtimeDebug.env
+    allowTestWebhookWithoutSignature =
+      runtimeDebug.env === 'test' &&
+      isEnabledEnvFlag(
+        process.env.MERCADOPAGO_ALLOW_TEST_WEBHOOK_WITHOUT_SIGNATURE
+      )
     webhookSecrets = getMercadoPagoWebhookSecretsForValidation()
     console.info('[MercadoPago][webhook] runtime', {
       env: runtimeDebug.env,
       hasAccessToken: runtimeDebug.hasAccessToken,
       hasWebhookSecret: runtimeDebug.hasWebhookSecret,
       webhookSecretSource: runtimeDebug.webhookSecretSource,
+      webhookSecretLength: runtimeDebug.webhookSecretLength,
       webhookSecretCandidates: webhookSecrets.map((entry) => entry.source),
       baseUrl: runtimeDebug.baseUrl,
+      xRequestId: requestIdHeader,
       webhookTopic,
       isLegacyPaymentFeed,
       providerEventId,
       providerResourceId,
+      allowTestWebhookWithoutSignature,
     })
   } catch (error) {
     const message = extractErrorMessage(
@@ -359,6 +377,7 @@ export async function POST(request: NextRequest) {
   const testedSecretSources: string[] = []
   let matchedSecretSource: string | null = null
   let signature: ReturnType<typeof validateMercadoPagoSignature> | null = null
+  let bypassedSignatureInTestDebug = false
 
   if (shouldValidateSignature) {
     const secretsToTry =
@@ -371,7 +390,7 @@ export async function POST(request: NextRequest) {
 
       const candidateSignature = validateMercadoPagoSignature({
         signatureHeader: request.headers.get('x-signature'),
-        requestIdHeader: request.headers.get('x-request-id'),
+        requestIdHeader,
         dataId: providerResourceId,
         alternativeDataIds: [queryDataId, queryId, providerEventId],
         secret: secretCandidate.value,
@@ -395,14 +414,19 @@ export async function POST(request: NextRequest) {
   }
 
   if (signature) {
+    const manifestUsedForHmac =
+      signature.matchedManifest ?? signature.manifest ?? null
     console.info('[MercadoPago][webhook] signature-check', {
       signatureValid: signature.signatureValid,
       reason: signature.reason,
       ts: signature.ts,
+      xRequestId: requestIdHeader,
+      providerResourceId,
       hasSignatureHeader: Boolean(request.headers.get('x-signature')),
       testedSecretSources,
       matchedSecretSource,
       checkedDataIds: signature.checkedDataIds,
+      manifestUsedForHmac,
       manifestTried: signature.checkedManifests,
       matchedManifest: signature.matchedManifest,
     })
@@ -484,6 +508,23 @@ export async function POST(request: NextRequest) {
   }
 
   if (!signature || !signature.signatureValid) {
+    const canBypassInvalidSignatureInTest =
+      allowTestWebhookWithoutSignature &&
+      resolvedMercadoPagoEnv === 'test' &&
+      webhookTopic === 'payment' &&
+      Boolean(providerResourceId)
+
+    if (canBypassInvalidSignatureInTest) {
+      bypassedSignatureInTestDebug = true
+      console.warn('[MercadoPago][webhook][DEBUG_ONLY] bypassing signature', {
+        env: resolvedMercadoPagoEnv,
+        signatureReason: signature?.reason ?? 'not_checked',
+        providerResourceId,
+        xRequestId: requestIdHeader,
+      })
+    }
+
+    if (!canBypassInvalidSignatureInTest) {
     const signatureIssue = !signature
       ? 'Webhook rechazado: validacion de firma no ejecutada.'
       : signature.reason === 'missing_secret'
@@ -500,6 +541,7 @@ export async function POST(request: NextRequest) {
       processingError: `${signatureIssue} reason=${signature?.reason ?? 'not_checked'}; tested_secret_sources=${testedSecretSources.join(',') || 'none'}; provider_resource_id=${providerResourceId ?? 'null'}; manifest=${signature?.manifest || 'n/a'}`,
     })
     return NextResponse.json({ ok: true }, { status: 200 })
+    }
   }
 
   if (!providerResourceId) {
@@ -638,7 +680,9 @@ export async function POST(request: NextRequest) {
     eventId,
     processed: true,
     paymentId: paymentRow.id,
-    processingError: null,
+    processingError: bypassedSignatureInTestDebug
+      ? 'DEBUG_ONLY: pago procesado en test con flag MERCADOPAGO_ALLOW_TEST_WEBHOOK_WITHOUT_SIGNATURE=true y firma invalida.'
+      : null,
   })
 
   return NextResponse.json({ ok: true }, { status: 200 })
