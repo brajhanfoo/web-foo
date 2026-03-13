@@ -332,6 +332,7 @@ export async function POST(request: NextRequest) {
       env: runtimeDebug.env,
       hasAccessToken: runtimeDebug.hasAccessToken,
       hasWebhookSecret: runtimeDebug.hasWebhookSecret,
+      webhookSecretSource: runtimeDebug.webhookSecretSource,
       baseUrl: runtimeDebug.baseUrl,
       webhookTopic,
       isLegacyPaymentFeed,
