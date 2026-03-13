@@ -141,7 +141,8 @@ export function MercadoPagoReturnState(props: { variant: ReturnVariant }) {
 
         if (
           !cancelled &&
-          (json.payment.status === 'pending' || json.payment.status === 'initiated')
+          (json.payment.status === 'pending' ||
+            json.payment.status === 'initiated')
         ) {
           retryTimer = setTimeout(() => {
             setPollTick((prev) => prev + 1)
