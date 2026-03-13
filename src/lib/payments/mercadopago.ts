@@ -19,6 +19,14 @@ type SignatureValidation = {
   ts: string | null
   v1: string | null
   manifest: string
+  matchedManifest: string | null
+  checkedManifests: string[]
+  reason:
+    | 'ok'
+    | 'missing_secret'
+    | 'missing_signature'
+    | 'missing_manifest'
+    | 'signature_mismatch'
 }
 
 function normalizeEnv(value: string | null | undefined): string {
@@ -82,7 +90,6 @@ export function getMercadoPagoWebhookSecret(): string {
   }
 
   return firstNonEmpty([
-    process.env.MERCADOPAGO_WEBHOOK_SECRET_TEST,
     process.env.MERCADOPAGO_WEBHOOK_SECRET,
   ])
 }
@@ -179,7 +186,7 @@ export function buildMercadoPagoUrls(): {
     success: `${baseUrl}/mercadopago/success`,
     failure: `${baseUrl}/mercadopago/failure`,
     pending: `${baseUrl}/mercadopago/pending`,
-    notification: `${baseUrl}/api/mercadopago/webhook`,
+    notification: `${baseUrl}/api/mercadopago/webhook?source_news=webhooks`,
   }
 }
 
@@ -227,6 +234,47 @@ function buildManifest(params: {
   return segments.join('')
 }
 
+function buildManifestCandidates(params: {
+  dataId: string | null
+  requestId: string | null
+  ts: string | null
+}): string[] {
+  const rawDataId = normalizeEnv(params.dataId)
+  const normalizedDataId = normalizeIdForSignature(params.dataId)
+  const requestId = normalizeEnv(params.requestId)
+  const ts = normalizeEnv(params.ts)
+
+  const byId = [normalizedDataId, rawDataId].filter(
+    (id): id is string => Boolean(id)
+  )
+
+  const candidates = new Set<string>()
+  for (const id of byId) {
+    const full = buildManifest({
+      dataId: id,
+      requestId: requestId || null,
+      ts: ts || null,
+    })
+    if (full) candidates.add(full)
+
+    const withoutRequestId = buildManifest({
+      dataId: id,
+      requestId: null,
+      ts: ts || null,
+    })
+    if (withoutRequestId) candidates.add(withoutRequestId)
+
+    const withoutTs = buildManifest({
+      dataId: id,
+      requestId: requestId || null,
+      ts: null,
+    })
+    if (withoutTs) candidates.add(withoutTs)
+  }
+
+  return [...candidates]
+}
+
 function safeHexEquals(left: string, right: string): boolean {
   const leftBuffer = Buffer.from(left, 'hex')
   const rightBuffer = Buffer.from(right, 'hex')
@@ -248,27 +296,107 @@ export function validateMercadoPagoSignature(params: {
     requestId: requestId || null,
     ts: signature.ts,
   })
+  const checkedManifests = buildManifestCandidates({
+    dataId: params.dataId,
+    requestId: requestId || null,
+    ts: signature.ts,
+  })
 
-  if (!params.secret || !signature.v1 || !manifest) {
+  if (!params.secret) {
     return {
       signatureValid: false,
       ts: signature.ts,
       v1: signature.v1,
       manifest,
+      matchedManifest: null,
+      checkedManifests,
+      reason: 'missing_secret',
     }
   }
 
-  const hmac = crypto
-    .createHmac('sha256', params.secret)
-    .update(manifest)
-    .digest('hex')
+  if (!signature.v1) {
+    return {
+      signatureValid: false,
+      ts: signature.ts,
+      v1: signature.v1,
+      manifest,
+      matchedManifest: null,
+      checkedManifests,
+      reason: 'missing_signature',
+    }
+  }
+
+  if (checkedManifests.length === 0) {
+    return {
+      signatureValid: false,
+      ts: signature.ts,
+      v1: signature.v1,
+      manifest,
+      matchedManifest: null,
+      checkedManifests,
+      reason: 'missing_manifest',
+    }
+  }
+
+  for (const candidateManifest of checkedManifests) {
+    const hmac = crypto
+      .createHmac('sha256', params.secret)
+      .update(candidateManifest)
+      .digest('hex')
+
+    if (safeHexEquals(hmac, signature.v1)) {
+      return {
+        signatureValid: true,
+        ts: signature.ts,
+        v1: signature.v1,
+        manifest: candidateManifest,
+        matchedManifest: candidateManifest,
+        checkedManifests,
+        reason: 'ok',
+      }
+    }
+  }
 
   return {
-    signatureValid: safeHexEquals(hmac, signature.v1),
+    signatureValid: false,
     ts: signature.ts,
     v1: signature.v1,
     manifest,
+    matchedManifest: null,
+    checkedManifests,
+    reason: 'signature_mismatch',
   }
+}
+
+function extractResourceId(resource: string): string | null {
+  const trimmed = resource.trim()
+  if (!trimmed) return null
+  if (/^\d+$/.test(trimmed)) return trimmed
+
+  try {
+    const parsed = new URL(trimmed)
+    const parts = parsed.pathname.split('/').filter(Boolean)
+    if (parts.length === 0) return null
+    const last = parts[parts.length - 1] ?? ''
+    if (/^\d+$/.test(last)) return last
+  } catch {
+    return null
+  }
+
+  return null
+}
+
+function resolveBodyTopic(payload: Record<string, unknown>): string {
+  const explicitType = normalizeEnv(
+    typeof payload['type'] === 'string' ? payload['type'] : ''
+  )
+    .toLowerCase()
+    .trim()
+  if (explicitType) return explicitType
+
+  return normalizeEnv(typeof payload['topic'] === 'string' ? payload['topic'] : '')
+    .toLowerCase()
+    .trim()
 }
 
 export function resolveMercadoPagoDataId(
@@ -295,21 +423,22 @@ export function resolveMercadoPagoDataId(
   if (!payload || typeof payload !== 'object') return null
   const candidate = payload as Record<string, unknown>
 
-  const bodyType = normalizeEnv(
-    typeof candidate['type'] === 'string' ? candidate['type'] : ''
-  )
-    .toLowerCase()
-    .trim()
+  const bodyType = resolveBodyTopic(candidate)
   if (bodyType === 'payment' && fromLegacyIdQuery) return fromLegacyIdQuery
 
   const dataCandidate = candidate['data']
-  if (!dataCandidate || typeof dataCandidate !== 'object') return null
+  if (dataCandidate && typeof dataCandidate === 'object') {
+    const id = (dataCandidate as Record<string, unknown>)['id']
+    if (typeof id === 'number' && Number.isFinite(id)) return String(id)
+    if (typeof id === 'string') {
+      const normalized = id.trim()
+      if (normalized) return normalized
+    }
+  }
 
-  const id = (dataCandidate as Record<string, unknown>)['id']
-  if (typeof id === 'number' && Number.isFinite(id)) return String(id)
-  if (typeof id === 'string') {
-    const normalized = id.trim()
-    return normalized || null
+  const resource = candidate['resource']
+  if (typeof resource === 'string' && bodyType === 'payment') {
+    return extractResourceId(resource)
   }
 
   return null
@@ -333,11 +462,7 @@ export function resolveMercadoPagoWebhookTopic(
 
   if (payload && typeof payload === 'object') {
     const candidate = payload as Record<string, unknown>
-    const bodyType = normalizeEnv(
-      typeof candidate['type'] === 'string' ? candidate['type'] : ''
-    )
-      .toLowerCase()
-      .trim()
+    const bodyType = resolveBodyTopic(candidate)
     if (bodyType === 'payment') return 'payment'
     if (bodyType === 'merchant_order') return 'merchant_order'
 

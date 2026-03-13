@@ -90,7 +90,7 @@ export function TalentSidebar({ displayName }: { displayName: string }) {
         />
         <SidebarLink
           href="/plataforma/talento/mis-postulaciones"
-          label="Mis Postulaciones"
+          label="Mis programas"
           Icon={Inbox}
         />
         <SidebarLink

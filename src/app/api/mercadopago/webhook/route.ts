@@ -134,6 +134,7 @@ function resolveWebhookEventMetadata(params: {
   requestIdHeader: string | null
 }): {
   webhookTopic: 'payment' | 'merchant_order' | 'unknown'
+  isLegacyPaymentFeed: boolean
   eventType: string | null
   providerEventId: string | null
   providerResourceId: string | null
@@ -150,8 +151,14 @@ function resolveWebhookEventMetadata(params: {
     params.payload
   )
 
-  const queryLegacyId = normalizeString(params.requestUrl.searchParams.get('id'))
-  if (!providerResourceId && webhookTopic === 'merchant_order' && queryLegacyId) {
+  const queryLegacyId = normalizeString(
+    params.requestUrl.searchParams.get('id')
+  )
+  if (
+    !providerResourceId &&
+    webhookTopic === 'merchant_order' &&
+    queryLegacyId
+  ) {
     providerResourceId = queryLegacyId
   }
 
@@ -162,8 +169,28 @@ function resolveWebhookEventMetadata(params: {
     providerEventId = normalizeNumberToString(params.payload['id'])
   }
 
+  const hasLegacyPaymentTopic =
+    (normalizeString(params.requestUrl.searchParams.get('topic')) ?? '')
+      .toLowerCase()
+      .trim() === 'payment'
+  const hasResourcePayload =
+    isRecord(params.payload) && normalizeString(params.payload['resource']) !== null
+  const hasActionPayload =
+    isRecord(params.payload) && normalizeString(params.payload['action']) !== null
+  const hasTypePayload =
+    isRecord(params.payload) && normalizeString(params.payload['type']) !== null
+
+  const isLegacyPaymentFeed =
+    webhookTopic === 'payment' &&
+    hasLegacyPaymentTopic &&
+    hasResourcePayload &&
+    !hasActionPayload &&
+    !hasTypePayload
+
   if (!eventType) {
-    if (webhookTopic === 'payment') eventType = 'payment.webhook'
+    if (webhookTopic === 'payment') {
+      eventType = isLegacyPaymentFeed ? 'payment.legacy_feed' : 'payment.webhook'
+    }
     if (webhookTopic === 'merchant_order') eventType = 'merchant_order.webhook'
   }
 
@@ -171,7 +198,13 @@ function resolveWebhookEventMetadata(params: {
     providerEventId = normalizeString(params.requestIdHeader)
   }
 
-  return { webhookTopic, eventType, providerEventId, providerResourceId }
+  return {
+    webhookTopic,
+    isLegacyPaymentFeed,
+    eventType,
+    providerEventId,
+    providerResourceId,
+  }
 }
 
 function extractMercadoPagoFields(payment: unknown): {
@@ -279,8 +312,13 @@ export async function POST(request: NextRequest) {
     requestUrl,
     requestIdHeader: request.headers.get('x-request-id'),
   })
-  const { webhookTopic, eventType, providerEventId, providerResourceId } =
-    webhookMetadata
+  const {
+    webhookTopic,
+    isLegacyPaymentFeed,
+    eventType,
+    providerEventId,
+    providerResourceId,
+  } = webhookMetadata
 
   let webhookSecret = ''
   try {
@@ -292,6 +330,7 @@ export async function POST(request: NextRequest) {
       hasWebhookSecret: runtimeDebug.hasWebhookSecret,
       baseUrl: runtimeDebug.baseUrl,
       webhookTopic,
+      isLegacyPaymentFeed,
       providerEventId,
       providerResourceId,
     })
@@ -306,12 +345,32 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ ok: false, message }, { status: 500 })
   }
 
-  const signature = validateMercadoPagoSignature({
-    signatureHeader: request.headers.get('x-signature'),
-    requestIdHeader: request.headers.get('x-request-id'),
-    dataId: providerResourceId,
-    secret: webhookSecret,
-  })
+  const shouldValidateSignature =
+    webhookTopic === 'payment' && !isLegacyPaymentFeed
+  const signature = shouldValidateSignature
+    ? validateMercadoPagoSignature({
+        signatureHeader: request.headers.get('x-signature'),
+        requestIdHeader: request.headers.get('x-request-id'),
+        dataId: providerResourceId,
+        secret: webhookSecret,
+      })
+    : null
+
+  if (signature) {
+    console.info('[MercadoPago][webhook] signature-check', {
+      signatureValid: signature.signatureValid,
+      reason: signature.reason,
+      ts: signature.ts,
+      hasSignatureHeader: Boolean(request.headers.get('x-signature')),
+      manifestTried: signature.checkedManifests,
+      matchedManifest: signature.matchedManifest,
+    })
+  } else {
+    console.info('[MercadoPago][webhook] signature-check skipped', {
+      webhookTopic,
+      isLegacyPaymentFeed,
+    })
+  }
 
   if (providerEventId) {
     const { data: existingProcessed } = await supabaseAdmin
@@ -335,7 +394,7 @@ export async function POST(request: NextRequest) {
       event_type: eventType,
       provider_event_id: providerEventId,
       provider_resource_id: providerResourceId,
-      signature_valid: signature.signatureValid,
+      signature_valid: signature ? signature.signatureValid : null,
       processed: false,
       payload: payload,
       headers: snapshotHeaders(request),
@@ -364,6 +423,16 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ ok: true, ignored: true }, { status: 200 })
   }
 
+  if (isLegacyPaymentFeed) {
+    await markWebhookEvent({
+      eventId,
+      processed: true,
+      processingError:
+        'Evento payment legacy (topic=payment) auditado e ignorado para cierre canonico. Se espera payment.created/payment.updated.',
+    })
+    return NextResponse.json({ ok: true, ignored: true }, { status: 200 })
+  }
+
   if (webhookTopic !== 'payment') {
     await markWebhookEvent({
       eventId,
@@ -373,12 +442,23 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ ok: true, ignored: true }, { status: 200 })
   }
 
-  if (!signature.signatureValid) {
+  if (!signature || !signature.signatureValid) {
+    const signatureIssue =
+      !signature
+        ? 'Webhook rechazado: validacion de firma no ejecutada.'
+        : signature.reason === 'missing_secret'
+        ? 'Webhook rechazado: falta configurar MERCADOPAGO_WEBHOOK_SECRET para este entorno.'
+        : signature.reason === 'missing_signature'
+          ? 'Webhook rechazado: falta x-signature (v1) en el request.'
+          : signature.reason === 'missing_manifest'
+            ? 'Webhook rechazado: no se pudo construir manifest para validar firma.'
+            : 'Webhook rechazado: la firma no coincide con el secret configurado.'
+
     await markWebhookEvent({
       eventId,
       processed: true,
       processingError:
-        'Firma invalida en webhook de Mercado Pago. Revisa MERCADOPAGO_WEBHOOK_SECRET y MERCADOPAGO_ENV.',
+        `${signatureIssue} reason=${signature?.reason ?? 'not_checked'}; provider_resource_id=${providerResourceId ?? 'null'}; manifest=${signature?.manifest || 'n/a'}`,
     })
     return NextResponse.json({ ok: true }, { status: 200 })
   }
