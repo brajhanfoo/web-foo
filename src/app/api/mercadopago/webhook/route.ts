@@ -1,14 +1,18 @@
+import crypto from 'node:crypto'
+
 import { NextRequest, NextResponse } from 'next/server'
 
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import {
+  buildMercadoPagoSignatureManifest,
+  calculateMercadoPagoSignatureHmac,
   createMercadoPagoPaymentClient,
   getMercadoPagoWebhookSecretsForValidation,
   getMercadoPagoRuntimeDebugInfo,
+  parseMercadoPagoSignatureHeader,
   resolveMercadoPagoWebhookTopic,
   mapMercadoPagoStatusToPaymentStatus,
   resolveMercadoPagoDataId,
-  validateMercadoPagoSignature,
   type MercadoPagoNamedSecret,
 } from '@/lib/payments/mercadopago'
 import type { PaymentProvider, PaymentStatus } from '@/types/payments'
@@ -35,6 +39,42 @@ type ProgramRowSummary = Pick<
   ProgramRow,
   'id' | 'payment_mode' | 'requires_payment_pre'
 >
+
+type PaymentWebhookSignatureValidationReason =
+  | 'ok'
+  | 'missing_secret'
+  | 'missing_signature'
+  | 'missing_manifest'
+  | 'signature_mismatch'
+
+type PaymentWebhookSignatureVariantCheck = {
+  manifestVariantName: string
+  manifestVariantValue: string
+  calculatedHmacVariant: string
+  variantMatch: boolean
+}
+
+type PaymentWebhookSignatureValidation = {
+  signatureValid: boolean
+  reason: PaymentWebhookSignatureValidationReason
+  ts: string | null
+  v1: string | null
+  manifest: string
+  matchedManifest: string | null
+  checkedManifests: string[]
+  checkedDataIds: string[]
+  testedSecretSources: string[]
+  matchedSecretSource: string | null
+  dataIdDetected: string | null
+  requestIdDetected: string | null
+  requestIdSource: 'x-request-id' | 'missing'
+  usedRequestIdFallback: boolean
+  officialManifestDataId: string | null
+  alternativeIdsTested: string[]
+  officialMatch: boolean
+  calculatedHmacOfficial: string
+  variantChecks: PaymentWebhookSignatureVariantCheck[]
+}
 
 function isRecord(v: unknown): v is Record<string, unknown> {
   return typeof v === 'object' && v !== null
@@ -116,6 +156,311 @@ function snapshotQueryParams(requestUrl: URL): Record<string, string> {
   const out: Record<string, string> = {}
   for (const [key, value] of requestUrl.searchParams.entries()) out[key] = value
   return out
+}
+
+function safeHexEquals(left: string, right: string): boolean {
+  const normalizedLeft = left.trim().toLowerCase()
+  const normalizedRight = right.trim().toLowerCase()
+  if (!normalizedLeft || !normalizedRight) return false
+
+  const leftIsHex = /^[0-9a-f]+$/.test(normalizedLeft)
+  const rightIsHex = /^[0-9a-f]+$/.test(normalizedRight)
+  if (!leftIsHex || !rightIsHex) return false
+  if (normalizedLeft.length % 2 !== 0 || normalizedRight.length % 2 !== 0) {
+    return false
+  }
+
+  const leftBuffer = Buffer.from(normalizedLeft, 'hex')
+  const rightBuffer = Buffer.from(normalizedRight, 'hex')
+  if (leftBuffer.length === 0 || rightBuffer.length === 0) return false
+  if (leftBuffer.length !== rightBuffer.length) return false
+  return crypto.timingSafeEqual(leftBuffer, rightBuffer)
+}
+
+function uniqueNonEmptyStrings(values: Array<string | null | undefined>): string[] {
+  const out: string[] = []
+  const seen = new Set<string>()
+
+  for (const value of values) {
+    const normalized = normalizeString(value)
+    if (!normalized || seen.has(normalized)) continue
+    seen.add(normalized)
+    out.push(normalized)
+  }
+
+  return out
+}
+
+function extractBodyDataId(payload: unknown): string | null {
+  if (!isRecord(payload)) return null
+  if (!isRecord(payload['data'])) return null
+  return normalizeNumberToString(payload['data']['id'])
+}
+
+function buildPaymentWebhookSignatureValidation(params: {
+  request: NextRequest
+  requestUrl: URL
+  payload: unknown
+  providerEventId: string | null
+  providerResourceId: string | null
+  webhookSecrets: MercadoPagoNamedSecret[]
+}): PaymentWebhookSignatureValidation {
+  const signatureHeader = params.request.headers.get('x-signature')
+  const requestIdHeader = params.request.headers.get('x-request-id')
+  const parsedSignature = parseMercadoPagoSignatureHeader(signatureHeader)
+  const ts = normalizeString(parsedSignature.ts)
+  const v1 = normalizeString(parsedSignature.v1)?.toLowerCase() ?? null
+
+  const bodyDataId = extractBodyDataId(params.payload)
+  const queryDataId = normalizeString(params.requestUrl.searchParams.get('data.id'))
+  const legacyQueryId = normalizeString(params.requestUrl.searchParams.get('id'))
+
+  const officialManifestDataId =
+    queryDataId ??
+    bodyDataId ??
+    params.providerResourceId ??
+    legacyQueryId ??
+    params.providerEventId
+
+  const alternativeIdsTested = uniqueNonEmptyStrings([
+    bodyDataId,
+    queryDataId,
+    legacyQueryId,
+    params.providerResourceId,
+    params.providerEventId,
+  ]).filter((id) => id !== officialManifestDataId)
+
+  const requestIdSource: 'x-request-id' | 'missing' = requestIdHeader
+    ? 'x-request-id'
+    : 'missing'
+
+  const officialManifest = buildMercadoPagoSignatureManifest({
+    dataId: officialManifestDataId,
+    requestId: requestIdHeader,
+    ts,
+    includeRequestId: true,
+    trailingSemicolon: true,
+  })
+
+  const variantEntries: Array<{ name: string; manifest: string }> = []
+  if (officialManifestDataId && ts) {
+    variantEntries.push({
+      name: 'no_trailing_semicolon',
+      manifest: buildMercadoPagoSignatureManifest({
+        dataId: officialManifestDataId,
+        requestId: requestIdHeader,
+        ts,
+        includeRequestId: true,
+        trailingSemicolon: false,
+      }),
+    })
+    variantEntries.push({
+      name: 'without_request_id',
+      manifest: buildMercadoPagoSignatureManifest({
+        dataId: officialManifestDataId,
+        requestId: requestIdHeader,
+        ts,
+        includeRequestId: false,
+        trailingSemicolon: true,
+      }),
+    })
+  }
+
+  const alternativeDataId = alternativeIdsTested[0] ?? null
+  if (alternativeDataId && ts) {
+    variantEntries.push({
+      name: 'alternative_data_id',
+      manifest: buildMercadoPagoSignatureManifest({
+        dataId: alternativeDataId,
+        requestId: requestIdHeader,
+        ts,
+        includeRequestId: true,
+        trailingSemicolon: true,
+      }),
+    })
+  }
+
+  const trimmedVariants = variantEntries.filter((entry) => Boolean(entry.manifest))
+  const checkedManifests = uniqueNonEmptyStrings([
+    officialManifest,
+    ...trimmedVariants.map((entry) => entry.manifest),
+  ])
+
+  const testedSecretSources = params.webhookSecrets.map((entry) => entry.source)
+
+  if (!v1) {
+    return {
+      signatureValid: false,
+      reason: 'missing_signature',
+      ts,
+      v1: null,
+      manifest: officialManifest,
+      matchedManifest: null,
+      checkedManifests,
+      checkedDataIds: uniqueNonEmptyStrings([
+        officialManifestDataId,
+        ...alternativeIdsTested,
+      ]),
+      testedSecretSources,
+      matchedSecretSource: null,
+      dataIdDetected: officialManifestDataId,
+      requestIdDetected: requestIdHeader,
+      requestIdSource,
+      usedRequestIdFallback: false,
+      officialManifestDataId,
+      alternativeIdsTested,
+      officialMatch: false,
+      calculatedHmacOfficial: '',
+      variantChecks: [],
+    }
+  }
+
+  if (params.webhookSecrets.length === 0) {
+    return {
+      signatureValid: false,
+      reason: 'missing_secret',
+      ts,
+      v1,
+      manifest: officialManifest,
+      matchedManifest: null,
+      checkedManifests,
+      checkedDataIds: uniqueNonEmptyStrings([
+        officialManifestDataId,
+        ...alternativeIdsTested,
+      ]),
+      testedSecretSources,
+      matchedSecretSource: null,
+      dataIdDetected: officialManifestDataId,
+      requestIdDetected: requestIdHeader,
+      requestIdSource,
+      usedRequestIdFallback: false,
+      officialManifestDataId,
+      alternativeIdsTested,
+      officialMatch: false,
+      calculatedHmacOfficial: '',
+      variantChecks: [],
+    }
+  }
+
+  if (!officialManifest) {
+    return {
+      signatureValid: false,
+      reason: 'missing_manifest',
+      ts,
+      v1,
+      manifest: '',
+      matchedManifest: null,
+      checkedManifests,
+      checkedDataIds: uniqueNonEmptyStrings([
+        officialManifestDataId,
+        ...alternativeIdsTested,
+      ]),
+      testedSecretSources,
+      matchedSecretSource: null,
+      dataIdDetected: officialManifestDataId,
+      requestIdDetected: requestIdHeader,
+      requestIdSource,
+      usedRequestIdFallback: false,
+      officialManifestDataId,
+      alternativeIdsTested,
+      officialMatch: false,
+      calculatedHmacOfficial: '',
+      variantChecks: [],
+    }
+  }
+
+  let calculatedHmacOfficial = ''
+  let officialMatch = false
+  let variantChecks: PaymentWebhookSignatureVariantCheck[] = []
+  let matchedManifest: string | null = null
+  let matchedSecretSource: string | null = null
+
+  const firstSecret = params.webhookSecrets[0]
+  if (firstSecret) {
+    calculatedHmacOfficial = calculateMercadoPagoSignatureHmac({
+      secret: firstSecret.value,
+      manifest: officialManifest,
+    })
+    officialMatch = safeHexEquals(calculatedHmacOfficial, v1)
+    variantChecks = trimmedVariants.map((entry) => {
+      const calculatedHmacVariant = calculateMercadoPagoSignatureHmac({
+        secret: firstSecret.value,
+        manifest: entry.manifest,
+      })
+      return {
+        manifestVariantName: entry.name,
+        manifestVariantValue: entry.manifest,
+        calculatedHmacVariant,
+        variantMatch: safeHexEquals(calculatedHmacVariant, v1),
+      }
+    })
+    if (officialMatch) {
+      matchedManifest = officialManifest
+      matchedSecretSource = firstSecret.source
+    } else {
+      const matchedVariant = variantChecks.find((entry) => entry.variantMatch)
+      if (matchedVariant) {
+        matchedManifest = matchedVariant.manifestVariantValue
+        matchedSecretSource = firstSecret.source
+      }
+    }
+  }
+
+  if (!matchedManifest && params.webhookSecrets.length > 1) {
+    for (const secretCandidate of params.webhookSecrets.slice(1)) {
+      const candidateOfficial = calculateMercadoPagoSignatureHmac({
+        secret: secretCandidate.value,
+        manifest: officialManifest,
+      })
+      if (safeHexEquals(candidateOfficial, v1)) {
+        officialMatch = true
+        calculatedHmacOfficial = candidateOfficial
+        matchedManifest = officialManifest
+        matchedSecretSource = secretCandidate.source
+        break
+      }
+
+      for (const variant of trimmedVariants) {
+        const candidateVariant = calculateMercadoPagoSignatureHmac({
+          secret: secretCandidate.value,
+          manifest: variant.manifest,
+        })
+        if (safeHexEquals(candidateVariant, v1)) {
+          calculatedHmacOfficial = candidateOfficial
+          matchedManifest = variant.manifest
+          matchedSecretSource = secretCandidate.source
+          break
+        }
+      }
+
+      if (matchedManifest) break
+    }
+  }
+
+  return {
+    signatureValid: Boolean(matchedManifest),
+    reason: matchedManifest ? 'ok' : 'signature_mismatch',
+    ts,
+    v1,
+    manifest: officialManifest,
+    matchedManifest,
+    checkedManifests,
+    checkedDataIds: uniqueNonEmptyStrings([
+      officialManifestDataId,
+      ...alternativeIdsTested,
+    ]),
+    testedSecretSources,
+    matchedSecretSource,
+    dataIdDetected: officialManifestDataId,
+    requestIdDetected: requestIdHeader,
+    requestIdSource,
+    usedRequestIdFallback: false,
+    officialManifestDataId,
+    alternativeIdsTested,
+    officialMatch,
+    calculatedHmacOfficial,
+    variantChecks,
+  }
 }
 
 async function markWebhookEvent(params: {
@@ -344,21 +689,23 @@ export async function POST(request: NextRequest) {
         process.env.MERCADOPAGO_ALLOW_TEST_WEBHOOK_WITHOUT_SIGNATURE
       )
     webhookSecrets = getMercadoPagoWebhookSecretsForValidation()
-    console.info('[MercadoPago][webhook] runtime', {
-      env: runtimeDebug.env,
-      hasAccessToken: runtimeDebug.hasAccessToken,
-      hasWebhookSecret: runtimeDebug.hasWebhookSecret,
-      webhookSecretSource: runtimeDebug.webhookSecretSource,
-      webhookSecretLength: runtimeDebug.webhookSecretLength,
-      webhookSecretCandidates: webhookSecrets.map((entry) => entry.source),
-      baseUrl: runtimeDebug.baseUrl,
-      xRequestId: requestIdHeader,
-      webhookTopic,
-      isLegacyPaymentFeed,
-      providerEventId,
-      providerResourceId,
-      allowTestWebhookWithoutSignature,
-    })
+    if (webhookTopic === 'payment') {
+      console.info('[MercadoPago][webhook][payment] runtime', {
+        env: runtimeDebug.env,
+        hasAccessToken: runtimeDebug.hasAccessToken,
+        hasWebhookSecret: runtimeDebug.hasWebhookSecret,
+        webhookSecretSource: runtimeDebug.webhookSecretSource,
+        webhookSecretLength: runtimeDebug.webhookSecretLength,
+        webhookSecretCandidates: webhookSecrets.map((entry) => entry.source),
+        baseUrl: runtimeDebug.baseUrl,
+        xRequestId: requestIdHeader,
+        webhookTopic,
+        isLegacyPaymentFeed,
+        providerEventId,
+        providerResourceId,
+        allowTestWebhookWithoutSignature,
+      })
+    }
   } catch (error) {
     const message = extractErrorMessage(
       error,
@@ -372,61 +719,99 @@ export async function POST(request: NextRequest) {
 
   const shouldValidateSignature =
     webhookTopic === 'payment' && !isLegacyPaymentFeed
+  const parsedSignatureHeader = parseMercadoPagoSignatureHeader(
+    request.headers.get('x-signature')
+  )
+  const bodyDataId = extractBodyDataId(payload)
   const queryDataId = normalizeString(requestUrl.searchParams.get('data.id'))
-  const queryId = normalizeString(requestUrl.searchParams.get('id'))
-  const testedSecretSources: string[] = []
-  let matchedSecretSource: string | null = null
-  let signature: ReturnType<typeof validateMercadoPagoSignature> | null = null
+  const queryLegacyId = normalizeString(requestUrl.searchParams.get('id'))
+  const requestHeadersForDebug = {
+    'x-signature': request.headers.get('x-signature'),
+    'x-request-id': requestIdHeader,
+    'x-nf-request-id': request.headers.get('x-nf-request-id'),
+    'content-type': request.headers.get('content-type'),
+    'user-agent': request.headers.get('user-agent'),
+  }
+  const requestQueryForDebug = snapshotQueryParams(requestUrl)
+
+  if (webhookTopic === 'payment') {
+    console.info('[MercadoPago][webhook][payment] request', {
+      env: resolvedMercadoPagoEnv,
+      webhookUrl: request.url,
+      queryParams: requestQueryForDebug,
+      headers: requestHeadersForDebug,
+      rawBody: bodyText,
+    })
+
+    console.info('[MercadoPago][webhook][payment] parsed', {
+      webhookTopic,
+      eventType,
+      providerEventId,
+      providerResourceId,
+      dataIdDetected: providerResourceId,
+      requestIdDetected: requestIdHeader,
+      tsDetected: parsedSignatureHeader.ts,
+      v1Detected: parsedSignatureHeader.v1,
+    })
+  }
+
+  let signature: PaymentWebhookSignatureValidation | null = null
   let bypassedSignatureInTestDebug = false
 
   if (shouldValidateSignature) {
-    const secretsToTry =
-      webhookSecrets.length > 0
-        ? webhookSecrets
-        : [{ source: 'no_secret_configured', value: '' }]
+    signature = buildPaymentWebhookSignatureValidation({
+      request,
+      requestUrl,
+      payload,
+      providerEventId,
+      providerResourceId,
+      webhookSecrets,
+    })
 
-    for (const secretCandidate of secretsToTry) {
-      testedSecretSources.push(secretCandidate.source)
+    console.info('[MercadoPago][webhook][payment] hypothesis-id', {
+      bodyDataId,
+      queryDataId,
+      legacyQueryId: queryLegacyId,
+      providerEventId,
+      providerResourceId,
+      officialManifestDataId: signature.officialManifestDataId,
+      alternativeIdsTested: signature.alternativeIdsTested,
+    })
 
-      const candidateSignature = validateMercadoPagoSignature({
-        signatureHeader: request.headers.get('x-signature'),
-        requestIdHeader,
-        dataId: providerResourceId,
-        alternativeDataIds: [queryDataId, queryId, providerEventId],
-        secret: secretCandidate.value,
-      })
+    console.info('[MercadoPago][webhook][payment] hypothesis-request-id', {
+      xRequestId: requestIdHeader,
+      xNfRequestId: request.headers.get('x-nf-request-id'),
+      requestIdDetected: signature.requestIdDetected,
+      requestIdSource: signature.requestIdSource,
+      usedRequestIdFallback: signature.usedRequestIdFallback,
+    })
 
-      if (!signature) signature = candidateSignature
-
-      if (candidateSignature.signatureValid) {
-        signature = candidateSignature
-        matchedSecretSource = secretCandidate.source
-        break
-      }
-
-      if (
-        signature.reason === 'missing_secret' &&
-        candidateSignature.reason !== 'missing_secret'
-      ) {
-        signature = candidateSignature
-      }
-    }
+    console.info('[MercadoPago][webhook][payment] hypothesis-manifest', {
+      officialManifest: signature.manifest,
+      calculatedHmacOfficial: signature.calculatedHmacOfficial,
+      receivedV1: signature.v1,
+      officialMatch: signature.officialMatch,
+      testedSecretSources: signature.testedSecretSources,
+      matchedSecretSource: signature.matchedSecretSource,
+      variantChecks: signature.variantChecks,
+      signatureValid: signature.signatureValid,
+      matchedManifest: signature.matchedManifest,
+      reason: signature.reason,
+    })
   }
 
   if (signature) {
-    const manifestUsedForHmac =
-      signature.matchedManifest ?? signature.manifest ?? null
-    console.info('[MercadoPago][webhook] signature-check', {
+    console.info('[MercadoPago][webhook][payment] signature-check', {
       signatureValid: signature.signatureValid,
       reason: signature.reason,
       ts: signature.ts,
       xRequestId: requestIdHeader,
       providerResourceId,
       hasSignatureHeader: Boolean(request.headers.get('x-signature')),
-      testedSecretSources,
-      matchedSecretSource,
+      testedSecretSources: signature.testedSecretSources,
+      matchedSecretSource: signature.matchedSecretSource,
       checkedDataIds: signature.checkedDataIds,
-      manifestUsedForHmac,
+      manifestUsedForHmac: signature.matchedManifest ?? signature.manifest,
       manifestTried: signature.checkedManifests,
       matchedManifest: signature.matchedManifest,
     })
@@ -525,22 +910,22 @@ export async function POST(request: NextRequest) {
     }
 
     if (!canBypassInvalidSignatureInTest) {
-    const signatureIssue = !signature
-      ? 'Webhook rechazado: validacion de firma no ejecutada.'
-      : signature.reason === 'missing_secret'
-        ? 'Webhook rechazado: falta configurar MERCADOPAGO_WEBHOOK_SECRET para este entorno.'
-        : signature.reason === 'missing_signature'
-          ? 'Webhook rechazado: falta x-signature (v1) en el request.'
-          : signature.reason === 'missing_manifest'
-            ? 'Webhook rechazado: no se pudo construir manifest para validar firma.'
-            : 'Webhook rechazado: la firma no coincide con el secret configurado.'
+      const signatureIssue = !signature
+        ? 'Webhook rechazado: validacion de firma no ejecutada.'
+        : signature.reason === 'missing_secret'
+          ? 'Webhook rechazado: falta configurar MERCADOPAGO_WEBHOOK_SECRET para este entorno.'
+          : signature.reason === 'missing_signature'
+            ? 'Webhook rechazado: falta x-signature (v1) en el request.'
+            : signature.reason === 'missing_manifest'
+              ? 'Webhook rechazado: no se pudo construir manifest para validar firma.'
+              : 'Webhook rechazado: la firma no coincide con el secret configurado.'
 
-    await markWebhookEvent({
-      eventId,
-      processed: true,
-      processingError: `${signatureIssue} reason=${signature?.reason ?? 'not_checked'}; tested_secret_sources=${testedSecretSources.join(',') || 'none'}; provider_resource_id=${providerResourceId ?? 'null'}; manifest=${signature?.manifest || 'n/a'}`,
-    })
-    return NextResponse.json({ ok: true }, { status: 200 })
+      await markWebhookEvent({
+        eventId,
+        processed: true,
+        processingError: `${signatureIssue} reason=${signature?.reason ?? 'not_checked'}; tested_secret_sources=${signature?.testedSecretSources.join(',') || 'none'}; provider_resource_id=${providerResourceId ?? 'null'}; manifest=${signature?.manifest || 'n/a'}`,
+      })
+      return NextResponse.json({ ok: true }, { status: 200 })
     }
   }
 
