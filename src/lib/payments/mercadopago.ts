@@ -40,7 +40,14 @@ type SignatureValidation = {
 }
 
 function normalizeEnv(value: string | null | undefined): string {
-  return (value ?? '').trim()
+  const trimmed = (value ?? '').trim()
+  if (
+    (trimmed.startsWith('"') && trimmed.endsWith('"')) ||
+    (trimmed.startsWith("'") && trimmed.endsWith("'"))
+  ) {
+    return trimmed.slice(1, -1).trim()
+  }
+  return trimmed
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -65,6 +72,28 @@ function firstNonEmpty(values: Array<string | undefined>): string {
     if (normalized) return normalized
   }
   return ''
+}
+
+function firstNonEmptyWithSource(
+  values: Array<{ name: string; value: string | undefined }>
+): {
+  value: string
+  source: string | null
+} {
+  for (const entry of values) {
+    const normalized = normalizeEnv(entry.value)
+    if (normalized) {
+      return {
+        value: normalized,
+        source: entry.name,
+      }
+    }
+  }
+
+  return {
+    value: '',
+    source: null,
+  }
 }
 
 export function getMercadoPagoAccessToken(): string {
@@ -103,7 +132,36 @@ export function getMercadoPagoWebhookSecret(): string {
     ])
   }
 
-  return firstNonEmpty([process.env.MERCADOPAGO_WEBHOOK_SECRET])
+  return firstNonEmpty([
+    process.env.MERCADOPAGO_WEBHOOK_SECRET_TEST,
+    process.env.MERCADOPAGO_WEBHOOK_SECRET,
+  ])
+}
+
+export function getMercadoPagoWebhookSecretSource(): string | null {
+  if (isProductionMercadoPagoEnv()) {
+    return firstNonEmptyWithSource([
+      {
+        name: 'MERCADOPAGO_WEBHOOK_SECRET_PROD',
+        value: process.env.MERCADOPAGO_WEBHOOK_SECRET_PROD,
+      },
+      {
+        name: 'MERCADOPAGO_WEBHOOK_SECRET',
+        value: process.env.MERCADOPAGO_WEBHOOK_SECRET,
+      },
+    ]).source
+  }
+
+  return firstNonEmptyWithSource([
+    {
+      name: 'MERCADOPAGO_WEBHOOK_SECRET_TEST',
+      value: process.env.MERCADOPAGO_WEBHOOK_SECRET_TEST,
+    },
+    {
+      name: 'MERCADOPAGO_WEBHOOK_SECRET',
+      value: process.env.MERCADOPAGO_WEBHOOK_SECRET,
+    },
+  ]).source
 }
 
 function normalizeBaseUrl(url: string): string {
@@ -132,12 +190,14 @@ export function getMercadoPagoRuntimeDebugInfo(): {
   hasAccessToken: boolean
   hasPublicKey: boolean
   hasWebhookSecret: boolean
+  webhookSecretSource: string | null
   baseUrl: string
 } {
   const env = resolveMercadoPagoEnv()
   const accessToken = getMercadoPagoAccessToken()
   const publicKey = getMercadoPagoPublicKey()
   const webhookSecret = getMercadoPagoWebhookSecret()
+  const webhookSecretSource = getMercadoPagoWebhookSecretSource()
   const baseUrl = getMercadoPagoBaseUrl()
 
   return {
@@ -145,6 +205,7 @@ export function getMercadoPagoRuntimeDebugInfo(): {
     hasAccessToken: Boolean(accessToken),
     hasPublicKey: Boolean(publicKey),
     hasWebhookSecret: Boolean(webhookSecret),
+    webhookSecretSource,
     baseUrl,
   }
 }
