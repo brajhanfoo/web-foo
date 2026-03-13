@@ -352,11 +352,14 @@ export async function POST(request: NextRequest) {
 
   const shouldValidateSignature =
     webhookTopic === 'payment' && !isLegacyPaymentFeed
+  const queryDataId = normalizeString(requestUrl.searchParams.get('data.id'))
+  const queryId = normalizeString(requestUrl.searchParams.get('id'))
   const signature = shouldValidateSignature
     ? validateMercadoPagoSignature({
         signatureHeader: request.headers.get('x-signature'),
         requestIdHeader: request.headers.get('x-request-id'),
         dataId: providerResourceId,
+        alternativeDataIds: [queryDataId, queryId, providerEventId],
         secret: webhookSecret,
       })
     : null
@@ -367,6 +370,7 @@ export async function POST(request: NextRequest) {
       reason: signature.reason,
       ts: signature.ts,
       hasSignatureHeader: Boolean(request.headers.get('x-signature')),
+      checkedDataIds: signature.checkedDataIds,
       manifestTried: signature.checkedManifests,
       matchedManifest: signature.matchedManifest,
     })

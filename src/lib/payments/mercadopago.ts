@@ -31,6 +31,7 @@ type SignatureValidation = {
   manifest: string
   matchedManifest: string | null
   checkedManifests: string[]
+  checkedDataIds: string[]
   reason:
     | 'ok'
     | 'missing_secret'
@@ -383,62 +384,153 @@ function normalizeIdForSignature(value: string | null): string | null {
   return /[A-Z]/.test(trimmed) ? trimmed.toLowerCase() : trimmed
 }
 
-function buildManifest(params: {
-  dataId: string | null
+function buildManifestFromOrder(params: {
+  id: string
   requestId: string | null
   ts: string | null
+  order: Array<'id' | 'request-id' | 'ts'>
+  trailingSemicolon: boolean
 }): string {
-  const segments: string[] = []
-  const normalizedDataId = normalizeIdForSignature(params.dataId)
-  const normalizedRequestId = normalizeEnv(params.requestId)
-  const normalizedTs = normalizeEnv(params.ts)
+  const id = normalizeEnv(params.id)
+  const requestId = normalizeEnv(params.requestId)
+  const ts = normalizeEnv(params.ts)
+  if (!id) return ''
 
-  if (normalizedDataId) segments.push(`id:${normalizedDataId};`)
-  if (normalizedRequestId) segments.push(`request-id:${normalizedRequestId};`)
-  if (normalizedTs) segments.push(`ts:${normalizedTs};`)
+  const valueByKey: Record<'id' | 'request-id' | 'ts', string | null> = {
+    id,
+    'request-id': requestId || null,
+    ts: ts || null,
+  }
 
-  return segments.join('')
+  const pairs: string[] = []
+  for (const key of params.order) {
+    const value = valueByKey[key]
+    if (!value) continue
+    pairs.push(`${key}:${value}`)
+  }
+
+  if (pairs.length === 0) return ''
+  const joined = pairs.join(';')
+  return params.trailingSemicolon ? `${joined};` : joined
+}
+
+function permutations2(
+  a: 'id' | 'request-id' | 'ts',
+  b: 'id' | 'request-id' | 'ts'
+): Array<Array<'id' | 'request-id' | 'ts'>> {
+  return [
+    [a, b],
+    [b, a],
+  ]
+}
+
+function permutations3(
+  a: 'id' | 'request-id' | 'ts',
+  b: 'id' | 'request-id' | 'ts',
+  c: 'id' | 'request-id' | 'ts'
+): Array<Array<'id' | 'request-id' | 'ts'>> {
+  return [
+    [a, b, c],
+    [a, c, b],
+    [b, a, c],
+    [b, c, a],
+    [c, a, b],
+    [c, b, a],
+  ]
 }
 
 function buildManifestCandidates(params: {
-  dataId: string | null
+  dataIds: string[]
   requestId: string | null
   ts: string | null
-}): string[] {
-  const rawDataId = normalizeEnv(params.dataId)
-  const normalizedDataId = normalizeIdForSignature(params.dataId)
+}): {
+  checkedDataIds: string[]
+  checkedManifests: string[]
+} {
   const requestId = normalizeEnv(params.requestId)
   const ts = normalizeEnv(params.ts)
-
-  const byId = [normalizedDataId, rawDataId].filter((id): id is string =>
-    Boolean(id)
-  )
-
+  const checkedDataIds: string[] = []
   const candidates = new Set<string>()
-  for (const id of byId) {
-    const full = buildManifest({
-      dataId: id,
-      requestId: requestId || null,
-      ts: ts || null,
-    })
-    if (full) candidates.add(full)
 
-    const withoutRequestId = buildManifest({
-      dataId: id,
-      requestId: null,
-      ts: ts || null,
-    })
-    if (withoutRequestId) candidates.add(withoutRequestId)
-
-    const withoutTs = buildManifest({
-      dataId: id,
-      requestId: requestId || null,
-      ts: null,
-    })
-    if (withoutTs) candidates.add(withoutTs)
+  const normalizedDataIds = new Set<string>()
+  for (const dataId of params.dataIds) {
+    const raw = normalizeEnv(dataId)
+    const normalized = normalizeIdForSignature(dataId)
+    if (raw) normalizedDataIds.add(raw)
+    if (normalized) normalizedDataIds.add(normalized)
   }
 
-  return [...candidates]
+  for (const dataId of normalizedDataIds) {
+    checkedDataIds.push(dataId)
+    const fullOrders =
+      requestId && ts
+        ? permutations3('id', 'request-id', 'ts')
+        : requestId
+          ? permutations2('id', 'request-id')
+          : ts
+            ? permutations2('id', 'ts')
+            : ([['id']] as Array<Array<'id' | 'request-id' | 'ts'>>)
+
+    for (const order of fullOrders) {
+      const withTrailing = buildManifestFromOrder({
+        id: dataId,
+        requestId: requestId || null,
+        ts: ts || null,
+        order,
+        trailingSemicolon: true,
+      })
+      if (withTrailing) candidates.add(withTrailing)
+
+      const withoutTrailing = buildManifestFromOrder({
+        id: dataId,
+        requestId: requestId || null,
+        ts: ts || null,
+        order,
+        trailingSemicolon: false,
+      })
+      if (withoutTrailing) candidates.add(withoutTrailing)
+    }
+
+    if (ts) {
+      for (const order of permutations2('id', 'ts')) {
+        const manifest = buildManifestFromOrder({
+          id: dataId,
+          requestId: null,
+          ts,
+          order,
+          trailingSemicolon: true,
+        })
+        if (manifest) candidates.add(manifest)
+      }
+    }
+
+    if (requestId) {
+      for (const order of permutations2('id', 'request-id')) {
+        const manifest = buildManifestFromOrder({
+          id: dataId,
+          requestId,
+          ts: null,
+          order,
+          trailingSemicolon: true,
+        })
+        if (manifest) candidates.add(manifest)
+      }
+    }
+
+    const idOnly = buildManifestFromOrder({
+      id: dataId,
+      requestId: null,
+      ts: null,
+      order: ['id'],
+      trailingSemicolon: true,
+    })
+    if (idOnly) candidates.add(idOnly)
+  }
+
+  return {
+    checkedDataIds,
+    checkedManifests: [...candidates],
+  }
 }
 
 function safeHexEquals(left: string, right: string): boolean {
@@ -453,20 +545,23 @@ export function validateMercadoPagoSignature(params: {
   signatureHeader: string | null
   requestIdHeader: string | null
   dataId: string | null
+  alternativeDataIds?: Array<string | null | undefined>
   secret: string
 }): SignatureValidation {
   const signature = parseMercadoPagoSignatureHeader(params.signatureHeader)
   const requestId = normalizeEnv(params.requestIdHeader)
-  const manifest = buildManifest({
-    dataId: params.dataId,
+  const allIds = [
+    params.dataId,
+    ...(params.alternativeDataIds ?? []),
+  ].filter((id): id is string => Boolean(normalizeEnv(id)))
+  const manifestData = buildManifestCandidates({
+    dataIds: allIds,
     requestId: requestId || null,
     ts: signature.ts,
   })
-  const checkedManifests = buildManifestCandidates({
-    dataId: params.dataId,
-    requestId: requestId || null,
-    ts: signature.ts,
-  })
+  const checkedManifests = manifestData.checkedManifests
+  const checkedDataIds = manifestData.checkedDataIds
+  const manifest = checkedManifests[0] ?? ''
 
   if (!params.secret) {
     return {
@@ -476,6 +571,7 @@ export function validateMercadoPagoSignature(params: {
       manifest,
       matchedManifest: null,
       checkedManifests,
+      checkedDataIds,
       reason: 'missing_secret',
     }
   }
@@ -488,6 +584,7 @@ export function validateMercadoPagoSignature(params: {
       manifest,
       matchedManifest: null,
       checkedManifests,
+      checkedDataIds,
       reason: 'missing_signature',
     }
   }
@@ -500,6 +597,7 @@ export function validateMercadoPagoSignature(params: {
       manifest,
       matchedManifest: null,
       checkedManifests,
+      checkedDataIds,
       reason: 'missing_manifest',
     }
   }
@@ -518,6 +616,7 @@ export function validateMercadoPagoSignature(params: {
         manifest: candidateManifest,
         matchedManifest: candidateManifest,
         checkedManifests,
+        checkedDataIds,
         reason: 'ok',
       }
     }
@@ -530,6 +629,7 @@ export function validateMercadoPagoSignature(params: {
     manifest,
     matchedManifest: null,
     checkedManifests,
+    checkedDataIds,
     reason: 'signature_mismatch',
   }
 }
