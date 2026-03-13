@@ -101,6 +101,32 @@ function firstNonEmptyWithSource(
   }
 }
 
+function normalizeSecretValue(value: string | undefined): string {
+  return (value ?? '').trim()
+}
+
+function firstNonEmptySecretWithSource(
+  values: Array<{ name: string; value: string | undefined }>
+): {
+  value: string
+  source: string | null
+} {
+  for (const entry of values) {
+    const normalized = normalizeSecretValue(entry.value)
+    if (normalized) {
+      return {
+        value: normalized,
+        source: entry.name,
+      }
+    }
+  }
+
+  return {
+    value: '',
+    source: null,
+  }
+}
+
 function nonEmptyNamedSecrets(
   values: Array<{ name: string; value: string | undefined }>
 ): MercadoPagoNamedSecret[] {
@@ -108,7 +134,7 @@ function nonEmptyNamedSecrets(
   const out: MercadoPagoNamedSecret[] = []
 
   for (const entry of values) {
-    const normalized = normalizeEnv(entry.value)
+    const normalized = normalizeSecretValue(entry.value)
     if (!normalized || seen.has(normalized)) continue
     seen.add(normalized)
     out.push({
@@ -150,21 +176,24 @@ export function getMercadoPagoPublicKey(): string {
 
 export function getMercadoPagoWebhookSecret(): string {
   if (isProductionMercadoPagoEnv()) {
-    return firstNonEmpty([
-      process.env.MERCADOPAGO_WEBHOOK_SECRET_PROD,
-      process.env.MERCADOPAGO_WEBHOOK_SECRET,
-    ])
+    return firstNonEmptySecretWithSource([
+      {
+        name: 'MERCADOPAGO_WEBHOOK_SECRET_PROD',
+        value: process.env.MERCADOPAGO_WEBHOOK_SECRET_PROD,
+      },
+      {
+        name: 'MERCADOPAGO_WEBHOOK_SECRET',
+        value: process.env.MERCADOPAGO_WEBHOOK_SECRET,
+      },
+    ]).value
   }
 
-  return firstNonEmpty([
-    process.env.MERCADOPAGO_WEBHOOK_SECRET_TEST,
-    process.env.MERCADOPAGO_WEBHOOK_SECRET,
-  ])
+  return normalizeSecretValue(process.env.MERCADOPAGO_WEBHOOK_SECRET_TEST)
 }
 
 export function getMercadoPagoWebhookSecretSource(): string | null {
   if (isProductionMercadoPagoEnv()) {
-    return firstNonEmptyWithSource([
+    return firstNonEmptySecretWithSource([
       {
         name: 'MERCADOPAGO_WEBHOOK_SECRET_PROD',
         value: process.env.MERCADOPAGO_WEBHOOK_SECRET_PROD,
@@ -176,16 +205,9 @@ export function getMercadoPagoWebhookSecretSource(): string | null {
     ]).source
   }
 
-  return firstNonEmptyWithSource([
-    {
-      name: 'MERCADOPAGO_WEBHOOK_SECRET_TEST',
-      value: process.env.MERCADOPAGO_WEBHOOK_SECRET_TEST,
-    },
-    {
-      name: 'MERCADOPAGO_WEBHOOK_SECRET',
-      value: process.env.MERCADOPAGO_WEBHOOK_SECRET,
-    },
-  ]).source
+  return normalizeSecretValue(process.env.MERCADOPAGO_WEBHOOK_SECRET_TEST)
+    ? 'MERCADOPAGO_WEBHOOK_SECRET_TEST'
+    : null
 }
 
 export function getMercadoPagoWebhookSecretsForValidation(): MercadoPagoNamedSecret[] {
@@ -196,22 +218,27 @@ export function getMercadoPagoWebhookSecretsForValidation(): MercadoPagoNamedSec
         value: process.env.MERCADOPAGO_WEBHOOK_SECRET_PROD,
       },
       {
+        name: 'MERCADOPAGO_WEBHOOK_SECRET_TEST',
+        value: process.env.MERCADOPAGO_WEBHOOK_SECRET_TEST,
+      },
+      {
         name: 'MERCADOPAGO_WEBHOOK_SECRET',
         value: process.env.MERCADOPAGO_WEBHOOK_SECRET,
       },
     ])
   }
 
-  return nonEmptyNamedSecrets([
+  const testSecret = normalizeSecretValue(
+    process.env.MERCADOPAGO_WEBHOOK_SECRET_TEST
+  )
+  if (!testSecret) return []
+
+  return [
     {
-      name: 'MERCADOPAGO_WEBHOOK_SECRET_TEST',
-      value: process.env.MERCADOPAGO_WEBHOOK_SECRET_TEST,
+      source: 'MERCADOPAGO_WEBHOOK_SECRET_TEST',
+      value: testSecret,
     },
-    {
-      name: 'MERCADOPAGO_WEBHOOK_SECRET',
-      value: process.env.MERCADOPAGO_WEBHOOK_SECRET,
-    },
-  ])
+  ]
 }
 
 function normalizeBaseUrl(url: string): string {
@@ -241,6 +268,7 @@ export function getMercadoPagoRuntimeDebugInfo(): {
   hasPublicKey: boolean
   hasWebhookSecret: boolean
   webhookSecretSource: string | null
+  webhookSecretLength: number
   baseUrl: string
 } {
   const env = resolveMercadoPagoEnv()
@@ -256,6 +284,7 @@ export function getMercadoPagoRuntimeDebugInfo(): {
     hasPublicKey: Boolean(publicKey),
     hasWebhookSecret: Boolean(webhookSecret),
     webhookSecretSource,
+    webhookSecretLength: webhookSecret.length,
     baseUrl,
   }
 }
