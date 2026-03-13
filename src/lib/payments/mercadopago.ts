@@ -23,7 +23,7 @@ export type MercadoPagoPaymentClient = {
 
 const MERCADO_PAGO_API_BASE_URL = 'https://api.mercadopago.com'
 
-type SignatureParts = {
+export type MercadoPagoSignatureParts = {
   ts: string | null
   v1: string | null
 }
@@ -435,7 +435,9 @@ export function buildMercadoPagoUrls(): {
   }
 }
 
-function parseMercadoPagoSignatureHeader(value: string | null): SignatureParts {
+export function parseMercadoPagoSignatureHeader(
+  value: string | null
+): MercadoPagoSignatureParts {
   if (!value) return { ts: null, v1: null }
 
   const entries = value.split(',')
@@ -453,6 +455,42 @@ function parseMercadoPagoSignatureHeader(value: string | null): SignatureParts {
   }
 
   return { ts, v1 }
+}
+
+export function buildMercadoPagoSignatureManifest(params: {
+  dataId: string | null
+  requestId: string | null
+  ts: string | null
+  includeRequestId?: boolean
+  trailingSemicolon?: boolean
+}): string {
+  const dataId = normalizeIdForSignature(params.dataId)
+  const requestId = normalizeEnv(params.requestId)
+  const ts = normalizeEnv(params.ts)
+  const includeRequestId = params.includeRequestId ?? true
+  const trailingSemicolon = params.trailingSemicolon ?? true
+
+  if (!dataId || !ts) return ''
+
+  const parts: string[] = [`id:${dataId}`]
+  if (includeRequestId && requestId) {
+    parts.push(`request-id:${requestId}`)
+  }
+  parts.push(`ts:${ts}`)
+
+  const manifest = parts.join(';')
+  return trailingSemicolon ? `${manifest};` : manifest
+}
+
+export function calculateMercadoPagoSignatureHmac(params: {
+  secret: string
+  manifest: string
+}): string {
+  if (!params.secret || !params.manifest) return ''
+  return crypto
+    .createHmac('sha256', params.secret)
+    .update(params.manifest)
+    .digest('hex')
 }
 
 function normalizeIdForSignature(value: string | null): string | null {
