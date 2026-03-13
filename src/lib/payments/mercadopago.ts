@@ -1,13 +1,23 @@
 import 'server-only'
 
 import crypto from 'node:crypto'
-import { MercadoPagoConfig, Payment, Preference } from 'mercadopago'
 
 import { getSiteUrl } from '@/lib/site-url'
 import type { PaymentStatus } from '@/types/payments'
 
 export type MercadoPagoWebhookTopic = 'payment' | 'merchant_order' | 'unknown'
 export type MercadoPagoEnv = 'test' | 'production'
+export type MercadoPagoConfig = {
+  accessToken: string
+}
+export type MercadoPagoPreferenceClient = {
+  create(input: { body: unknown }): Promise<Record<string, unknown>>
+}
+export type MercadoPagoPaymentClient = {
+  get(input: { id: string }): Promise<Record<string, unknown>>
+}
+
+const MERCADO_PAGO_API_BASE_URL = 'https://api.mercadopago.com'
 
 type SignatureParts = {
   ts: string | null
@@ -31,6 +41,10 @@ type SignatureValidation = {
 
 function normalizeEnv(value: string | null | undefined): string {
   return (value ?? '').trim()
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null
 }
 
 export function resolveMercadoPagoEnv(): MercadoPagoEnv {
@@ -89,9 +103,7 @@ export function getMercadoPagoWebhookSecret(): string {
     ])
   }
 
-  return firstNonEmpty([
-    process.env.MERCADOPAGO_WEBHOOK_SECRET,
-  ])
+  return firstNonEmpty([process.env.MERCADOPAGO_WEBHOOK_SECRET])
 }
 
 function normalizeBaseUrl(url: string): string {
@@ -143,15 +155,108 @@ export function createMercadoPagoConfig(): MercadoPagoConfig {
     throw new Error('Falta configurar el access token de Mercado Pago.')
   }
 
-  return new MercadoPagoConfig({ accessToken })
+  return { accessToken }
 }
 
-export function createMercadoPagoPreferenceClient(): Preference {
-  return new Preference(createMercadoPagoConfig())
+function resolveMercadoPagoApiErrorMessage(params: {
+  status: number
+  statusText: string
+  payload: unknown
+}): string {
+  if (isRecord(params.payload)) {
+    const apiMessage =
+      normalizeEnv(String(params.payload['message'] ?? '')) ||
+      normalizeEnv(String(params.payload['error_message'] ?? '')) ||
+      normalizeEnv(String(params.payload['error'] ?? ''))
+    if (apiMessage) return apiMessage
+
+    const cause = params.payload['cause']
+    if (Array.isArray(cause) && cause.length > 0) {
+      const first = cause[0]
+      if (isRecord(first)) {
+        const description = normalizeEnv(String(first['description'] ?? ''))
+        if (description) return description
+      }
+    }
+  }
+
+  return `Mercado Pago API error (${params.status} ${params.statusText || 'unknown'}).`
 }
 
-export function createMercadoPagoPaymentClient(): Payment {
-  return new Payment(createMercadoPagoConfig())
+async function mercadoPagoApiRequest(params: {
+  path: string
+  method: 'GET' | 'POST'
+  body?: unknown
+}): Promise<Record<string, unknown>> {
+  const { accessToken } = createMercadoPagoConfig()
+  const url = `${MERCADO_PAGO_API_BASE_URL}${params.path}`
+
+  const headers: Record<string, string> = {
+    Authorization: `Bearer ${accessToken}`,
+    Accept: 'application/json',
+  }
+
+  const requestInit: RequestInit = {
+    method: params.method,
+    headers,
+    cache: 'no-store',
+  }
+
+  if (params.body !== undefined) {
+    headers['Content-Type'] = 'application/json'
+    requestInit.body = JSON.stringify(params.body)
+  }
+
+  const response = await fetch(url, requestInit)
+  const rawText = await response.text()
+
+  let payload: unknown = {}
+  if (rawText) {
+    try {
+      payload = JSON.parse(rawText) as unknown
+    } catch {
+      payload = { raw: rawText }
+    }
+  }
+
+  if (!response.ok) {
+    throw new Error(
+      resolveMercadoPagoApiErrorMessage({
+        status: response.status,
+        statusText: response.statusText,
+        payload,
+      })
+    )
+  }
+
+  return isRecord(payload) ? payload : {}
+}
+
+export function createMercadoPagoPreferenceClient(): MercadoPagoPreferenceClient {
+  return {
+    create: async (input: { body: unknown }) =>
+      mercadoPagoApiRequest({
+        path: '/checkout/preferences',
+        method: 'POST',
+        body: input.body,
+      }),
+  }
+}
+
+export function createMercadoPagoPaymentClient(): MercadoPagoPaymentClient {
+  return {
+    get: async (input: { id: string }) => {
+      const paymentId = normalizeEnv(input.id)
+      if (!paymentId) {
+        throw new Error('Falta id de pago de Mercado Pago.')
+      }
+
+      return mercadoPagoApiRequest({
+        path: `/v1/payments/${encodeURIComponent(paymentId)}`,
+        method: 'GET',
+      })
+    },
+  }
 }
 
 export function mapMercadoPagoStatusToPaymentStatus(
@@ -244,8 +349,8 @@ function buildManifestCandidates(params: {
   const requestId = normalizeEnv(params.requestId)
   const ts = normalizeEnv(params.ts)
 
-  const byId = [normalizedDataId, rawDataId].filter(
-    (id): id is string => Boolean(id)
+  const byId = [normalizedDataId, rawDataId].filter((id): id is string =>
+    Boolean(id)
   )
 
   const candidates = new Set<string>()
@@ -394,7 +499,9 @@ function resolveBodyTopic(payload: Record<string, unknown>): string {
     .trim()
   if (explicitType) return explicitType
 
-  return normalizeEnv(typeof payload['topic'] === 'string' ? payload['topic'] : '')
+  return normalizeEnv(
+    typeof payload['topic'] === 'string' ? payload['topic'] : ''
+  )
     .toLowerCase()
     .trim()
 }
