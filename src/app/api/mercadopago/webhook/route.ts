@@ -3,12 +3,13 @@ import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import {
   createMercadoPagoPaymentClient,
+  getMercadoPagoWebhookSecretsForValidation,
   getMercadoPagoRuntimeDebugInfo,
-  getMercadoPagoWebhookSecret,
   resolveMercadoPagoWebhookTopic,
   mapMercadoPagoStatusToPaymentStatus,
   resolveMercadoPagoDataId,
   validateMercadoPagoSignature,
+  type MercadoPagoNamedSecret,
 } from '@/lib/payments/mercadopago'
 import type { PaymentProvider, PaymentStatus } from '@/types/payments'
 import type { ProgramPaymentMode, ProgramRow } from '@/types/programs'
@@ -324,15 +325,16 @@ export async function POST(request: NextRequest) {
     providerResourceId,
   } = webhookMetadata
 
-  let webhookSecret = ''
+  let webhookSecrets: MercadoPagoNamedSecret[] = []
   try {
     const runtimeDebug = getMercadoPagoRuntimeDebugInfo()
-    webhookSecret = getMercadoPagoWebhookSecret()
+    webhookSecrets = getMercadoPagoWebhookSecretsForValidation()
     console.info('[MercadoPago][webhook] runtime', {
       env: runtimeDebug.env,
       hasAccessToken: runtimeDebug.hasAccessToken,
       hasWebhookSecret: runtimeDebug.hasWebhookSecret,
       webhookSecretSource: runtimeDebug.webhookSecretSource,
+      webhookSecretCandidates: webhookSecrets.map((entry) => entry.source),
       baseUrl: runtimeDebug.baseUrl,
       webhookTopic,
       isLegacyPaymentFeed,
@@ -354,15 +356,43 @@ export async function POST(request: NextRequest) {
     webhookTopic === 'payment' && !isLegacyPaymentFeed
   const queryDataId = normalizeString(requestUrl.searchParams.get('data.id'))
   const queryId = normalizeString(requestUrl.searchParams.get('id'))
-  const signature = shouldValidateSignature
-    ? validateMercadoPagoSignature({
+  const testedSecretSources: string[] = []
+  let matchedSecretSource: string | null = null
+  let signature: ReturnType<typeof validateMercadoPagoSignature> | null = null
+
+  if (shouldValidateSignature) {
+    const secretsToTry =
+      webhookSecrets.length > 0
+        ? webhookSecrets
+        : [{ source: 'no_secret_configured', value: '' }]
+
+    for (const secretCandidate of secretsToTry) {
+      testedSecretSources.push(secretCandidate.source)
+
+      const candidateSignature = validateMercadoPagoSignature({
         signatureHeader: request.headers.get('x-signature'),
         requestIdHeader: request.headers.get('x-request-id'),
         dataId: providerResourceId,
         alternativeDataIds: [queryDataId, queryId, providerEventId],
-        secret: webhookSecret,
+        secret: secretCandidate.value,
       })
-    : null
+
+      if (!signature) signature = candidateSignature
+
+      if (candidateSignature.signatureValid) {
+        signature = candidateSignature
+        matchedSecretSource = secretCandidate.source
+        break
+      }
+
+      if (
+        signature.reason === 'missing_secret' &&
+        candidateSignature.reason !== 'missing_secret'
+      ) {
+        signature = candidateSignature
+      }
+    }
+  }
 
   if (signature) {
     console.info('[MercadoPago][webhook] signature-check', {
@@ -370,6 +400,8 @@ export async function POST(request: NextRequest) {
       reason: signature.reason,
       ts: signature.ts,
       hasSignatureHeader: Boolean(request.headers.get('x-signature')),
+      testedSecretSources,
+      matchedSecretSource,
       checkedDataIds: signature.checkedDataIds,
       manifestTried: signature.checkedManifests,
       matchedManifest: signature.matchedManifest,
@@ -465,7 +497,7 @@ export async function POST(request: NextRequest) {
     await markWebhookEvent({
       eventId,
       processed: true,
-      processingError: `${signatureIssue} reason=${signature?.reason ?? 'not_checked'}; provider_resource_id=${providerResourceId ?? 'null'}; manifest=${signature?.manifest || 'n/a'}`,
+      processingError: `${signatureIssue} reason=${signature?.reason ?? 'not_checked'}; tested_secret_sources=${testedSecretSources.join(',') || 'none'}; provider_resource_id=${providerResourceId ?? 'null'}; manifest=${signature?.manifest || 'n/a'}`,
     })
     return NextResponse.json({ ok: true }, { status: 200 })
   }
