@@ -6,7 +6,6 @@ import { getSiteUrl } from '@/lib/site-url'
 import type { PaymentStatus } from '@/types/payments'
 
 export type MercadoPagoWebhookTopic = 'payment' | 'merchant_order' | 'unknown'
-export type MercadoPagoEnv = 'test' | 'production'
 export type MercadoPagoNamedSecret = {
   source: string
   value: string
@@ -28,22 +27,6 @@ export type MercadoPagoSignatureParts = {
   v1: string | null
 }
 
-type SignatureValidation = {
-  signatureValid: boolean
-  ts: string | null
-  v1: string | null
-  manifest: string
-  matchedManifest: string | null
-  checkedManifests: string[]
-  checkedDataIds: string[]
-  reason:
-    | 'ok'
-    | 'missing_secret'
-    | 'missing_signature'
-    | 'missing_manifest'
-    | 'signature_mismatch'
-}
-
 function normalizeEnv(value: string | null | undefined): string {
   const trimmed = (value ?? '').trim()
   if (
@@ -57,18 +40,6 @@ function normalizeEnv(value: string | null | undefined): string {
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null
-}
-
-export function resolveMercadoPagoEnv(): MercadoPagoEnv {
-  const explicit = normalizeEnv(process.env.MERCADOPAGO_ENV).toLowerCase()
-  if (explicit === 'test' || explicit === 'sandbox') return 'test'
-  if (explicit === 'production' || explicit === 'prod') return 'production'
-
-  throw new Error("MERCADOPAGO_ENV debe ser 'test' o 'production'.")
-}
-
-function isProductionMercadoPagoEnv(): boolean {
-  return resolveMercadoPagoEnv() === 'production'
 }
 
 function firstNonEmpty(values: Array<string | undefined>): string {
@@ -147,86 +118,56 @@ function nonEmptyNamedSecrets(
 }
 
 export function getMercadoPagoAccessToken(): string {
-  if (isProductionMercadoPagoEnv()) {
-    return firstNonEmpty([
-      process.env.MERCADOPAGO_ACCESS_TOKEN_PROD,
-      process.env.MERCADOPAGO_ACCESS_TOKEN,
-    ])
-  }
-
-  return firstNonEmpty([process.env.MERCADOPAGO_ACCESS_TOKEN])
+  return firstNonEmpty([
+    process.env.MERCADOPAGO_ACCESS_TOKEN,
+    process.env.MERCADOPAGO_ACCESS_TOKEN_PROD,
+  ])
 }
 
 export function getMercadoPagoPublicKey(): string {
-  if (isProductionMercadoPagoEnv()) {
-    return firstNonEmpty([
-      process.env.MERCADOPAGO_PUBLIC_KEY_PROD,
-      process.env.MERCADOPAGO_PUBLIC_KEY,
-    ])
-  }
-
-  return firstNonEmpty([process.env.MERCADOPAGO_PUBLIC_KEY])
+  return firstNonEmpty([
+    process.env.MERCADOPAGO_PUBLIC_KEY,
+    process.env.MERCADOPAGO_PUBLIC_KEY_PROD,
+  ])
 }
 
 export function getMercadoPagoWebhookSecret(): string {
-  if (isProductionMercadoPagoEnv()) {
-    return firstNonEmptySecretWithSource([
-      {
-        name: 'MERCADOPAGO_WEBHOOK_SECRET_PROD',
-        value: process.env.MERCADOPAGO_WEBHOOK_SECRET_PROD,
-      },
-      {
-        name: 'MERCADOPAGO_WEBHOOK_SECRET',
-        value: process.env.MERCADOPAGO_WEBHOOK_SECRET,
-      },
-    ]).value
-  }
-
-  return normalizeSecretValue(process.env.MERCADOPAGO_WEBHOOK_SECRET)
+  return firstNonEmptySecretWithSource([
+    {
+      name: 'MERCADOPAGO_WEBHOOK_SECRET',
+      value: process.env.MERCADOPAGO_WEBHOOK_SECRET,
+    },
+    {
+      name: 'MERCADOPAGO_WEBHOOK_SECRET_PROD',
+      value: process.env.MERCADOPAGO_WEBHOOK_SECRET_PROD,
+    },
+  ]).value
 }
 
 export function getMercadoPagoWebhookSecretSource(): string | null {
-  if (isProductionMercadoPagoEnv()) {
-    return firstNonEmptySecretWithSource([
-      {
-        name: 'MERCADOPAGO_WEBHOOK_SECRET_PROD',
-        value: process.env.MERCADOPAGO_WEBHOOK_SECRET_PROD,
-      },
-      {
-        name: 'MERCADOPAGO_WEBHOOK_SECRET',
-        value: process.env.MERCADOPAGO_WEBHOOK_SECRET,
-      },
-    ]).source
-  }
-
-  return normalizeSecretValue(process.env.MERCADOPAGO_WEBHOOK_SECRET)
-    ? 'MERCADOPAGO_WEBHOOK_SECRET'
-    : null
+  return firstNonEmptySecretWithSource([
+    {
+      name: 'MERCADOPAGO_WEBHOOK_SECRET',
+      value: process.env.MERCADOPAGO_WEBHOOK_SECRET,
+    },
+    {
+      name: 'MERCADOPAGO_WEBHOOK_SECRET_PROD',
+      value: process.env.MERCADOPAGO_WEBHOOK_SECRET_PROD,
+    },
+  ]).source
 }
 
 export function getMercadoPagoWebhookSecretsForValidation(): MercadoPagoNamedSecret[] {
-  if (isProductionMercadoPagoEnv()) {
-    return nonEmptyNamedSecrets([
-      {
-        name: 'MERCADOPAGO_WEBHOOK_SECRET_PROD',
-        value: process.env.MERCADOPAGO_WEBHOOK_SECRET_PROD,
-      },
-      {
-        name: 'MERCADOPAGO_WEBHOOK_SECRET',
-        value: process.env.MERCADOPAGO_WEBHOOK_SECRET,
-      },
-    ])
-  }
-
-  const secret = normalizeSecretValue(process.env.MERCADOPAGO_WEBHOOK_SECRET)
-  if (!secret) return []
-
-  return [
+  return nonEmptyNamedSecrets([
     {
-      source: 'MERCADOPAGO_WEBHOOK_SECRET',
-      value: secret,
+      name: 'MERCADOPAGO_WEBHOOK_SECRET',
+      value: process.env.MERCADOPAGO_WEBHOOK_SECRET,
     },
-  ]
+    {
+      name: 'MERCADOPAGO_WEBHOOK_SECRET_PROD',
+      value: process.env.MERCADOPAGO_WEBHOOK_SECRET_PROD,
+    },
+  ])
 }
 
 function normalizeBaseUrl(url: string): string {
@@ -234,12 +175,10 @@ function normalizeBaseUrl(url: string): string {
 }
 
 export function getMercadoPagoBaseUrl(): string {
-  const explicitBaseUrl = isProductionMercadoPagoEnv()
-    ? firstNonEmpty([
-        process.env.MERCADOPAGO_BASE_URL_PROD,
-        process.env.MERCADOPAGO_BASE_URL,
-      ])
-    : firstNonEmpty([process.env.MERCADOPAGO_BASE_URL])
+  const explicitBaseUrl = firstNonEmpty([
+    process.env.MERCADOPAGO_BASE_URL,
+    process.env.MERCADOPAGO_BASE_URL_PROD,
+  ])
 
   if (explicitBaseUrl) return normalizeBaseUrl(explicitBaseUrl)
 
@@ -248,7 +187,6 @@ export function getMercadoPagoBaseUrl(): string {
 }
 
 export function getMercadoPagoRuntimeDebugInfo(): {
-  env: MercadoPagoEnv
   hasAccessToken: boolean
   hasPublicKey: boolean
   hasWebhookSecret: boolean
@@ -256,7 +194,6 @@ export function getMercadoPagoRuntimeDebugInfo(): {
   webhookSecretLength: number
   baseUrl: string
 } {
-  const env = resolveMercadoPagoEnv()
   const accessToken = getMercadoPagoAccessToken()
   const publicKey = getMercadoPagoPublicKey()
   const webhookSecret = getMercadoPagoWebhookSecret()
@@ -264,7 +201,6 @@ export function getMercadoPagoRuntimeDebugInfo(): {
   const baseUrl = getMercadoPagoBaseUrl()
 
   return {
-    env,
     hasAccessToken: Boolean(accessToken),
     hasPublicKey: Boolean(publicKey),
     hasWebhookSecret: Boolean(webhookSecret),
@@ -483,255 +419,6 @@ function normalizeIdForSignature(value: string | null): string | null {
   const trimmed = value.trim()
   if (!trimmed) return null
   return /[A-Z]/.test(trimmed) ? trimmed.toLowerCase() : trimmed
-}
-
-function buildManifestFromOrder(params: {
-  id: string
-  requestId: string | null
-  ts: string | null
-  order: Array<'id' | 'request-id' | 'ts'>
-  trailingSemicolon: boolean
-}): string {
-  const id = normalizeEnv(params.id)
-  const requestId = normalizeEnv(params.requestId)
-  const ts = normalizeEnv(params.ts)
-  if (!id) return ''
-
-  const valueByKey: Record<'id' | 'request-id' | 'ts', string | null> = {
-    id,
-    'request-id': requestId || null,
-    ts: ts || null,
-  }
-
-  const pairs: string[] = []
-  for (const key of params.order) {
-    const value = valueByKey[key]
-    if (!value) continue
-    pairs.push(`${key}:${value}`)
-  }
-
-  if (pairs.length === 0) return ''
-  const joined = pairs.join(';')
-  return params.trailingSemicolon ? `${joined};` : joined
-}
-
-function permutations2(
-  a: 'id' | 'request-id' | 'ts',
-  b: 'id' | 'request-id' | 'ts'
-): Array<Array<'id' | 'request-id' | 'ts'>> {
-  return [
-    [a, b],
-    [b, a],
-  ]
-}
-
-function permutations3(
-  a: 'id' | 'request-id' | 'ts',
-  b: 'id' | 'request-id' | 'ts',
-  c: 'id' | 'request-id' | 'ts'
-): Array<Array<'id' | 'request-id' | 'ts'>> {
-  return [
-    [a, b, c],
-    [a, c, b],
-    [b, a, c],
-    [b, c, a],
-    [c, a, b],
-    [c, b, a],
-  ]
-}
-
-function buildManifestCandidates(params: {
-  dataIds: string[]
-  requestId: string | null
-  ts: string | null
-}): {
-  checkedDataIds: string[]
-  checkedManifests: string[]
-} {
-  const requestId = normalizeEnv(params.requestId)
-  const ts = normalizeEnv(params.ts)
-  const checkedDataIds: string[] = []
-  const candidates = new Set<string>()
-
-  const normalizedDataIds = new Set<string>()
-  for (const dataId of params.dataIds) {
-    const raw = normalizeEnv(dataId)
-    const normalized = normalizeIdForSignature(dataId)
-    if (raw) normalizedDataIds.add(raw)
-    if (normalized) normalizedDataIds.add(normalized)
-  }
-
-  for (const dataId of normalizedDataIds) {
-    checkedDataIds.push(dataId)
-    const fullOrders =
-      requestId && ts
-        ? permutations3('id', 'request-id', 'ts')
-        : requestId
-          ? permutations2('id', 'request-id')
-          : ts
-            ? permutations2('id', 'ts')
-            : ([['id']] as Array<Array<'id' | 'request-id' | 'ts'>>)
-
-    for (const order of fullOrders) {
-      const withTrailing = buildManifestFromOrder({
-        id: dataId,
-        requestId: requestId || null,
-        ts: ts || null,
-        order,
-        trailingSemicolon: true,
-      })
-      if (withTrailing) candidates.add(withTrailing)
-
-      const withoutTrailing = buildManifestFromOrder({
-        id: dataId,
-        requestId: requestId || null,
-        ts: ts || null,
-        order,
-        trailingSemicolon: false,
-      })
-      if (withoutTrailing) candidates.add(withoutTrailing)
-    }
-
-    if (ts) {
-      for (const order of permutations2('id', 'ts')) {
-        const manifest = buildManifestFromOrder({
-          id: dataId,
-          requestId: null,
-          ts,
-          order,
-          trailingSemicolon: true,
-        })
-        if (manifest) candidates.add(manifest)
-      }
-    }
-
-    if (requestId) {
-      for (const order of permutations2('id', 'request-id')) {
-        const manifest = buildManifestFromOrder({
-          id: dataId,
-          requestId,
-          ts: null,
-          order,
-          trailingSemicolon: true,
-        })
-        if (manifest) candidates.add(manifest)
-      }
-    }
-
-    const idOnly = buildManifestFromOrder({
-      id: dataId,
-      requestId: null,
-      ts: null,
-      order: ['id'],
-      trailingSemicolon: true,
-    })
-    if (idOnly) candidates.add(idOnly)
-  }
-
-  return {
-    checkedDataIds,
-    checkedManifests: [...candidates],
-  }
-}
-
-function safeHexEquals(left: string, right: string): boolean {
-  const leftBuffer = Buffer.from(left, 'hex')
-  const rightBuffer = Buffer.from(right, 'hex')
-  if (leftBuffer.length === 0 || rightBuffer.length === 0) return false
-  if (leftBuffer.length !== rightBuffer.length) return false
-  return crypto.timingSafeEqual(leftBuffer, rightBuffer)
-}
-
-export function validateMercadoPagoSignature(params: {
-  signatureHeader: string | null
-  requestIdHeader: string | null
-  dataId: string | null
-  alternativeDataIds?: Array<string | null | undefined>
-  secret: string
-}): SignatureValidation {
-  const signature = parseMercadoPagoSignatureHeader(params.signatureHeader)
-  const requestId = normalizeEnv(params.requestIdHeader)
-  const allIds = [params.dataId, ...(params.alternativeDataIds ?? [])].filter(
-    (id): id is string => Boolean(normalizeEnv(id))
-  )
-  const manifestData = buildManifestCandidates({
-    dataIds: allIds,
-    requestId: requestId || null,
-    ts: signature.ts,
-  })
-  const checkedManifests = manifestData.checkedManifests
-  const checkedDataIds = manifestData.checkedDataIds
-  const manifest = checkedManifests[0] ?? ''
-
-  if (!params.secret) {
-    return {
-      signatureValid: false,
-      ts: signature.ts,
-      v1: signature.v1,
-      manifest,
-      matchedManifest: null,
-      checkedManifests,
-      checkedDataIds,
-      reason: 'missing_secret',
-    }
-  }
-
-  if (!signature.v1) {
-    return {
-      signatureValid: false,
-      ts: signature.ts,
-      v1: signature.v1,
-      manifest,
-      matchedManifest: null,
-      checkedManifests,
-      checkedDataIds,
-      reason: 'missing_signature',
-    }
-  }
-
-  if (checkedManifests.length === 0) {
-    return {
-      signatureValid: false,
-      ts: signature.ts,
-      v1: signature.v1,
-      manifest,
-      matchedManifest: null,
-      checkedManifests,
-      checkedDataIds,
-      reason: 'missing_manifest',
-    }
-  }
-
-  for (const candidateManifest of checkedManifests) {
-    const hmac = crypto
-      .createHmac('sha256', params.secret)
-      .update(candidateManifest)
-      .digest('hex')
-
-    if (safeHexEquals(hmac, signature.v1)) {
-      return {
-        signatureValid: true,
-        ts: signature.ts,
-        v1: signature.v1,
-        manifest: candidateManifest,
-        matchedManifest: candidateManifest,
-        checkedManifests,
-        checkedDataIds,
-        reason: 'ok',
-      }
-    }
-  }
-
-  return {
-    signatureValid: false,
-    ts: signature.ts,
-    v1: signature.v1,
-    manifest,
-    matchedManifest: null,
-    checkedManifests,
-    checkedDataIds,
-    reason: 'signature_mismatch',
-  }
 }
 
 function extractResourceId(resource: string): string | null {

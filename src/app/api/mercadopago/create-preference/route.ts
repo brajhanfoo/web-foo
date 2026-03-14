@@ -41,6 +41,7 @@ type ProgramRowSummary = Pick<
   | 'id'
   | 'title'
   | 'slug'
+  | 'description'
   | 'payment_mode'
   | 'requires_payment_pre'
   | 'price_usd'
@@ -60,12 +61,37 @@ type PaymentRow = {
   provider: PaymentProvider
 }
 
+type ProfileRowSummary = {
+  first_name: string | null
+  last_name: string | null
+  email: string | null
+  whatsapp_e164: string | null
+  document_number: string | null
+  country_residence: string | null
+}
+
+type MercadoPagoPayer = {
+  first_name?: string
+  last_name?: string
+  email?: string
+  identification?: {
+    type: string
+    number: string
+  }
+  phone?: {
+    area_code: string
+    number: string
+  }
+}
+
 type MercadoPagoUrls = {
   success: string
   failure: string
   pending: string
   notification: string
 }
+
+const MERCADO_PAGO_CATEGORY_ID = 'services'
 
 function isRecord(v: unknown): v is Record<string, unknown> {
   return typeof v === 'object' && v !== null
@@ -202,6 +228,163 @@ function buildPreferenceTitle(params: {
   return `${kind} ${title}`.trim().slice(0, 120)
 }
 
+function normalizeWhitespace(value: string | null | undefined): string | null {
+  if (!value) return null
+  const normalized = value.replace(/\s+/g, ' ').trim()
+  return normalized || null
+}
+
+function normalizeEmail(value: string | null | undefined): string | null {
+  const normalized = normalizeWhitespace(value)
+  if (!normalized) return null
+  if (!normalized.includes('@')) return null
+  return normalized
+}
+
+function normalizeCountryKey(value: string | null | undefined): string | null {
+  const normalized = normalizeWhitespace(value)
+  if (!normalized) return null
+
+  return normalized
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+}
+
+function resolveCountryCallingCode(
+  countryResidence: string | null | undefined
+): string | null {
+  const key = normalizeCountryKey(countryResidence)
+  if (!key) return null
+
+  const mapping: Record<string, string> = {
+    argentina: '54',
+    bolivia: '591',
+    brasil: '55',
+    brazil: '55',
+    chile: '56',
+    colombia: '57',
+    ecuador: '593',
+    espana: '34',
+    mexico: '52',
+    peru: '51',
+    uruguay: '598',
+    'estados unidos': '1',
+    usa: '1',
+    'united states': '1',
+  }
+
+  return mapping[key] ?? null
+}
+
+function resolvePayerPhone(params: {
+  whatsappE164: string | null | undefined
+  countryResidence: string | null | undefined
+}): MercadoPagoPayer['phone'] | null {
+  const rawPhone = normalizeWhitespace(params.whatsappE164)
+  if (!rawPhone) return null
+  if (!rawPhone.startsWith('+')) return null
+
+  const digits = rawPhone.replace(/[^\d]/g, '')
+  if (!digits || digits.length < 8 || digits.length > 15) return null
+
+  const callingCode = resolveCountryCallingCode(params.countryResidence)
+  if (!callingCode || !digits.startsWith(callingCode)) return null
+
+  const number = digits.slice(callingCode.length)
+  if (!number || number.length < 6) return null
+
+  return {
+    area_code: callingCode,
+    number,
+  }
+}
+
+function normalizeDocumentNumber(value: string | null | undefined): string | null {
+  const normalized = normalizeWhitespace(value)
+  if (!normalized) return null
+
+  const compact = normalized.replace(/[^\dA-Za-z]/g, '')
+  return compact || null
+}
+
+function resolvePayerIdentification(params: {
+  documentNumber: string | null | undefined
+  countryResidence: string | null | undefined
+}): MercadoPagoPayer['identification'] | null {
+  const number = normalizeDocumentNumber(params.documentNumber)
+  if (!number) return null
+
+  const countryKey = normalizeCountryKey(params.countryResidence)
+  if (!countryKey) return null
+
+  if (countryKey !== 'argentina' && countryKey !== 'peru') {
+    return null
+  }
+
+  return {
+    type: 'DNI',
+    number,
+  }
+}
+
+function buildMercadoPagoPayer(params: {
+  profile: ProfileRowSummary | null
+  authEmail: string | null
+}): MercadoPagoPayer | undefined {
+  const firstName = normalizeWhitespace(params.profile?.first_name)
+  const lastName = normalizeWhitespace(params.profile?.last_name)
+  const email =
+    normalizeEmail(params.profile?.email) ?? normalizeEmail(params.authEmail)
+  const phone = resolvePayerPhone({
+    whatsappE164: params.profile?.whatsapp_e164,
+    countryResidence: params.profile?.country_residence,
+  })
+  const identification = resolvePayerIdentification({
+    documentNumber: params.profile?.document_number,
+    countryResidence: params.profile?.country_residence,
+  })
+
+  const payer: MercadoPagoPayer = {}
+  if (firstName) payer.first_name = firstName
+  if (lastName) payer.last_name = lastName
+  if (email) payer.email = email
+  if (identification) payer.identification = identification
+  if (phone) payer.phone = phone
+
+  return Object.keys(payer).length > 0 ? payer : undefined
+}
+
+function buildPreferenceItemId(params: {
+  purpose: PaymentPurpose
+  programId: string
+  applicationId: string | null
+}): string {
+  if (params.purpose === 'pre_enrollment') {
+    return `pre_enrollment:${params.programId}`
+  }
+
+  return `tuition:${params.programId}:${params.applicationId ?? 'no_application'}`
+}
+
+function buildPreferenceDescription(params: {
+  purpose: PaymentPurpose
+  programTitle: string
+  programDescription: string | null
+}): string {
+  const cleanProgramTitle = params.programTitle.trim() || 'programa'
+  const base =
+    params.purpose === 'pre_enrollment'
+      ? `Pre-inscripcion al programa ${cleanProgramTitle}.`
+      : `Matricula del programa ${cleanProgramTitle}.`
+
+  const cleanProgramDescription = normalizeWhitespace(params.programDescription)
+  if (!cleanProgramDescription) return base
+
+  const enriched = `${base} ${cleanProgramDescription}`
+  return enriched.slice(0, 240)
+}
+
 function pickString(raw: unknown, key: string): string | null {
   if (!isRecord(raw)) return null
   const value = raw[key]
@@ -210,12 +393,29 @@ function pickString(raw: unknown, key: string): string | null {
   return trimmed || null
 }
 
+function pickStringOrNumber(raw: unknown, key: string): string | null {
+  if (!isRecord(raw)) return null
+  const value = raw[key]
+  if (typeof value === 'string') {
+    const trimmed = value.trim()
+    return trimmed || null
+  }
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return String(value)
+  }
+  return null
+}
+
 function buildPreferenceBody(params: {
   purpose: PaymentPurpose
   amountCents: number
   paymentId: string
+  programId: string
+  applicationId: string | null
   programTitle: string
+  programDescription: string | null
   programSlug: string
+  payer?: MercadoPagoPayer
   urls: {
     success: string
     failure: string
@@ -226,11 +426,22 @@ function buildPreferenceBody(params: {
   return {
     items: [
       {
+        id: buildPreferenceItemId({
+          purpose: params.purpose,
+          programId: params.programId,
+          applicationId: params.applicationId,
+        }),
         title: buildPreferenceTitle({
           purpose: params.purpose,
           programTitle: params.programTitle,
           programSlug: params.programSlug,
         }),
+        description: buildPreferenceDescription({
+          purpose: params.purpose,
+          programTitle: params.programTitle,
+          programDescription: params.programDescription,
+        }),
+        category_id: MERCADO_PAGO_CATEGORY_ID,
         quantity: 1,
         currency_id: DEFAULT_CURRENCY,
         unit_price: params.amountCents / 100,
@@ -244,6 +455,7 @@ function buildPreferenceBody(params: {
     },
     auto_return: 'approved',
     notification_url: params.urls.notification,
+    ...(params.payer ? { payer: params.payer } : {}),
   }
 }
 
@@ -391,7 +603,9 @@ export async function POST(
 
   const { data: programRow, error: programErr } = await supabaseAdmin
     .from('programs')
-    .select('id, title, slug, payment_mode, requires_payment_pre, price_usd')
+    .select(
+      'id, title, slug, description, payment_mode, requires_payment_pre, price_usd'
+    )
     .eq('id', programId)
     .maybeSingle()
 
@@ -404,6 +618,16 @@ export async function POST(
 
   const program = programRow as ProgramRowSummary
   const paymentMode = resolvePaymentMode(program)
+
+  const { data: profileRow } = await supabaseAdmin
+    .from('profiles')
+    .select(
+      'first_name,last_name,email,whatsapp_e164,document_number,country_residence'
+    )
+    .eq('id', userId)
+    .maybeSingle()
+
+  const profile = (profileRow as ProfileRowSummary | null) ?? null
 
   if (purpose === 'pre_enrollment' && paymentMode !== 'pre') {
     return NextResponse.json(
@@ -573,12 +797,21 @@ export async function POST(
 
   try {
     const preferenceClient = createMercadoPagoPreferenceClient()
+    const payer = buildMercadoPagoPayer({
+      profile,
+      authEmail: userRes.user.email ?? null,
+    })
+
     const preferenceBody = buildPreferenceBody({
       purpose,
       amountCents,
       paymentId,
+      programId: program.id,
+      applicationId,
       programTitle: program.title,
+      programDescription: program.description ?? null,
       programSlug: program.slug,
+      payer,
       urls,
     })
 
@@ -586,7 +819,7 @@ export async function POST(
       body: preferenceBody as never,
     })
 
-    const preferenceId = pickString(preferenceResponse, 'id')
+    const preferenceId = pickStringOrNumber(preferenceResponse, 'id')
     const initPoint =
       pickString(preferenceResponse, 'init_point') ??
       pickString(preferenceResponse, 'initPoint')

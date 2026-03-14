@@ -24,6 +24,10 @@ type ProgramSlugRow = {
   slug: string
 }
 
+type ApplicationOwnerRow = {
+  applicant_profile_id: string
+}
+
 function clean(value: string | null): string | null {
   if (!value) return null
   const trimmed = value.trim()
@@ -31,6 +35,7 @@ function clean(value: string | null): string | null {
 }
 
 async function resolvePaymentId(params: {
+  userId: string
   externalReference: string | null
   preferenceId: string | null
   mercadoPagoPaymentId: string | null
@@ -41,6 +46,7 @@ async function resolvePaymentId(params: {
       .select('id')
       .eq('id', params.externalReference)
       .eq('provider', MERCADO_PAGO_PROVIDER)
+      .eq('user_id', params.userId)
       .maybeSingle()
     if (data?.id) return String(data.id)
   }
@@ -85,6 +91,7 @@ export async function GET(request: NextRequest) {
   )
 
   const paymentId = await resolvePaymentId({
+    userId: userRes.user.id,
     externalReference,
     preferenceId,
     mercadoPagoPaymentId,
@@ -116,9 +123,32 @@ export async function GET(request: NextRequest) {
   const payment = paymentData as PaymentRow
   if (payment.user_id !== userRes.user.id) {
     return NextResponse.json(
-      { ok: false, message: 'Sin permisos' },
-      { status: 403 }
+      { ok: false, message: 'Pago no encontrado.' },
+      { status: 404 }
     )
+  }
+
+  if (payment.application_id) {
+    const { data: applicationData, error: applicationErr } = await supabaseAdmin
+      .from('applications')
+      .select('applicant_profile_id')
+      .eq('id', payment.application_id)
+      .maybeSingle()
+
+    if (applicationErr || !applicationData) {
+      return NextResponse.json(
+        { ok: false, message: 'Pago no encontrado.' },
+        { status: 404 }
+      )
+    }
+
+    const application = applicationData as ApplicationOwnerRow
+    if (application.applicant_profile_id !== userRes.user.id) {
+      return NextResponse.json(
+        { ok: false, message: 'Pago no encontrado.' },
+        { status: 404 }
+      )
+    }
   }
 
   let nextUrl: string | null = null
