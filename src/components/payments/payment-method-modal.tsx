@@ -14,6 +14,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { PayphoneCheckoutModal } from '@/components/payments/payphone-checkout-modal'
+import { buildPaymentSupportWhatsAppUrl } from '@/lib/payments/payment-support'
 
 type PaymentPurpose = 'pre_enrollment' | 'tuition'
 
@@ -32,6 +33,7 @@ type PaymentMethodModalProps = {
   open: boolean
   onOpenChange: (open: boolean) => void
   programId: string
+  programTitle?: string | null
   editionId: string | null
   purpose: PaymentPurpose
   applicationId?: string | null
@@ -43,6 +45,10 @@ export function PaymentMethodModal(props: PaymentMethodModalProps) {
   const [payphoneOpen, setPayphoneOpen] = useState(false)
   const [isStartingMp, setIsStartingMp] = useState(false)
   const [methodError, setMethodError] = useState<string | null>(null)
+  const paymentSupportUrl = buildPaymentSupportWhatsAppUrl({
+    purpose: props.purpose,
+    programTitle: props.programTitle ?? null,
+  })
 
   function openPayphone() {
     setMethodError(null)
@@ -144,6 +150,17 @@ export function PaymentMethodModal(props: PaymentMethodModalProps) {
                 {methodError}
               </div>
             ) : null}
+
+            <div className="pt-1 text-center">
+              <a
+                href={paymentSupportUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs text-white/60 underline underline-offset-4 transition-colors hover:text-white/80"
+              >
+                ¿Necesitas otra forma de pago? Consulta opciones por WhatsApp
+              </a>
+            </div>
           </div>
         </DialogContent>
       </Dialog>

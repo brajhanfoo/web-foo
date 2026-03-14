@@ -47,33 +47,10 @@ type PaymentWebhookSignatureValidationReason =
   | 'missing_manifest'
   | 'signature_mismatch'
 
-type PaymentWebhookSignatureVariantCheck = {
-  manifestVariantName: string
-  manifestVariantValue: string
-  calculatedHmacVariant: string
-  variantMatch: boolean
-}
-
 type PaymentWebhookSignatureValidation = {
   signatureValid: boolean
   reason: PaymentWebhookSignatureValidationReason
   ts: string | null
-  v1: string | null
-  manifest: string
-  matchedManifest: string | null
-  checkedManifests: string[]
-  checkedDataIds: string[]
-  testedSecretSources: string[]
-  matchedSecretSource: string | null
-  dataIdDetected: string | null
-  requestIdDetected: string | null
-  requestIdSource: 'x-request-id' | 'missing'
-  usedRequestIdFallback: boolean
-  officialManifestDataId: string | null
-  alternativeIdsTested: string[]
-  officialMatch: boolean
-  calculatedHmacOfficial: string
-  variantChecks: PaymentWebhookSignatureVariantCheck[]
 }
 
 function isRecord(v: unknown): v is Record<string, unknown> {
@@ -103,12 +80,6 @@ function normalizeNumber(v: unknown): number | null {
 function normalizeBoolean(v: unknown): boolean | null {
   if (typeof v === 'boolean') return v
   return null
-}
-
-function isEnabledEnvFlag(value: string | undefined): boolean {
-  if (!value) return false
-  const normalized = value.trim().toLowerCase()
-  return normalized === 'true' || normalized === '1' || normalized === 'yes'
 }
 
 function extractErrorMessage(error: unknown, fallback: string): string {
@@ -147,8 +118,18 @@ function isDuplicateError(error: unknown): boolean {
 }
 
 function snapshotHeaders(request: NextRequest): Record<string, string> {
+  const sensitiveHeaders = new Set([
+    'x-signature',
+    'authorization',
+    'cookie',
+    'set-cookie',
+    'x-api-key',
+  ])
   const out: Record<string, string> = {}
-  for (const [key, value] of request.headers.entries()) out[key] = value
+  for (const [key, value] of request.headers.entries()) {
+    const normalizedKey = key.trim().toLowerCase()
+    out[key] = sensitiveHeaders.has(normalizedKey) ? '[redacted]' : value
+  }
   return out
 }
 
@@ -197,22 +178,6 @@ function safeHexEquals(left: string, right: string): boolean {
   return crypto.timingSafeEqual(leftBuffer, rightBuffer)
 }
 
-function uniqueNonEmptyStrings(
-  values: Array<string | null | undefined>
-): string[] {
-  const out: string[] = []
-  const seen = new Set<string>()
-
-  for (const value of values) {
-    const normalized = normalizeString(value)
-    if (!normalized || seen.has(normalized)) continue
-    seen.add(normalized)
-    out.push(normalized)
-  }
-
-  return out
-}
-
 function extractBodyDataId(payload: unknown): string | null {
   if (!isRecord(payload)) return null
   if (!isRecord(payload['data'])) return null
@@ -223,7 +188,6 @@ function buildPaymentWebhookSignatureValidation(params: {
   request: NextRequest
   requestUrl: URL
   payload: unknown
-  providerEventId: string | null
   providerResourceId: string | null
   webhookSecrets: MercadoPagoNamedSecret[]
 }): PaymentWebhookSignatureValidation {
@@ -248,18 +212,6 @@ function buildPaymentWebhookSignatureValidation(params: {
     legacyQueryId ??
     null
 
-  const alternativeIdsTested = uniqueNonEmptyStrings([
-    bodyDataId,
-    queryDataId,
-    legacyQueryId,
-    params.providerResourceId,
-    params.providerEventId,
-  ]).filter((id) => id !== officialManifestDataId)
-
-  const requestIdSource: 'x-request-id' | 'missing' = requestIdHeader
-    ? 'x-request-id'
-    : 'missing'
-
   const officialManifest = buildMercadoPagoSignatureManifest({
     dataId: officialManifestDataId,
     requestId: requestIdHeader,
@@ -268,64 +220,11 @@ function buildPaymentWebhookSignatureValidation(params: {
     trailingSemicolon: true,
   })
 
-  const variantEntries: Array<{ name: string; manifest: string }> = []
-  if (officialManifestDataId && ts) {
-    variantEntries.push({
-      name: 'no_trailing_semicolon',
-      manifest: buildMercadoPagoSignatureManifest({
-        dataId: officialManifestDataId,
-        requestId: requestIdHeader,
-        ts,
-        includeRequestId: true,
-        trailingSemicolon: false,
-      }),
-    })
-    variantEntries.push({
-      name: 'without_request_id',
-      manifest: buildMercadoPagoSignatureManifest({
-        dataId: officialManifestDataId,
-        requestId: requestIdHeader,
-        ts,
-        includeRequestId: false,
-        trailingSemicolon: true,
-      }),
-    })
-  }
-
-  const trimmedVariants = variantEntries.filter((entry) =>
-    Boolean(entry.manifest)
-  )
-  const checkedManifests = uniqueNonEmptyStrings([
-    officialManifest,
-    ...trimmedVariants.map((entry) => entry.manifest),
-  ])
-
-  const testedSecretSources = params.webhookSecrets.map((entry) => entry.source)
-
   if (!v1) {
     return {
       signatureValid: false,
       reason: 'missing_signature',
       ts,
-      v1: null,
-      manifest: officialManifest,
-      matchedManifest: null,
-      checkedManifests,
-      checkedDataIds: uniqueNonEmptyStrings([
-        officialManifestDataId,
-        ...alternativeIdsTested,
-      ]),
-      testedSecretSources,
-      matchedSecretSource: null,
-      dataIdDetected: officialManifestDataId,
-      requestIdDetected: requestIdHeader,
-      requestIdSource,
-      usedRequestIdFallback: false,
-      officialManifestDataId,
-      alternativeIdsTested,
-      officialMatch: false,
-      calculatedHmacOfficial: '',
-      variantChecks: [],
     }
   }
 
@@ -334,25 +233,6 @@ function buildPaymentWebhookSignatureValidation(params: {
       signatureValid: false,
       reason: 'missing_secret',
       ts,
-      v1,
-      manifest: officialManifest,
-      matchedManifest: null,
-      checkedManifests,
-      checkedDataIds: uniqueNonEmptyStrings([
-        officialManifestDataId,
-        ...alternativeIdsTested,
-      ]),
-      testedSecretSources,
-      matchedSecretSource: null,
-      dataIdDetected: officialManifestDataId,
-      requestIdDetected: requestIdHeader,
-      requestIdSource,
-      usedRequestIdFallback: false,
-      officialManifestDataId,
-      alternativeIdsTested,
-      officialMatch: false,
-      calculatedHmacOfficial: '',
-      variantChecks: [],
     }
   }
 
@@ -361,98 +241,27 @@ function buildPaymentWebhookSignatureValidation(params: {
       signatureValid: false,
       reason: 'missing_manifest',
       ts,
-      v1,
-      manifest: '',
-      matchedManifest: null,
-      checkedManifests,
-      checkedDataIds: uniqueNonEmptyStrings([
-        officialManifestDataId,
-        ...alternativeIdsTested,
-      ]),
-      testedSecretSources,
-      matchedSecretSource: null,
-      dataIdDetected: officialManifestDataId,
-      requestIdDetected: requestIdHeader,
-      requestIdSource,
-      usedRequestIdFallback: false,
-      officialManifestDataId,
-      alternativeIdsTested,
-      officialMatch: false,
-      calculatedHmacOfficial: '',
-      variantChecks: [],
     }
   }
 
-  let calculatedHmacOfficial = ''
-  let officialMatch = false
-  let variantChecks: PaymentWebhookSignatureVariantCheck[] = []
-  let matchedManifest: string | null = null
-  let matchedSecretSource: string | null = null
-
-  const firstSecret = params.webhookSecrets[0]
-  if (firstSecret) {
-    calculatedHmacOfficial = calculateMercadoPagoSignatureHmac({
-      secret: firstSecret.value,
+  for (const secretCandidate of params.webhookSecrets) {
+    const calculatedHmac = calculateMercadoPagoSignatureHmac({
+      secret: secretCandidate.value,
       manifest: officialManifest,
     })
-    officialMatch = safeHexEquals(calculatedHmacOfficial, v1)
-    variantChecks = trimmedVariants.map((entry) => {
-      const calculatedHmacVariant = calculateMercadoPagoSignatureHmac({
-        secret: firstSecret.value,
-        manifest: entry.manifest,
-      })
+    if (safeHexEquals(calculatedHmac, v1)) {
       return {
-        manifestVariantName: entry.name,
-        manifestVariantValue: entry.manifest,
-        calculatedHmacVariant,
-        variantMatch: safeHexEquals(calculatedHmacVariant, v1),
-      }
-    })
-    if (officialMatch) {
-      matchedManifest = officialManifest
-      matchedSecretSource = firstSecret.source
-    }
-  }
-
-  if (!matchedManifest && params.webhookSecrets.length > 1) {
-    for (const secretCandidate of params.webhookSecrets.slice(1)) {
-      const candidateOfficial = calculateMercadoPagoSignatureHmac({
-        secret: secretCandidate.value,
-        manifest: officialManifest,
-      })
-      if (safeHexEquals(candidateOfficial, v1)) {
-        officialMatch = true
-        calculatedHmacOfficial = candidateOfficial
-        matchedManifest = officialManifest
-        matchedSecretSource = secretCandidate.source
-        break
+        signatureValid: true,
+        reason: 'ok',
+        ts,
       }
     }
   }
 
   return {
-    signatureValid: Boolean(matchedManifest),
-    reason: matchedManifest ? 'ok' : 'signature_mismatch',
+    signatureValid: false,
+    reason: 'signature_mismatch',
     ts,
-    v1,
-    manifest: officialManifest,
-    matchedManifest,
-    checkedManifests,
-    checkedDataIds: uniqueNonEmptyStrings([
-      officialManifestDataId,
-      ...alternativeIdsTested,
-    ]),
-    testedSecretSources,
-    matchedSecretSource,
-    dataIdDetected: officialManifestDataId,
-    requestIdDetected: requestIdHeader,
-    requestIdSource,
-    usedRequestIdFallback: false,
-    officialManifestDataId,
-    alternativeIdsTested,
-    officialMatch,
-    calculatedHmacOfficial,
-    variantChecks,
   }
 }
 
@@ -670,165 +479,29 @@ export async function POST(request: NextRequest) {
     providerResourceId,
   } = webhookMetadata
 
-  let webhookSecrets: MercadoPagoNamedSecret[] = []
-  let resolvedMercadoPagoEnv: 'test' | 'production' = 'test'
-  let allowTestWebhookWithoutSignature = false
-  let envConfigError: string | null = null
-  try {
-    const runtimeDebug = getMercadoPagoRuntimeDebugInfo()
-    resolvedMercadoPagoEnv = runtimeDebug.env
-    allowTestWebhookWithoutSignature =
-      runtimeDebug.env === 'test' &&
-      isEnabledEnvFlag(
-        process.env.MERCADOPAGO_ALLOW_TEST_WEBHOOK_WITHOUT_SIGNATURE
-      )
-    webhookSecrets = getMercadoPagoWebhookSecretsForValidation()
-    if (webhookTopic === 'payment') {
-      console.info('[MercadoPago][webhook][payment] runtime', {
-        env: runtimeDebug.env,
-        hasAccessToken: runtimeDebug.hasAccessToken,
-        hasWebhookSecret: runtimeDebug.hasWebhookSecret,
-        webhookSecretSource: runtimeDebug.webhookSecretSource,
-        webhookSecretLength: runtimeDebug.webhookSecretLength,
-        webhookSecretCandidates: webhookSecrets.map((entry) => entry.source),
-        baseUrl: runtimeDebug.baseUrl,
-        xRequestId: requestIdHeader,
-        webhookTopic,
-        isLegacyPaymentFeed,
-        providerEventId,
-        providerResourceId,
-        allowTestWebhookWithoutSignature,
-      })
-    }
-  } catch (error) {
-    envConfigError = extractErrorMessage(
-      error,
-      "MERCADOPAGO_ENV debe ser 'test' o 'production'."
-    )
-    console.error('[MercadoPago][webhook] invalid environment config', {
-      message: envConfigError,
-    })
-  }
-
+  const runtimeDebug = getMercadoPagoRuntimeDebugInfo()
+  const webhookSecrets = getMercadoPagoWebhookSecretsForValidation()
   const shouldValidateSignature =
     webhookTopic === 'payment' && !isLegacyPaymentFeed
-  const parsedSignatureHeader = parseMercadoPagoSignatureHeader(
-    request.headers.get('x-signature')
-  )
-  const bodyDataId = extractBodyDataId(payload)
-  const queryDataId = normalizeString(requestUrl.searchParams.get('data.id'))
-  const queryLegacyId = normalizeString(requestUrl.searchParams.get('id'))
-  const requestHeadersForDebug = {
-    'x-signature': request.headers.get('x-signature'),
-    'x-request-id': requestIdHeader,
-    'x-nf-request-id': request.headers.get('x-nf-request-id'),
-    'content-type': request.headers.get('content-type'),
-    'user-agent': request.headers.get('user-agent'),
-  }
-  const requestQueryForDebug = snapshotQueryParams(requestUrl)
-
-  if (webhookTopic === 'payment') {
-    const bodyType = isRecord(payload) ? normalizeString(payload['type']) : null
-    const bodyAction = isRecord(payload)
-      ? normalizeString(payload['action'])
-      : null
-    const bodyEventId = isRecord(payload)
-      ? normalizeNumberToString(payload['id'])
-      : null
-    const bodyUserId = isRecord(payload)
-      ? normalizeNumberToString(payload['user_id'])
-      : null
-
-    console.info('[MercadoPago][webhook][payment] request', {
-      env: resolvedMercadoPagoEnv,
-      envConfigError,
-      webhookUrl: request.url,
-      queryParams: requestQueryForDebug,
-      headers: requestHeadersForDebug,
-      rawBody: bodyText,
-    })
-
-    console.info('[MercadoPago][webhook][payment] parsed', {
-      webhookTopic,
-      eventType,
-      providerEventId,
-      providerResourceId,
-      dataIdDetected: providerResourceId,
-      bodyDataId,
-      bodyType,
-      bodyAction,
-      bodyEventId,
-      bodyUserId,
-      requestIdDetected: requestIdHeader,
-      tsDetected: parsedSignatureHeader.ts,
-      v1Detected: parsedSignatureHeader.v1,
-    })
-  }
 
   let signature: PaymentWebhookSignatureValidation | null = null
-  let bypassedSignatureInTestDebug = false
-
   if (shouldValidateSignature) {
     signature = buildPaymentWebhookSignatureValidation({
       request,
       requestUrl,
       payload,
-      providerEventId,
       providerResourceId,
       webhookSecrets,
     })
-
-    console.info('[MercadoPago][webhook][payment] hypothesis-id', {
-      bodyDataId,
-      queryDataId,
-      legacyQueryId: queryLegacyId,
-      providerEventId,
-      providerResourceId,
-      officialManifestDataId: signature.officialManifestDataId,
-      alternativeIdsTested: signature.alternativeIdsTested,
-    })
-
-    console.info('[MercadoPago][webhook][payment] hypothesis-request-id', {
-      xRequestId: requestIdHeader,
-      xNfRequestId: request.headers.get('x-nf-request-id'),
-      requestIdDetected: signature.requestIdDetected,
-      requestIdSource: signature.requestIdSource,
-      usedRequestIdFallback: signature.usedRequestIdFallback,
-    })
-
-    console.info('[MercadoPago][webhook][payment] hypothesis-manifest', {
-      officialManifest: signature.manifest,
-      calculatedHmacOfficial: signature.calculatedHmacOfficial,
-      receivedV1: signature.v1,
-      officialMatch: signature.officialMatch,
-      testedSecretSources: signature.testedSecretSources,
-      matchedSecretSource: signature.matchedSecretSource,
-      variantChecks: signature.variantChecks,
-      signatureValid: signature.signatureValid,
-      matchedManifest: signature.matchedManifest,
-      reason: signature.reason,
-    })
   }
 
-  if (signature) {
-    console.info('[MercadoPago][webhook][payment] signature-check', {
-      signatureValid: signature.signatureValid,
-      reason: signature.reason,
-      ts: signature.ts,
-      xRequestId: requestIdHeader,
+  if (webhookTopic === 'payment') {
+    console.info('[MercadoPago][webhook] received', {
+      eventType,
+      providerEventId,
       providerResourceId,
-      hasSignatureHeader: Boolean(request.headers.get('x-signature')),
-      testedSecretSources: signature.testedSecretSources,
-      matchedSecretSource: signature.matchedSecretSource,
-      checkedDataIds: signature.checkedDataIds,
-      manifestUsedForHmac: signature.matchedManifest ?? signature.manifest,
-      manifestTried: signature.checkedManifests,
-      matchedManifest: signature.matchedManifest,
-    })
-  } else {
-    console.info('[MercadoPago][webhook] signature-check skipped', {
-      webhookTopic,
-      isLegacyPaymentFeed,
+      hasWebhookSecret: runtimeDebug.hasWebhookSecret,
+      signatureValid: signature?.signatureValid ?? null,
     })
   }
 
@@ -954,47 +627,29 @@ export async function POST(request: NextRequest) {
   }
 
   if (!signature || !signature.signatureValid) {
-    const canBypassInvalidSignatureInTest =
-      allowTestWebhookWithoutSignature &&
-      resolvedMercadoPagoEnv === 'test' &&
-      webhookTopic === 'payment' &&
-      Boolean(providerResourceId)
+    const signatureIssue = !signature
+      ? 'Webhook rechazado: validacion de firma no ejecutada.'
+      : signature.reason === 'missing_secret'
+        ? 'Webhook rechazado: falta configurar MERCADOPAGO_WEBHOOK_SECRET.'
+        : signature.reason === 'missing_signature'
+          ? 'Webhook rechazado: falta x-signature (v1).'
+          : signature.reason === 'missing_manifest'
+            ? 'Webhook rechazado: no se pudo construir manifest.'
+            : 'Webhook rechazado: firma invalida.'
 
-    if (canBypassInvalidSignatureInTest) {
-      bypassedSignatureInTestDebug = true
-      console.warn('[MercadoPago][webhook][DEBUG_ONLY] bypassing signature', {
-        env: resolvedMercadoPagoEnv,
-        signatureReason: signature?.reason ?? 'not_checked',
-        providerResourceId,
-        xRequestId: requestIdHeader,
-      })
-    }
-
-    if (!canBypassInvalidSignatureInTest) {
-      const signatureIssue = !signature
-        ? 'Webhook rechazado: validacion de firma no ejecutada.'
-        : signature.reason === 'missing_secret'
-          ? 'Webhook rechazado: falta configurar MERCADOPAGO_WEBHOOK_SECRET para este entorno.'
-          : signature.reason === 'missing_signature'
-            ? 'Webhook rechazado: falta x-signature (v1) en el request.'
-            : signature.reason === 'missing_manifest'
-              ? 'Webhook rechazado: no se pudo construir manifest para validar firma.'
-              : 'Webhook rechazado: la firma no coincide con el secret configurado.'
-
-      await markWebhookEvent({
-        eventId,
-        processed: true,
-        processingError: `${signatureIssue} reason=${signature?.reason ?? 'not_checked'}; tested_secret_sources=${signature?.testedSecretSources.join(',') || 'none'}; provider_resource_id=${providerResourceId ?? 'null'}; manifest=${signature?.manifest || 'n/a'}${envConfigError ? `; env_config_error=${envConfigError}` : ''}`,
-      })
-      return ackWebhook({
-        webhookTopic,
-        status: 200,
-        reason: 'invalid_signature_acknowledged',
-        payload: { ok: true },
-        providerEventId,
-        providerResourceId,
-      })
-    }
+    await markWebhookEvent({
+      eventId,
+      processed: true,
+      processingError: `${signatureIssue} reason=${signature?.reason ?? 'not_checked'}; provider_resource_id=${providerResourceId ?? 'null'}`,
+    })
+    return ackWebhook({
+      webhookTopic,
+      status: 200,
+      reason: 'invalid_signature_acknowledged',
+      payload: { ok: true },
+      providerEventId,
+      providerResourceId,
+    })
   }
 
   if (!providerResourceId) {
@@ -1092,20 +747,67 @@ export async function POST(request: NextRequest) {
       : mappedStatus
 
   const nowIso = new Date().toISOString()
+  const { data: existingMpData } = await supabaseAdmin
+    .from('mercadopago_payments')
+    .select(
+      'preference_id,mercadopago_payment_id,merchant_order_id,external_reference,mp_status,status_detail,payment_type,payment_method,installments,live_mode,raw_preference_response'
+    )
+    .eq('payment_id', paymentRow.id)
+    .maybeSingle()
+
+  const existingMp = isRecord(existingMpData) ? existingMpData : null
+  const rawPreferenceResponse = isRecord(existingMp?.['raw_preference_response'])
+    ? (existingMp['raw_preference_response'] as Record<string, unknown>)
+    : null
+  const rawPreferenceId =
+    normalizeString(rawPreferenceResponse?.['id']) ??
+    normalizeNumberToString(rawPreferenceResponse?.['id']) ??
+    null
+  const mergedPreferenceId =
+    fields.preferenceId ??
+    normalizeString(existingMp?.['preference_id']) ??
+    rawPreferenceId ??
+    null
+  const mergedMercadoPagoPaymentId =
+    fields.mercadoPagoPaymentId ??
+    normalizeString(existingMp?.['mercadopago_payment_id']) ??
+    null
+  const mergedMerchantOrderId =
+    fields.merchantOrderId ??
+    normalizeString(existingMp?.['merchant_order_id']) ??
+    null
+  const mergedExternalReference =
+    fields.externalReference ??
+    normalizeString(existingMp?.['external_reference']) ??
+    paymentRow.id
+  const mergedMpStatus =
+    fields.mpStatus ?? normalizeString(existingMp?.['mp_status']) ?? null
+  const mergedStatusDetail =
+    fields.statusDetail ?? normalizeString(existingMp?.['status_detail']) ?? null
+  const mergedPaymentType =
+    fields.paymentType ?? normalizeString(existingMp?.['payment_type']) ?? null
+  const mergedPaymentMethod =
+    fields.paymentMethod ??
+    normalizeString(existingMp?.['payment_method']) ??
+    null
+  const mergedInstallments =
+    fields.installments ?? normalizeNumber(existingMp?.['installments']) ?? null
+  const mergedLiveMode =
+    fields.liveMode ?? normalizeBoolean(existingMp?.['live_mode']) ?? null
 
   await supabaseAdmin.from('mercadopago_payments').upsert(
     {
       payment_id: paymentRow.id,
-      preference_id: fields.preferenceId,
-      mercadopago_payment_id: fields.mercadoPagoPaymentId,
-      merchant_order_id: fields.merchantOrderId,
-      external_reference: fields.externalReference,
-      mp_status: fields.mpStatus,
-      status_detail: fields.statusDetail,
-      payment_type: fields.paymentType,
-      payment_method: fields.paymentMethod,
-      installments: fields.installments,
-      live_mode: fields.liveMode,
+      preference_id: mergedPreferenceId,
+      mercadopago_payment_id: mergedMercadoPagoPaymentId,
+      merchant_order_id: mergedMerchantOrderId,
+      external_reference: mergedExternalReference,
+      mp_status: mergedMpStatus,
+      status_detail: mergedStatusDetail,
+      payment_type: mergedPaymentType,
+      payment_method: mergedPaymentMethod,
+      installments: mergedInstallments,
+      live_mode: mergedLiveMode,
       last_webhook_at: nowIso,
       last_synced_at: nowIso,
       raw_payment_response: remotePayment,
@@ -1119,6 +821,10 @@ export async function POST(request: NextRequest) {
 
   if (nextStatus === 'paid' && !paymentRow.paid_at) {
     paymentUpdate['paid_at'] = nowIso
+  }
+
+  if (nextStatus === 'paid') {
+    paymentUpdate['error_message'] = null
   }
 
   if (nextStatus === 'failed' || nextStatus === 'canceled') {
@@ -1157,13 +863,18 @@ export async function POST(request: NextRequest) {
       .eq('id', paymentRow.application_id)
   }
 
+  console.info('[MercadoPago][webhook] payment-updated', {
+    eventType,
+    providerResourceId,
+    paymentId: paymentRow.id,
+    status: nextStatus,
+  })
+
   await markWebhookEvent({
     eventId,
     processed: true,
     paymentId: paymentRow.id,
-    processingError: bypassedSignatureInTestDebug
-      ? 'DEBUG_ONLY: pago procesado en test con flag MERCADOPAGO_ALLOW_TEST_WEBHOOK_WITHOUT_SIGNATURE=true y firma invalida.'
-      : null,
+    processingError: null,
   })
 
   return ackWebhook({

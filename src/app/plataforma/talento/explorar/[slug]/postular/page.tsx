@@ -975,6 +975,7 @@ export default function ProgramPostularPage() {
             open={checkoutOpen}
             onOpenChange={setCheckoutOpen}
             programId={program.id}
+            programTitle={program.title}
             editionId={edition?.id ?? null}
             purpose="pre_enrollment"
             amountCents={amountCents}

@@ -728,6 +728,7 @@ export default function ProgramsPage() {
               if (!open) setCheckoutOpen(false)
             }}
             programId={checkoutProgram.id}
+            programTitle={checkoutProgram.title}
             editionId={checkoutProgram.edition?.id ?? null}
             purpose="pre_enrollment"
             amountCents={parsePriceToCents(checkoutProgram.price_usd) ?? 0}

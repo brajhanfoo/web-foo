@@ -225,6 +225,7 @@ export function CurrentApplicationHero(props: { app: ApplicationRow }) {
                   open={checkoutOpen}
                   onOpenChange={setCheckoutOpen}
                   programId={props.app.program_id}
+                  programTitle={programTitle}
                   editionId={props.app.edition_id}
                   purpose="tuition"
                   applicationId={props.app.id}
