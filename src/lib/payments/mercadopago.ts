@@ -154,10 +154,7 @@ export function getMercadoPagoAccessToken(): string {
     ])
   }
 
-  return firstNonEmpty([
-    process.env.MERCADOPAGO_ACCESS_TOKEN_TEST,
-    process.env.MERCADOPAGO_ACCESS_TOKEN,
-  ])
+  return firstNonEmpty([process.env.MERCADOPAGO_ACCESS_TOKEN])
 }
 
 export function getMercadoPagoPublicKey(): string {
@@ -168,10 +165,7 @@ export function getMercadoPagoPublicKey(): string {
     ])
   }
 
-  return firstNonEmpty([
-    process.env.MERCADOPAGO_PUBLIC_KEY_TEST,
-    process.env.MERCADOPAGO_PUBLIC_KEY,
-  ])
+  return firstNonEmpty([process.env.MERCADOPAGO_PUBLIC_KEY])
 }
 
 export function getMercadoPagoWebhookSecret(): string {
@@ -188,7 +182,7 @@ export function getMercadoPagoWebhookSecret(): string {
     ]).value
   }
 
-  return normalizeSecretValue(process.env.MERCADOPAGO_WEBHOOK_SECRET_TEST)
+  return normalizeSecretValue(process.env.MERCADOPAGO_WEBHOOK_SECRET)
 }
 
 export function getMercadoPagoWebhookSecretSource(): string | null {
@@ -205,8 +199,8 @@ export function getMercadoPagoWebhookSecretSource(): string | null {
     ]).source
   }
 
-  return normalizeSecretValue(process.env.MERCADOPAGO_WEBHOOK_SECRET_TEST)
-    ? 'MERCADOPAGO_WEBHOOK_SECRET_TEST'
+  return normalizeSecretValue(process.env.MERCADOPAGO_WEBHOOK_SECRET)
+    ? 'MERCADOPAGO_WEBHOOK_SECRET'
     : null
 }
 
@@ -218,25 +212,19 @@ export function getMercadoPagoWebhookSecretsForValidation(): MercadoPagoNamedSec
         value: process.env.MERCADOPAGO_WEBHOOK_SECRET_PROD,
       },
       {
-        name: 'MERCADOPAGO_WEBHOOK_SECRET_TEST',
-        value: process.env.MERCADOPAGO_WEBHOOK_SECRET_TEST,
-      },
-      {
         name: 'MERCADOPAGO_WEBHOOK_SECRET',
         value: process.env.MERCADOPAGO_WEBHOOK_SECRET,
       },
     ])
   }
 
-  const testSecret = normalizeSecretValue(
-    process.env.MERCADOPAGO_WEBHOOK_SECRET_TEST
-  )
-  if (!testSecret) return []
+  const secret = normalizeSecretValue(process.env.MERCADOPAGO_WEBHOOK_SECRET)
+  if (!secret) return []
 
   return [
     {
-      source: 'MERCADOPAGO_WEBHOOK_SECRET_TEST',
-      value: testSecret,
+      source: 'MERCADOPAGO_WEBHOOK_SECRET',
+      value: secret,
     },
   ]
 }
@@ -251,10 +239,7 @@ export function getMercadoPagoBaseUrl(): string {
         process.env.MERCADOPAGO_BASE_URL_PROD,
         process.env.MERCADOPAGO_BASE_URL,
       ])
-    : firstNonEmpty([
-        process.env.MERCADOPAGO_BASE_URL_TEST,
-        process.env.MERCADOPAGO_BASE_URL,
-      ])
+    : firstNonEmpty([process.env.MERCADOPAGO_BASE_URL])
 
   if (explicitBaseUrl) return normalizeBaseUrl(explicitBaseUrl)
 
