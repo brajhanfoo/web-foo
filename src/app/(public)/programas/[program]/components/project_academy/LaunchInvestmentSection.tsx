@@ -26,7 +26,7 @@ const LaunchInvestmentSection = () => {
             </span>
 
             <div className="mt-6">
-              <p className="text-sm text-white/40 line-through">$600 USD</p>
+              <p className="text-sm text-white/40 line-through">$850 USD</p>
 
               <div className="flex items-end gap-2">
                 <span className="text-5xl font-bold text-[#BDBE0B]">$250</span>
@@ -51,7 +51,7 @@ const LaunchInvestmentSection = () => {
                 <FiCalendar className="mt-0.5 h-4 w-4 text-[#BDBE0B]" />
                 <div>
                   <p className="font-medium text-white">
-                    Inicio: 20 de febrero
+                    Inicio: 04 de mayo
                   </p>
                   <p className="text-xs text-white/50">
                     Duración de 12 semanas

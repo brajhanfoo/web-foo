@@ -56,9 +56,9 @@ export const PROGRAM_SPECS: Record<string, ProgramRenderSpec> = {
         <RealWorldProductSection />
         <ProgramStructureAccordion />
         <TracksSection />
-        <SolutionDefinitionSection />
+        {/* <SolutionDefinitionSection /> */}
         <AgileRitualsSection />
-        <MentorshipSection />
+        {/* <MentorshipSection /> */}
         <CareerIntensiveSection />
         <EvaluationCertificationSection />
         <CareerOutcomeSection />
