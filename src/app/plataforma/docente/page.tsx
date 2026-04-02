@@ -44,7 +44,7 @@ export default function DocenteHomePage() {
       setLoading(false)
     }
     void run()
-  }, [showError])
+  }, [])
 
   if (loading) {
     return (
