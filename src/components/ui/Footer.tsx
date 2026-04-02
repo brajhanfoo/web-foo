@@ -10,7 +10,7 @@ export default function Footer() {
       <div className="h-px bg-gradient-to-r from-transparent via-[#00CCA4]/40 to-transparent mb-12" />
 
       {/* Contenedor principal (mismo ancho que navbar) */}
-      <div className="mx-auto w-full px-6 md:px-4 lg:px-16 xl:px-32">
+      <div className="mx-auto w-full px-4 sm:px-6 md:px-4 lg:px-16 xl:px-32">
         {/* Fila superior */}
         <div className="flex flex-col md:flex-row items-center justify-between gap-6">
           {/* Logo */}
@@ -63,7 +63,7 @@ export default function Footer() {
           </p>
 
           {/* Links legales */}
-          <div className="flex items-center gap-3 text-white/50">
+          <div className="flex flex-wrap items-center justify-center gap-3 text-white/50 md:justify-end">
             <Link
               href="/terminos-y-condiciones"
               className="hover:text-white transition"

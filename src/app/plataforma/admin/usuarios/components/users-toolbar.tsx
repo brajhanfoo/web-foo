@@ -31,8 +31,8 @@ export function UsersToolbar({
 }) {
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-slate-800 bg-slate-900 p-4">
-      <div className="flex flex-wrap items-center gap-3">
-        <div className="w-full min-w-[220px] max-w-xs">
+      <div className="flex min-w-0 flex-1 flex-wrap items-center gap-3">
+        <div className="w-full min-w-0 max-w-xs">
           <Input
             value={search}
             onChange={(event) => onSearchChange(event.target.value)}
@@ -46,7 +46,7 @@ export function UsersToolbar({
 
         <Select value={roleFilter} onValueChange={onRoleFilterChange}>
           <SelectTrigger
-            className="w-[180px] bg-slate-900 border-slate-800 text-slate-100"
+            className="w-full bg-slate-900 border-slate-800 text-slate-100 sm:w-[180px]"
             aria-label="Filtrar por rol"
           >
             <SelectValue placeholder="Filtrar por rol" />

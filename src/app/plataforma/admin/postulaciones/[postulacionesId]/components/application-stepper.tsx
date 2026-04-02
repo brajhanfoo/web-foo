@@ -19,8 +19,8 @@ export function ApplicationStepper({ currentStep }: { currentStep: number }) {
     completedIndex === 1 ? 2 : clamp(completedIndex, 1, lastIndex)
 
   return (
-    <div className="w-full">
-      <div className="flex items-center justify-between w-full">
+    <div className="w-full overflow-x-auto pb-1">
+      <div className="flex min-w-[620px] items-center justify-between">
         {STATUS_STEPS.map((step, index) => {
           const isCompleted = step.index <= completedIndex
           const isActive = step.index === activeIndex

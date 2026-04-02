@@ -34,7 +34,7 @@ export function ShellCard(props: {
         ].join(' ')}
       >
         <CardHeader className="pb-3">
-          <div className="flex items-center justify-between gap-3">
+          <div className="flex flex-wrap items-start justify-between gap-3">
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <span
                 className={[
@@ -97,7 +97,7 @@ export function ShellCard(props: {
       ].join(' ')}
     >
       <CardHeader className="pb-3">
-        <div className="flex items-center justify-between gap-3">
+        <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <span
               className={[
@@ -140,7 +140,7 @@ export function ShellCard(props: {
               </div>
               <div
                 className={[
-                  'flex items-center gap-2',
+                  'flex flex-wrap items-center gap-2',
                   props.bottomRightAlign === 'start'
                     ? 'justify-start'
                     : 'justify-end',

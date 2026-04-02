@@ -829,7 +829,7 @@ export default function ProgramPostularPage() {
     !schema
   ) {
     return (
-      <div className="p-6 max-w-3xl mx-auto space-y-4">
+      <div className="max-w-3xl mx-auto space-y-4 p-4 sm:p-6">
         <Link
           className="inline-flex items-center rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-white hover:bg-white/10"
           href="/plataforma/talento/explorar"
@@ -857,7 +857,7 @@ export default function ProgramPostularPage() {
 
   if (isBooting) {
     return (
-      <div className="p-6 max-w-3xl mx-auto">
+      <div className="max-w-3xl mx-auto p-4 sm:p-6">
         <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-6 text-white">
           Verificando sesión…
         </div>
@@ -867,7 +867,7 @@ export default function ProgramPostularPage() {
 
   if (!userId) {
     return (
-      <div className="p-6 max-w-3xl mx-auto space-y-4">
+      <div className="max-w-3xl mx-auto space-y-4 p-4 sm:p-6">
         <Link
           className="inline-flex items-center rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-white hover:bg-white/10"
           href={`/plataforma/talento/explorar/${program.slug}`}
@@ -897,7 +897,7 @@ export default function ProgramPostularPage() {
 
   if (!profile) {
     return (
-      <div className="p-6 max-w-3xl mx-auto space-y-4">
+      <div className="max-w-3xl mx-auto space-y-4 p-4 sm:p-6">
         <Link
           className="inline-flex items-center rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-white hover:bg-white/10"
           href={`/plataforma/talento/explorar/${program.slug}`}
@@ -931,7 +931,7 @@ export default function ProgramPostularPage() {
   if (paymentMode === 'pre') {
     if (hasPaidPre === null) {
       return (
-        <div className="p-6 max-w-3xl mx-auto">
+        <div className="max-w-3xl mx-auto p-4 sm:p-6">
           <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-6 text-white">
             Verificando tu pago…
           </div>
@@ -942,7 +942,7 @@ export default function ProgramPostularPage() {
     if (!hasPaidPre) {
       const amountCents = parsePriceToCents(program.price_usd) ?? 0
       return (
-        <div className="p-6 max-w-3xl mx-auto space-y-4">
+        <div className="max-w-3xl mx-auto space-y-4 p-4 sm:p-6">
           <Link
             className="inline-flex items-center rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-white hover:bg-white/10"
             href={`/plataforma/talento/explorar`}

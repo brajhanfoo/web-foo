@@ -252,7 +252,7 @@ export function PaymentProofDialog({
         </Button>
       </DialogTrigger>
 
-      <DialogContent className="sm:max-w-[720px] bg-slate-900 text-slate-100">
+      <DialogContent className="max-h-[85vh] overflow-y-auto bg-slate-900 text-slate-100 sm:max-w-[720px]">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
         </DialogHeader>
@@ -263,9 +263,9 @@ export function PaymentProofDialog({
           <div className="space-y-4 bg-slate-900">
             {proof ? (
               <>
-                <div className="flex items-center justify-between gap-2 bg-slate-900">
+                <div className="flex flex-wrap items-center justify-between gap-2 bg-slate-900">
                   <div className="min-w-0">
-                    <div className="text-sm font-semibold truncate">
+                    <div className="truncate text-sm font-semibold">
                       {proof.original_filename ?? 'Comprobante'}
                     </div>
                     <div className="text-xs text-slate-400 mt-1">
@@ -277,7 +277,7 @@ export function PaymentProofDialog({
 
                 <div className="rounded-lg border p-3 bg-slate-900">
                   {isImage(proof.mime_type) ? (
-                    <div className="relative w-full h-[360px] overflow-hidden rounded-md">
+                    <div className="relative h-[260px] w-full overflow-hidden rounded-md sm:h-[360px]">
                       <Image
                         src={proof.signed_url}
                         alt="Comprobante"
@@ -290,7 +290,7 @@ export function PaymentProofDialog({
                     <iframe
                       title="Comprobante PDF"
                       src={proof.signed_url}
-                      className="w-full h-[360px] rounded-md border"
+                      className="h-[260px] w-full rounded-md border sm:h-[360px]"
                     />
                   ) : (
                     <a

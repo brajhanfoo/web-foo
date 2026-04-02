@@ -9,7 +9,7 @@ const Hero = () => {
       {/* Background glow */}
       <div className="absolute inset-0 md:bg-[radial-gradient(circle_at_top,rgba(128,0,255,0.15),transparent_60%)]" />
 
-      <div className="relative z-10 max-w-7xl mx-auto px-6 md:pt-28 pb-20">
+      <div className="relative z-10 mx-auto max-w-7xl px-4 pb-20 sm:px-6 md:pt-28">
         {/* Badge */}
         <div className="flex justify-center mb-6">
           <span className="px-4 py-1 text-xs tracking-widest rounded-full bg-purple-500/10 text-[#780B90] border border-purple-500/20">
@@ -31,9 +31,9 @@ const Hero = () => {
       </div>
 
       {/* Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+      <div className="grid grid-cols-1 gap-6 px-4 sm:gap-10 sm:px-6 md:grid-cols-2">
         {/* Card: Contratación de Talento */}
-        <div className="group relative rounded-3xl bg-neutral-900/80 border border-white/10 p-10 overflow-hidden shadow-[0_0_60px_rgba(0,0,0,0.8)]">
+        <div className="group relative overflow-hidden rounded-3xl border border-white/10 bg-neutral-900/80 p-6 shadow-[0_0_60px_rgba(0,0,0,0.8)] sm:p-10">
           {/* Glow interno */}
           <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-cyan-500/10 via-transparent to-transparent opacity-60" />
 
@@ -97,7 +97,7 @@ const Hero = () => {
         </div>
 
         {/* Card: Patrocinio de Retos */}
-        <div className="group relative rounded-3xl bg-neutral-900/80 border border-white/10 p-10 overflow-hidden shadow-[0_0_60px_rgba(0,0,0,0.8)]">
+        <div className="group relative overflow-hidden rounded-3xl border border-white/10 bg-neutral-900/80 p-6 shadow-[0_0_60px_rgba(0,0,0,0.8)] sm:p-10">
           {/* Glow interno */}
           <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-purple-500/10 via-transparent to-transparent opacity-60" />
 

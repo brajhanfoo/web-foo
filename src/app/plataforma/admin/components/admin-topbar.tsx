@@ -1,19 +1,23 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useMemo } from 'react'
 import { usePathname } from 'next/navigation'
-import { Search } from 'lucide-react'
+import { Menu, Search } from 'lucide-react'
 
-import { useAuthStore } from '@/stores/auth-stores'
-import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { useAuthStore } from '@/stores/auth-stores'
 
 function textOrEmpty(v: string | null | undefined) {
   return (v ?? '').trim()
 }
 
-export function AdminTopbar() {
+export function AdminTopbar({
+  onMenuClick,
+}: {
+  onMenuClick?: () => void
+}) {
   const pathname = usePathname()
   const bootAuth = useAuthStore((s) => s.bootAuth)
   const profile = useAuthStore((s) => s.profile)
@@ -24,12 +28,11 @@ export function AdminTopbar() {
     return n || 'Admin'
   }, [profile?.first_name, profile?.last_name])
 
-  // Título simple basado en ruta (opcional)
   const title = useMemo(() => {
     if (pathname.includes('/postulaciones')) return 'Postulaciones'
     if (pathname.includes('/usuarios')) return 'Usuarios'
     if (pathname.includes('/programas')) return 'Programas'
-    if (pathname.includes('/configuracion')) return 'Configuración'
+    if (pathname.includes('/configuracion')) return 'Configuracion'
     return 'Panel de Admin'
   }, [pathname])
 
@@ -39,37 +42,50 @@ export function AdminTopbar() {
 
   return (
     <header className="sticky top-0 z-30 border-b border-slate-800 bg-slate-900 backdrop-blur-md">
-      <div className="h-14 px-4 flex items-center justify-between gap-3">
-        <div className="min-w-0">
-          <div className="text-sm font-semibold text-slate-100 truncate">
-            {title}
-          </div>
-          <div className="text-[11px] text-slate-400 truncate">
-            Gestión interna · Foo Talent Group
+      <div className="flex min-h-14 items-center justify-between gap-3 px-4 py-2">
+        <div className="flex min-w-0 items-center gap-2">
+          <Button
+            type="button"
+            variant="secondary"
+            size="icon"
+            onClick={onMenuClick}
+            className="h-9 w-9 border border-slate-800 bg-slate-800 text-slate-100 hover:bg-slate-700 lg:hidden"
+            aria-label="Abrir menu"
+          >
+            <Menu className="h-4 w-4" aria-hidden="true" />
+          </Button>
+
+          <div className="min-w-0">
+            <div className="truncate text-sm font-semibold text-slate-100">
+              {title}
+            </div>
+            <div className="truncate text-[11px] text-slate-400">
+              Gestion interna · Foo Talent Group
+            </div>
           </div>
         </div>
 
-        <div className="hidden md:flex items-center gap-2 min-w-[320px]">
-          <div className="relative w-full">
-            <Search className="h-4 w-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+        <div className="hidden min-w-0 flex-1 items-center justify-end gap-2 md:flex lg:max-w-[360px]">
+          <div className="relative w-full min-w-0">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
             <Input
-              placeholder="Buscar…"
+              placeholder="Buscar..."
               name="admin-search"
               aria-label="Buscar en admin"
               autoComplete="off"
-              className="pl-9 bg-slate-900 border-slate-800 text-slate-100 placeholder:text-slate-400"
+              className="border-slate-800 bg-slate-900 pl-9 text-slate-100 placeholder:text-slate-400"
             />
           </div>
         </div>
 
         <div className="flex items-center gap-2">
-          <Badge className="bg-slate-800 text-slate-100 border border-slate-800">
+          <Badge className="border border-slate-800 bg-slate-800 text-slate-100">
             Admin
           </Badge>
 
           <Button
             variant="secondary"
-            className="bg-slate-800 hover:bg-slate-700 border border-slate-800 text-slate-100"
+            className="hidden border border-slate-800 bg-slate-800 text-slate-100 hover:bg-slate-700 sm:inline-flex"
           >
             Hola, {displayName}
           </Button>

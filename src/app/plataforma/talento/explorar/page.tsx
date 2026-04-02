@@ -445,7 +445,7 @@ export default function ProgramsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-dvh bg-black px-6 py-8">
+      <div className="min-h-dvh bg-black px-4 py-8 sm:px-6">
         <Card className="bg-black border-white/10 text-amber-50">
           <CardHeader>
             <CardTitle>Cargando programas…</CardTitle>
@@ -461,7 +461,7 @@ export default function ProgramsPage() {
   const todayDate = getTodayDateOnly(new Date())
 
   return (
-    <div className="min-h-dvh bg-black px-6 py-8">
+    <div className="min-h-dvh bg-black px-4 py-8 sm:px-6">
       <div className="mx-auto w-full max-w-5xl space-y-8">
         <div className="space-y-1">
           <h1 className="text-2xl font-semibold text-amber-50 text-balance">
@@ -647,7 +647,7 @@ export default function ProgramsPage() {
                         </div>
                       </div>
                       {editionLine ? (
-                        <div className="flex items-center gap-2">
+                        <div className="flex flex-wrap items-center gap-2">
                           <span
                             className={[
                               'h-1.5 w-1.5 rounded-full',
@@ -662,7 +662,7 @@ export default function ProgramsPage() {
                           ) : null}
                         </div>
                       ) : (
-                        <div className="flex items-center gap-2">
+                        <div className="flex flex-wrap items-center gap-2">
                           <span className="h-1.5 w-1.5 rounded-full bg-white/30" />
                           <span className="text-white/60">Sin edición</span>
                         </div>

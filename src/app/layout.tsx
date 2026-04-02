@@ -14,7 +14,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="es" suppressHydrationWarning>
-      <body>
+      <body className="overflow-x-hidden">
         {children}
         <Toaster richColors position="top-right" expand={false} closeButton />
       </body>

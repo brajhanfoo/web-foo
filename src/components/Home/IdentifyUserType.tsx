@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation'
 export default function IdentifyUserType() {
   const router = useRouter()
   return (
-    <section className="relative bg-black text-white px-6 py-20">
+    <section className="relative bg-black px-4 py-20 text-white sm:px-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="flex items-center gap-2 mb-12 text-xs font-mono text-neutral-400">
@@ -15,7 +15,7 @@ export default function IdentifyUserType() {
         {/* Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
           {/* Card: Talento */}
-          <div className="group relative rounded-3xl bg-neutral-900/80 border border-white/10 p-10 overflow-hidden shadow-[0_0_60px_rgba(0,0,0,0.8)]">
+          <div className="group relative overflow-hidden rounded-3xl border border-white/10 bg-neutral-900/80 p-6 shadow-[0_0_60px_rgba(0,0,0,0.8)] sm:p-10">
             {/* Glow */}
             <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-teal-500/15 via-transparent to-transparent opacity-60" />
 
@@ -43,7 +43,7 @@ export default function IdentifyUserType() {
           </div>
 
           {/* Card: Empresa */}
-          <div className="group relative rounded-3xl bg-neutral-900/80 border border-white/10 p-10 overflow-hidden shadow-[0_0_60px_rgba(0,0,0,0.8)]">
+          <div className="group relative overflow-hidden rounded-3xl border border-white/10 bg-neutral-900/80 p-6 shadow-[0_0_60px_rgba(0,0,0,0.8)] sm:p-10">
             {/* Glow */}
             <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-purple-500/15 via-transparent to-transparent opacity-60" />
 

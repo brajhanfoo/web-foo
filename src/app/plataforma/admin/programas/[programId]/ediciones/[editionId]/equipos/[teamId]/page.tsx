@@ -326,7 +326,7 @@ export default function AdminTeamDetailPage() {
             <ArrowLeft className="h-4 w-4" /> Volver
           </Link>
           <div className="space-y-1">
-            <h1 className="text-xl font-semibold text-slate-100">
+            <h1 className="text-xl font-semibold text-slate-100 break-words">
               {program.title} / {edition.edition_name} / {team.name}
             </h1>
             <div className="text-sm text-slate-300">
@@ -388,7 +388,7 @@ export default function AdminTeamDetailPage() {
 
       <Card className="bg-slate-900 border-slate-800 text-slate-100">
         <CardHeader>
-          <div className="flex items-center justify-between gap-2">
+          <div className="flex flex-wrap items-center justify-between gap-2">
             <div>
               <CardTitle>Hitos del equipo</CardTitle>
               <CardDescription className="text-slate-300">
@@ -416,7 +416,7 @@ export default function AdminTeamDetailPage() {
                       {formatDateRange(milestone.starts_at, null)}
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
                     <Button
                       variant="secondary"
                       size="sm"
