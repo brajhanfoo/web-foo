@@ -17,12 +17,16 @@ export default async function PlataformaIndexPage() {
   // 2. rol (consulta mínima)
   const { data: profile } = await supabase
     .from('profiles')
-    .select('role')
+    .select('role, password_reset_required')
     .eq('id', userId)
     .maybeSingle()
 
   if (!profile?.role) {
     redirect('/ingresar')
+  }
+
+  if (profile.password_reset_required) {
+    redirect('/update-password?required=1&redirectTo=%2Fplataforma')
   }
 
   // 3. redirect por rol

@@ -27,9 +27,15 @@ export default async function DocenteLayout({
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('role, first_name, last_name')
+    .select('role, first_name, last_name, password_reset_required')
     .eq('id', user.id)
     .maybeSingle()
+
+  if (profile?.password_reset_required) {
+    redirect(
+      '/update-password?required=1&redirectTo=%2Fplataforma%2Fdocente'
+    )
+  }
 
   const role = profile?.role ?? null
   const allowed =
