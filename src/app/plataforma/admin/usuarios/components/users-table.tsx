@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/select'
 import { UserCheck, UserX } from 'lucide-react'
 
-export type AppRole = 'talent' | 'super_admin'
+export type AppRole = 'talent' | 'docente' | 'admin' | 'super_admin'
 
 export type UserRow = {
   id: string
@@ -40,6 +40,13 @@ function formatDate(value: string): string {
 function displayName(user: UserRow): string {
   const name = `${user.first_name ?? ''} ${user.last_name ?? ''}`.trim()
   return name || user.email || 'Usuario'
+}
+
+function roleLabel(role: AppRole): string {
+  if (role === 'super_admin') return 'Super admin'
+  if (role === 'admin') return 'Admin'
+  if (role === 'docente') return 'Docente'
+  return 'Talent'
 }
 
 export function UsersTable({
@@ -153,7 +160,7 @@ export function UsersTable({
                     <SelectContent>
                       {roleOptions.map((role) => (
                         <SelectItem key={role} value={role}>
-                          {role === 'super_admin' ? 'Super admin' : 'Talent'}
+                          {roleLabel(role)}
                         </SelectItem>
                       ))}
                     </SelectContent>

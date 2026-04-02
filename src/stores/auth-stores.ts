@@ -3,7 +3,12 @@
 import { create } from 'zustand'
 import { supabase } from '@/lib/supabase/client'
 
-export type ProfileRole = 'talent' | 'super_admin' | 'admin' | 'staff'
+export type ProfileRole =
+  | 'talent'
+  | 'super_admin'
+  | 'admin'
+  | 'staff'
+  | 'docente'
 
 export type ProfileRow = {
   id: string
@@ -22,6 +27,8 @@ export type ProfileRow = {
   marketing_opt_in: boolean
   created_at: string
   updated_at: string
+  password_reset_required?: boolean
+  professional_area_id?: string | null
 }
 
 type AuthStoreState = {
@@ -55,7 +62,7 @@ export const useAuthStore = create<AuthStoreState>((set) => ({
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select(
-        'id, role, first_name, last_name, country_residence, whatsapp_e164, linkedin_url, profile_status, document_number, terms_version, portfolio_url, english_level, terms_accepted_at, marketing_opt_in, created_at, updated_at'
+        'id, role, first_name, last_name, country_residence, whatsapp_e164, linkedin_url, profile_status, document_number, terms_version, portfolio_url, english_level, terms_accepted_at, marketing_opt_in, created_at, updated_at, password_reset_required, professional_area_id'
       )
       .eq('id', userId)
       .maybeSingle()

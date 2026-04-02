@@ -9,6 +9,17 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
+import {
+  FileUp,
   ExternalLink,
   Folder,
   GraduationCap,
@@ -59,6 +70,50 @@ type WorkspaceApiResponse =
   | { ok: true; data: WorkspacePayload }
   | { ok: false; message: string }
 
+type WorkspaceTaskSubmission = {
+  id: string
+  submission_scope: 'team' | 'individual'
+  submission_type: 'link' | 'file' | 'both'
+  link_url: string | null
+  file_path: string | null
+  file_name: string | null
+  attempt_number: number
+  is_resubmission: boolean
+  status: 'submitted' | 'changes_requested' | 'approved' | 'rejected' | 'reviewed'
+  submitted_at: string
+  latest_feedback: {
+    feedback_id: string
+    comment: string | null
+    score: number | null
+    created_at: string
+  } | null
+}
+
+type WorkspaceTaskAssignment = {
+  id: string
+  milestone_id: string
+  submission_mode: 'team' | 'individual'
+  deadline_at: string | null
+  allow_resubmission: boolean
+  resubmission_deadline_at: string | null
+  max_attempts: number
+  grading_mode: 'score_100' | 'pass_fail' | 'none'
+  status: 'draft' | 'published' | 'closed' | 'archived'
+  task_template: {
+    id: string
+    title: string
+    description: string | null
+    instructions: string | null
+  } | null
+  milestone: {
+    id: string
+    title: string
+    position: number | null
+    starts_at: string | null
+  } | null
+  submissions: WorkspaceTaskSubmission[]
+}
+
 type WorkspaceState =
   | { kind: 'loading' }
   | { kind: 'unauthorized'; message: string }
@@ -94,6 +149,15 @@ export default function WorkspacePage() {
 
   const [state, setState] = useState<WorkspaceState>({ kind: 'loading' })
   const [certificateBusy, setCertificateBusy] = useState(false)
+  const [tasksLoading, setTasksLoading] = useState(false)
+  const [tasks, setTasks] = useState<WorkspaceTaskAssignment[]>([])
+  const [submissionDialogTaskId, setSubmissionDialogTaskId] = useState<
+    string | null
+  >(null)
+  const [submissionLink, setSubmissionLink] = useState('')
+  const [submissionComment, setSubmissionComment] = useState('')
+  const [submissionFile, setSubmissionFile] = useState<File | null>(null)
+  const [submittingTask, setSubmittingTask] = useState(false)
 
   useEffect(() => {
     showErrorRef.current = showError
@@ -159,6 +223,44 @@ export default function WorkspacePage() {
     }
   }, [applicationId])
 
+  async function loadTasks(targetApplicationId: string) {
+    setTasksLoading(true)
+    const response = await fetch(
+      `/api/plataforma/workspace/tasks?application_id=${targetApplicationId}`,
+      {
+        cache: 'no-store',
+      }
+    )
+    const payload = (await response.json().catch(() => null)) as
+      | { ok: true; tasks: WorkspaceTaskAssignment[] }
+      | { ok: false; message: string }
+      | null
+
+    if (!response.ok || !payload || !payload.ok) {
+      const message =
+        payload && 'message' in payload
+          ? payload.message
+          : 'No se pudieron cargar tareas.'
+      showErrorRef.current('No se pudieron cargar tareas', message)
+      setTasks([])
+      setTasksLoading(false)
+      return
+    }
+
+    setTasks(payload.tasks ?? [])
+    setTasksLoading(false)
+  }
+
+  useEffect(() => {
+    if (state.kind !== 'ready') return
+    void loadTasks(state.data.application.id)
+  }, [state])
+
+  const selectedTask = useMemo(
+    () => tasks.find((task) => task.id === submissionDialogTaskId) ?? null,
+    [submissionDialogTaskId, tasks]
+  )
+
   const editionRange = useMemo(() => {
     if (state.kind !== 'ready') return ''
     return buildEditionRange(state.data.edition)
@@ -196,6 +298,55 @@ export default function WorkspacePage() {
     } finally {
       setCertificateBusy(false)
     }
+  }
+
+  async function openSubmissionFile(submissionId: string) {
+    const response = await fetch(
+      `/api/plataforma/submissions/file-url?submission_id=${submissionId}`
+    )
+    const payload = (await response.json().catch(() => null)) as
+      | { ok: boolean; signed_url?: string; message?: string }
+      | null
+    if (!response.ok || !payload?.ok || !payload.signed_url) {
+      showErrorRef.current(payload?.message ?? 'No se pudo abrir archivo')
+      return
+    }
+    window.open(payload.signed_url, '_blank', 'noopener,noreferrer')
+  }
+
+  async function submitTask() {
+    if (state.kind !== 'ready' || !submissionDialogTaskId) return
+    if (!submissionLink.trim() && !submissionFile) {
+      showErrorRef.current('Debes subir archivo, link o ambos.')
+      return
+    }
+
+    setSubmittingTask(true)
+    const formData = new FormData()
+    formData.append('task_assignment_id', submissionDialogTaskId)
+    if (submissionLink.trim()) formData.append('link_url', submissionLink.trim())
+    if (submissionComment.trim()) formData.append('comment', submissionComment.trim())
+    if (submissionFile) formData.append('file', submissionFile)
+
+    const response = await fetch('/api/plataforma/submissions', {
+      method: 'POST',
+      body: formData,
+    })
+    const payload = (await response.json().catch(() => null)) as
+      | { ok: boolean; message?: string }
+      | null
+    setSubmittingTask(false)
+
+    if (!response.ok || !payload?.ok) {
+      showErrorRef.current(payload?.message ?? 'No se pudo enviar la entrega.')
+      return
+    }
+
+    setSubmissionDialogTaskId(null)
+    setSubmissionLink('')
+    setSubmissionComment('')
+    setSubmissionFile(null)
+    await loadTasks(state.data.application.id)
   }
 
   if (state.kind === 'loading') {
@@ -473,6 +624,192 @@ export default function WorkspacePage() {
           )}
         </CardContent>
       </Card>
+
+      <Card className="border bg-background/10">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base text-white">
+            Tareas y entregables
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {tasksLoading ? (
+            <div className="text-sm text-white/70">Cargando tareas...</div>
+          ) : tasks.length === 0 ? (
+            <div className="text-sm text-white/70">
+              No hay tareas publicadas para tu equipo aún.
+            </div>
+          ) : (
+            tasks.map((task) => {
+              const currentSubmission = task.submissions[0] ?? null
+              return (
+                <div
+                  key={task.id}
+                  className="rounded-lg border border-white/10 bg-black/20 p-3"
+                >
+                  <div className="flex flex-wrap items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <div className="truncate text-sm font-semibold text-white">
+                        {task.task_template?.title ?? 'Tarea'}
+                      </div>
+                      <div className="text-xs text-white/60">
+                        Hito: {task.milestone?.title ?? '—'} · Modo:{' '}
+                        {task.submission_mode === 'team'
+                          ? 'Equipo'
+                          : 'Individual'}
+                      </div>
+                      <div className="text-xs text-white/50">
+                        Deadline: {formatDateDMY(task.deadline_at)}
+                      </div>
+                    </div>
+                    <Badge className="border border-white/10 bg-white/10 text-white">
+                      {currentSubmission
+                        ? `Entregado (${currentSubmission.status})`
+                        : 'Pendiente'}
+                    </Badge>
+                  </div>
+
+                  {task.task_template?.description ? (
+                    <div className="mt-2 text-xs text-white/70">
+                      {task.task_template.description}
+                    </div>
+                  ) : null}
+
+                  {task.task_template?.instructions ? (
+                    <div className="mt-2 rounded-md border border-white/10 bg-black/30 p-2 text-xs text-white/70">
+                      {task.task_template.instructions}
+                    </div>
+                  ) : null}
+
+                  {currentSubmission ? (
+                    <div className="mt-3 space-y-2">
+                      <div className="text-xs text-white/60">
+                        Intento #{currentSubmission.attempt_number} ·{' '}
+                        {formatDateDMY(currentSubmission.submitted_at)}
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {currentSubmission.link_url ? (
+                          <Button size="sm" variant="secondary" asChild>
+                            <Link
+                              href={currentSubmission.link_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
+                              Ver link
+                              <ExternalLink className="ml-1 h-3 w-3" />
+                            </Link>
+                          </Button>
+                        ) : null}
+                        {currentSubmission.file_path ? (
+                          <Button
+                            size="sm"
+                            variant="secondary"
+                            onClick={() =>
+                              void openSubmissionFile(currentSubmission.id)
+                            }
+                          >
+                            Ver archivo
+                            <ExternalLink className="ml-1 h-3 w-3" />
+                          </Button>
+                        ) : null}
+                      </div>
+                      {currentSubmission.latest_feedback?.comment ? (
+                        <div className="rounded-md border border-emerald-500/30 bg-emerald-500/10 p-2 text-xs text-emerald-100">
+                          Feedback: {currentSubmission.latest_feedback.comment}
+                        </div>
+                      ) : null}
+                    </div>
+                  ) : null}
+
+                  <div className="mt-3 flex justify-end">
+                    <Button
+                      onClick={() => setSubmissionDialogTaskId(task.id)}
+                      className="gap-2 bg-emerald-700 text-white hover:bg-emerald-600"
+                      disabled={
+                        task.status === 'closed' ||
+                        (currentSubmission && !task.allow_resubmission)
+                      }
+                    >
+                      <FileUp className="h-4 w-4" />
+                      {currentSubmission ? 'Reentregar' : 'Entregar'}
+                    </Button>
+                  </div>
+                </div>
+              )
+            })
+          )}
+        </CardContent>
+      </Card>
+
+      <Dialog
+        open={Boolean(submissionDialogTaskId)}
+        onOpenChange={(open) => {
+          if (!open) {
+            setSubmissionDialogTaskId(null)
+            setSubmissionLink('')
+            setSubmissionComment('')
+            setSubmissionFile(null)
+          }
+        }}
+      >
+        <DialogContent className="border border-white/10 bg-black text-white sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>
+              {selectedTask?.task_template?.title ?? 'Enviar entrega'}
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label className="text-white/70">Link de entrega</Label>
+              <Input
+                value={submissionLink}
+                onChange={(event) => setSubmissionLink(event.target.value)}
+                className="border-white/10 bg-white/5"
+                placeholder="https://..."
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-white/70">Archivo (opcional)</Label>
+              <Input
+                type="file"
+                onChange={(event) =>
+                  setSubmissionFile(event.target.files?.[0] ?? null)
+                }
+                className="border-white/10 bg-white/5"
+              />
+              <div className="text-[11px] text-white/50">
+                Máximo 25MB. PDF, imágenes, ZIP, DOC/DOCX o TXT.
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label className="text-white/70">Comentario</Label>
+              <Textarea
+                value={submissionComment}
+                onChange={(event) => setSubmissionComment(event.target.value)}
+                className="border-white/10 bg-white/5"
+                placeholder="Notas de entrega"
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="secondary"
+              className="border border-white/10 bg-white/10 text-white hover:bg-white/15"
+              onClick={() => setSubmissionDialogTaskId(null)}
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={() => void submitTask()}
+              disabled={submittingTask}
+              className="bg-emerald-700 text-white hover:bg-emerald-600"
+            >
+              {submittingTask ? 'Enviando...' : 'Enviar entrega'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

@@ -4,6 +4,7 @@ import { useMemo } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { Menu } from 'lucide-react'
 
+import { PlatformNotificationsMenu } from '@/components/platform/platform-notifications-menu'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 
@@ -69,6 +70,8 @@ export function TalentTopBar({
         </div>
 
         <div className="flex min-w-0 items-center justify-end gap-2 sm:gap-3">
+          <PlatformNotificationsMenu />
+
           <Button
             variant="secondary"
             className="hidden border border-white/10 bg-white/10 text-white hover:bg-white/15 sm:inline-flex"

@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase/client'
 import { getPasswordError } from '@/lib/validation/password'
 import {
@@ -14,6 +14,9 @@ import {
 
 export default function UpdatePasswordPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const requiredReset = searchParams.get('required') === '1'
+  const redirectTo = searchParams.get('redirectTo') || '/plataforma'
 
   const [phase, setPhase] = useState<
     'boot' | 'validating' | 'ready' | 'saving' | 'done' | 'error'
@@ -88,8 +91,14 @@ export default function UpdatePasswordPage() {
       const { error } = await supabase.auth.updateUser({ password })
       if (error) throw error
 
-      // recomendado: cerrar sesión recovery y volver a login limpio
-      await supabase.auth.signOut()
+      if (requiredReset) {
+        await fetch('/api/auth/complete-password-reset', {
+          method: 'POST',
+        }).catch(() => null)
+      } else {
+        // flujo de recuperación por enlace
+        await supabase.auth.signOut()
+      }
 
       setPhase('done')
       // setTimeout(() => router.replace('/ingresar'), 400)
@@ -275,10 +284,14 @@ export default function UpdatePasswordPage() {
                 </p>
 
                 <button
-                  onClick={() => router.replace('/ingresar')}
+                  onClick={() =>
+                    router.replace(requiredReset ? redirectTo : '/ingresar')
+                  }
                   className="mt-10 w-full rounded-xl py-3 font-semibold text-black bg-[#00CCA4] hover:bg-[#00E0B3] transition shadow-[0_0_25px_#00CCA455] cursor-pointer"
                 >
-                  Ir al inicio de sesión
+                  {requiredReset
+                    ? 'Continuar a la plataforma'
+                    : 'Ir al inicio de sesión'}
                 </button>
               </div>
             </div>

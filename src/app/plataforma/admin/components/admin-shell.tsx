@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react'
 import { usePathname } from 'next/navigation'
 
+import { ActivityTracker } from '@/components/auth/activity-tracker'
+
 import { AdminSidebar } from './admin-sidebar'
 import { AdminTopbar } from './admin-topbar'
 
@@ -59,6 +61,7 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
       </aside>
 
       <div className="flex h-full min-h-0">
+        <ActivityTracker />
         <div className="hidden h-full lg:block">
           <AdminSidebar className="h-full" />
         </div>

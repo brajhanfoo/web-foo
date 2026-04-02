@@ -31,6 +31,9 @@ export default async function PlataformaIndexPage() {
     case 'super_admin':
       redirect('/plataforma/admin')
 
+    case 'docente':
+      redirect('/plataforma/docente')
+
     case 'talent':
       redirect('/plataforma/talento')
 

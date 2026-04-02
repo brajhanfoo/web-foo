@@ -3,6 +3,9 @@
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import {
+  Activity,
+  BookMarked,
+  Briefcase,
   GraduationCap,
   Inbox,
   LayoutGrid,
@@ -109,9 +112,27 @@ export function AdminSidebar({
           onNavigate={onNavigate}
         />
         <SidebarLink
+          href="/plataforma/admin/docentes"
+          label="Docentes"
+          Icon={Briefcase}
+          onNavigate={onNavigate}
+        />
+        <SidebarLink
+          href="/plataforma/admin/actividad"
+          label="Actividad"
+          Icon={Activity}
+          onNavigate={onNavigate}
+        />
+        <SidebarLink
           href="/plataforma/admin/programas"
           label="Programas"
           Icon={GraduationCap}
+          onNavigate={onNavigate}
+        />
+        <SidebarLink
+          href="/plataforma/admin/entregables"
+          label="Entregables"
+          Icon={BookMarked}
           onNavigate={onNavigate}
         />
       </nav>
