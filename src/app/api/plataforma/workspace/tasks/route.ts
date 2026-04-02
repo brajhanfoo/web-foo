@@ -71,14 +71,16 @@ export async function GET(request: Request) {
         'max_attempts',
         'grading_mode',
         'status',
+        'is_published',
+        'closed_at',
         'created_at',
         'task_template:task_templates(id, title, description, instructions)',
         'milestone:program_edition_milestones(id, title, position, starts_at)',
       ].join(', ')
     )
     .eq('team_id', appRow.team_id)
-    .eq('is_published', true)
-    .in('status', ['published', 'closed'])
+    // Fuente de verdad para visibilidad del alumno: status='published'.
+    .eq('status', 'published')
     .order('created_at', { ascending: true })
 
   if (assignmentsError) {

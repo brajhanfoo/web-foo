@@ -394,6 +394,7 @@ export default function WorkspacePage() {
 
   function renderTaskCard(task: WorkspaceTaskAssignment) {
     const currentSubmission = task.submissions[0] ?? null
+    const isDeliverable = task.status === 'published'
     return (
       <div
         key={task.id}
@@ -417,7 +418,9 @@ export default function WorkspacePage() {
             </div>
           </div>
           <Badge className="border border-white/10 bg-white/10 text-white">
-            {currentSubmission
+            {!isDeliverable
+              ? 'No disponible'
+              : currentSubmission
               ? `Entregado (${currentSubmission.status})`
               : 'Pendiente'}
           </Badge>
@@ -481,7 +484,7 @@ export default function WorkspacePage() {
             onClick={() => setSubmissionDialogTaskId(task.id)}
             className="gap-2 bg-emerald-700 text-white hover:bg-emerald-600"
             disabled={
-              task.status === 'closed' ||
+              !isDeliverable ||
               (currentSubmission && !task.allow_resubmission)
             }
           >

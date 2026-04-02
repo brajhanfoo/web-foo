@@ -341,6 +341,7 @@ export async function POST(request: Request) {
       status,
       is_published: status === 'published',
       published_at: status === 'published' ? new Date().toISOString() : null,
+      closed_at: status === 'closed' ? new Date().toISOString() : null,
     })
     .select('id, team_id, submission_mode, status, deadline_at')
     .maybeSingle()
@@ -526,13 +527,23 @@ export async function PATCH(request: Request) {
     body.status === 'closed' ||
     body.status === 'archived'
   ) {
+    const nowIso = new Date().toISOString()
     patch.status = body.status
     if (body.status === 'published') {
       patch.is_published = true
-      patch.published_at = new Date().toISOString()
+      patch.published_at = nowIso
+      patch.closed_at = null
     }
     if (body.status === 'closed') {
-      patch.closed_at = new Date().toISOString()
+      patch.is_published = false
+      patch.closed_at = nowIso
+    }
+    if (body.status === 'draft') {
+      patch.is_published = false
+      patch.closed_at = null
+    }
+    if (body.status === 'archived') {
+      patch.is_published = false
     }
   }
 
