@@ -300,7 +300,9 @@ function resolvePayerPhone(params: {
   }
 }
 
-function normalizeDocumentNumber(value: string | null | undefined): string | null {
+function normalizeDocumentNumber(
+  value: string | null | undefined
+): string | null {
   const normalized = normalizeWhitespace(value)
   if (!normalized) return null
 

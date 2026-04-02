@@ -21,12 +21,7 @@ type SidebarLinkProperties = {
   onNavigate?: () => void
 }
 
-function SidebarLink({
-  href,
-  label,
-  Icon,
-  onNavigate,
-}: SidebarLinkProperties) {
+function SidebarLink({ href, label, Icon, onNavigate }: SidebarLinkProperties) {
   const pathname = usePathname()
   const isActive = pathname === href
 

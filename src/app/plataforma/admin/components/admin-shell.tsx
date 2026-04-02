@@ -52,7 +52,10 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
           sidebarOpen ? 'translate-x-0' : '-translate-x-full',
         ].join(' ')}
       >
-        <AdminSidebar className="h-full" onNavigate={() => setSidebarOpen(false)} />
+        <AdminSidebar
+          className="h-full"
+          onNavigate={() => setSidebarOpen(false)}
+        />
       </aside>
 
       <div className="flex h-full min-h-0">

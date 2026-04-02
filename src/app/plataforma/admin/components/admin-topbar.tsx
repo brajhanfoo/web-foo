@@ -13,11 +13,7 @@ function textOrEmpty(v: string | null | undefined) {
   return (v ?? '').trim()
 }
 
-export function AdminTopbar({
-  onMenuClick,
-}: {
-  onMenuClick?: () => void
-}) {
+export function AdminTopbar({ onMenuClick }: { onMenuClick?: () => void }) {
   const pathname = usePathname()
   const bootAuth = useAuthStore((s) => s.bootAuth)
   const profile = useAuthStore((s) => s.profile)

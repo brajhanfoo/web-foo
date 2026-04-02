@@ -2,7 +2,9 @@ const DEFAULT_PAYMENT_SUPPORT_WHATSAPP = '+51901831491'
 
 type PaymentPurpose = 'pre_enrollment' | 'tuition'
 
-function normalizeProgramTitle(value: string | null | undefined): string | null {
+function normalizeProgramTitle(
+  value: string | null | undefined
+): string | null {
   if (!value) return null
   const trimmed = value.trim()
   return trimmed || null
@@ -12,7 +14,9 @@ function normalizeWhatsAppNumber(value: string): string {
   return value.replace(/[^\d]/g, '')
 }
 
-function resolvePurposeLabel(purpose: PaymentPurpose | null | undefined): string {
+function resolvePurposeLabel(
+  purpose: PaymentPurpose | null | undefined
+): string {
   if (purpose === 'pre_enrollment') return 'pre-inscripcion'
   if (purpose === 'tuition') return 'matricula'
   return 'pago'
@@ -34,4 +38,3 @@ export function buildPaymentSupportWhatsAppUrl(params: {
   const message = `Hola, quisiera consultar otras formas de pago para la ${purposeLabel}${programSegment}.`
   return `https://wa.me/${number}?text=${encodeURIComponent(message)}`
 }
-
