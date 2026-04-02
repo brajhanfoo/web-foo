@@ -465,7 +465,7 @@ export default function AdminEditionDetailPage() {
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
+        <div className="flex min-w-0 items-center gap-3">
           <Link
             href={`/plataforma/admin/programas/${programId}`}
             className="inline-flex items-center gap-2 rounded-md border border-slate-800 bg-slate-900 px-3 py-2 text-sm text-slate-200 hover:bg-slate-800"
@@ -473,7 +473,7 @@ export default function AdminEditionDetailPage() {
             <ArrowLeft className="h-4 w-4" /> Volver
           </Link>
           <div className="space-y-1">
-            <h1 className="text-xl font-semibold text-slate-100">
+            <h1 className="text-xl font-semibold text-slate-100 break-words">
               {program.title} · {edition.edition_name}
             </h1>
             <div className="text-sm text-slate-300">
@@ -606,7 +606,7 @@ export default function AdminEditionDetailPage() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <Input
                     value={newTeamName}
                     onChange={(element) => setNewTeamName(element.target.value)}

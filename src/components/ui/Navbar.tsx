@@ -75,7 +75,7 @@ export default function Navbar({ logoSrc, logoAlt }: NavbarProperties) {
   }
 
   return (
-    <nav className="sticky top-0 z-50 flex items-center justify-between w-full bg-black px-6 py-4 md:px-4 lg:px-16 xl:px-32 shadow-lg">
+    <nav className="sticky top-0 z-50 flex w-full items-center justify-between bg-black px-4 py-4 sm:px-6 md:px-4 lg:px-16 xl:px-32 shadow-lg">
       {/* LOGO */}
       <Link href="/" className="z-50">
         <Image
@@ -149,7 +149,7 @@ export default function Navbar({ logoSrc, logoAlt }: NavbarProperties) {
 
       {/* MOBILE MENU */}
       <div
-        className={`fixed inset-0 bg-black z-40 flex flex-col px-6 py-24 space-y-6 transition-transform duration-300 ease-in-out
+        className={`fixed inset-0 z-40 flex flex-col overflow-y-auto bg-black px-6 py-24 pb-10 space-y-6 transition-transform duration-300 ease-in-out
         ${menuOpen ? 'translate-x-0' : 'translate-x-full'}`}
       >
         {navItems.map(({ name, href, icon }) => {

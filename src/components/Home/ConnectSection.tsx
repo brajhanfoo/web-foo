@@ -12,7 +12,7 @@ const ConnectSection: React.FC = () => {
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(60%_50%_at_70%_40%,rgba(34,211,238,0.12),transparent_60%)]" />
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(50%_40%_at_85%_30%,rgba(168,85,247,0.12),transparent_60%)]" />
 
-      <div className="relative z-10 max-w-7xl mx-auto px-6 pt-32 pb-24 grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+      <div className="relative z-10 mx-auto grid max-w-7xl grid-cols-1 items-center gap-16 px-4 pb-24 pt-32 sm:px-6 lg:grid-cols-2">
         {/* LEFT */}
         <div>
           {/* System ready */}

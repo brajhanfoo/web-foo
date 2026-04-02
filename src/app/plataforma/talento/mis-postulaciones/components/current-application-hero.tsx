@@ -110,7 +110,7 @@ export function CurrentApplicationHero(props: { app: ApplicationRow }) {
     shadow-[0_8px_30px_rgba(0,0,0,0.35)]
   "
         topLeft={
-          <div className="flex items-center gap-3 text-sm md:text-base">
+          <div className="flex flex-wrap items-center gap-2 text-sm md:text-base">
             {/* Programa */}
             <span className="text-white font-semibold tracking-wide">
               {programTitle}

@@ -4,7 +4,7 @@ const Form = () => {
   return (
     <div
       id="contacto"
-      className="relative max-w-3xl mx-auto rounded-3xl bg-neutral-900/80 border border-white/10 p-10 md:p-12 overflow-hidden shadow-[0_0_80px_rgba(0,0,0,0.9)]"
+      className="relative mx-auto max-w-3xl overflow-hidden rounded-3xl border border-white/10 bg-neutral-900/80 p-6 shadow-[0_0_80px_rgba(0,0,0,0.9)] sm:p-10 md:p-12"
     >
       {/* Glow de fondo */}
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-purple-500/20 via-teal-500/10 to-transparent opacity-60" />

@@ -305,8 +305,8 @@ export default function AdminProgramDetailPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-3">
           <Link
             href="/plataforma/admin/programas"
             className="inline-flex items-center gap-2 rounded-md border border-slate-800 bg-slate-900 px-3 py-2 text-sm text-slate-200 hover:bg-slate-800"
@@ -314,7 +314,7 @@ export default function AdminProgramDetailPage() {
             <ArrowLeft className="h-4 w-4" /> Volver
           </Link>
           <div className="space-y-1">
-            <h1 className="text-xl font-semibold text-slate-100">
+            <h1 className="text-xl font-semibold text-slate-100 break-words">
               {program.title}
             </h1>
             <p className="text-sm text-slate-300">{program.slug}</p>
@@ -436,8 +436,8 @@ export default function AdminProgramDetailPage() {
                     key={edition.id}
                     className="rounded-lg border border-slate-800 bg-slate-900 p-4 space-y-2"
                   >
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div className="min-w-0">
                         <div className="font-medium">
                           {edition.edition_name}
                         </div>

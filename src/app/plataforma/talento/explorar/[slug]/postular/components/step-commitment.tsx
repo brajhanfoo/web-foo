@@ -100,11 +100,11 @@ export function StepCommitment({
         ingreso.
       </div>
 
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
         <Button
           type="button"
           variant="secondary"
-          className="border border-white/10 bg-white/5 text-white hover:bg-white/10"
+          className="w-full border border-white/10 bg-white/5 text-white hover:bg-white/10 sm:w-auto"
           onClick={onBack}
         >
           <ArrowLeft className="mr-2 h-4 w-4" aria-hidden="true" />
@@ -116,7 +116,7 @@ export function StepCommitment({
           onClick={onSubmit}
           disabled={isSubmitting}
           className={cn(
-            'inline-flex items-center gap-2 rounded-xl bg-emerald-400 px-6 py-3 text-sm font-semibold text-black transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/60',
+            'inline-flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-400 px-6 py-3 text-sm font-semibold text-black transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/60 sm:w-auto',
             isSubmitting && 'opacity-70'
           )}
         >

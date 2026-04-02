@@ -40,7 +40,7 @@ export function PastCompletedCard(props: {
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Button variant="secondary" className="gap-2" asChild>
             <Link href="#">
               Ver certificado <ExternalLink className="h-4 w-4" />

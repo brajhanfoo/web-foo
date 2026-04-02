@@ -178,8 +178,8 @@ export default function AdminProgramsPage() {
   }
 
   return (
-    <div className="p-6 space-y-5">
-      <div className="flex items-start justify-between gap-3 text-slate-100">
+    <div className="space-y-5 p-4 md:p-6">
+      <div className="flex flex-wrap items-start justify-between gap-3 text-slate-100">
         <div>
           <h1 className="text-xl font-semibold">Programas</h1>
           <p className="text-sm text-slate-400">
@@ -208,110 +208,118 @@ export default function AdminProgramsPage() {
         />
       </div>
 
-      <div className="rounded-lg border border-slate-800 overflow-hidden">
-        <div className="grid grid-cols-12 gap-0 border-b border-slate-800 bg-slate-900/60 text-xs text-slate-400 font-medium">
-          <div className="col-span-4 px-3 py-2">Programa</div>
-          <div className="col-span-3 px-3 py-2">Slug</div>
-          <div className="col-span-2 px-3 py-2">Pago</div>
-          <div className="col-span-1 px-3 py-2">Estado</div>
-          <div className="col-span-2 px-3 py-2 text-right">Acciones</div>
-        </div>
-
-        {loading ? (
-          <div className="p-4 text-sm text-slate-400">Cargando…</div>
-        ) : filtered.length === 0 ? (
-          <div className="p-4 text-sm text-slate-400">No hay programas.</div>
-        ) : (
-          filtered.map((p) => (
-            <div
-              key={p.id}
-              className="grid grid-cols-12 border-b border-slate-800 last:border-b-0 text-slate-300"
-            >
-              <div className="col-span-4 px-3 py-3">
-                <div className="font-medium">{p.title}</div>
-                {p.description ? (
-                  <div className="text-xs text-slate-400 line-clamp-2">
-                    {p.description}
-                  </div>
-                ) : null}
-              </div>
-
-              <div className="col-span-3 px-3 py-3 text-sm">{p.slug}</div>
-
-              <div className="col-span-2 px-3 py-3 text-sm">
-                {resolvePaymentMode(p) === 'pre'
-                  ? 'Pago previo'
-                  : resolvePaymentMode(p) === 'post'
-                    ? 'Pago posterior'
-                    : 'Sin pago'}
-              </div>
-
-              <div className="col-span-2 px-3 py-3 text-sm">
-                {p.is_published ? 'Publicado' : 'Oculto'}
-              </div>
-              <div className="col-span-1 flex justify-center  items-center ">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      aria-label="Abrir acciones"
-                    >
-                      <MoreVertical className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-
-                  <DropdownMenuContent
-                    align="end"
-                    className="w-48 bg-slate-900 border border-slate-800 text-slate-100"
-                  >
-                    {/* Gestionar */}
-                    <DropdownMenuItem asChild>
-                      <Link
-                        href={`/plataforma/admin/programas/${p.id}`}
-                        className="flex items-center gap-2 text-slate-300"
-                      >
-                        <ExternalLink className="h-4 w-4" />
-                        Gestionar
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-
-                    {/* Editar */}
-                    <DropdownMenuItem
-                      onClick={() => openEdit(p)}
-                      className="flex items-center gap-2 text-slate-300"
-                    >
-                      <Pencil className="h-4 w-4" />
-                      Editar
-                    </DropdownMenuItem>
-
-                    <DropdownMenuSeparator />
-
-                    {/* Publicar / Ocultar */}
-                    <DropdownMenuItem
-                      onClick={() => void togglePublished(p)}
-                      className="flex items-center gap-2 text-slate-300"
-                    >
-                      {p.is_published ? (
-                        <EyeOff className="h-4 w-4" />
-                      ) : (
-                        <Eye className="h-4 w-4" />
-                      )}
-                      {p.is_published ? 'Ocultar' : 'Publicar'}
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
+      <div className="rounded-lg border border-slate-800">
+        <div className="overflow-x-auto">
+          <div className="min-w-[860px]">
+            <div className="grid grid-cols-12 gap-0 border-b border-slate-800 bg-slate-900/60 text-xs text-slate-400 font-medium">
+              <div className="col-span-4 px-3 py-2">Programa</div>
+              <div className="col-span-3 px-3 py-2">Slug</div>
+              <div className="col-span-2 px-3 py-2">Pago</div>
+              <div className="col-span-2 px-3 py-2">Estado</div>
+              <div className="col-span-1 px-3 py-2 text-right">Acciones</div>
             </div>
-          ))
-        )}
+
+            {loading ? (
+              <div className="p-4 text-sm text-slate-400">Cargando…</div>
+            ) : filtered.length === 0 ? (
+              <div className="p-4 text-sm text-slate-400">
+                No hay programas.
+              </div>
+            ) : (
+              filtered.map((p) => (
+                <div
+                  key={p.id}
+                  className="grid grid-cols-12 border-b border-slate-800 last:border-b-0 text-slate-300"
+                >
+                  <div className="col-span-4 min-w-0 px-3 py-3">
+                    <div className="truncate font-medium">{p.title}</div>
+                    {p.description ? (
+                      <div className="text-xs text-slate-400 line-clamp-2">
+                        {p.description}
+                      </div>
+                    ) : null}
+                  </div>
+
+                  <div className="col-span-3 min-w-0 px-3 py-3 text-sm">
+                    <span className="block truncate">{p.slug}</span>
+                  </div>
+
+                  <div className="col-span-2 px-3 py-3 text-sm">
+                    {resolvePaymentMode(p) === 'pre'
+                      ? 'Pago previo'
+                      : resolvePaymentMode(p) === 'post'
+                        ? 'Pago posterior'
+                        : 'Sin pago'}
+                  </div>
+
+                  <div className="col-span-2 px-3 py-3 text-sm">
+                    {p.is_published ? 'Publicado' : 'Oculto'}
+                  </div>
+                  <div className="col-span-1 flex items-center justify-center">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          aria-label="Abrir acciones"
+                        >
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+
+                      <DropdownMenuContent
+                        align="end"
+                        className="w-48 bg-slate-900 border border-slate-800 text-slate-100"
+                      >
+                        {/* Gestionar */}
+                        <DropdownMenuItem asChild>
+                          <Link
+                            href={`/plataforma/admin/programas/${p.id}`}
+                            className="flex items-center gap-2 text-slate-300"
+                          >
+                            <ExternalLink className="h-4 w-4" />
+                            Gestionar
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+
+                        {/* Editar */}
+                        <DropdownMenuItem
+                          onClick={() => openEdit(p)}
+                          className="flex items-center gap-2 text-slate-300"
+                        >
+                          <Pencil className="h-4 w-4" />
+                          Editar
+                        </DropdownMenuItem>
+
+                        <DropdownMenuSeparator />
+
+                        {/* Publicar / Ocultar */}
+                        <DropdownMenuItem
+                          onClick={() => void togglePublished(p)}
+                          className="flex items-center gap-2 text-slate-300"
+                        >
+                          {p.is_published ? (
+                            <EyeOff className="h-4 w-4" />
+                          ) : (
+                            <Eye className="h-4 w-4" />
+                          )}
+                          {p.is_published ? 'Ocultar' : 'Publicar'}
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
       </div>
 
       {/* Modal simple (sin shadcn para que sea copy/paste) */}
       {open ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900 p-4">
-          <div className="w-full max-w-xl rounded-lg bg-slate-900 border border-slate-800 shadow text-slate-100">
+        <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-slate-900 p-4 sm:items-center">
+          <div className="my-4 w-full max-w-xl rounded-lg border border-slate-800 bg-slate-900 text-slate-100 shadow sm:my-0">
             <div className="p-4 border-b">
               <div className="text-lg font-semibold">
                 {editing ? 'Editar programa' : 'Nuevo programa'}
@@ -388,7 +396,7 @@ export default function AdminProgramsPage() {
               </div>
             </div>
 
-            <div className="p-4 border-t flex items-center justify-end gap-2">
+            <div className="flex flex-col-reverse gap-2 border-t p-4 sm:flex-row sm:items-center sm:justify-end">
               <button
                 onClick={() => {
                   setOpen(false)
