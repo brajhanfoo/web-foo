@@ -134,7 +134,10 @@ type WorkspaceState =
 
 function buildEditionRange(edition: WorkspacePayload['edition'] | null) {
   if (!edition) return ''
-  const startLine = formatDateOnlyInTimeZone(edition.starts_at, PLATFORM_TIMEZONE)
+  const startLine = formatDateOnlyInTimeZone(
+    edition.starts_at,
+    PLATFORM_TIMEZONE
+  )
   const endLine = formatDateOnlyInTimeZone(edition.ends_at, PLATFORM_TIMEZONE)
   const startText = startLine ? `Inicio: ${startLine}` : ''
   const endText = endLine ? `Fin: ${endLine}` : ''
@@ -267,7 +270,8 @@ export default function WorkspacePage() {
     () => tasks.find((task) => task.id === submissionDialogTaskId) ?? null,
     [submissionDialogTaskId, tasks]
   )
-  const selectedTaskSubmissionType = selectedTask?.allowed_submission_type ?? 'both'
+  const selectedTaskSubmissionType =
+    selectedTask?.allowed_submission_type ?? 'both'
   const showLinkInput = selectedTaskSubmissionType !== 'file'
   const showFileInput = selectedTaskSubmissionType !== 'link'
 
@@ -361,9 +365,13 @@ export default function WorkspacePage() {
 
     return Array.from(merged.values()).sort((left, right) => {
       const leftPos =
-        typeof left.position === 'number' ? left.position : Number.MAX_SAFE_INTEGER
+        typeof left.position === 'number'
+          ? left.position
+          : Number.MAX_SAFE_INTEGER
       const rightPos =
-        typeof right.position === 'number' ? right.position : Number.MAX_SAFE_INTEGER
+        typeof right.position === 'number'
+          ? right.position
+          : Number.MAX_SAFE_INTEGER
       if (leftPos !== rightPos) return leftPos - rightPos
 
       const leftDate = Date.parse(String(left.starts_at ?? ''))
@@ -404,7 +412,8 @@ export default function WorkspacePage() {
               {submissionTypeLabel(task.allowed_submission_type ?? 'both')}
             </div>
             <div className="text-xs text-white/50">
-              Deadline: {formatDateTimeInTimeZone(task.deadline_at, PLATFORM_TIMEZONE)}
+              Deadline:{' '}
+              {formatDateTimeInTimeZone(task.deadline_at, PLATFORM_TIMEZONE)}
             </div>
           </div>
           <Badge className="border border-white/10 bg-white/10 text-white">
@@ -430,7 +439,10 @@ export default function WorkspacePage() {
           <div className="mt-3 space-y-2">
             <div className="text-xs text-white/60">
               Intento #{currentSubmission.attempt_number} Â·{' '}
-              {formatDateTimeInTimeZone(currentSubmission.submitted_at, PLATFORM_TIMEZONE)}
+              {formatDateTimeInTimeZone(
+                currentSubmission.submitted_at,
+                PLATFORM_TIMEZONE
+              )}
             </div>
             <div className="flex flex-wrap gap-2">
               {currentSubmission.link_url ? (
@@ -527,7 +539,8 @@ export default function WorkspacePage() {
   }
 
   async function submitTask() {
-    if (state.kind !== 'ready' || !submissionDialogTaskId || !selectedTask) return
+    if (state.kind !== 'ready' || !submissionDialogTaskId || !selectedTask)
+      return
 
     const submissionType = selectedTask.allowed_submission_type
     const hasLink = Boolean(submissionLink.trim())
@@ -964,7 +977,9 @@ export default function WorkspacePage() {
               <div className="space-y-2">
                 <Label className="text-white/70">
                   Link de entrega
-                  {selectedTaskSubmissionType === 'both' ? ' (obligatorio)' : ''}
+                  {selectedTaskSubmissionType === 'both'
+                    ? ' (obligatorio)'
+                    : ''}
                 </Label>
                 <Input
                   value={submissionLink}
@@ -978,7 +993,9 @@ export default function WorkspacePage() {
               <div className="space-y-2">
                 <Label className="text-white/70">
                   Archivo
-                  {selectedTaskSubmissionType === 'both' ? ' (obligatorio)' : ''}
+                  {selectedTaskSubmissionType === 'both'
+                    ? ' (obligatorio)'
+                    : ''}
                 </Label>
                 <Input
                   type="file"

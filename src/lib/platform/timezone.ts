@@ -57,7 +57,9 @@ export function formatDateOnlyInTimeZone(
 }
 
 function parseGmtOffsetLabel(label: string): number | null {
-  const clean = String(label ?? '').trim().toUpperCase()
+  const clean = String(label ?? '')
+    .trim()
+    .toUpperCase()
   const match = /^(?:GMT|UTC)([+-])(\d{1,2})(?::?(\d{2}))?$/.exec(clean)
   if (!match) return null
 
@@ -146,7 +148,10 @@ export function localDateTimeToUtcIso(
   let candidateUtc = sourceUtc
 
   for (let i = 0; i < 3; i += 1) {
-    const offsetMinutes = getOffsetMinutesAtInstant(timeZone, new Date(candidateUtc))
+    const offsetMinutes = getOffsetMinutesAtInstant(
+      timeZone,
+      new Date(candidateUtc)
+    )
     const nextUtc = sourceUtc - offsetMinutes * 60_000
     if (Math.abs(nextUtc - candidateUtc) < 1000) {
       candidateUtc = nextUtc

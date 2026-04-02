@@ -717,7 +717,8 @@ export default function AdminDocentesPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="text-xs text-slate-400">
-              Zona horaria oficial: {PLATFORM_TIMEZONE_LABEL}. Tambien puedes guardar otras zonas IANA.
+              Zona horaria oficial: {PLATFORM_TIMEZONE_LABEL}. Tambien puedes
+              guardar otras zonas IANA.
             </div>
             <div className="space-y-2">
               <Label>Equipo</Label>

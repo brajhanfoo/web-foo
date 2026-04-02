@@ -1049,7 +1049,8 @@ export default function AdminTeamDetailPage() {
         <CardHeader>
           <CardTitle>Horarios del equipo</CardTitle>
           <CardDescription className="text-slate-300">
-            Soporte para advertencia de conflictos. Default: {PLATFORM_TIMEZONE_LABEL}.
+            Soporte para advertencia de conflictos. Default:{' '}
+            {PLATFORM_TIMEZONE_LABEL}.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">

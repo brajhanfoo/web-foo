@@ -1,4 +1,4 @@
--- 20260404_task_assignments_allowed_submission_type.sql
+-- 20260405_task_assignments_allowed_submission_type.sql
 -- Configura tipo de entrega permitido por task_assignment (link|file|both)
 -- y lo valida en submissions.
 

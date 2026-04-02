@@ -79,9 +79,8 @@ export async function POST(request: Request) {
 
   const hasLink = Boolean(linkUrl)
   const hasFile = uploadedFile instanceof File
-  const allowedSubmissionType = (
-    assignment.allowed_submission_type ?? 'both'
-  ) as 'link' | 'file' | 'both'
+  const allowedSubmissionType = (assignment.allowed_submission_type ??
+    'both') as 'link' | 'file' | 'both'
 
   if (allowedSubmissionType === 'link' && (!hasLink || hasFile)) {
     return NextResponse.json(

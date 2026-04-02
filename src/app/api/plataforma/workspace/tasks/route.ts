@@ -77,7 +77,8 @@ export async function GET(request: Request) {
       ].join(', ')
     )
     .eq('team_id', appRow.team_id)
-    .or('status.eq.published,status.eq.closed,is_published.eq.true')
+    .eq('is_published', true)
+    .in('status', ['published', 'closed'])
     .order('created_at', { ascending: true })
 
   if (assignmentsError) {

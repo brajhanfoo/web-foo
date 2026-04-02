@@ -1,9 +1,6 @@
 import { NextResponse } from 'next/server'
 
-import {
-  isValidIanaTimeZone,
-  PLATFORM_TIMEZONE,
-} from '@/lib/platform/timezone'
+import { isValidIanaTimeZone, PLATFORM_TIMEZONE } from '@/lib/platform/timezone'
 import { isAdminRole, requirePlatformProfile } from '@/lib/platform/security'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 
