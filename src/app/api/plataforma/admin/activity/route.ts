@@ -47,7 +47,9 @@ export async function GET(request: Request) {
     appQuery,
     supabaseAdmin
       .from('profiles')
-      .select('id, first_name, last_name, email, role, last_relevant_activity_at')
+      .select(
+        'id, first_name, last_name, email, role, last_relevant_activity_at'
+      )
       .eq('role', 'docente')
       .eq('is_active', true),
   ])
@@ -119,7 +121,12 @@ export async function GET(request: Request) {
 
   const teamStatsMap = new Map<
     string,
-    { team_id: string; team_name: string; total_students: number; inactive_students: number }
+    {
+      team_id: string
+      team_name: string
+      total_students: number
+      inactive_students: number
+    }
   >()
 
   for (const student of students) {

@@ -14,7 +14,10 @@ type TeamNotificationInput = {
 }
 
 function sanitizeText(value: string, max = 2000): string {
-  return value.replace(/[\u0000-\u001f\u007f]/g, '').trim().slice(0, max)
+  return value
+    .replace(/[\u0000-\u001f\u007f]/g, '')
+    .trim()
+    .slice(0, max)
 }
 
 export async function notifyTeamMembers(input: TeamNotificationInput) {
@@ -100,7 +103,10 @@ export async function emailDocentesAndAdmins(input: {
       .filter((value): value is string => Boolean(value)) ?? []
 
   const { data: docenteProfiles } = docenteIds.length
-    ? await supabaseAdmin.from('profiles').select('id, email').in('id', docenteIds)
+    ? await supabaseAdmin
+        .from('profiles')
+        .select('id, email')
+        .in('id', docenteIds)
     : { data: [] as Array<{ id: string; email: string | null }> }
 
   const docEmails =

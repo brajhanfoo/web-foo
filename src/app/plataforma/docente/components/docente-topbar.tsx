@@ -10,8 +10,10 @@ import { Button } from '@/components/ui/button'
 
 function titleFromPath(pathname: string): string {
   if (pathname === '/plataforma/docente') return 'Equipos y entregables'
-  if (pathname.startsWith('/plataforma/docente/equipos')) return 'Workspace de equipo'
-  if (pathname.startsWith('/plataforma/docente/actividad')) return 'Actividad de estudiantes'
+  if (pathname.startsWith('/plataforma/docente/equipos'))
+    return 'Workspace de equipo'
+  if (pathname.startsWith('/plataforma/docente/actividad'))
+    return 'Actividad de estudiantes'
   return 'Panel Docente'
 }
 
@@ -67,4 +69,3 @@ export function DocenteTopbar({
     </header>
   )
 }
-

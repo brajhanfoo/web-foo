@@ -151,7 +151,10 @@ export function buildSubmissionObjectPath(input: ObjectPathInput): string {
   ].join('/')
 }
 
-export function sanitizeFeedbackComment(value: string, maxLength = 5000): string {
+export function sanitizeFeedbackComment(
+  value: string,
+  maxLength = 5000
+): string {
   const stripped = value
     .replace(/<[^>]*>/g, ' ')
     .replace(/javascript:/gi, '')
@@ -159,4 +162,3 @@ export function sanitizeFeedbackComment(value: string, maxLength = 5000): string
     .replace(/[\u0000-\u001f\u007f]/g, ' ')
   return stripped.trim().slice(0, maxLength)
 }
-

@@ -53,14 +53,12 @@ type TeamRef = {
   id: string
   name: string
   edition_id: string
-  edition:
-    | {
-        id?: string
-        edition_name?: string
-        program_id?: string
-        program?: { id?: string; title?: string } | null
-      }
-    | null
+  edition: {
+    id?: string
+    edition_name?: string
+    program_id?: string
+    program?: { id?: string; title?: string } | null
+  } | null
 }
 
 type ScheduleSlot = {
@@ -134,16 +132,14 @@ export default function AdminDocentesPage() {
     const response = await fetch('/api/plataforma/admin/docentes', {
       cache: 'no-store',
     })
-    const payload = (await response.json().catch(() => null)) as
-      | {
-          ok: boolean
-          docentes?: DocenteRow[]
-          professional_areas?: ProfessionalArea[]
-          assignments?: AssignmentRow[]
-          teams?: TeamRef[]
-          message?: string
-        }
-      | null
+    const payload = (await response.json().catch(() => null)) as {
+      ok: boolean
+      docentes?: DocenteRow[]
+      professional_areas?: ProfessionalArea[]
+      assignments?: AssignmentRow[]
+      teams?: TeamRef[]
+      message?: string
+    } | null
 
     if (!response.ok || !payload?.ok) {
       showError(payload?.message ?? 'No se pudo cargar docentes.')
@@ -169,9 +165,11 @@ export default function AdminDocentesPage() {
         cache: 'no-store',
       }
     )
-    const payload = (await response.json().catch(() => null)) as
-      | { ok: boolean; slots?: ScheduleSlot[]; message?: string }
-      | null
+    const payload = (await response.json().catch(() => null)) as {
+      ok: boolean
+      slots?: ScheduleSlot[]
+      message?: string
+    } | null
     if (!response.ok || !payload?.ok) {
       showError(payload?.message ?? 'No se pudo cargar horarios.')
       return
@@ -216,9 +214,11 @@ export default function AdminDocentesPage() {
         temporary_password: createTempPassword || undefined,
       }),
     })
-    const payload = (await response.json().catch(() => null)) as
-      | { ok: boolean; message?: string; temporary_password?: string }
-      | null
+    const payload = (await response.json().catch(() => null)) as {
+      ok: boolean
+      message?: string
+      temporary_password?: string
+    } | null
     setBusy(false)
     if (!response.ok || !payload?.ok) {
       showError(payload?.message ?? 'No se pudo crear docente.')
@@ -241,19 +241,23 @@ export default function AdminDocentesPage() {
 
   async function saveDocente(docente: DocenteRow) {
     setBusy(true)
-    const response = await fetch(`/api/plataforma/admin/docentes/${docente.id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        first_name: docente.first_name,
-        last_name: docente.last_name,
-        professional_area_id: docente.professional_area_id,
-        is_active: docente.is_active,
-      }),
-    })
-    const payload = (await response.json().catch(() => null)) as
-      | { ok: boolean; message?: string }
-      | null
+    const response = await fetch(
+      `/api/plataforma/admin/docentes/${docente.id}`,
+      {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          first_name: docente.first_name,
+          last_name: docente.last_name,
+          professional_area_id: docente.professional_area_id,
+          is_active: docente.is_active,
+        }),
+      }
+    )
+    const payload = (await response.json().catch(() => null)) as {
+      ok: boolean
+      message?: string
+    } | null
     setBusy(false)
     if (!response.ok || !payload?.ok) {
       showError(payload?.message ?? 'No se pudo guardar docente.')
@@ -271,9 +275,11 @@ export default function AdminDocentesPage() {
         method: 'POST',
       }
     )
-    const payload = (await response.json().catch(() => null)) as
-      | { ok: boolean; temporary_password?: string; message?: string }
-      | null
+    const payload = (await response.json().catch(() => null)) as {
+      ok: boolean
+      temporary_password?: string
+      message?: string
+    } | null
     setBusy(false)
     if (!response.ok || !payload?.ok) {
       showError(payload?.message ?? 'No se pudo resetear contraseña.')
@@ -305,18 +311,16 @@ export default function AdminDocentesPage() {
         staff_role: staffRole || null,
       }),
     })
-    const payload = (await response.json().catch(() => null)) as
-      | {
-          ok: boolean
-          conflicts?: Array<{
-            conflict_team_name?: string
-            day_of_week?: number
-            start_time?: string
-            end_time?: string
-          }>
-          message?: string
-        }
-      | null
+    const payload = (await response.json().catch(() => null)) as {
+      ok: boolean
+      conflicts?: Array<{
+        conflict_team_name?: string
+        day_of_week?: number
+        start_time?: string
+        end_time?: string
+      }>
+      message?: string
+    } | null
     setBusy(false)
     if (!response.ok || !payload?.ok) {
       showError(payload?.message ?? 'No se pudo crear asignación.')
@@ -351,9 +355,10 @@ export default function AdminDocentesPage() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ assignment_id: assignmentId }),
     })
-    const payload = (await response.json().catch(() => null)) as
-      | { ok: boolean; message?: string }
-      | null
+    const payload = (await response.json().catch(() => null)) as {
+      ok: boolean
+      message?: string
+    } | null
     setBusy(false)
     if (!response.ok || !payload?.ok) {
       showError(payload?.message ?? 'No se pudo eliminar asignación.')
@@ -379,9 +384,10 @@ export default function AdminDocentesPage() {
         timezone,
       }),
     })
-    const payload = (await response.json().catch(() => null)) as
-      | { ok: boolean; message?: string }
-      | null
+    const payload = (await response.json().catch(() => null)) as {
+      ok: boolean
+      message?: string
+    } | null
     if (!response.ok || !payload?.ok) {
       showError(payload?.message ?? 'No se pudo crear horario.')
       return
@@ -396,9 +402,10 @@ export default function AdminDocentesPage() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ slot_id: slotId }),
     })
-    const payload = (await response.json().catch(() => null)) as
-      | { ok: boolean; message?: string }
-      | null
+    const payload = (await response.json().catch(() => null)) as {
+      ok: boolean
+      message?: string
+    } | null
     if (!response.ok || !payload?.ok) {
       showError(payload?.message ?? 'No se pudo eliminar horario.')
       return
@@ -506,7 +513,10 @@ export default function AdminDocentesPage() {
             <div className="grid gap-3 md:grid-cols-2">
               <div className="space-y-2">
                 <Label>Docente</Label>
-                <Select value={selectedDocente} onValueChange={setSelectedDocente}>
+                <Select
+                  value={selectedDocente}
+                  onValueChange={setSelectedDocente}
+                >
                   <SelectTrigger className="border-slate-800 bg-slate-950">
                     <SelectValue placeholder="Selecciona docente" />
                   </SelectTrigger>
@@ -593,10 +603,12 @@ export default function AdminDocentesPage() {
                           </Badge>
                         ) : null}
                       </div>
-                      <div className="text-xs text-slate-400">{docente.email}</div>
                       <div className="text-xs text-slate-400">
-                        Equipos activos: {docente.active_assignments_count} · Último
-                        login: {formatDate(docente.last_login_at)}
+                        {docente.email}
+                      </div>
+                      <div className="text-xs text-slate-400">
+                        Equipos activos: {docente.active_assignments_count} ·
+                        Último login: {formatDate(docente.last_login_at)}
                       </div>
                     </div>
 
@@ -716,7 +728,8 @@ export default function AdminDocentesPage() {
                           )}
                         </div>
                         <div className="truncate text-xs text-slate-400">
-                          {programTitle} · {editionName} · {team?.name ?? 'Equipo'}
+                          {programTitle} · {editionName} ·{' '}
+                          {team?.name ?? 'Equipo'}
                         </div>
                         {assignment.staff_role ? (
                           <div className="text-xs text-slate-500">
@@ -834,4 +847,3 @@ export default function AdminDocentesPage() {
     </div>
   )
 }
-

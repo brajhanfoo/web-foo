@@ -75,4 +75,3 @@ export function DocenteShell({
     </div>
   )
 }
-

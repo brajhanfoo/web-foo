@@ -17,7 +17,8 @@ type SidebarLinkProps = {
 function SidebarLink({ href, label, Icon, onNavigate }: SidebarLinkProps) {
   const pathname = usePathname()
   const active =
-    pathname === href || (href !== '/plataforma/docente' && pathname.startsWith(href))
+    pathname === href ||
+    (href !== '/plataforma/docente' && pathname.startsWith(href))
 
   return (
     <Link

@@ -21,7 +21,10 @@ import { Textarea } from '@/components/ui/textarea'
 type TeamRef = {
   id: string
   name: string
-  edition?: { edition_name?: string; program?: { title?: string } | null } | null
+  edition?: {
+    edition_name?: string
+    program?: { title?: string } | null
+  } | null
 }
 
 type MilestoneRef = {
@@ -86,9 +89,9 @@ export default function AdminEntregablesPage() {
   const [submissionMode, setSubmissionMode] = useState<'team' | 'individual'>(
     'team'
   )
-  const [gradingMode, setGradingMode] = useState<'score_100' | 'pass_fail' | 'none'>(
-    'score_100'
-  )
+  const [gradingMode, setGradingMode] = useState<
+    'score_100' | 'pass_fail' | 'none'
+  >('score_100')
   const [deadlineAt, setDeadlineAt] = useState('')
   const [allowResubmission, setAllowResubmission] = useState(false)
   const [resubDeadlineAt, setResubDeadlineAt] = useState('')
@@ -100,18 +103,18 @@ export default function AdminEntregablesPage() {
   async function loadReferences(nextTeamId?: string) {
     const effectiveTeam = nextTeamId ?? teamId
     const query =
-      effectiveTeam && effectiveTeam !== 'none' ? `?team_id=${effectiveTeam}` : ''
+      effectiveTeam && effectiveTeam !== 'none'
+        ? `?team_id=${effectiveTeam}`
+        : ''
     const response = await fetch(`/api/plataforma/tasks/references${query}`, {
       cache: 'no-store',
     })
-    const payload = (await response.json().catch(() => null)) as
-      | {
-          ok: boolean
-          teams?: TeamRef[]
-          milestones?: MilestoneRef[]
-          message?: string
-        }
-      | null
+    const payload = (await response.json().catch(() => null)) as {
+      ok: boolean
+      teams?: TeamRef[]
+      milestones?: MilestoneRef[]
+      message?: string
+    } | null
     if (!response.ok || !payload?.ok) {
       showError(payload?.message ?? 'No se pudieron cargar referencias.')
       return
@@ -132,9 +135,11 @@ export default function AdminEntregablesPage() {
         cache: 'no-store',
       }
     )
-    const payload = (await response.json().catch(() => null)) as
-      | { ok: boolean; assignments?: Assignment[]; message?: string }
-      | null
+    const payload = (await response.json().catch(() => null)) as {
+      ok: boolean
+      assignments?: Assignment[]
+      message?: string
+    } | null
     if (!response.ok || !payload?.ok) {
       showError(payload?.message ?? 'No se pudieron cargar tareas.')
       return
@@ -182,14 +187,17 @@ export default function AdminEntregablesPage() {
         grading_mode: gradingMode,
         deadline_at: deadlineAt || null,
         allow_resubmission: allowResubmission,
-        resubmission_deadline_at: allowResubmission ? resubDeadlineAt || null : null,
+        resubmission_deadline_at: allowResubmission
+          ? resubDeadlineAt || null
+          : null,
         max_attempts: Number(maxAttempts),
         status: initialStatus,
       }),
     })
-    const payload = (await response.json().catch(() => null)) as
-      | { ok: boolean; message?: string }
-      | null
+    const payload = (await response.json().catch(() => null)) as {
+      ok: boolean
+      message?: string
+    } | null
     setBusy(false)
     if (!response.ok || !payload?.ok) {
       showError(payload?.message ?? 'No se pudo crear tarea.')
@@ -218,9 +226,10 @@ export default function AdminEntregablesPage() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ assignment_id: assignmentId, status }),
     })
-    const payload = (await response.json().catch(() => null)) as
-      | { ok: boolean; message?: string }
-      | null
+    const payload = (await response.json().catch(() => null)) as {
+      ok: boolean
+      message?: string
+    } | null
     setBusy(false)
     if (!response.ok || !payload?.ok) {
       showError(payload?.message ?? 'No se pudo actualizar estado.')
@@ -241,9 +250,10 @@ export default function AdminEntregablesPage() {
         resubmission_deadline_at: resubDeadlineAt || null,
       }),
     })
-    const payload = (await response.json().catch(() => null)) as
-      | { ok: boolean; message?: string }
-      | null
+    const payload = (await response.json().catch(() => null)) as {
+      ok: boolean
+      message?: string
+    } | null
     setBusy(false)
     if (!response.ok || !payload?.ok) {
       showError(payload?.message ?? 'No se pudo habilitar reentrega.')
@@ -282,7 +292,10 @@ export default function AdminEntregablesPage() {
           <div className="grid gap-3 md:grid-cols-2">
             <div className="space-y-2">
               <Label>Equipo</Label>
-              <Select value={teamId} onValueChange={(value) => void handleTeamChange(value)}>
+              <Select
+                value={teamId}
+                onValueChange={(value) => void handleTeamChange(value)}
+              >
                 <SelectTrigger className="border-slate-800 bg-slate-950">
                   <SelectValue placeholder="Selecciona equipo" />
                 </SelectTrigger>
@@ -461,7 +474,9 @@ export default function AdminEntregablesPage() {
               Selecciona un equipo para ver tareas.
             </div>
           ) : assignments.length === 0 ? (
-            <div className="text-sm text-slate-400">No hay tareas asignadas.</div>
+            <div className="text-sm text-slate-400">
+              No hay tareas asignadas.
+            </div>
           ) : (
             assignments.map((assignment) => (
               <div
@@ -528,4 +543,3 @@ export default function AdminEntregablesPage() {
     </div>
   )
 }
-

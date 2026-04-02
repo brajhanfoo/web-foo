@@ -57,12 +57,10 @@ export function PlatformNotificationsMenu({
     const response = await fetch('/api/plataforma/notifications?limit=20', {
       cache: 'no-store',
     })
-    const payload = (await response.json().catch(() => null)) as
-      | {
-          ok: boolean
-          notifications?: NotificationRow[]
-        }
-      | null
+    const payload = (await response.json().catch(() => null)) as {
+      ok: boolean
+      notifications?: NotificationRow[]
+    } | null
 
     if (response.ok && payload?.ok) {
       setRows(payload.notifications ?? [])
@@ -204,4 +202,3 @@ export function PlatformNotificationsMenu({
     </DropdownMenu>
   )
 }
-

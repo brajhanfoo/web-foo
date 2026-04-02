@@ -1,7 +1,10 @@
 import { NextResponse } from 'next/server'
 
 import { touchPlatformActivity } from '@/lib/platform/activity'
-import { emailTeamMembers, notifyTeamMembers } from '@/lib/platform/notifications'
+import {
+  emailTeamMembers,
+  notifyTeamMembers,
+} from '@/lib/platform/notifications'
 import { canManageTeam } from '@/lib/platform/permissions'
 import { isAdminRole, requirePlatformProfile } from '@/lib/platform/security'
 import { sanitizeFeedbackComment } from '@/lib/platform/submissions'
@@ -68,7 +71,10 @@ export async function POST(
   }
 
   const body = (await request.json().catch(() => ({}))) as FeedbackBody
-  const comment = sanitizeFeedbackComment(sanitizeText(body.comment, 5000), 5000)
+  const comment = sanitizeFeedbackComment(
+    sanitizeText(body.comment, 5000),
+    5000
+  )
   const status =
     body.status === 'approved' ||
     body.status === 'rejected' ||
@@ -176,4 +182,3 @@ export async function POST(
 
   return NextResponse.json({ ok: true, feedback_id: feedback.id })
 }
-

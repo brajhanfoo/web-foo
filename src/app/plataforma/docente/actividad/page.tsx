@@ -79,7 +79,8 @@ export default function DocenteActivityPage() {
             {payload.totals.total} estudiantes
           </Badge>
           <Badge className="border border-amber-500/40 bg-amber-500/10 text-amber-200">
-            {payload.totals.inactive} inactivos (&gt;= {payload.threshold_days} días)
+            {payload.totals.inactive} inactivos (&gt;= {payload.threshold_days}{' '}
+            días)
           </Badge>
         </CardContent>
       </Card>
@@ -127,4 +128,3 @@ export default function DocenteActivityPage() {
     </div>
   )
 }
-

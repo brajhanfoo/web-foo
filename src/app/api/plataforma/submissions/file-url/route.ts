@@ -61,7 +61,8 @@ export async function GET(request: Request) {
     )
   }
 
-  const bucket = sanitizeText(submission.file_bucket_id, 120) || 'task-submissions'
+  const bucket =
+    sanitizeText(submission.file_bucket_id, 120) || 'task-submissions'
   const { data: signed, error: signedError } = await supabaseAdmin.storage
     .from(bucket)
     .createSignedUrl(submission.file_path, 600)
@@ -75,4 +76,3 @@ export async function GET(request: Request) {
 
   return NextResponse.json({ ok: true, signed_url: signed.signedUrl })
 }
-

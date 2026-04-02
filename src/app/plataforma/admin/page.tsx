@@ -117,7 +117,10 @@ export default function AdminHomePage() {
         <Card className="border border-slate-800 bg-slate-900 text-slate-100">
           <CardHeader>
             <h2 className="flex items-center gap-2 text-base text-balance font-semibold leading-none tracking-tight">
-              <Briefcase className="h-4 w-4 text-emerald-300" aria-hidden="true" />
+              <Briefcase
+                className="h-4 w-4 text-emerald-300"
+                aria-hidden="true"
+              />
               Docentes
             </h2>
             <p className="text-sm text-slate-300 text-pretty">

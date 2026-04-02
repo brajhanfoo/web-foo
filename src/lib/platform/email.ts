@@ -47,4 +47,3 @@ export async function sendTransactionalEmail(
     cache: 'no-store',
   }).catch(() => null)
 }
-

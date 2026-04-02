@@ -30,9 +30,11 @@ export default function DocenteHomePage() {
       const response = await fetch('/api/plataforma/docente/teams', {
         cache: 'no-store',
       })
-      const payload = (await response.json().catch(() => null)) as
-        | { ok: boolean; teams?: TeamRow[]; message?: string }
-        | null
+      const payload = (await response.json().catch(() => null)) as {
+        ok: boolean
+        teams?: TeamRow[]
+        message?: string
+      } | null
       if (!response.ok || !payload?.ok) {
         showError(payload?.message ?? 'No se pudieron cargar equipos.')
         setLoading(false)
@@ -113,4 +115,3 @@ export default function DocenteHomePage() {
     </div>
   )
 }
-

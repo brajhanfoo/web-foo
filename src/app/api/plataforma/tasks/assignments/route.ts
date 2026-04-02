@@ -1,9 +1,16 @@
 import { NextResponse } from 'next/server'
 
 import { touchPlatformActivity } from '@/lib/platform/activity'
-import { emailTeamMembers, notifyTeamMembers } from '@/lib/platform/notifications'
+import {
+  emailTeamMembers,
+  notifyTeamMembers,
+} from '@/lib/platform/notifications'
 import { canManageTeam } from '@/lib/platform/permissions'
-import { canManageTasks, isAdminRole, requirePlatformProfile } from '@/lib/platform/security'
+import {
+  canManageTasks,
+  isAdminRole,
+  requirePlatformProfile,
+} from '@/lib/platform/security'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 
 type CreateAssignmentBody = {
@@ -100,7 +107,10 @@ export async function GET(request: Request) {
   if (teamId) {
     query = query.eq('team_id', teamId)
     if (!isAdminRole(auth.profile.role)) {
-      const allowed = await assertTaskManagementPermission(auth.profile.id, teamId)
+      const allowed = await assertTaskManagementPermission(
+        auth.profile.id,
+        teamId
+      )
       if (!allowed) {
         return NextResponse.json(
           { ok: false, message: 'Sin permisos para este equipo.' },
@@ -238,7 +248,9 @@ export async function POST(request: Request) {
       created_by: auth.profile.id,
       deadline_at: normalizeDateTime(body.deadline_at),
       allow_resubmission: Boolean(body.allow_resubmission),
-      resubmission_deadline_at: normalizeDateTime(body.resubmission_deadline_at),
+      resubmission_deadline_at: normalizeDateTime(
+        body.resubmission_deadline_at
+      ),
       max_attempts:
         typeof body.max_attempts === 'number' && body.max_attempts > 0
           ? Math.floor(body.max_attempts)
@@ -254,7 +266,10 @@ export async function POST(request: Request) {
 
   if (assignmentError || !assignment) {
     return NextResponse.json(
-      { ok: false, message: assignmentError?.message ?? 'No se pudo crear tarea.' },
+      {
+        ok: false,
+        message: assignmentError?.message ?? 'No se pudo crear tarea.',
+      },
       { status: 400 }
     )
   }
@@ -351,12 +366,17 @@ export async function PATCH(request: Request) {
     patch.allow_resubmission = body.allow_resubmission
   }
   if (Object.prototype.hasOwnProperty.call(body, 'resubmission_deadline_at')) {
-    patch.resubmission_deadline_at = normalizeDateTime(body.resubmission_deadline_at)
+    patch.resubmission_deadline_at = normalizeDateTime(
+      body.resubmission_deadline_at
+    )
   }
   if (typeof body.max_attempts === 'number' && body.max_attempts > 0) {
     patch.max_attempts = Math.floor(body.max_attempts)
   }
-  if (body.submission_mode === 'team' || body.submission_mode === 'individual') {
+  if (
+    body.submission_mode === 'team' ||
+    body.submission_mode === 'individual'
+  ) {
     patch.submission_mode = body.submission_mode
   }
   if (
@@ -398,7 +418,10 @@ export async function PATCH(request: Request) {
 
   if (updateError || !updated) {
     return NextResponse.json(
-      { ok: false, message: updateError?.message ?? 'No se pudo actualizar tarea.' },
+      {
+        ok: false,
+        message: updateError?.message ?? 'No se pudo actualizar tarea.',
+      },
       { status: 400 }
     )
   }
@@ -452,4 +475,3 @@ export async function PATCH(request: Request) {
 
   return NextResponse.json({ ok: true, assignment: updated })
 }
-

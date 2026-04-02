@@ -4,7 +4,11 @@ import { createClient } from '@/lib/supabase/server'
 
 import { DocenteShell } from './components/docente-shell'
 
-function displayName(firstName: string | null, lastName: string | null, fallback: string) {
+function displayName(
+  firstName: string | null,
+  lastName: string | null,
+  fallback: string
+) {
   const name = `${firstName ?? ''} ${lastName ?? ''}`.trim()
   return name || fallback
 }
@@ -28,7 +32,8 @@ export default async function DocenteLayout({
     .maybeSingle()
 
   const role = profile?.role ?? null
-  const allowed = role === 'docente' || role === 'admin' || role === 'super_admin'
+  const allowed =
+    role === 'docente' || role === 'admin' || role === 'super_admin'
   if (!allowed) {
     redirect('/plataforma')
   }
@@ -41,4 +46,3 @@ export default async function DocenteLayout({
 
   return <DocenteShell displayName={name}>{children}</DocenteShell>
 }
-

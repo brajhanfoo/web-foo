@@ -79,7 +79,12 @@ type WorkspaceTaskSubmission = {
   file_name: string | null
   attempt_number: number
   is_resubmission: boolean
-  status: 'submitted' | 'changes_requested' | 'approved' | 'rejected' | 'reviewed'
+  status:
+    | 'submitted'
+    | 'changes_requested'
+    | 'approved'
+    | 'rejected'
+    | 'reviewed'
   submitted_at: string
   latest_feedback: {
     feedback_id: string
@@ -304,9 +309,11 @@ export default function WorkspacePage() {
     const response = await fetch(
       `/api/plataforma/submissions/file-url?submission_id=${submissionId}`
     )
-    const payload = (await response.json().catch(() => null)) as
-      | { ok: boolean; signed_url?: string; message?: string }
-      | null
+    const payload = (await response.json().catch(() => null)) as {
+      ok: boolean
+      signed_url?: string
+      message?: string
+    } | null
     if (!response.ok || !payload?.ok || !payload.signed_url) {
       showErrorRef.current(payload?.message ?? 'No se pudo abrir archivo')
       return
@@ -324,17 +331,20 @@ export default function WorkspacePage() {
     setSubmittingTask(true)
     const formData = new FormData()
     formData.append('task_assignment_id', submissionDialogTaskId)
-    if (submissionLink.trim()) formData.append('link_url', submissionLink.trim())
-    if (submissionComment.trim()) formData.append('comment', submissionComment.trim())
+    if (submissionLink.trim())
+      formData.append('link_url', submissionLink.trim())
+    if (submissionComment.trim())
+      formData.append('comment', submissionComment.trim())
     if (submissionFile) formData.append('file', submissionFile)
 
     const response = await fetch('/api/plataforma/submissions', {
       method: 'POST',
       body: formData,
     })
-    const payload = (await response.json().catch(() => null)) as
-      | { ok: boolean; message?: string }
-      | null
+    const payload = (await response.json().catch(() => null)) as {
+      ok: boolean
+      message?: string
+    } | null
     setSubmittingTask(false)
 
     if (!response.ok || !payload?.ok) {

@@ -23,4 +23,3 @@ export async function touchPlatformActivity(input: TouchActivityInput) {
 
   await supabaseAdmin.rpc('touch_user_activity', payload)
 }
-

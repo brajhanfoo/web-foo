@@ -35,7 +35,12 @@ type SubmissionRow = {
   file_path: string | null
   file_name: string | null
   attempt_number: number
-  status: 'submitted' | 'changes_requested' | 'approved' | 'rejected' | 'reviewed'
+  status:
+    | 'submitted'
+    | 'changes_requested'
+    | 'approved'
+    | 'rejected'
+    | 'reviewed'
   submitted_at: string
   latest_feedback: {
     feedback_id: string
@@ -116,7 +121,9 @@ export default function DocenteTeamWorkspacePage() {
   const [maxAttempts, setMaxAttempts] = useState('1')
   const [status, setStatus] = useState<'draft' | 'published'>('draft')
 
-  const [reviewSubmissionId, setReviewSubmissionId] = useState<string | null>(null)
+  const [reviewSubmissionId, setReviewSubmissionId] = useState<string | null>(
+    null
+  )
   const [reviewStatus, setReviewStatus] = useState<
     'changes_requested' | 'approved' | 'rejected' | 'reviewed'
   >('reviewed')
@@ -125,9 +132,12 @@ export default function DocenteTeamWorkspacePage() {
 
   async function loadWorkspace() {
     setLoading(true)
-    const response = await fetch(`/api/plataforma/docente/teams/${teamId}/workspace`, {
-      cache: 'no-store',
-    })
+    const response = await fetch(
+      `/api/plataforma/docente/teams/${teamId}/workspace`,
+      {
+        cache: 'no-store',
+      }
+    )
     const payload = (await response.json().catch(() => null)) as
       | WorkspacePayload
       | { ok: false; message?: string }
@@ -180,9 +190,10 @@ export default function DocenteTeamWorkspacePage() {
         status,
       }),
     })
-    const payload = (await response.json().catch(() => null)) as
-      | { ok: boolean; message?: string }
-      | null
+    const payload = (await response.json().catch(() => null)) as {
+      ok: boolean
+      message?: string
+    } | null
     setBusy(false)
     if (!response.ok || !payload?.ok) {
       showError(payload?.message ?? 'No se pudo crear tarea.')
@@ -216,9 +227,10 @@ export default function DocenteTeamWorkspacePage() {
         }),
       }
     )
-    const payload = (await response.json().catch(() => null)) as
-      | { ok: boolean; message?: string }
-      | null
+    const payload = (await response.json().catch(() => null)) as {
+      ok: boolean
+      message?: string
+    } | null
     setBusy(false)
     if (!response.ok || !payload?.ok) {
       showError(payload?.message ?? 'No se pudo guardar feedback.')
@@ -236,9 +248,11 @@ export default function DocenteTeamWorkspacePage() {
     const response = await fetch(
       `/api/plataforma/submissions/file-url?submission_id=${submissionId}`
     )
-    const payload = (await response.json().catch(() => null)) as
-      | { ok: boolean; signed_url?: string; message?: string }
-      | null
+    const payload = (await response.json().catch(() => null)) as {
+      ok: boolean
+      signed_url?: string
+      message?: string
+    } | null
     if (!response.ok || !payload?.ok || !payload.signed_url) {
       showError(payload?.message ?? 'No se pudo abrir archivo.')
       return
@@ -344,7 +358,9 @@ export default function DocenteTeamWorkspacePage() {
             />
             <Select
               value={status}
-              onValueChange={(value) => setStatus(value as 'draft' | 'published')}
+              onValueChange={(value) =>
+                setStatus(value as 'draft' | 'published')
+              }
             >
               <SelectTrigger className="border-slate-800 bg-slate-950">
                 <SelectValue placeholder="Estado inicial" />
@@ -386,7 +402,8 @@ export default function DocenteTeamWorkspacePage() {
                     </div>
                     <div className="text-xs text-slate-400">
                       Modo: {assignment.submission_mode} · Estado:{' '}
-                      {assignment.status} · Deadline: {formatDate(assignment.deadline_at)}
+                      {assignment.status} · Deadline:{' '}
+                      {formatDate(assignment.deadline_at)}
                     </div>
                   </div>
                   <Badge className="border border-slate-700 bg-slate-800 text-slate-100">
@@ -427,14 +444,19 @@ export default function DocenteTeamWorkspacePage() {
                               <Button
                                 size="sm"
                                 variant="secondary"
-                                onClick={() => void openSubmissionFile(submission.id)}
+                                onClick={() =>
+                                  void openSubmissionFile(submission.id)
+                                }
                               >
-                                Archivo <ExternalLink className="ml-1 h-3 w-3" />
+                                Archivo{' '}
+                                <ExternalLink className="ml-1 h-3 w-3" />
                               </Button>
                             ) : null}
                             <Button
                               size="sm"
-                              onClick={() => setReviewSubmissionId(submission.id)}
+                              onClick={() =>
+                                setReviewSubmissionId(submission.id)
+                              }
                             >
                               <MessageSquareText className="mr-1 h-3 w-3" />
                               Revisar
@@ -444,7 +466,8 @@ export default function DocenteTeamWorkspacePage() {
 
                         {submission.latest_feedback?.comment ? (
                           <div className="mt-2 text-xs text-slate-400">
-                            Último feedback: {submission.latest_feedback.comment}
+                            Último feedback:{' '}
+                            {submission.latest_feedback.comment}
                           </div>
                         ) : null}
                       </div>
@@ -497,7 +520,9 @@ export default function DocenteTeamWorkspacePage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="reviewed">Revisado</SelectItem>
-                <SelectItem value="changes_requested">Cambios solicitados</SelectItem>
+                <SelectItem value="changes_requested">
+                  Cambios solicitados
+                </SelectItem>
                 <SelectItem value="approved">Aprobado</SelectItem>
                 <SelectItem value="rejected">Rechazado</SelectItem>
               </SelectContent>
@@ -534,4 +559,3 @@ export default function DocenteTeamWorkspacePage() {
     </div>
   )
 }
-

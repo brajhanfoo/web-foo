@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase/client'
 import { getPasswordError } from '@/lib/validation/password'
@@ -12,7 +12,7 @@ import {
   HiEyeSlash,
 } from 'react-icons/hi2'
 
-export default function UpdatePasswordPage() {
+function UpdatePasswordPageContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const requiredReset = searchParams.get('required') === '1'
@@ -310,5 +310,21 @@ export default function UpdatePasswordPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+function UpdatePasswordPageFallback() {
+  return (
+    <div className="relative min-h-screen bg-black flex items-center justify-center px-4">
+      <p className="text-sm text-white/60">Cargando...</p>
+    </div>
+  )
+}
+
+export default function UpdatePasswordPage() {
+  return (
+    <Suspense fallback={<UpdatePasswordPageFallback />}>
+      <UpdatePasswordPageContent />
+    </Suspense>
   )
 }

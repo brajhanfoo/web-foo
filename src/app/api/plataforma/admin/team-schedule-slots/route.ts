@@ -43,7 +43,9 @@ export async function GET(request: Request) {
 
   const { data, error } = await supabaseAdmin
     .from('team_schedule_slots')
-    .select('id, team_id, day_of_week, start_time, end_time, timezone, is_active')
+    .select(
+      'id, team_id, day_of_week, start_time, end_time, timezone, is_active'
+    )
     .eq('team_id', teamId)
     .order('day_of_week', { ascending: true })
     .order('start_time', { ascending: true })
@@ -87,7 +89,10 @@ export async function POST(request: Request) {
     )
   }
 
-  if (!/^\d{2}:\d{2}(:\d{2})?$/.test(startTime) || !/^\d{2}:\d{2}(:\d{2})?$/.test(endTime)) {
+  if (
+    !/^\d{2}:\d{2}(:\d{2})?$/.test(startTime) ||
+    !/^\d{2}:\d{2}(:\d{2})?$/.test(endTime)
+  ) {
     return NextResponse.json(
       { ok: false, message: 'Formato de hora inválido.' },
       { status: 400 }
@@ -104,7 +109,9 @@ export async function POST(request: Request) {
       timezone,
       is_active: true,
     })
-    .select('id, team_id, day_of_week, start_time, end_time, timezone, is_active')
+    .select(
+      'id, team_id, day_of_week, start_time, end_time, timezone, is_active'
+    )
     .maybeSingle()
 
   if (error || !data) {
@@ -155,4 +162,3 @@ export async function DELETE(request: Request) {
 
   return NextResponse.json({ ok: true })
 }
-

@@ -1,9 +1,6 @@
 import { NextResponse } from 'next/server'
 
-import {
-  isDocenteAssigned,
-  isTeamMember,
-} from '@/lib/platform/permissions'
+import { isDocenteAssigned, isTeamMember } from '@/lib/platform/permissions'
 import { isAdminRole, requirePlatformProfile } from '@/lib/platform/security'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 
@@ -105,8 +102,9 @@ export async function GET(request: Request) {
   }
 
   const submissionRows =
-    ((submissionsRes.data ?? []) as unknown as Array<Record<string, unknown>>) ??
-    []
+    ((submissionsRes.data ?? []) as unknown as Array<
+      Record<string, unknown>
+    >) ?? []
 
   const visibleSubmissions = submissionRows.filter((submission) => {
     const scope = String(submission.submission_scope ?? '')
@@ -133,7 +131,8 @@ export async function GET(request: Request) {
   }
 
   const feedbackRows =
-    ((feedbackRes.data ?? []) as unknown as Array<Record<string, unknown>>) ?? []
+    ((feedbackRes.data ?? []) as unknown as Array<Record<string, unknown>>) ??
+    []
 
   const feedbackBySubmission = new Map<string, Record<string, unknown>>(
     feedbackRows.map((row) => [String(row.submission_id), row])
@@ -141,7 +140,11 @@ export async function GET(request: Request) {
 
   const submissionsByAssignment = new Map<
     string,
-    Array<Record<string, unknown> & { latest_feedback: Record<string, unknown> | null }>
+    Array<
+      Record<string, unknown> & {
+        latest_feedback: Record<string, unknown> | null
+      }
+    >
   >()
 
   for (const submission of visibleSubmissions) {
@@ -149,8 +152,7 @@ export async function GET(request: Request) {
     const previous = submissionsByAssignment.get(assignmentId) ?? []
     previous.push({
       ...(submission as Record<string, unknown>),
-      latest_feedback:
-        feedbackBySubmission.get(String(submission.id)) ?? null,
+      latest_feedback: feedbackBySubmission.get(String(submission.id)) ?? null,
     })
     submissionsByAssignment.set(assignmentId, previous)
   }

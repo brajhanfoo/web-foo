@@ -293,7 +293,8 @@ export default function AdminActivityPage() {
                   </div>
                   <div className="text-xs text-slate-400">{row.email}</div>
                   <div className="text-xs text-slate-500">
-                    {row.program_title ?? 'Programa'} · {row.team_name ?? 'Sin equipo'} ·{' '}
+                    {row.program_title ?? 'Programa'} ·{' '}
+                    {row.team_name ?? 'Sin equipo'} ·{' '}
                     {row.inactive_for_days ?? 0} días inactivo
                   </div>
                 </div>
@@ -339,4 +340,3 @@ export default function AdminActivityPage() {
     </div>
   )
 }
-

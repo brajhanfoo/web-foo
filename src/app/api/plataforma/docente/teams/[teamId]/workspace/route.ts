@@ -42,32 +42,35 @@ export async function GET(
     )
   }
 
-  const [teamRes, milestonesRes, assignmentsRes, membersRes] = await Promise.all([
-    supabaseAdmin
-      .from('program_edition_teams')
-      .select(
-        'id, name, edition_id, edition:program_editions(id, edition_name, program_id, program:programs(id, title))'
-      )
-      .eq('id', targetTeamId)
-      .maybeSingle(),
-    supabaseAdmin
-      .from('program_edition_milestones')
-      .select('id, title, position, starts_at')
-      .eq('team_id', targetTeamId)
-      .order('position', { ascending: true, nullsFirst: false }),
-    supabaseAdmin
-      .from('task_assignments')
-      .select(
-        'id, milestone_id, submission_mode, deadline_at, allow_resubmission, resubmission_deadline_at, max_attempts, grading_mode, status, created_at, task_template:task_templates(id, title, description, instructions)'
-      )
-      .eq('team_id', targetTeamId)
-      .order('created_at', { ascending: true }),
-    supabaseAdmin
-      .from('applications')
-      .select('id, applicant_profile_id, assigned_role, applicant:profiles(id, first_name, last_name, email)')
-      .eq('team_id', targetTeamId)
-      .eq('status', 'enrolled'),
-  ])
+  const [teamRes, milestonesRes, assignmentsRes, membersRes] =
+    await Promise.all([
+      supabaseAdmin
+        .from('program_edition_teams')
+        .select(
+          'id, name, edition_id, edition:program_editions(id, edition_name, program_id, program:programs(id, title))'
+        )
+        .eq('id', targetTeamId)
+        .maybeSingle(),
+      supabaseAdmin
+        .from('program_edition_milestones')
+        .select('id, title, position, starts_at')
+        .eq('team_id', targetTeamId)
+        .order('position', { ascending: true, nullsFirst: false }),
+      supabaseAdmin
+        .from('task_assignments')
+        .select(
+          'id, milestone_id, submission_mode, deadline_at, allow_resubmission, resubmission_deadline_at, max_attempts, grading_mode, status, created_at, task_template:task_templates(id, title, description, instructions)'
+        )
+        .eq('team_id', targetTeamId)
+        .order('created_at', { ascending: true }),
+      supabaseAdmin
+        .from('applications')
+        .select(
+          'id, applicant_profile_id, assigned_role, applicant:profiles(id, first_name, last_name, email)'
+        )
+        .eq('team_id', targetTeamId)
+        .eq('status', 'enrolled'),
+    ])
 
   if (teamRes.error || !teamRes.data) {
     return NextResponse.json(
@@ -118,15 +121,18 @@ export async function GET(
 
   const submissionsByAssignment = new Map<
     string,
-    Array<Record<string, unknown> & { latest_feedback: Record<string, unknown> | null }>
+    Array<
+      Record<string, unknown> & {
+        latest_feedback: Record<string, unknown> | null
+      }
+    >
   >()
   for (const submission of submissionsRes.data ?? []) {
     const key = String(submission.task_assignment_id)
     const bucket = submissionsByAssignment.get(key) ?? []
     bucket.push({
       ...(submission as Record<string, unknown>),
-      latest_feedback:
-        feedbackBySubmission.get(String(submission.id)) ?? null,
+      latest_feedback: feedbackBySubmission.get(String(submission.id)) ?? null,
     })
     submissionsByAssignment.set(key, bucket)
   }
@@ -144,4 +150,3 @@ export async function GET(
     members: membersRes.data ?? [],
   })
 }
-

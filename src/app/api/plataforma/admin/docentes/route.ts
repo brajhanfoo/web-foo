@@ -67,7 +67,12 @@ export async function GET() {
       .order('name', { ascending: true }),
   ])
 
-  if (areasRes.error || docentesRes.error || assignmentsRes.error || teamsRes.error) {
+  if (
+    areasRes.error ||
+    docentesRes.error ||
+    assignmentsRes.error ||
+    teamsRes.error
+  ) {
     return NextResponse.json(
       { ok: false, message: 'No se pudo cargar la data de docentes.' },
       { status: 400 }
@@ -180,7 +185,10 @@ export async function POST(request: Request) {
 
   if (profileError) {
     return NextResponse.json(
-      { ok: false, message: 'Se creó auth user, pero falló el perfil docente.' },
+      {
+        ok: false,
+        message: 'Se creó auth user, pero falló el perfil docente.',
+      },
       { status: 400 }
     )
   }
@@ -210,4 +218,3 @@ export async function POST(request: Request) {
     temporary_password: temporaryPassword,
   })
 }
-

@@ -41,4 +41,3 @@ export function ActivityTracker({ intervalMs = 120000 }: ActivityTrackerProps) {
 
   return null
 }
-

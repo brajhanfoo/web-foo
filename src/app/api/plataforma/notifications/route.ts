@@ -58,7 +58,9 @@ export async function PATCH(request: Request) {
     )
   }
 
-  const body = (await request.json().catch(() => ({}))) as NotificationsPatchBody
+  const body = (await request
+    .json()
+    .catch(() => ({}))) as NotificationsPatchBody
   const ids = Array.isArray(body.ids)
     ? body.ids.filter((value) => typeof value === 'string' && value.trim())
     : []
@@ -91,4 +93,3 @@ export async function PATCH(request: Request) {
 
   return NextResponse.json({ ok: true })
 }
-
