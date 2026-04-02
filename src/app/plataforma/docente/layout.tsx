@@ -32,9 +32,7 @@ export default async function DocenteLayout({
     .maybeSingle()
 
   if (profile?.password_reset_required) {
-    redirect(
-      '/update-password?required=1&redirectTo=%2Fplataforma%2Fdocente'
-    )
+    redirect('/update-password?required=1&redirectTo=%2Fplataforma%2Fdocente')
   }
 
   const role = profile?.role ?? null

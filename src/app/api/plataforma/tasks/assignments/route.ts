@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server'
+﻿import { NextResponse } from 'next/server'
 
 import { touchPlatformActivity } from '@/lib/platform/activity'
 import {
@@ -31,6 +31,9 @@ type CreateAssignmentBody = {
 
 type PatchAssignmentBody = {
   assignment_id?: string
+  title?: string | null
+  description?: string | null
+  instructions?: string | null
   deadline_at?: string | null
   allow_resubmission?: boolean
   resubmission_deadline_at?: string | null
@@ -74,6 +77,13 @@ export async function GET(request: Request) {
 
   const url = new URL(request.url)
   const teamId = url.searchParams.get('team_id')?.trim() ?? ''
+
+  if (!teamId && !isAdminRole(auth.profile.role)) {
+    return NextResponse.json(
+      { ok: false, message: 'team_id es obligatorio para este rol.' },
+      { status: 400 }
+    )
+  }
 
   let query = supabaseAdmin
     .from('task_assignments')
@@ -232,8 +242,31 @@ export async function POST(request: Request) {
 
   if (editionError || !editionRow?.program_id) {
     return NextResponse.json(
-      { ok: false, message: 'No se pudo resolver programa/edición.' },
+      { ok: false, message: 'No se pudo resolver programa/ediciÃ³n.' },
       { status: 404 }
+    )
+  }
+
+  const { data: milestoneRow, error: milestoneError } = await supabaseAdmin
+    .from('program_edition_milestones')
+    .select('id, team_id, edition_id')
+    .eq('id', milestoneId)
+    .maybeSingle()
+
+  if (milestoneError || !milestoneRow?.id) {
+    return NextResponse.json(
+      { ok: false, message: 'Hito no encontrado.' },
+      { status: 404 }
+    )
+  }
+
+  if (
+    milestoneRow.team_id !== teamId ||
+    milestoneRow.edition_id !== teamRow.edition_id
+  ) {
+    return NextResponse.json(
+      { ok: false, message: 'El hito no pertenece al equipo/edicion indicada.' },
+      { status: 400 }
     )
   }
 
@@ -278,8 +311,8 @@ export async function POST(request: Request) {
     const title = 'Nueva tarea publicada'
     const bodyText =
       assignment.submission_mode === 'team'
-        ? 'Se publicó una tarea con entrega por equipo.'
-        : 'Se publicó una tarea con entrega individual.'
+        ? 'Se publicÃ³ una tarea con entrega por equipo.'
+        : 'Se publicÃ³ una tarea con entrega individual.'
 
     await notifyTeamMembers({
       teamId,
@@ -301,7 +334,7 @@ export async function POST(request: Request) {
   await touchPlatformActivity({
     userId: auth.profile.id,
     activityType: 'task_assignment_created',
-    route: '/plataforma/entregables',
+    route: '/plataforma/admin/programas',
     teamId,
     editionId: teamRow.edition_id,
     programId: editionRow.program_id,
@@ -337,7 +370,7 @@ export async function PATCH(request: Request) {
 
   const { data: currentRow, error: currentError } = await supabaseAdmin
     .from('task_assignments')
-    .select('id, team_id, edition_id, program_id, status')
+    .select('id, team_id, edition_id, program_id, status, task_template_id')
     .eq('id', assignmentId)
     .maybeSingle()
 
@@ -359,6 +392,26 @@ export async function PATCH(request: Request) {
   }
 
   const patch: Record<string, unknown> = {}
+  const templatePatch: Record<string, unknown> = {}
+
+  if (Object.prototype.hasOwnProperty.call(body, 'title')) {
+    const title = sanitizeText(body.title, 140)
+    if (!title) {
+      return NextResponse.json(
+        { ok: false, message: 'title no puede ser vacio.' },
+        { status: 400 }
+      )
+    }
+    templatePatch.title = title
+  }
+
+  if (Object.prototype.hasOwnProperty.call(body, 'description')) {
+    templatePatch.description = sanitizeText(body.description, 800) || null
+  }
+
+  if (Object.prototype.hasOwnProperty.call(body, 'instructions')) {
+    templatePatch.instructions = sanitizeText(body.instructions, 5000) || null
+  }
   if (Object.prototype.hasOwnProperty.call(body, 'deadline_at')) {
     patch.deadline_at = normalizeDateTime(body.deadline_at)
   }
@@ -402,28 +455,67 @@ export async function PATCH(request: Request) {
     }
   }
 
-  if (!Object.keys(patch).length) {
+  if (!Object.keys(patch).length && !Object.keys(templatePatch).length) {
     return NextResponse.json(
       { ok: false, message: 'No hay cambios para aplicar.' },
       { status: 400 }
     )
   }
 
-  const { data: updated, error: updateError } = await supabaseAdmin
-    .from('task_assignments')
-    .update(patch)
-    .eq('id', assignmentId)
-    .select('id, team_id, status')
-    .maybeSingle()
+  if (Object.keys(templatePatch).length) {
+    if (!currentRow.task_template_id) {
+      return NextResponse.json(
+        { ok: false, message: 'La tarea no tiene plantilla editable.' },
+        { status: 400 }
+      )
+    }
 
-  if (updateError || !updated) {
-    return NextResponse.json(
-      {
-        ok: false,
-        message: updateError?.message ?? 'No se pudo actualizar tarea.',
-      },
-      { status: 400 }
-    )
+    const { error: templateError } = await supabaseAdmin
+      .from('task_templates')
+      .update(templatePatch)
+      .eq('id', currentRow.task_template_id)
+
+    if (templateError) {
+      return NextResponse.json(
+        {
+          ok: false,
+          message:
+            templateError.message ?? 'No se pudo actualizar la plantilla.',
+        },
+        { status: 400 }
+      )
+    }
+  }
+
+  let updated: {
+    id: string
+    team_id: string
+    status: 'draft' | 'published' | 'closed' | 'archived'
+  } = {
+    id: assignmentId,
+    team_id: currentRow.team_id,
+    status: currentRow.status as 'draft' | 'published' | 'closed' | 'archived',
+  }
+
+  if (Object.keys(patch).length) {
+    const { data: updatedRow, error: updateError } = await supabaseAdmin
+      .from('task_assignments')
+      .update(patch)
+      .eq('id', assignmentId)
+      .select('id, team_id, status')
+      .maybeSingle()
+
+    if (updateError || !updatedRow) {
+      return NextResponse.json(
+        {
+          ok: false,
+          message: updateError?.message ?? 'No se pudo actualizar tarea.',
+        },
+        { status: 400 }
+      )
+    }
+
+    updated = updatedRow
   }
 
   if (currentRow.status !== updated.status && updated.status === 'published') {
@@ -451,7 +543,7 @@ export async function PATCH(request: Request) {
       teamId: updated.team_id,
       type: 'task_resubmission_enabled',
       title: 'Reentrega habilitada',
-      body: 'Se habilitó reentrega para una tarea de tu equipo.',
+      body: 'Se habilitÃ³ reentrega para una tarea de tu equipo.',
       payload: { task_assignment_id: updated.id },
       source: 'task_assignments',
       createdBy: auth.profile.id,
@@ -459,19 +551,23 @@ export async function PATCH(request: Request) {
     await emailTeamMembers({
       teamId: updated.team_id,
       subject: 'Reentrega habilitada',
-      text: 'Se habilitó reentrega para una tarea. Revisa los plazos en tu workspace.',
+      text: 'Se habilitÃ³ reentrega para una tarea. Revisa los plazos en tu workspace.',
     })
   }
 
   await touchPlatformActivity({
     userId: auth.profile.id,
     activityType: 'task_assignment_updated',
-    route: '/plataforma/entregables',
+    route: '/plataforma/admin/programas',
     teamId: currentRow.team_id,
     editionId: currentRow.edition_id,
     programId: currentRow.program_id,
-    metadata: { task_assignment_id: assignmentId },
+    metadata: {
+      task_assignment_id: assignmentId,
+      template_updated: Object.keys(templatePatch).length > 0,
+    },
   })
 
   return NextResponse.json({ ok: true, assignment: updated })
 }
+

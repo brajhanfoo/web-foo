@@ -1,6 +1,10 @@
 import { NextResponse } from 'next/server'
 
-import { canManageTasks, requirePlatformProfile } from '@/lib/platform/security'
+import {
+  canManageTasks,
+  isAdminRole,
+  requirePlatformProfile,
+} from '@/lib/platform/security'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 
 export async function GET(request: Request) {
@@ -21,12 +25,52 @@ export async function GET(request: Request) {
   const url = new URL(request.url)
   const teamId = url.searchParams.get('team_id')?.trim() ?? ''
 
-  const teamsRes = await supabaseAdmin
+  let allowedTeamIds: string[] | null = null
+  if (!isAdminRole(auth.profile.role)) {
+    const { data: assignments, error: assignmentsError } = await supabaseAdmin
+      .from('docente_team_assignments')
+      .select('team_id')
+      .eq('docente_profile_id', auth.profile.id)
+      .eq('is_active', true)
+
+    if (assignmentsError) {
+      return NextResponse.json(
+        { ok: false, message: 'No se pudo validar equipos asignados.' },
+        { status: 400 }
+      )
+    }
+
+    allowedTeamIds = (assignments ?? [])
+      .map((row) => row.team_id)
+      .filter((value): value is string => Boolean(value))
+
+    if (teamId && !allowedTeamIds.includes(teamId)) {
+      return NextResponse.json(
+        { ok: false, message: 'Sin permisos para este equipo.' },
+        { status: 403 }
+      )
+    }
+  }
+
+  let teamsQuery = supabaseAdmin
     .from('program_edition_teams')
     .select(
       'id, name, edition_id, edition:program_editions(id, edition_name, program_id, program:programs(id, title))'
     )
     .order('name', { ascending: true })
+
+  if (allowedTeamIds) {
+    if (!allowedTeamIds.length) {
+      return NextResponse.json({
+        ok: true,
+        teams: [],
+        milestones: [],
+      })
+    }
+    teamsQuery = teamsQuery.in('id', allowedTeamIds)
+  }
+
+  const teamsRes = await teamsQuery
 
   if (teamsRes.error) {
     return NextResponse.json(

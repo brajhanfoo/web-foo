@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server'
+﻿import { NextResponse } from 'next/server'
 
 import { isAdminRole, requirePlatformProfile } from '@/lib/platform/security'
 import { supabaseAdmin } from '@/lib/supabase/admin'
@@ -67,7 +67,7 @@ export async function GET(request: Request) {
   const applicationsRes = await supabaseAdmin
     .from('applications')
     .select(
-      'id, team_id, applicant_profile_id, team:program_edition_teams(id, name), profile:profiles(id, first_name, last_name, email, last_relevant_activity_at), last_seen:user_last_seen(last_relevant_activity_at)'
+      'id, team_id, applicant_profile_id, team:program_edition_teams(id, name)'
     )
     .in('team_id', teamIds)
     .eq('status', 'enrolled')
@@ -79,21 +79,63 @@ export async function GET(request: Request) {
     )
   }
 
-  const students = (applicationsRes.data ?? []).map((row) => {
-    const profile = row.profile as {
-      id?: string
-      first_name?: string | null
-      last_name?: string | null
-      email?: string | null
-      last_relevant_activity_at?: string | null
-    } | null
-    const lastSeen = row.last_seen as {
-      last_relevant_activity_at?: string | null
-    } | null
+  const applicationRows = applicationsRes.data ?? []
+  const profileIds = Array.from(
+    new Set(
+      applicationRows
+        .map((row) => String(row.applicant_profile_id ?? '').trim())
+        .filter(Boolean)
+    )
+  )
+
+  const [profilesRes, lastSeenRes] = await Promise.all([
+    profileIds.length
+      ? supabaseAdmin
+          .from('profiles')
+          .select('id, first_name, last_name, email, last_relevant_activity_at')
+          .in('id', profileIds)
+      : Promise.resolve({
+          data: [] as Array<{
+            id: string
+            first_name: string | null
+            last_name: string | null
+            email: string | null
+            last_relevant_activity_at: string | null
+          }>,
+          error: null,
+        }),
+    profileIds.length
+      ? supabaseAdmin
+          .from('user_last_seen')
+          .select('user_id, last_relevant_activity_at')
+          .in('user_id', profileIds)
+      : Promise.resolve({
+          data: [] as Array<{
+            user_id: string
+            last_relevant_activity_at: string | null
+          }>,
+          error: null,
+        }),
+  ])
+
+  if (profilesRes.error || lastSeenRes.error) {
+    return NextResponse.json(
+      { ok: false, message: 'No se pudo cargar actividad de estudiantes.' },
+      { status: 400 }
+    )
+  }
+
+  const profileById = new Map((profilesRes.data ?? []).map((row) => [row.id, row]))
+  const lastSeenById = new Map(
+    (lastSeenRes.data ?? []).map((row) => [row.user_id, row.last_relevant_activity_at])
+  )
+
+  const students = applicationRows.map((row) => {
+    const profile = profileById.get(String(row.applicant_profile_id ?? '')) ?? null
     const team = row.team as { name?: string | null } | null
 
     const lastActivity =
-      lastSeen?.last_relevant_activity_at ??
+      lastSeenById.get(String(row.applicant_profile_id ?? '')) ??
       profile?.last_relevant_activity_at ??
       null
     const inactiveForDays = toDaysSince(lastActivity)
@@ -119,3 +161,4 @@ export async function GET(request: Request) {
     },
   })
 }
+

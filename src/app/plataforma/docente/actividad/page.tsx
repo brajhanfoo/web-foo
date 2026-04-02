@@ -1,6 +1,6 @@
-'use client'
+﻿'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 import { useToastEnhanced } from '@/hooks/use-toast-enhanced'
 import { Badge } from '@/components/ui/badge'
@@ -30,39 +30,70 @@ function fullName(first: string | null, last: string | null): string {
 
 export default function DocenteActivityPage() {
   const { showError } = useToastEnhanced()
+  const showErrorRef = useRef(showError)
   const [loading, setLoading] = useState(true)
   const [payload, setPayload] = useState<ActivityPayload | null>(null)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
   useEffect(() => {
-    const run = async () => {
-      setLoading(true)
-      const response = await fetch('/api/plataforma/docente/activity', {
-        cache: 'no-store',
-      })
-      const data = (await response.json().catch(() => null)) as
-        | ActivityPayload
-        | { ok: false; message?: string }
-        | null
-      if (!response.ok || !data || !data.ok) {
-        const message =
-          data && 'message' in data
-            ? data.message
-            : 'No se pudo cargar actividad.'
-        showError(message ?? 'No se pudo cargar actividad.')
-        setLoading(false)
-        return
-      }
-      setPayload(data)
-      setLoading(false)
-    }
-    void run()
+    showErrorRef.current = showError
   }, [showError])
 
-  if (loading || !payload) {
+  async function loadData() {
+    setLoading(true)
+    setErrorMessage(null)
+    const response = await fetch('/api/plataforma/docente/activity', {
+      cache: 'no-store',
+    })
+    const data = (await response.json().catch(() => null)) as
+      | ActivityPayload
+      | { ok: false; message?: string }
+      | null
+
+    if (!response.ok || !data || !data.ok) {
+      const message =
+        data && 'message' in data
+          ? data.message
+          : 'No se pudo cargar actividad.'
+      setPayload(null)
+      setErrorMessage(message ?? 'No se pudo cargar actividad.')
+      showErrorRef.current(message ?? 'No se pudo cargar actividad.')
+      setLoading(false)
+      return
+    }
+
+    setPayload(data)
+    setLoading(false)
+  }
+
+  useEffect(() => {
+    void loadData()
+  }, [])
+
+  if (loading) {
     return (
       <Card className="border border-slate-800 bg-slate-900 text-slate-100">
         <CardContent className="py-8 text-sm text-slate-300">
           Cargando actividad...
+        </CardContent>
+      </Card>
+    )
+  }
+
+  if (!payload) {
+    return (
+      <Card className="border border-slate-800 bg-slate-900 text-slate-100">
+        <CardContent className="space-y-4 py-8">
+          <div className="text-sm text-slate-300">
+            {errorMessage ?? 'No se pudo cargar actividad.'}
+          </div>
+          <button
+            type="button"
+            onClick={() => void loadData()}
+            className="inline-flex rounded-md border border-slate-700 bg-slate-800 px-3 py-2 text-xs text-slate-100 hover:bg-slate-700"
+          >
+            Reintentar
+          </button>
         </CardContent>
       </Card>
     )
@@ -80,7 +111,7 @@ export default function DocenteActivityPage() {
           </Badge>
           <Badge className="border border-amber-500/40 bg-amber-500/10 text-amber-200">
             {payload.totals.inactive} inactivos (&gt;= {payload.threshold_days}{' '}
-            días)
+            dÃ­as)
           </Badge>
         </CardContent>
       </Card>
@@ -118,7 +149,7 @@ export default function DocenteActivityPage() {
                       : 'border-emerald-500/40 bg-emerald-500/10 text-emerald-200'
                   }
                 >
-                  {row.inactive_for_days ?? 0} días
+                  {row.inactive_for_days ?? 0} dÃ­as
                 </Badge>
               </div>
             ))
@@ -128,3 +159,4 @@ export default function DocenteActivityPage() {
     </div>
   )
 }
+

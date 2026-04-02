@@ -1,7 +1,8 @@
-'use client'
+﻿'use client'
 
+import Link from 'next/link'
 import { useEffect, useMemo, useState } from 'react'
-import { RotateCcw, Save, UserPlus } from 'lucide-react'
+import { RotateCcw, UserPlus } from 'lucide-react'
 
 import { useToastEnhanced } from '@/hooks/use-toast-enhanced'
 import { Badge } from '@/components/ui/badge'
@@ -75,10 +76,10 @@ const DAY_LABELS: Record<number, string> = {
   0: 'Domingo',
   1: 'Lunes',
   2: 'Martes',
-  3: 'Miércoles',
+  3: 'MiÃ©rcoles',
   4: 'Jueves',
   5: 'Viernes',
-  6: 'Sábado',
+  6: 'SÃ¡bado',
 }
 
 function buildFullName(docente: DocenteRow): string {
@@ -88,9 +89,9 @@ function buildFullName(docente: DocenteRow): string {
 }
 
 function formatDate(value: string | null): string {
-  if (!value) return '—'
+  if (!value) return 'â€”'
   const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return '—'
+  if (Number.isNaN(date.getTime())) return 'â€”'
   return new Intl.DateTimeFormat('es-EC', {
     day: '2-digit',
     month: 'short',
@@ -227,8 +228,8 @@ export default function AdminDocentesPage() {
     showSuccess('Docente creado.')
     if (payload.temporary_password) {
       showWarning(
-        `Contraseña temporal: ${payload.temporary_password}`,
-        'Compártela por canal seguro.'
+        `ContraseÃ±a temporal: ${payload.temporary_password}`,
+        'CompÃ¡rtela por canal seguro.'
       )
     }
     setCreateEmail('')
@@ -282,14 +283,14 @@ export default function AdminDocentesPage() {
     } | null
     setBusy(false)
     if (!response.ok || !payload?.ok) {
-      showError(payload?.message ?? 'No se pudo resetear contraseña.')
+      showError(payload?.message ?? 'No se pudo resetear contraseÃ±a.')
       return
     }
-    showSuccess('Contraseña temporal regenerada.')
+    showSuccess('ContraseÃ±a temporal regenerada.')
     if (payload.temporary_password) {
       showWarning(
         `Nueva temporal: ${payload.temporary_password}`,
-        'Compártela por canal seguro.'
+        'CompÃ¡rtela por canal seguro.'
       )
     }
     await loadData()
@@ -323,13 +324,13 @@ export default function AdminDocentesPage() {
     } | null
     setBusy(false)
     if (!response.ok || !payload?.ok) {
-      showError(payload?.message ?? 'No se pudo crear asignación.')
+      showError(payload?.message ?? 'No se pudo crear asignaciÃ³n.')
       return
     }
 
     if (payload.conflicts?.length) {
       showWarning(
-        'Asignación creada con advertencia de solapamiento de horario.',
+        'AsignaciÃ³n creada con advertencia de solapamiento de horario.',
         payload.conflicts
           .slice(0, 2)
           .map(
@@ -339,7 +340,7 @@ export default function AdminDocentesPage() {
           .join(' | ')
       )
     } else {
-      showSuccess('Asignación docente-equipo creada.')
+      showSuccess('AsignaciÃ³n docente-equipo creada.')
     }
 
     setSelectedDocente('none')
@@ -361,10 +362,10 @@ export default function AdminDocentesPage() {
     } | null
     setBusy(false)
     if (!response.ok || !payload?.ok) {
-      showError(payload?.message ?? 'No se pudo eliminar asignación.')
+      showError(payload?.message ?? 'No se pudo eliminar asignaciÃ³n.')
       return
     }
-    showSuccess('Asignación eliminada.')
+    showSuccess('AsignaciÃ³n eliminada.')
     await loadData()
   }
 
@@ -418,7 +419,7 @@ export default function AdminDocentesPage() {
     return (
       <Card className="border border-slate-800 bg-slate-900 text-slate-100">
         <CardContent className="py-8 text-sm text-slate-300">
-          Cargando módulo de docentes...
+          Cargando mÃ³dulo de docentes...
         </CardContent>
       </Card>
     )
@@ -453,13 +454,13 @@ export default function AdminDocentesPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label>Área</Label>
+                <Label>Ãrea</Label>
                 <Select value={createAreaId} onValueChange={setCreateAreaId}>
                   <SelectTrigger className="border-slate-800 bg-slate-950">
-                    <SelectValue placeholder="Selecciona área" />
+                    <SelectValue placeholder="Selecciona Ã¡rea" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="none">Sin área</SelectItem>
+                    <SelectItem value="none">Sin Ã¡rea</SelectItem>
                     {areas.map((area) => (
                       <SelectItem key={area.id} value={area.id}>
                         {area.name}
@@ -487,12 +488,12 @@ export default function AdminDocentesPage() {
             </div>
 
             <div className="space-y-2">
-              <Label>Contraseña temporal (opcional)</Label>
+              <Label>ContraseÃ±a temporal (opcional)</Label>
               <Input
                 value={createTempPassword}
                 onChange={(event) => setCreateTempPassword(event.target.value)}
                 className="border-slate-800 bg-slate-950"
-                placeholder="si queda vacío se genera automáticamente"
+                placeholder="si queda vacÃ­o se genera automÃ¡ticamente"
               />
             </div>
 
@@ -507,61 +508,22 @@ export default function AdminDocentesPage() {
 
         <Card className="border border-slate-800 bg-slate-900 text-slate-100">
           <CardHeader>
-            <CardTitle>Asignar docente a equipo</CardTitle>
+            <CardTitle>Asignacion contextual por equipo</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid gap-3 md:grid-cols-2">
-              <div className="space-y-2">
-                <Label>Docente</Label>
-                <Select
-                  value={selectedDocente}
-                  onValueChange={setSelectedDocente}
-                >
-                  <SelectTrigger className="border-slate-800 bg-slate-950">
-                    <SelectValue placeholder="Selecciona docente" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">Selecciona</SelectItem>
-                    {docentes.map((docente) => (
-                      <SelectItem key={docente.id} value={docente.id}>
-                        {buildFullName(docente)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label>Equipo</Label>
-                <Select value={selectedTeam} onValueChange={setSelectedTeam}>
-                  <SelectTrigger className="border-slate-800 bg-slate-950">
-                    <SelectValue placeholder="Selecciona equipo" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">Selecciona</SelectItem>
-                    {teams.map((team) => (
-                      <SelectItem key={team.id} value={team.id}>
-                        {team.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Rol staff (opcional)</Label>
-              <Input
-                value={staffRole}
-                onChange={(event) => setStaffRole(event.target.value)}
-                className="border-slate-800 bg-slate-950"
-                placeholder="Mentor principal, apoyo, etc."
-              />
-            </div>
-
+          <CardContent className="space-y-3 text-sm text-slate-300">
+            <p>
+              La asignacion y desasignacion docente se realiza en la vista del
+              equipo: programa / edicion / equipo.
+            </p>
+            <p>
+              Desde ahi se visualizan juntos estudiantes, docentes asignados y
+              conflictos de horario.
+            </p>
             <div className="flex justify-end">
-              <Button disabled={busy} onClick={() => void createAssignment()}>
-                <Save className="mr-2 h-4 w-4" />
-                Crear asignación
+              <Button asChild>
+                <Link href="/plataforma/admin/programas">
+                  Ir al flujo por equipo
+                </Link>
               </Button>
             </div>
           </CardContent>
@@ -607,8 +569,8 @@ export default function AdminDocentesPage() {
                         {docente.email}
                       </div>
                       <div className="text-xs text-slate-400">
-                        Equipos activos: {docente.active_assignments_count} ·
-                        Último login: {formatDate(docente.last_login_at)}
+                        Equipos activos: {docente.active_assignments_count} Â·
+                        Ãšltimo login: {formatDate(docente.last_login_at)}
                       </div>
                     </div>
 
@@ -702,7 +664,7 @@ export default function AdminDocentesPage() {
                 const team = teamLookup.get(assignment.team_id)
                 const edition = team?.edition
                 const programTitle = edition?.program?.title ?? 'Programa'
-                const editionName = edition?.edition_name ?? 'Edición'
+                const editionName = edition?.edition_name ?? 'EdiciÃ³n'
                 return (
                   <div
                     key={assignment.id}
@@ -728,7 +690,7 @@ export default function AdminDocentesPage() {
                           )}
                         </div>
                         <div className="truncate text-xs text-slate-400">
-                          {programTitle} · {editionName} ·{' '}
+                          {programTitle} Â· {editionName} Â·{' '}
                           {team?.name ?? 'Equipo'}
                         </div>
                         {assignment.staff_role ? (
@@ -778,7 +740,7 @@ export default function AdminDocentesPage() {
             <div className="grid gap-2 md:grid-cols-4">
               <Select value={dayOfWeek} onValueChange={setDayOfWeek}>
                 <SelectTrigger className="border-slate-800 bg-slate-950">
-                  <SelectValue placeholder="Día" />
+                  <SelectValue placeholder="DÃ­a" />
                 </SelectTrigger>
                 <SelectContent>
                   {Object.entries(DAY_LABELS).map(([value, label]) => (
@@ -827,7 +789,7 @@ export default function AdminDocentesPage() {
                     className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-slate-800 bg-slate-950 px-3 py-2"
                   >
                     <div className="text-xs text-slate-300">
-                      {DAY_LABELS[slot.day_of_week] ?? slot.day_of_week} ·{' '}
+                      {DAY_LABELS[slot.day_of_week] ?? slot.day_of_week} Â·{' '}
                       {slot.start_time} - {slot.end_time} ({slot.timezone})
                     </div>
                     <Button
@@ -847,3 +809,4 @@ export default function AdminDocentesPage() {
     </div>
   )
 }
+

@@ -1,4 +1,4 @@
-// src/app/plataforma/talento/mis-postulaciones/[applicationId]/workspace/page.tsx
+﻿// src/app/plataforma/talento/mis-postulaciones/[applicationId]/workspace/page.tsx
 'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
@@ -275,6 +275,139 @@ export default function WorkspacePage() {
     if (state.kind !== 'ready') return false
     return Boolean(state.data.application.certificate_object_path)
   }, [state])
+
+  const tasksByMilestone = useMemo(() => {
+    const grouped = new Map<string, WorkspaceTaskAssignment[]>()
+    const withoutMilestone: WorkspaceTaskAssignment[] = []
+
+    for (const task of tasks) {
+      const key = task.milestone_id?.trim()
+      if (key) {
+        const bucket = grouped.get(key) ?? []
+        bucket.push(task)
+        grouped.set(key, bucket)
+      } else {
+        withoutMilestone.push(task)
+      }
+    }
+
+    for (const entry of grouped.values()) {
+      entry.sort((left, right) => {
+        const leftDate = Date.parse(String(left.deadline_at ?? ''))
+        const rightDate = Date.parse(String(right.deadline_at ?? ''))
+        const leftSafe = Number.isNaN(leftDate) ? Number.MAX_SAFE_INTEGER : leftDate
+        const rightSafe = Number.isNaN(rightDate)
+          ? Number.MAX_SAFE_INTEGER
+          : rightDate
+        return leftSafe - rightSafe
+      })
+    }
+
+    withoutMilestone.sort((left, right) => {
+      const leftDate = Date.parse(String(left.deadline_at ?? ''))
+      const rightDate = Date.parse(String(right.deadline_at ?? ''))
+      const leftSafe = Number.isNaN(leftDate) ? Number.MAX_SAFE_INTEGER : leftDate
+      const rightSafe = Number.isNaN(rightDate)
+        ? Number.MAX_SAFE_INTEGER
+        : rightDate
+      return leftSafe - rightSafe
+    })
+
+    return { grouped, withoutMilestone }
+  }, [tasks])
+
+  function renderTaskCard(task: WorkspaceTaskAssignment) {
+    const currentSubmission = task.submissions[0] ?? null
+    return (
+      <div
+        key={task.id}
+        className="rounded-lg border border-white/10 bg-black/20 p-3"
+      >
+        <div className="flex flex-wrap items-start justify-between gap-2">
+          <div className="min-w-0">
+            <div className="truncate text-sm font-semibold text-white">
+              {task.task_template?.title ?? 'Tarea'}
+            </div>
+            <div className="text-xs text-white/60">
+              Modo: {task.submission_mode === 'team' ? 'Equipo' : 'Individual'}
+            </div>
+            <div className="text-xs text-white/50">
+              Deadline: {formatDateDMY(task.deadline_at)}
+            </div>
+          </div>
+          <Badge className="border border-white/10 bg-white/10 text-white">
+            {currentSubmission
+              ? `Entregado (${currentSubmission.status})`
+              : 'Pendiente'}
+          </Badge>
+        </div>
+
+        {task.task_template?.description ? (
+          <div className="mt-2 text-xs text-white/70">
+            {task.task_template.description}
+          </div>
+        ) : null}
+
+        {task.task_template?.instructions ? (
+          <div className="mt-2 rounded-md border border-white/10 bg-black/30 p-2 text-xs text-white/70">
+            {task.task_template.instructions}
+          </div>
+        ) : null}
+
+        {currentSubmission ? (
+          <div className="mt-3 space-y-2">
+            <div className="text-xs text-white/60">
+              Intento #{currentSubmission.attempt_number} Â·{' '}
+              {formatDateDMY(currentSubmission.submitted_at)}
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {currentSubmission.link_url ? (
+                <Button size="sm" variant="secondary" asChild>
+                  <Link
+                    href={currentSubmission.link_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Ver link
+                    <ExternalLink className="ml-1 h-3 w-3" />
+                  </Link>
+                </Button>
+              ) : null}
+              {currentSubmission.file_path ? (
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  onClick={() => void openSubmissionFile(currentSubmission.id)}
+                >
+                  Ver archivo
+                  <ExternalLink className="ml-1 h-3 w-3" />
+                </Button>
+              ) : null}
+            </div>
+            {currentSubmission.latest_feedback?.comment ? (
+              <div className="rounded-md border border-emerald-500/30 bg-emerald-500/10 p-2 text-xs text-emerald-100">
+                Feedback: {currentSubmission.latest_feedback.comment}
+              </div>
+            ) : null}
+          </div>
+        ) : null}
+
+        <div className="mt-3 flex justify-end">
+          <Button
+            onClick={() => setSubmissionDialogTaskId(task.id)}
+            className="gap-2 bg-emerald-700 text-white hover:bg-emerald-600"
+            disabled={
+              task.status === 'closed' ||
+              (currentSubmission && !task.allow_resubmission)
+            }
+          >
+            <FileUp className="h-4 w-4" />
+            {currentSubmission ? 'Reentregar' : 'Entregar'}
+          </Button>
+        </div>
+      </div>
+    )
+  }
 
   const handleCertificateOpen = async () => {
     if (state.kind !== 'ready') return
@@ -646,106 +779,59 @@ export default function WorkspacePage() {
             <div className="text-sm text-white/70">Cargando tareas...</div>
           ) : tasks.length === 0 ? (
             <div className="text-sm text-white/70">
-              No hay tareas publicadas para tu equipo aún.
+              No hay tareas publicadas para tu equipo aÃºn.
             </div>
           ) : (
-            tasks.map((task) => {
-              const currentSubmission = task.submissions[0] ?? null
-              return (
-                <div
-                  key={task.id}
-                  className="rounded-lg border border-white/10 bg-black/20 p-3"
-                >
-                  <div className="flex flex-wrap items-start justify-between gap-2">
-                    <div className="min-w-0">
-                      <div className="truncate text-sm font-semibold text-white">
-                        {task.task_template?.title ?? 'Tarea'}
-                      </div>
-                      <div className="text-xs text-white/60">
-                        Hito: {task.milestone?.title ?? '—'} · Modo:{' '}
-                        {task.submission_mode === 'team'
-                          ? 'Equipo'
-                          : 'Individual'}
-                      </div>
-                      <div className="text-xs text-white/50">
-                        Deadline: {formatDateDMY(task.deadline_at)}
-                      </div>
-                    </div>
-                    <Badge className="border border-white/10 bg-white/10 text-white">
-                      {currentSubmission
-                        ? `Entregado (${currentSubmission.status})`
-                        : 'Pendiente'}
-                    </Badge>
-                  </div>
-
-                  {task.task_template?.description ? (
-                    <div className="mt-2 text-xs text-white/70">
-                      {task.task_template.description}
-                    </div>
-                  ) : null}
-
-                  {task.task_template?.instructions ? (
-                    <div className="mt-2 rounded-md border border-white/10 bg-black/30 p-2 text-xs text-white/70">
-                      {task.task_template.instructions}
-                    </div>
-                  ) : null}
-
-                  {currentSubmission ? (
-                    <div className="mt-3 space-y-2">
-                      <div className="text-xs text-white/60">
-                        Intento #{currentSubmission.attempt_number} ·{' '}
-                        {formatDateDMY(currentSubmission.submitted_at)}
-                      </div>
-                      <div className="flex flex-wrap gap-2">
-                        {currentSubmission.link_url ? (
-                          <Button size="sm" variant="secondary" asChild>
-                            <Link
-                              href={currentSubmission.link_url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                            >
-                              Ver link
-                              <ExternalLink className="ml-1 h-3 w-3" />
-                            </Link>
-                          </Button>
-                        ) : null}
-                        {currentSubmission.file_path ? (
-                          <Button
-                            size="sm"
-                            variant="secondary"
-                            onClick={() =>
-                              void openSubmissionFile(currentSubmission.id)
-                            }
-                          >
-                            Ver archivo
-                            <ExternalLink className="ml-1 h-3 w-3" />
-                          </Button>
-                        ) : null}
-                      </div>
-                      {currentSubmission.latest_feedback?.comment ? (
-                        <div className="rounded-md border border-emerald-500/30 bg-emerald-500/10 p-2 text-xs text-emerald-100">
-                          Feedback: {currentSubmission.latest_feedback.comment}
+            <div className="space-y-4">
+              {data.milestones.map((milestone) => {
+                const milestoneTasks =
+                  tasksByMilestone.grouped.get(milestone.id) ?? []
+                return (
+                  <div
+                    key={milestone.id}
+                    className="rounded-lg border border-white/10 bg-black/15 p-3"
+                  >
+                    <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                      <div>
+                        <div className="text-sm font-semibold text-white">
+                          {milestone.title}
                         </div>
-                      ) : null}
+                        <div className="text-xs text-white/50">
+                          Fecha: {formatDateDMY(milestone.starts_at) || '—'}
+                        </div>
+                      </div>
+                      <Badge className="border border-white/10 bg-white/10 text-white">
+                        {milestoneTasks.length} tarea
+                        {milestoneTasks.length === 1 ? '' : 's'}
+                      </Badge>
                     </div>
-                  ) : null}
 
-                  <div className="mt-3 flex justify-end">
-                    <Button
-                      onClick={() => setSubmissionDialogTaskId(task.id)}
-                      className="gap-2 bg-emerald-700 text-white hover:bg-emerald-600"
-                      disabled={
-                        task.status === 'closed' ||
-                        (currentSubmission && !task.allow_resubmission)
-                      }
-                    >
-                      <FileUp className="h-4 w-4" />
-                      {currentSubmission ? 'Reentregar' : 'Entregar'}
-                    </Button>
+                    {milestoneTasks.length === 0 ? (
+                      <div className="text-xs text-white/60">
+                        Sin tareas publicadas para este hito.
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        {milestoneTasks.map((task) => renderTaskCard(task))}
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+
+              {tasksByMilestone.withoutMilestone.length > 0 ? (
+                <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3">
+                  <div className="mb-2 text-sm font-semibold text-amber-100">
+                    Tareas sin hito visible
+                  </div>
+                  <div className="space-y-3">
+                    {tasksByMilestone.withoutMilestone.map((task) =>
+                      renderTaskCard(task)
+                    )}
                   </div>
                 </div>
-              )
-            })
+              ) : null}
+            </div>
           )}
         </CardContent>
       </Card>
@@ -788,7 +874,7 @@ export default function WorkspacePage() {
                 className="border-white/10 bg-white/5"
               />
               <div className="text-[11px] text-white/50">
-                Máximo 25MB. PDF, imágenes, ZIP, DOC/DOCX o TXT.
+                MÃ¡ximo 25MB. PDF, imÃ¡genes, ZIP, DOC/DOCX o TXT.
               </div>
             </div>
             <div className="space-y-2">
@@ -823,3 +909,5 @@ export default function WorkspacePage() {
     </div>
   )
 }
+
+

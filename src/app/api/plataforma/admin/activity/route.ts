@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server'
+﻿import { NextResponse } from 'next/server'
 
 import { isAdminRole, requirePlatformProfile } from '@/lib/platform/security'
 import { supabaseAdmin } from '@/lib/supabase/admin'
@@ -36,25 +36,16 @@ export async function GET(request: Request) {
   let appQuery = supabaseAdmin
     .from('applications')
     .select(
-      'id, program_id, edition_id, team_id, applicant_profile_id, status, program:programs(id, title), team:program_edition_teams(id, name), profile:profiles(id, first_name, last_name, email, role, last_relevant_activity_at), last_seen:user_last_seen(last_relevant_activity_at)'
+      'id, program_id, edition_id, team_id, applicant_profile_id, status, program:programs(id, title), team:program_edition_teams(id, name)'
     )
     .eq('status', 'enrolled')
 
   if (programId) appQuery = appQuery.eq('program_id', programId)
   if (teamId) appQuery = appQuery.eq('team_id', teamId)
 
-  const [appsRes, docentesRes] = await Promise.all([
-    appQuery,
-    supabaseAdmin
-      .from('profiles')
-      .select(
-        'id, first_name, last_name, email, role, last_relevant_activity_at'
-      )
-      .eq('role', 'docente')
-      .eq('is_active', true),
-  ])
+  const appsRes = await appQuery
 
-  if (appsRes.error || docentesRes.error) {
+  if (appsRes.error) {
     return NextResponse.json(
       { ok: false, message: 'No se pudo cargar actividad.' },
       { status: 400 }
@@ -64,28 +55,78 @@ export async function GET(request: Request) {
   const appRows =
     ((appsRes.data ?? []) as unknown as Array<Record<string, unknown>>) ?? []
 
-  const students = appRows.map((row) => {
-    const profileRaw = row.profile as unknown
-    const profile = (
-      Array.isArray(profileRaw) ? profileRaw[0] : profileRaw
-    ) as {
-      id?: string
-      first_name?: string | null
-      last_name?: string | null
-      email?: string | null
-      role?: string | null
-      last_relevant_activity_at?: string | null
-    } | null
+  const studentProfileIds = Array.from(
+    new Set(
+      appRows
+        .map((row) => String(row.applicant_profile_id ?? '').trim())
+        .filter(Boolean)
+    )
+  )
 
-    const lastSeenRaw = row.last_seen as unknown
-    const lastSeen = (
-      Array.isArray(lastSeenRaw) ? lastSeenRaw[0] : lastSeenRaw
-    ) as {
-      last_relevant_activity_at?: string | null
-    } | null
+  const [studentProfilesRes, studentLastSeenRes, docentesRes] =
+    await Promise.all([
+      studentProfileIds.length
+        ? supabaseAdmin
+            .from('profiles')
+            .select(
+              'id, first_name, last_name, email, role, last_relevant_activity_at'
+            )
+            .in('id', studentProfileIds)
+        : Promise.resolve({
+            data: [] as Array<{
+              id: string
+              first_name: string | null
+              last_name: string | null
+              email: string | null
+              role: string | null
+              last_relevant_activity_at: string | null
+            }>,
+            error: null,
+          }),
+      studentProfileIds.length
+        ? supabaseAdmin
+            .from('user_last_seen')
+            .select('user_id, last_relevant_activity_at')
+            .in('user_id', studentProfileIds)
+        : Promise.resolve({
+            data: [] as Array<{
+              user_id: string
+              last_relevant_activity_at: string | null
+            }>,
+            error: null,
+          }),
+      supabaseAdmin
+        .from('profiles')
+        .select(
+          'id, first_name, last_name, email, role, last_relevant_activity_at'
+        )
+        .eq('role', 'docente')
+        .eq('is_active', true),
+    ])
+
+  if (studentProfilesRes.error || studentLastSeenRes.error || docentesRes.error) {
+    return NextResponse.json(
+      { ok: false, message: 'No se pudo cargar actividad.' },
+      { status: 400 }
+    )
+  }
+
+  const profileById = new Map(
+    (studentProfilesRes.data ?? []).map((row) => [row.id, row])
+  )
+  const studentLastSeenById = new Map(
+    (studentLastSeenRes.data ?? []).map((row) => [
+      row.user_id,
+      row.last_relevant_activity_at,
+    ])
+  )
+
+  const students = appRows.map((row) => {
+    const profileId = String(row.applicant_profile_id ?? '')
+    const profile = profileById.get(profileId) ?? null
 
     const lastActivity =
-      lastSeen?.last_relevant_activity_at ??
+      studentLastSeenById.get(profileId) ??
       profile?.last_relevant_activity_at ??
       null
     const inactiveForDays = toDaysSince(lastActivity)
@@ -110,8 +151,43 @@ export async function GET(request: Request) {
 
   const inactiveStudents = students.filter((student) => student.is_inactive)
 
-  const docentes = (docentesRes.data ?? []).map((row) => {
-    const inactiveForDays = toDaysSince(row.last_relevant_activity_at)
+  const docenteRows = docentesRes.data ?? []
+  const docenteIds = docenteRows
+    .map((row) => String(row.id ?? '').trim())
+    .filter(Boolean)
+
+  const docenteLastSeenRes = docenteIds.length
+    ? await supabaseAdmin
+        .from('user_last_seen')
+        .select('user_id, last_relevant_activity_at')
+        .in('user_id', docenteIds)
+    : {
+        data: [] as Array<{
+          user_id: string
+          last_relevant_activity_at: string | null
+        }>,
+        error: null,
+      }
+
+  if (docenteLastSeenRes.error) {
+    return NextResponse.json(
+      { ok: false, message: 'No se pudo cargar actividad.' },
+      { status: 400 }
+    )
+  }
+
+  const docenteLastSeenById = new Map(
+    (docenteLastSeenRes.data ?? []).map((row) => [
+      row.user_id,
+      row.last_relevant_activity_at,
+    ])
+  )
+
+  const docentes = docenteRows.map((row) => {
+    const lastActivity =
+      docenteLastSeenById.get(String(row.id ?? '')) ??
+      row.last_relevant_activity_at
+    const inactiveForDays = toDaysSince(lastActivity)
     return {
       ...row,
       inactive_for_days: inactiveForDays,
@@ -182,3 +258,4 @@ export async function GET(request: Request) {
     docentes,
   })
 }
+

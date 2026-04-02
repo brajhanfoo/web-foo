@@ -707,7 +707,7 @@ export default function AdminEditionDetailPage() {
                               href={`/plataforma/admin/programas/${programId}/ediciones/${editionId}/equipos/${team.id}`}
                             >
                               <ExternalLink className="h-4 w-4" />
-                              Hitos
+                              Gestionar equipo
                             </Link>
                           </Button>
                           <div className="flex items-center gap-2">

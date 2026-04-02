@@ -1,6 +1,6 @@
-'use client'
+﻿'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 
 import { useToastEnhanced } from '@/hooks/use-toast-enhanced'
 import { Badge } from '@/components/ui/badge'
@@ -70,14 +70,21 @@ function fullName(firstName: string | null, lastName: string | null): string {
 
 export default function AdminActivityPage() {
   const { showError } = useToastEnhanced()
+  const showErrorRef = useRef(showError)
   const [loading, setLoading] = useState(true)
   const [payload, setPayload] = useState<ActivityPayload | null>(null)
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [programId, setProgramId] = useState('all')
   const [teamId, setTeamId] = useState('all')
   const [inactiveDays, setInactiveDays] = useState('7')
 
+  useEffect(() => {
+    showErrorRef.current = showError
+  }, [showError])
+
   async function loadData() {
     setLoading(true)
+    setErrorMessage(null)
     const params = new URLSearchParams()
     if (programId !== 'all') params.set('program_id', programId)
     if (teamId !== 'all') params.set('team_id', teamId)
@@ -97,12 +104,15 @@ export default function AdminActivityPage() {
         nextPayload && 'message' in nextPayload
           ? nextPayload.message
           : 'No se pudo cargar actividad.'
-      showError(message ?? 'No se pudo cargar actividad.')
+      setPayload(null)
+      setErrorMessage(message ?? 'No se pudo cargar actividad.')
+      showErrorRef.current(message ?? 'No se pudo cargar actividad.')
       setLoading(false)
       return
     }
 
     setPayload(nextPayload)
+    setErrorMessage(null)
     setLoading(false)
   }
 
@@ -126,11 +136,24 @@ export default function AdminActivityPage() {
     return Array.from(map.entries())
   }, [payload?.by_team])
 
-  if (loading || !payload) {
+  if (loading) {
     return (
       <Card className="border border-slate-800 bg-slate-900 text-slate-100">
         <CardContent className="py-8 text-sm text-slate-300">
           Cargando actividad...
+        </CardContent>
+      </Card>
+    )
+  }
+
+  if (!payload) {
+    return (
+      <Card className="border border-slate-800 bg-slate-900 text-slate-100">
+        <CardContent className="space-y-4 py-8">
+          <div className="text-sm text-slate-300">
+            {errorMessage ?? 'No se pudo cargar actividad.'}
+          </div>
+          <Button onClick={() => void loadData()}>Reintentar</Button>
         </CardContent>
       </Card>
     )
@@ -174,13 +197,13 @@ export default function AdminActivityPage() {
 
             <Select value={inactiveDays} onValueChange={setInactiveDays}>
               <SelectTrigger className="border-slate-800 bg-slate-950">
-                <SelectValue placeholder="Días" />
+                <SelectValue placeholder="DÃ­as" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="3">3 días</SelectItem>
-                <SelectItem value="5">5 días</SelectItem>
-                <SelectItem value="7">7 días</SelectItem>
-                <SelectItem value="14">14 días</SelectItem>
+                <SelectItem value="3">3 dÃ­as</SelectItem>
+                <SelectItem value="5">5 dÃ­as</SelectItem>
+                <SelectItem value="7">7 dÃ­as</SelectItem>
+                <SelectItem value="14">14 dÃ­as</SelectItem>
               </SelectContent>
             </Select>
 
@@ -293,9 +316,9 @@ export default function AdminActivityPage() {
                   </div>
                   <div className="text-xs text-slate-400">{row.email}</div>
                   <div className="text-xs text-slate-500">
-                    {row.program_title ?? 'Programa'} ·{' '}
-                    {row.team_name ?? 'Sin equipo'} ·{' '}
-                    {row.inactive_for_days ?? 0} días inactivo
+                    {row.program_title ?? 'Programa'} Â·{' '}
+                    {row.team_name ?? 'Sin equipo'} Â·{' '}
+                    {row.inactive_for_days ?? 0} dÃ­as inactivo
                   </div>
                 </div>
               ))
@@ -329,7 +352,7 @@ export default function AdminActivityPage() {
                         : 'border-emerald-500/40 bg-emerald-500/10 text-emerald-200'
                     }
                   >
-                    {row.inactive_for_days ?? 0} días
+                    {row.inactive_for_days ?? 0} dÃ­as
                   </Badge>
                 </div>
               ))
@@ -340,3 +363,4 @@ export default function AdminActivityPage() {
     </div>
   )
 }
+

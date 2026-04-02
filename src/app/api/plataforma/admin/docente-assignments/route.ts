@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server'
+﻿import { NextResponse } from 'next/server'
 
 import { touchPlatformActivity } from '@/lib/platform/activity'
 import { isAdminRole, requirePlatformProfile } from '@/lib/platform/security'
@@ -23,7 +23,7 @@ function sanitizeText(value: unknown, max = 120): string {
     .slice(0, max)
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   const auth = await requirePlatformProfile()
   if (!auth.ok) {
     return NextResponse.json(
@@ -38,12 +38,21 @@ export async function GET() {
     )
   }
 
-  const { data, error } = await supabaseAdmin
+  const url = new URL(request.url)
+  const teamId = sanitizeText(url.searchParams.get('team_id'), 80)
+
+  let query = supabaseAdmin
     .from('docente_team_assignments')
     .select(
       'id, docente_profile_id, program_id, edition_id, team_id, staff_role, is_active, assigned_by, created_at, updated_at'
     )
     .order('created_at', { ascending: false })
+
+  if (teamId) {
+    query = query.eq('team_id', teamId)
+  }
+
+  const { data, error } = await query
 
   if (error) {
     return NextResponse.json(
@@ -103,7 +112,7 @@ export async function POST(request: Request) {
 
   if (editionError || !editionRow?.program_id) {
     return NextResponse.json(
-      { ok: false, message: 'Edición no encontrada.' },
+      { ok: false, message: 'EdiciÃ³n no encontrada.' },
       { status: 404 }
     )
   }
@@ -135,7 +144,7 @@ export async function POST(request: Request) {
 
   if (error || !data) {
     return NextResponse.json(
-      { ok: false, message: error?.message ?? 'No se pudo crear asignación.' },
+      { ok: false, message: error?.message ?? 'No se pudo crear asignaciÃ³n.' },
       { status: 400 }
     )
   }
@@ -143,7 +152,7 @@ export async function POST(request: Request) {
   await touchPlatformActivity({
     userId: auth.profile.id,
     activityType: 'admin_docente_assignment_created',
-    route: '/plataforma/admin/docentes',
+    route: '/plataforma/admin/programas',
     teamId,
     editionId: teamRow.edition_id,
     programId: editionRow.program_id,
@@ -207,7 +216,7 @@ export async function PATCH(request: Request) {
 
   if (error) {
     return NextResponse.json(
-      { ok: false, message: 'No se pudo actualizar la asignación.' },
+      { ok: false, message: 'No se pudo actualizar la asignaciÃ³n.' },
       { status: 400 }
     )
   }
@@ -248,10 +257,11 @@ export async function DELETE(request: Request) {
 
   if (error) {
     return NextResponse.json(
-      { ok: false, message: 'No se pudo eliminar la asignación.' },
+      { ok: false, message: 'No se pudo eliminar la asignaciÃ³n.' },
       { status: 400 }
     )
   }
 
   return NextResponse.json({ ok: true })
 }
+

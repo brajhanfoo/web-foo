@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server'
+﻿import { NextResponse } from 'next/server'
 
 import { isDocenteAssigned, isTeamMember } from '@/lib/platform/permissions'
 import { isAdminRole, requirePlatformProfile } from '@/lib/platform/security'
@@ -30,8 +30,15 @@ export async function GET(request: Request) {
 
   if (appError || !appRow?.team_id) {
     return NextResponse.json(
-      { ok: false, message: 'Aplicación o equipo no encontrado.' },
+      { ok: false, message: 'AplicaciÃ³n o equipo no encontrado.' },
       { status: 404 }
+    )
+  }
+
+  if (appRow.status !== 'enrolled') {
+    return NextResponse.json(
+      { ok: false, message: 'La aplicacion no esta enrolada en el equipo.' },
+      { status: 403 }
     )
   }
 
@@ -69,7 +76,7 @@ export async function GET(request: Request) {
       ].join(', ')
     )
     .eq('team_id', appRow.team_id)
-    .in('status', ['published', 'closed'])
+    .or('status.eq.published,status.eq.closed,is_published.eq.true')
     .order('created_at', { ascending: true })
 
   if (assignmentsError) {
@@ -157,10 +164,55 @@ export async function GET(request: Request) {
     submissionsByAssignment.set(assignmentId, previous)
   }
 
-  const items = assignmentRows.map((assignment) => ({
+  type AssignmentItem = Record<string, unknown> & {
+    submissions: Array<
+      Record<string, unknown> & {
+        latest_feedback: Record<string, unknown> | null
+      }
+    >
+  }
+
+  const items: AssignmentItem[] = assignmentRows.map((assignment) => ({
     ...assignment,
     submissions: submissionsByAssignment.get(String(assignment.id)) ?? [],
   }))
+
+  items.sort((left, right) => {
+    const leftMilestone = left['milestone'] as
+      | { position?: number | null; starts_at?: string | null }
+      | null
+      | undefined
+    const rightMilestone = right['milestone'] as
+      | { position?: number | null; starts_at?: string | null }
+      | null
+      | undefined
+
+    const leftPos =
+      typeof leftMilestone?.position === 'number'
+        ? leftMilestone.position
+        : Number.MAX_SAFE_INTEGER
+    const rightPos =
+      typeof rightMilestone?.position === 'number'
+        ? rightMilestone.position
+        : Number.MAX_SAFE_INTEGER
+    if (leftPos !== rightPos) return leftPos - rightPos
+
+    const leftDate = Date.parse(String(leftMilestone?.starts_at ?? ''))
+    const rightDate = Date.parse(String(rightMilestone?.starts_at ?? ''))
+    const leftDateSafe = Number.isNaN(leftDate)
+      ? Number.MAX_SAFE_INTEGER
+      : leftDate
+    const rightDateSafe = Number.isNaN(rightDate)
+      ? Number.MAX_SAFE_INTEGER
+      : rightDate
+    if (leftDateSafe !== rightDateSafe) return leftDateSafe - rightDateSafe
+
+    const leftCreated = Date.parse(String(left['created_at'] ?? ''))
+    const rightCreated = Date.parse(String(right['created_at'] ?? ''))
+    const leftCreatedSafe = Number.isNaN(leftCreated) ? 0 : leftCreated
+    const rightCreatedSafe = Number.isNaN(rightCreated) ? 0 : rightCreated
+    return leftCreatedSafe - rightCreatedSafe
+  })
 
   return NextResponse.json({
     ok: true,
@@ -169,3 +221,4 @@ export async function GET(request: Request) {
     tasks: items,
   })
 }
+
