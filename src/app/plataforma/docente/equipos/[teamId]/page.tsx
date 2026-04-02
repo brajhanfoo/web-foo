@@ -94,6 +94,12 @@ type WorkspacePayload = {
   assignments: AssignmentRow[]
 }
 
+type FeedbackStatus =
+  | 'changes_requested'
+  | 'approved'
+  | 'rejected'
+  | 'reviewed'
+
 function formatDate(value: string | null): string {
   return formatDateTimeInTimeZone(value, PLATFORM_TIMEZONE)
 }
@@ -133,6 +139,7 @@ export default function DocenteTeamWorkspacePage() {
   const [reviewStatus, setReviewStatus] = useState<
     'changes_requested' | 'approved' | 'rejected' | 'reviewed'
   >('reviewed')
+  const [reviewPassFail, setReviewPassFail] = useState<'pass' | 'fail'>('pass')
   const [reviewScore, setReviewScore] = useState('')
   const [reviewComment, setReviewComment] = useState('')
 
@@ -166,14 +173,21 @@ export default function DocenteTeamWorkspacePage() {
     void loadWorkspace()
   }, [teamId])
 
-  const selectedSubmission = useMemo(() => {
+  const selectedReviewContext = useMemo(() => {
     for (const assignment of workspace?.assignments ?? []) {
       for (const submission of assignment.submissions ?? []) {
-        if (submission.id === reviewSubmissionId) return submission
+        if (submission.id === reviewSubmissionId) {
+          return { assignment, submission }
+        }
       }
     }
-    return null
+    return null as
+      | { assignment: AssignmentRow; submission: SubmissionRow }
+      | null
   }, [reviewSubmissionId, workspace?.assignments])
+  const selectedSubmission = selectedReviewContext?.submission ?? null
+  const selectedAssignment = selectedReviewContext?.assignment ?? null
+  const selectedGradingMode = selectedAssignment?.grading_mode ?? 'none'
 
   async function createTask() {
     if (!workspace || milestoneId === 'none' || !title.trim()) {
@@ -222,6 +236,30 @@ export default function DocenteTeamWorkspacePage() {
       showError('Debes escribir comentario de devoluciÃ³n.')
       return
     }
+    if (!selectedAssignment) {
+      showError('No se pudo resolver la tarea de esta entrega.')
+      return
+    }
+
+    let effectiveStatus: FeedbackStatus = reviewStatus
+    let scorePayload: number | null = null
+
+    if (selectedGradingMode === 'score_100') {
+      const numericScore = Number(reviewScore.trim())
+      if (!Number.isFinite(numericScore)) {
+        showError('Ingresa un puntaje entre 0 y 100.')
+        return
+      }
+      if (numericScore < 0 || numericScore > 100) {
+        showError('El puntaje debe estar entre 0 y 100.')
+        return
+      }
+      scorePayload = numericScore
+    } else if (selectedGradingMode === 'pass_fail') {
+      effectiveStatus = reviewPassFail === 'pass' ? 'approved' : 'rejected'
+      scorePayload = null
+    }
+
     setBusy(true)
     const response = await fetch(
       `/api/plataforma/submissions/${reviewSubmissionId}/feedback`,
@@ -230,8 +268,8 @@ export default function DocenteTeamWorkspacePage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           comment: reviewComment,
-          score: reviewScore.trim() ? Number(reviewScore) : null,
-          status: reviewStatus,
+          score: scorePayload,
+          status: effectiveStatus,
         }),
       }
     )
@@ -249,6 +287,7 @@ export default function DocenteTeamWorkspacePage() {
     setReviewComment('')
     setReviewScore('')
     setReviewStatus('reviewed')
+    setReviewPassFail('pass')
     await loadWorkspace()
   }
 
@@ -529,6 +568,7 @@ export default function DocenteTeamWorkspacePage() {
             setReviewComment('')
             setReviewScore('')
             setReviewStatus('reviewed')
+            setReviewPassFail('pass')
           }
         }}
       >
@@ -544,37 +584,62 @@ export default function DocenteTeamWorkspacePage() {
                 ? `${selectedSubmission.id.slice(0, 8)}...`
                 : 'â€”'}
             </div>
-            <Select
-              value={reviewStatus}
-              onValueChange={(value) =>
-                setReviewStatus(
-                  value as
-                    | 'changes_requested'
-                    | 'approved'
-                    | 'rejected'
-                    | 'reviewed'
-                )
-              }
-            >
-              <SelectTrigger className="border-slate-800 bg-slate-950">
-                <SelectValue placeholder="Estado" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="reviewed">Revisado</SelectItem>
-                <SelectItem value="changes_requested">
-                  Cambios solicitados
-                </SelectItem>
-                <SelectItem value="approved">Aprobado</SelectItem>
-                <SelectItem value="rejected">Rechazado</SelectItem>
-              </SelectContent>
-            </Select>
-            <Input
-              value={reviewScore}
-              onChange={(event) => setReviewScore(event.target.value)}
-              placeholder="Puntaje (opcional)"
-              className="border-slate-800 bg-slate-950"
-              inputMode="decimal"
-            />
+            <div className="text-xs text-slate-400">
+              Modo de evaluacion:{' '}
+              {selectedGradingMode === 'score_100'
+                ? 'Puntaje 0 a 100'
+                : selectedGradingMode === 'pass_fail'
+                  ? 'Pass / Fail'
+                  : 'Sin nota'}
+            </div>
+            {selectedGradingMode !== 'pass_fail' ? (
+              <Select
+                value={reviewStatus}
+                onValueChange={(value) =>
+                  setReviewStatus(value as FeedbackStatus)
+                }
+              >
+                <SelectTrigger className="border-slate-800 bg-slate-950">
+                  <SelectValue placeholder="Estado" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="reviewed">Revisado</SelectItem>
+                  <SelectItem value="changes_requested">
+                    Cambios solicitados
+                  </SelectItem>
+                  <SelectItem value="approved">Aprobado</SelectItem>
+                  <SelectItem value="rejected">Rechazado</SelectItem>
+                </SelectContent>
+              </Select>
+            ) : (
+              <Select
+                value={reviewPassFail}
+                onValueChange={(value) =>
+                  setReviewPassFail(value as 'pass' | 'fail')
+                }
+              >
+                <SelectTrigger className="border-slate-800 bg-slate-950">
+                  <SelectValue placeholder="Resultado" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="pass">Pass</SelectItem>
+                  <SelectItem value="fail">Fail</SelectItem>
+                </SelectContent>
+              </Select>
+            )}
+            {selectedGradingMode === 'score_100' ? (
+              <Input
+                type="number"
+                min={0}
+                max={100}
+                step={1}
+                value={reviewScore}
+                onChange={(event) => setReviewScore(event.target.value)}
+                placeholder="Puntaje (0 a 100)"
+                className="border-slate-800 bg-slate-950"
+                inputMode="decimal"
+              />
+            ) : null}
             <Textarea
               value={reviewComment}
               onChange={(event) => setReviewComment(event.target.value)}
@@ -592,7 +657,7 @@ export default function DocenteTeamWorkspacePage() {
               Cancelar
             </Button>
             <Button disabled={busy} onClick={() => void submitReview()}>
-              Guardar feedback
+              Enviar feedback
             </Button>
           </DialogFooter>
         </DialogContent>

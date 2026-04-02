@@ -5,8 +5,8 @@ import {
   emailTeamMembers,
   notifyTeamMembers,
 } from '@/lib/platform/notifications'
-import { canManageTeam } from '@/lib/platform/permissions'
-import { isAdminRole, requirePlatformProfile } from '@/lib/platform/security'
+import { canReviewTeamSubmissions } from '@/lib/platform/permissions'
+import { requirePlatformProfile } from '@/lib/platform/security'
 import { sanitizeFeedbackComment } from '@/lib/platform/submissions'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 
@@ -47,7 +47,7 @@ export async function POST(
   const { data: submission, error: submissionError } = await supabaseAdmin
     .from('submissions')
     .select(
-      'id, team_id, task_assignment_id, submission_scope, owner_profile_id, status, task_assignment:task_assignments(id, edition_id, program_id, team_id)'
+      'id, team_id, task_assignment_id, submission_scope, owner_profile_id, status, task_assignment:task_assignments(id, edition_id, program_id, team_id, grading_mode)'
     )
     .eq('id', targetId)
     .maybeSingle()
@@ -59,9 +59,19 @@ export async function POST(
     )
   }
 
-  const canManage = isAdminRole(auth.profile.role)
-    ? true
-    : await canManageTeam(auth.profile.id, submission.team_id)
+  const assignmentRef = submission.task_assignment as {
+    edition_id?: string
+    program_id?: string
+    team_id?: string
+    grading_mode?: 'score_100' | 'pass_fail' | 'none'
+  } | null
+  const effectiveTeamId = assignmentRef?.team_id ?? submission.team_id
+
+  const canManage = await canReviewTeamSubmissions(
+    auth.profile.id,
+    auth.profile.role,
+    effectiveTeamId
+  )
 
   if (!canManage) {
     return NextResponse.json(
@@ -75,6 +85,7 @@ export async function POST(
     sanitizeText(body.comment, 5000),
     5000
   )
+  const gradingMode = assignmentRef?.grading_mode ?? 'none'
   const status =
     body.status === 'approved' ||
     body.status === 'rejected' ||
@@ -90,16 +101,34 @@ export async function POST(
     )
   }
 
+  let normalizedScore: number | null = null
+  if (gradingMode === 'score_100') {
+    if (typeof body.score !== 'number' || !Number.isFinite(body.score)) {
+      return NextResponse.json(
+        {
+          ok: false,
+          message: 'Debes enviar un puntaje valido entre 0 y 100.',
+        },
+        { status: 400 }
+      )
+    }
+    const score = Number(body.score)
+    if (score < 0 || score > 100) {
+      return NextResponse.json(
+        { ok: false, message: 'El puntaje debe estar entre 0 y 100.' },
+        { status: 400 }
+      )
+    }
+    normalizedScore = score
+  }
+
   const { data: feedback, error: feedbackError } = await supabaseAdmin
     .from('submission_feedback')
     .insert({
       submission_id: submission.id,
       actor_id: auth.profile.id,
       comment,
-      score:
-        typeof body.score === 'number' && Number.isFinite(body.score)
-          ? body.score
-          : null,
+      score: normalizedScore,
     })
     .select('id, submission_id, actor_id, score, created_at')
     .maybeSingle()
@@ -160,11 +189,6 @@ export async function POST(
     subject: notificationTitle,
     text: 'Hay una nueva devolución en tu entrega. Revisa el workspace.',
   })
-
-  const assignmentRef = submission.task_assignment as {
-    edition_id?: string
-    program_id?: string
-  } | null
 
   await touchPlatformActivity({
     userId: auth.profile.id,

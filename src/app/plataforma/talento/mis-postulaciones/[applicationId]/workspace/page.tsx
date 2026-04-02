@@ -421,8 +421,8 @@ export default function WorkspacePage() {
             {!isDeliverable
               ? 'No disponible'
               : currentSubmission
-              ? `Entregado (${currentSubmission.status})`
-              : 'Pendiente'}
+                ? `Entregado (${currentSubmission.status})`
+                : 'Pendiente'}
           </Badge>
         </div>
 
@@ -484,8 +484,7 @@ export default function WorkspacePage() {
             onClick={() => setSubmissionDialogTaskId(task.id)}
             className="gap-2 bg-emerald-700 text-white hover:bg-emerald-600"
             disabled={
-              !isDeliverable ||
-              (currentSubmission && !task.allow_resubmission)
+              !isDeliverable || (currentSubmission && !task.allow_resubmission)
             }
           >
             <FileUp className="h-4 w-4" />

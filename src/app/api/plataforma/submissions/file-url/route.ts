@@ -1,7 +1,10 @@
 import { NextResponse } from 'next/server'
 
-import { canManageTeam, isTeamMember } from '@/lib/platform/permissions'
-import { isAdminRole, requirePlatformProfile } from '@/lib/platform/security'
+import {
+  canReviewTeamSubmissions,
+  isTeamMember,
+} from '@/lib/platform/permissions'
+import { requirePlatformProfile } from '@/lib/platform/security'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 
 function sanitizeText(value: unknown, max = 80): string {
@@ -44,15 +47,18 @@ export async function GET(request: Request) {
     )
   }
 
-  const canReadAsAdmin = isAdminRole(auth.profile.role)
-  const canReadAsManager = canReadAsAdmin
-    ? true
-    : await canManageTeam(auth.profile.id, submission.team_id)
+  const canReadAsManager = await canReviewTeamSubmissions(
+    auth.profile.id,
+    auth.profile.role,
+    submission.team_id
+  )
 
   const canReadAsTalent =
-    submission.submission_scope === 'team'
-      ? await isTeamMember(auth.profile.id, submission.team_id)
-      : submission.owner_profile_id === auth.profile.id
+    auth.profile.role === 'talent'
+      ? submission.submission_scope === 'team'
+        ? await isTeamMember(auth.profile.id, submission.team_id)
+        : submission.owner_profile_id === auth.profile.id
+      : false
 
   if (!canReadAsManager && !canReadAsTalent) {
     return NextResponse.json(
