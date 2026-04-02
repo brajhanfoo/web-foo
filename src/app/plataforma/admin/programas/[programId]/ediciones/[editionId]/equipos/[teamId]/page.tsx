@@ -5,6 +5,11 @@ import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { supabase } from '@/lib/supabase/client'
 import { useToastEnhanced } from '@/hooks/use-toast-enhanced'
+import {
+  formatDateTimeInTimeZone,
+  PLATFORM_TIMEZONE,
+  PLATFORM_TIMEZONE_LABEL,
+} from '@/lib/platform/timezone'
 
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -84,6 +89,7 @@ type TaskAssignmentRow = {
   milestone_id: string
   team_id: string
   submission_mode: 'team' | 'individual'
+  allowed_submission_type: 'link' | 'file' | 'both'
   deadline_at: string | null
   allow_resubmission: boolean
   resubmission_deadline_at: string | null
@@ -126,16 +132,7 @@ function toDateOnlyOrNull(value: string): string | null {
 }
 
 function formatDate(value: string | null): string {
-  if (!value) return '--'
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return '--'
-  return new Intl.DateTimeFormat('es-EC', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  }).format(date)
+  return formatDateTimeInTimeZone(value, PLATFORM_TIMEZONE)
 }
 
 function formatDateRange(startsAt: string | null, endsAt: string | null) {
@@ -153,6 +150,12 @@ function studentName(student: StudentRow): string {
   const full =
     `${student.applicant_profile?.first_name ?? ''} ${student.applicant_profile?.last_name ?? ''}`.trim()
   return full || student.applicant_profile?.email || 'Estudiante'
+}
+
+function submissionTypeLabel(value: 'link' | 'file' | 'both'): string {
+  if (value === 'link') return 'Solo link'
+  if (value === 'file') return 'Solo archivo'
+  return 'Link y archivo'
 }
 
 export default function AdminTeamDetailPage() {
@@ -208,7 +211,7 @@ export default function AdminTeamDetailPage() {
   const [slotDayOfWeek, setSlotDayOfWeek] = useState('1')
   const [slotStartTime, setSlotStartTime] = useState('19:00')
   const [slotEndTime, setSlotEndTime] = useState('21:00')
-  const [slotTimezone, setSlotTimezone] = useState('America/Guayaquil')
+  const [slotTimezone, setSlotTimezone] = useState(PLATFORM_TIMEZONE)
 
   const [taskMilestoneId, setTaskMilestoneId] = useState<string | null>(null)
   const [taskTitle, setTaskTitle] = useState('')
@@ -217,6 +220,9 @@ export default function AdminTeamDetailPage() {
   const [taskSubmissionMode, setTaskSubmissionMode] = useState<
     'team' | 'individual'
   >('team')
+  const [taskAllowedSubmissionType, setTaskAllowedSubmissionType] = useState<
+    'link' | 'file' | 'both'
+  >('both')
   const [taskGradingMode, setTaskGradingMode] = useState<
     'score_100' | 'pass_fail' | 'none'
   >('score_100')
@@ -230,6 +236,8 @@ export default function AdminTeamDetailPage() {
   const [editTaskTitle, setEditTaskTitle] = useState('')
   const [editTaskDescription, setEditTaskDescription] = useState('')
   const [editTaskInstructions, setEditTaskInstructions] = useState('')
+  const [editTaskAllowedSubmissionType, setEditTaskAllowedSubmissionType] =
+    useState<'link' | 'file' | 'both'>('both')
 
   useEffect(() => {
     if (!programId || !editionId || !teamId) return
@@ -555,6 +563,7 @@ export default function AdminTeamDetailPage() {
     setTaskDescription('')
     setTaskInstructions('')
     setTaskSubmissionMode('team')
+    setTaskAllowedSubmissionType('both')
     setTaskGradingMode('score_100')
     setTaskDeadlineAt('')
     setTaskAllowResubmission(false)
@@ -580,6 +589,7 @@ export default function AdminTeamDetailPage() {
         description: taskDescription,
         instructions: taskInstructions,
         submission_mode: taskSubmissionMode,
+        allowed_submission_type: taskAllowedSubmissionType,
         grading_mode: taskGradingMode,
         deadline_at: taskDeadlineAt || null,
         allow_resubmission: taskAllowResubmission,
@@ -611,6 +621,7 @@ export default function AdminTeamDetailPage() {
     setEditTaskTitle(task.task_template?.title ?? '')
     setEditTaskDescription(task.task_template?.description ?? '')
     setEditTaskInstructions(task.task_template?.instructions ?? '')
+    setEditTaskAllowedSubmissionType(task.allowed_submission_type ?? 'both')
   }
 
   async function saveTaskEdits() {
@@ -629,6 +640,7 @@ export default function AdminTeamDetailPage() {
         title: editTaskTitle,
         description: editTaskDescription,
         instructions: editTaskInstructions,
+        allowed_submission_type: editTaskAllowedSubmissionType,
       }),
     })
     const payload = (await response.json().catch(() => null)) as {
@@ -859,6 +871,9 @@ export default function AdminTeamDetailPage() {
             <div className="text-sm text-slate-300">
               {formatDateRange(edition.starts_at, edition.ends_at)}
             </div>
+            <div className="text-xs text-slate-400">
+              Zona horaria oficial: {PLATFORM_TIMEZONE_LABEL}
+            </div>
           </div>
         </div>
       </div>
@@ -1034,7 +1049,7 @@ export default function AdminTeamDetailPage() {
         <CardHeader>
           <CardTitle>Horarios del equipo</CardTitle>
           <CardDescription className="text-slate-300">
-            Soporte para advertencia de conflictos.
+            Soporte para advertencia de conflictos. Default: {PLATFORM_TIMEZONE_LABEL}.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -1068,6 +1083,9 @@ export default function AdminTeamDetailPage() {
               onChange={(event) => setSlotTimezone(event.target.value)}
               className="border-slate-800 bg-slate-950"
             />
+          </div>
+          <div className="text-xs text-slate-400">
+            Usa zona horaria IANA (ej. {PLATFORM_TIMEZONE}).
           </div>
 
           <div className="flex justify-end">
@@ -1122,6 +1140,9 @@ export default function AdminTeamDetailPage() {
           </Button>
         </CardHeader>
         <CardContent className="space-y-4">
+          <div className="text-xs text-slate-400">
+            Deadlines en {PLATFORM_TIMEZONE_LABEL}.
+          </div>
           {milestones.length === 0 ? (
             <div className="rounded-md border border-dashed border-slate-700 bg-slate-950 p-4 text-sm text-slate-400">
               No hay hitos para este equipo.
@@ -1224,6 +1245,12 @@ export default function AdminTeamDetailPage() {
                                 Entrega: {task.submission_mode} · Deadline:{' '}
                                 {formatDate(task.deadline_at)} · Max intentos:{' '}
                                 {task.max_attempts}
+                              </div>
+                              <div className="text-xs text-slate-500">
+                                Tipo entrega:{' '}
+                                {submissionTypeLabel(
+                                  task.allowed_submission_type ?? 'both'
+                                )}
                               </div>
                               <div className="text-xs text-slate-500">
                                 Reentrega:{' '}
@@ -1447,7 +1474,7 @@ export default function AdminTeamDetailPage() {
               />
             </div>
 
-            <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
               <div className="space-y-2">
                 <Label>Modo entrega</Label>
                 <Select
@@ -1462,6 +1489,27 @@ export default function AdminTeamDetailPage() {
                   <SelectContent>
                     <SelectItem value="team">Equipo</SelectItem>
                     <SelectItem value="individual">Individual</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Tipo de entrega</Label>
+                <Select
+                  value={taskAllowedSubmissionType}
+                  onValueChange={(value) =>
+                    setTaskAllowedSubmissionType(
+                      value as 'link' | 'file' | 'both'
+                    )
+                  }
+                >
+                  <SelectTrigger className="border-slate-800 bg-slate-900">
+                    <SelectValue placeholder="Tipo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="link">Solo link</SelectItem>
+                    <SelectItem value="file">Solo archivo</SelectItem>
+                    <SelectItem value="both">Link y archivo</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -1508,7 +1556,7 @@ export default function AdminTeamDetailPage() {
 
             <div className="grid gap-3 md:grid-cols-3">
               <div className="space-y-2">
-                <Label>Deadline</Label>
+                <Label>Deadline (hora Buenos Aires)</Label>
                 <Input
                   type="datetime-local"
                   value={taskDeadlineAt}
@@ -1546,7 +1594,7 @@ export default function AdminTeamDetailPage() {
 
             {taskAllowResubmission ? (
               <div className="space-y-2">
-                <Label>Deadline reentrega</Label>
+                <Label>Deadline reentrega (hora Buenos Aires)</Label>
                 <Input
                   type="datetime-local"
                   value={taskResubDeadlineAt}
@@ -1605,6 +1653,26 @@ export default function AdminTeamDetailPage() {
                 className="border-slate-800 bg-slate-900"
                 rows={3}
               />
+            </div>
+            <div className="space-y-2">
+              <Label>Tipo de entrega</Label>
+              <Select
+                value={editTaskAllowedSubmissionType}
+                onValueChange={(value) =>
+                  setEditTaskAllowedSubmissionType(
+                    value as 'link' | 'file' | 'both'
+                  )
+                }
+              >
+                <SelectTrigger className="border-slate-800 bg-slate-900">
+                  <SelectValue placeholder="Tipo" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="link">Solo link</SelectItem>
+                  <SelectItem value="file">Solo archivo</SelectItem>
+                  <SelectItem value="both">Link y archivo</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             <div className="space-y-2">
               <Label>Instrucciones</Label>

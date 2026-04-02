@@ -67,7 +67,9 @@ export default function AdminEntregablesPage() {
       const editionName = normalize(team.edition?.edition_name)
       const teamName = normalize(team.name)
       return (
-        teamName.includes(q) || editionName.includes(q) || programTitle.includes(q)
+        teamName.includes(q) ||
+        editionName.includes(q) ||
+        programTitle.includes(q)
       )
     })
   }, [teams, query])
@@ -97,8 +99,8 @@ export default function AdminEntregablesPage() {
             programa / edicion / equipo / hito / tarea.
           </p>
           <p>
-            Usa esta vista solo como indice administrativo para navegar rapido al
-            equipo correcto.
+            Usa esta vista solo como indice administrativo para navegar rapido
+            al equipo correcto.
           </p>
           <div className="flex flex-wrap gap-2">
             <Button asChild>
@@ -169,4 +171,3 @@ export default function AdminEntregablesPage() {
     </div>
   )
 }
-

@@ -59,7 +59,7 @@ export async function GET(
       supabaseAdmin
         .from('task_assignments')
         .select(
-          'id, milestone_id, submission_mode, deadline_at, allow_resubmission, resubmission_deadline_at, max_attempts, grading_mode, status, created_at, task_template:task_templates(id, title, description, instructions)'
+          'id, milestone_id, submission_mode, allowed_submission_type, deadline_at, allow_resubmission, resubmission_deadline_at, max_attempts, grading_mode, status, created_at, task_template:task_templates(id, title, description, instructions)'
         )
         .eq('team_id', targetTeamId)
         .order('created_at', { ascending: true }),

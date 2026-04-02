@@ -123,7 +123,7 @@ export async function GET(
 
   let milestones: WorkspaceMilestoneRow[] = []
   if (appRow.team_id) {
-    const { data: milestonesRows, error: milestonesErr } = await supabaseServer
+    const { data: milestonesRows, error: milestonesErr } = await supabaseAdmin
       .from('program_edition_milestones')
       .select('id, title, meet_url, drive_url, starts_at, position, created_at')
       .eq('team_id', appRow.team_id)

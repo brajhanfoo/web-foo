@@ -57,7 +57,7 @@ export async function POST(request: Request) {
   const { data: assignment, error: assignmentError } = await supabaseAdmin
     .from('task_assignments')
     .select(
-      'id, team_id, edition_id, program_id, submission_mode, status, deadline_at, allow_resubmission, resubmission_deadline_at, max_attempts'
+      'id, team_id, edition_id, program_id, submission_mode, allowed_submission_type, status, deadline_at, allow_resubmission, resubmission_deadline_at, max_attempts'
     )
     .eq('id', assignmentId)
     .maybeSingle()
@@ -74,6 +74,45 @@ export async function POST(request: Request) {
     return NextResponse.json(
       { ok: false, message: 'Solo miembros del equipo pueden entregar.' },
       { status: 403 }
+    )
+  }
+
+  const hasLink = Boolean(linkUrl)
+  const hasFile = uploadedFile instanceof File
+  const allowedSubmissionType = (
+    assignment.allowed_submission_type ?? 'both'
+  ) as 'link' | 'file' | 'both'
+
+  if (allowedSubmissionType === 'link' && (!hasLink || hasFile)) {
+    return NextResponse.json(
+      {
+        ok: false,
+        message:
+          'Esta tarea acepta solo link. Adjunta URL valida y no subas archivo.',
+      },
+      { status: 400 }
+    )
+  }
+
+  if (allowedSubmissionType === 'file' && (!hasFile || hasLink)) {
+    return NextResponse.json(
+      {
+        ok: false,
+        message:
+          'Esta tarea acepta solo archivo. Sube archivo y no adjuntes URL.',
+      },
+      { status: 400 }
+    )
+  }
+
+  if (allowedSubmissionType === 'both' && (!hasLink || !hasFile)) {
+    return NextResponse.json(
+      {
+        ok: false,
+        message:
+          'Esta tarea requiere link y archivo. Completa ambos campos para enviar.',
+      },
+      { status: 400 }
     )
   }
 

@@ -11,6 +11,10 @@ import {
   isAdminRole,
   requirePlatformProfile,
 } from '@/lib/platform/security'
+import {
+  localDateTimeToUtcIso,
+  PLATFORM_TIMEZONE,
+} from '@/lib/platform/timezone'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 
 type CreateAssignmentBody = {
@@ -25,6 +29,7 @@ type CreateAssignmentBody = {
   resubmission_deadline_at?: string | null
   max_attempts?: number
   submission_mode?: 'team' | 'individual'
+  allowed_submission_type?: 'link' | 'file' | 'both'
   grading_mode?: 'score_100' | 'pass_fail' | 'none'
   status?: 'draft' | 'published' | 'closed' | 'archived'
 }
@@ -39,6 +44,7 @@ type PatchAssignmentBody = {
   resubmission_deadline_at?: string | null
   max_attempts?: number
   submission_mode?: 'team' | 'individual'
+  allowed_submission_type?: 'link' | 'file' | 'both'
   grading_mode?: 'score_100' | 'pass_fail' | 'none'
   status?: 'draft' | 'published' | 'closed' | 'archived'
 }
@@ -52,7 +58,23 @@ function sanitizeText(value: unknown, max = 2000): string {
 
 function normalizeDateTime(value: string | null | undefined): string | null {
   const clean = sanitizeText(value, 64)
-  return clean || null
+  if (!clean) return null
+
+  if (/[zZ]$|[+-]\d{2}:\d{2}$/.test(clean)) {
+    const date = new Date(clean)
+    if (Number.isNaN(date.getTime())) {
+      throw new Error('Formato de fecha invalido.')
+    }
+    return date.toISOString()
+  }
+
+  const localIso = localDateTimeToUtcIso(clean, PLATFORM_TIMEZONE)
+  if (!localIso) {
+    throw new Error(
+      `Formato de fecha invalido. Usa YYYY-MM-DDTHH:mm en ${PLATFORM_TIMEZONE}.`
+    )
+  }
+  return localIso
 }
 
 async function assertTaskManagementPermission(userId: string, teamId: string) {
@@ -101,6 +123,7 @@ export async function GET(request: Request) {
         'resubmission_deadline_at',
         'max_attempts',
         'submission_mode',
+        'allowed_submission_type',
         'grading_mode',
         'status',
         'is_published',
@@ -162,6 +185,11 @@ export async function POST(request: Request) {
   const milestoneId = sanitizeText(body.milestone_id, 80)
   const submissionMode =
     body.submission_mode === 'individual' ? 'individual' : 'team'
+  const allowedSubmissionType =
+    body.allowed_submission_type === 'link' ||
+    body.allowed_submission_type === 'file'
+      ? body.allowed_submission_type
+      : 'both'
   const gradingMode =
     body.grading_mode === 'pass_fail' || body.grading_mode === 'none'
       ? body.grading_mode
@@ -265,7 +293,28 @@ export async function POST(request: Request) {
     milestoneRow.edition_id !== teamRow.edition_id
   ) {
     return NextResponse.json(
-      { ok: false, message: 'El hito no pertenece al equipo/edicion indicada.' },
+      {
+        ok: false,
+        message: 'El hito no pertenece al equipo/edicion indicada.',
+      },
+      { status: 400 }
+    )
+  }
+
+  let normalizedDeadlineAt: string | null = null
+  let normalizedResubmissionDeadlineAt: string | null = null
+  try {
+    normalizedDeadlineAt = normalizeDateTime(body.deadline_at)
+    normalizedResubmissionDeadlineAt = normalizeDateTime(
+      body.resubmission_deadline_at
+    )
+  } catch (error) {
+    return NextResponse.json(
+      {
+        ok: false,
+        message:
+          error instanceof Error ? error.message : 'Formato de fecha invalido.',
+      },
       { status: 400 }
     )
   }
@@ -279,16 +328,15 @@ export async function POST(request: Request) {
       edition_id: teamRow.edition_id,
       program_id: editionRow.program_id,
       created_by: auth.profile.id,
-      deadline_at: normalizeDateTime(body.deadline_at),
+      deadline_at: normalizedDeadlineAt,
       allow_resubmission: Boolean(body.allow_resubmission),
-      resubmission_deadline_at: normalizeDateTime(
-        body.resubmission_deadline_at
-      ),
+      resubmission_deadline_at: normalizedResubmissionDeadlineAt,
       max_attempts:
         typeof body.max_attempts === 'number' && body.max_attempts > 0
           ? Math.floor(body.max_attempts)
           : 1,
       submission_mode: submissionMode,
+      allowed_submission_type: allowedSubmissionType,
       grading_mode: gradingMode,
       status,
       is_published: status === 'published',
@@ -413,15 +461,41 @@ export async function PATCH(request: Request) {
     templatePatch.instructions = sanitizeText(body.instructions, 5000) || null
   }
   if (Object.prototype.hasOwnProperty.call(body, 'deadline_at')) {
-    patch.deadline_at = normalizeDateTime(body.deadline_at)
+    try {
+      patch.deadline_at = normalizeDateTime(body.deadline_at)
+    } catch (error) {
+      return NextResponse.json(
+        {
+          ok: false,
+          message:
+            error instanceof Error
+              ? error.message
+              : 'Formato de fecha invalido.',
+        },
+        { status: 400 }
+      )
+    }
   }
   if (typeof body.allow_resubmission === 'boolean') {
     patch.allow_resubmission = body.allow_resubmission
   }
   if (Object.prototype.hasOwnProperty.call(body, 'resubmission_deadline_at')) {
-    patch.resubmission_deadline_at = normalizeDateTime(
-      body.resubmission_deadline_at
-    )
+    try {
+      patch.resubmission_deadline_at = normalizeDateTime(
+        body.resubmission_deadline_at
+      )
+    } catch (error) {
+      return NextResponse.json(
+        {
+          ok: false,
+          message:
+            error instanceof Error
+              ? error.message
+              : 'Formato de fecha invalido.',
+        },
+        { status: 400 }
+      )
+    }
   }
   if (typeof body.max_attempts === 'number' && body.max_attempts > 0) {
     patch.max_attempts = Math.floor(body.max_attempts)
@@ -431,6 +505,13 @@ export async function PATCH(request: Request) {
     body.submission_mode === 'individual'
   ) {
     patch.submission_mode = body.submission_mode
+  }
+  if (
+    body.allowed_submission_type === 'link' ||
+    body.allowed_submission_type === 'file' ||
+    body.allowed_submission_type === 'both'
+  ) {
+    patch.allowed_submission_type = body.allowed_submission_type
   }
   if (
     body.grading_mode === 'score_100' ||
@@ -570,4 +651,3 @@ export async function PATCH(request: Request) {
 
   return NextResponse.json({ ok: true, assignment: updated })
 }
-

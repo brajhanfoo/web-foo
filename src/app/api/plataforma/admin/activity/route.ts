@@ -104,7 +104,11 @@ export async function GET(request: Request) {
         .eq('is_active', true),
     ])
 
-  if (studentProfilesRes.error || studentLastSeenRes.error || docentesRes.error) {
+  if (
+    studentProfilesRes.error ||
+    studentLastSeenRes.error ||
+    docentesRes.error
+  ) {
     return NextResponse.json(
       { ok: false, message: 'No se pudo cargar actividad.' },
       { status: 400 }
@@ -258,4 +262,3 @@ export async function GET(request: Request) {
     docentes,
   })
 }
-

@@ -27,6 +27,12 @@ import {
   Users,
   Video,
 } from 'lucide-react'
+import {
+  formatDateOnlyInTimeZone,
+  formatDateTimeInTimeZone,
+  PLATFORM_TIMEZONE,
+  PLATFORM_TIMEZONE_LABEL,
+} from '@/lib/platform/timezone'
 
 type WorkspaceTeamRow = {
   id: string
@@ -96,8 +102,9 @@ type WorkspaceTaskSubmission = {
 
 type WorkspaceTaskAssignment = {
   id: string
-  milestone_id: string
+  milestone_id: string | null
   submission_mode: 'team' | 'individual'
+  allowed_submission_type: 'link' | 'file' | 'both'
   deadline_at: string | null
   allow_resubmission: boolean
   resubmission_deadline_at: string | null
@@ -125,25 +132,20 @@ type WorkspaceState =
   | { kind: 'error'; message: string }
   | { kind: 'ready'; data: WorkspacePayload }
 
-function formatDateDMY(value: string | null | undefined): string {
-  const raw = (value ?? '').trim()
-  if (!raw) return ''
-  const clean = raw.split('T')[0] ?? ''
-  const parts = clean.split('-')
-  if (parts.length !== 3) return ''
-  const [year, month, day] = parts
-  if (!year || !month || !day) return ''
-  return `${day.padStart(2, '0')}/${month.padStart(2, '0')}/${year}`
-}
-
 function buildEditionRange(edition: WorkspacePayload['edition'] | null) {
   if (!edition) return ''
-  const startLine = formatDateDMY(edition.starts_at)
-  const endLine = formatDateDMY(edition.ends_at)
+  const startLine = formatDateOnlyInTimeZone(edition.starts_at, PLATFORM_TIMEZONE)
+  const endLine = formatDateOnlyInTimeZone(edition.ends_at, PLATFORM_TIMEZONE)
   const startText = startLine ? `Inicio: ${startLine}` : ''
   const endText = endLine ? `Fin: ${endLine}` : ''
   if (startText && endText) return `${startText} - ${endText}`
   return startText || endText
+}
+
+function submissionTypeLabel(value: 'link' | 'file' | 'both'): string {
+  if (value === 'link') return 'Solo link'
+  if (value === 'file') return 'Solo archivo'
+  return 'Link y archivo'
 }
 
 export default function WorkspacePage() {
@@ -265,6 +267,18 @@ export default function WorkspacePage() {
     () => tasks.find((task) => task.id === submissionDialogTaskId) ?? null,
     [submissionDialogTaskId, tasks]
   )
+  const selectedTaskSubmissionType = selectedTask?.allowed_submission_type ?? 'both'
+  const showLinkInput = selectedTaskSubmissionType !== 'file'
+  const showFileInput = selectedTaskSubmissionType !== 'link'
+
+  useEffect(() => {
+    if (selectedTaskSubmissionType === 'file') {
+      setSubmissionLink('')
+    }
+    if (selectedTaskSubmissionType === 'link') {
+      setSubmissionFile(null)
+    }
+  }, [selectedTaskSubmissionType])
 
   const editionRange = useMemo(() => {
     if (state.kind !== 'ready') return ''
@@ -295,7 +309,9 @@ export default function WorkspacePage() {
       entry.sort((left, right) => {
         const leftDate = Date.parse(String(left.deadline_at ?? ''))
         const rightDate = Date.parse(String(right.deadline_at ?? ''))
-        const leftSafe = Number.isNaN(leftDate) ? Number.MAX_SAFE_INTEGER : leftDate
+        const leftSafe = Number.isNaN(leftDate)
+          ? Number.MAX_SAFE_INTEGER
+          : leftDate
         const rightSafe = Number.isNaN(rightDate)
           ? Number.MAX_SAFE_INTEGER
           : rightDate
@@ -306,7 +322,9 @@ export default function WorkspacePage() {
     withoutMilestone.sort((left, right) => {
       const leftDate = Date.parse(String(left.deadline_at ?? ''))
       const rightDate = Date.parse(String(right.deadline_at ?? ''))
-      const leftSafe = Number.isNaN(leftDate) ? Number.MAX_SAFE_INTEGER : leftDate
+      const leftSafe = Number.isNaN(leftDate)
+        ? Number.MAX_SAFE_INTEGER
+        : leftDate
       const rightSafe = Number.isNaN(rightDate)
         ? Number.MAX_SAFE_INTEGER
         : rightDate
@@ -315,6 +333,56 @@ export default function WorkspacePage() {
 
     return { grouped, withoutMilestone }
   }, [tasks])
+
+  const milestonesForTasks = useMemo(() => {
+    if (state.kind !== 'ready') return [] as WorkspaceMilestoneRow[]
+
+    const merged = new Map<string, WorkspaceMilestoneRow>()
+    for (const milestone of state.data.milestones) {
+      merged.set(milestone.id, milestone)
+    }
+
+    for (const task of tasks) {
+      const milestoneId = task.milestone_id?.trim()
+      if (!milestoneId) continue
+      if (merged.has(milestoneId)) continue
+
+      const taskMilestone = task.milestone
+      merged.set(milestoneId, {
+        id: milestoneId,
+        title: taskMilestone?.title ?? 'Hito',
+        meet_url: null,
+        drive_url: null,
+        starts_at: taskMilestone?.starts_at ?? null,
+        position: taskMilestone?.position ?? null,
+        created_at: '',
+      })
+    }
+
+    return Array.from(merged.values()).sort((left, right) => {
+      const leftPos =
+        typeof left.position === 'number' ? left.position : Number.MAX_SAFE_INTEGER
+      const rightPos =
+        typeof right.position === 'number' ? right.position : Number.MAX_SAFE_INTEGER
+      if (leftPos !== rightPos) return leftPos - rightPos
+
+      const leftDate = Date.parse(String(left.starts_at ?? ''))
+      const rightDate = Date.parse(String(right.starts_at ?? ''))
+      const leftDateSafe = Number.isNaN(leftDate)
+        ? Number.MAX_SAFE_INTEGER
+        : leftDate
+      const rightDateSafe = Number.isNaN(rightDate)
+        ? Number.MAX_SAFE_INTEGER
+        : rightDate
+      if (leftDateSafe !== rightDateSafe) return leftDateSafe - rightDateSafe
+
+      const leftCreated = Date.parse(String(left.created_at ?? ''))
+      const rightCreated = Date.parse(String(right.created_at ?? ''))
+      const leftCreatedSafe = Number.isNaN(leftCreated) ? 0 : leftCreated
+      const rightCreatedSafe = Number.isNaN(rightCreated) ? 0 : rightCreated
+      return leftCreatedSafe - rightCreatedSafe
+    })
+  }, [state, tasks])
 
   function renderTaskCard(task: WorkspaceTaskAssignment) {
     const currentSubmission = task.submissions[0] ?? null
@@ -331,8 +399,12 @@ export default function WorkspacePage() {
             <div className="text-xs text-white/60">
               Modo: {task.submission_mode === 'team' ? 'Equipo' : 'Individual'}
             </div>
+            <div className="text-xs text-white/60">
+              Tipo entrega:{' '}
+              {submissionTypeLabel(task.allowed_submission_type ?? 'both')}
+            </div>
             <div className="text-xs text-white/50">
-              Deadline: {formatDateDMY(task.deadline_at)}
+              Deadline: {formatDateTimeInTimeZone(task.deadline_at, PLATFORM_TIMEZONE)}
             </div>
           </div>
           <Badge className="border border-white/10 bg-white/10 text-white">
@@ -358,7 +430,7 @@ export default function WorkspacePage() {
           <div className="mt-3 space-y-2">
             <div className="text-xs text-white/60">
               Intento #{currentSubmission.attempt_number} Â·{' '}
-              {formatDateDMY(currentSubmission.submitted_at)}
+              {formatDateTimeInTimeZone(currentSubmission.submitted_at, PLATFORM_TIMEZONE)}
             </div>
             <div className="flex flex-wrap gap-2">
               {currentSubmission.link_url ? (
@@ -455,9 +527,28 @@ export default function WorkspacePage() {
   }
 
   async function submitTask() {
-    if (state.kind !== 'ready' || !submissionDialogTaskId) return
-    if (!submissionLink.trim() && !submissionFile) {
-      showErrorRef.current('Debes subir archivo, link o ambos.')
+    if (state.kind !== 'ready' || !submissionDialogTaskId || !selectedTask) return
+
+    const submissionType = selectedTask.allowed_submission_type
+    const hasLink = Boolean(submissionLink.trim())
+    const hasFile = Boolean(submissionFile)
+
+    if (submissionType === 'link' && (!hasLink || hasFile)) {
+      showErrorRef.current(
+        'Esta tarea acepta solo link. Completa URL y no adjuntes archivo.'
+      )
+      return
+    }
+
+    if (submissionType === 'file' && (!hasFile || hasLink)) {
+      showErrorRef.current(
+        'Esta tarea acepta solo archivo. Adjunta archivo y no incluyas URL.'
+      )
+      return
+    }
+
+    if (submissionType === 'both' && (!hasLink || !hasFile)) {
+      showErrorRef.current('Esta tarea requiere link y archivo.')
       return
     }
 
@@ -578,6 +669,9 @@ export default function WorkspacePage() {
             </div>
             <div className="text-sm text-white/70 break-words">
               Edicion: {editionName}
+            </div>
+            <div className="text-xs text-white/50">
+              Zona horaria oficial: {PLATFORM_TIMEZONE_LABEL}
             </div>
             {editionRange ? (
               <div className="text-sm text-white/70">{editionRange}</div>
@@ -702,7 +796,10 @@ export default function WorkspacePage() {
 
               {data.milestones.map((milestone) => {
                 const dateLabel = milestone.starts_at
-                  ? formatDateDMY(milestone.starts_at)
+                  ? formatDateOnlyInTimeZone(
+                      milestone.starts_at,
+                      PLATFORM_TIMEZONE
+                    )
                   : '-'
 
                 return (
@@ -783,7 +880,7 @@ export default function WorkspacePage() {
             </div>
           ) : (
             <div className="space-y-4">
-              {data.milestones.map((milestone) => {
+              {milestonesForTasks.map((milestone) => {
                 const milestoneTasks =
                   tasksByMilestone.grouped.get(milestone.id) ?? []
                 return (
@@ -797,7 +894,11 @@ export default function WorkspacePage() {
                           {milestone.title}
                         </div>
                         <div className="text-xs text-white/50">
-                          Fecha: {formatDateDMY(milestone.starts_at) || '—'}
+                          Fecha:{' '}
+                          {formatDateOnlyInTimeZone(
+                            milestone.starts_at,
+                            PLATFORM_TIMEZONE
+                          ) || '—'}
                         </div>
                       </div>
                       <Badge className="border border-white/10 bg-white/10 text-white">
@@ -855,28 +956,42 @@ export default function WorkspacePage() {
           </DialogHeader>
 
           <div className="space-y-4">
-            <div className="space-y-2">
-              <Label className="text-white/70">Link de entrega</Label>
-              <Input
-                value={submissionLink}
-                onChange={(event) => setSubmissionLink(event.target.value)}
-                className="border-white/10 bg-white/5"
-                placeholder="https://..."
-              />
+            <div className="rounded-md border border-white/10 bg-white/5 p-2 text-xs text-white/70">
+              Tipo de entrega requerido:{' '}
+              {submissionTypeLabel(selectedTaskSubmissionType)}
             </div>
-            <div className="space-y-2">
-              <Label className="text-white/70">Archivo (opcional)</Label>
-              <Input
-                type="file"
-                onChange={(event) =>
-                  setSubmissionFile(event.target.files?.[0] ?? null)
-                }
-                className="border-white/10 bg-white/5"
-              />
-              <div className="text-[11px] text-white/50">
-                MÃ¡ximo 25MB. PDF, imÃ¡genes, ZIP, DOC/DOCX o TXT.
+            {showLinkInput ? (
+              <div className="space-y-2">
+                <Label className="text-white/70">
+                  Link de entrega
+                  {selectedTaskSubmissionType === 'both' ? ' (obligatorio)' : ''}
+                </Label>
+                <Input
+                  value={submissionLink}
+                  onChange={(event) => setSubmissionLink(event.target.value)}
+                  className="border-white/10 bg-white/5"
+                  placeholder="https://..."
+                />
               </div>
-            </div>
+            ) : null}
+            {showFileInput ? (
+              <div className="space-y-2">
+                <Label className="text-white/70">
+                  Archivo
+                  {selectedTaskSubmissionType === 'both' ? ' (obligatorio)' : ''}
+                </Label>
+                <Input
+                  type="file"
+                  onChange={(event) =>
+                    setSubmissionFile(event.target.files?.[0] ?? null)
+                  }
+                  className="border-white/10 bg-white/5"
+                />
+                <div className="text-[11px] text-white/50">
+                  MÃ¡ximo 25MB. PDF, imÃ¡genes, ZIP, DOC/DOCX o TXT.
+                </div>
+              </div>
+            ) : null}
             <div className="space-y-2">
               <Label className="text-white/70">Comentario</Label>
               <Textarea
@@ -909,5 +1024,3 @@ export default function WorkspacePage() {
     </div>
   )
 }
-
-

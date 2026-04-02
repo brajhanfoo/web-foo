@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useMemo, useState } from 'react'
 import { useParams } from 'next/navigation'
@@ -25,6 +25,11 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
+import {
+  formatDateTimeInTimeZone,
+  PLATFORM_TIMEZONE,
+  PLATFORM_TIMEZONE_LABEL,
+} from '@/lib/platform/timezone'
 
 type SubmissionRow = {
   id: string
@@ -54,6 +59,7 @@ type AssignmentRow = {
   id: string
   milestone_id: string
   submission_mode: 'team' | 'individual'
+  allowed_submission_type: 'link' | 'file' | 'both'
   deadline_at: string | null
   allow_resubmission: boolean
   resubmission_deadline_at: string | null
@@ -89,16 +95,13 @@ type WorkspacePayload = {
 }
 
 function formatDate(value: string | null): string {
-  if (!value) return '—'
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return '—'
-  return new Intl.DateTimeFormat('es-EC', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  }).format(date)
+  return formatDateTimeInTimeZone(value, PLATFORM_TIMEZONE)
+}
+
+function submissionTypeLabel(value: 'link' | 'file' | 'both'): string {
+  if (value === 'link') return 'Solo link'
+  if (value === 'file') return 'Solo archivo'
+  return 'Link y archivo'
 }
 
 export default function DocenteTeamWorkspacePage() {
@@ -117,6 +120,9 @@ export default function DocenteTeamWorkspacePage() {
   const [submissionMode, setSubmissionMode] = useState<'team' | 'individual'>(
     'team'
   )
+  const [allowedSubmissionType, setAllowedSubmissionType] = useState<
+    'link' | 'file' | 'both'
+  >('both')
   const [deadlineAt, setDeadlineAt] = useState('')
   const [maxAttempts, setMaxAttempts] = useState('1')
   const [status, setStatus] = useState<'draft' | 'published'>('draft')
@@ -171,7 +177,7 @@ export default function DocenteTeamWorkspacePage() {
 
   async function createTask() {
     if (!workspace || milestoneId === 'none' || !title.trim()) {
-      showError('Completa hito y título.')
+      showError('Completa hito y tÃ­tulo.')
       return
     }
     setBusy(true)
@@ -185,6 +191,7 @@ export default function DocenteTeamWorkspacePage() {
         description,
         instructions,
         submission_mode: submissionMode,
+        allowed_submission_type: allowedSubmissionType,
         deadline_at: deadlineAt || null,
         max_attempts: Number(maxAttempts),
         status,
@@ -205,13 +212,14 @@ export default function DocenteTeamWorkspacePage() {
     setInstructions('')
     setDeadlineAt('')
     setMaxAttempts('1')
+    setAllowedSubmissionType('both')
     setStatus('draft')
     await loadWorkspace()
   }
 
   async function submitReview() {
     if (!reviewSubmissionId || !reviewComment.trim()) {
-      showError('Debes escribir comentario de devolución.')
+      showError('Debes escribir comentario de devoluciÃ³n.')
       return
     }
     setBusy(true)
@@ -276,9 +284,14 @@ export default function DocenteTeamWorkspacePage() {
         <CardHeader>
           <CardTitle>{workspace.team.name}</CardTitle>
         </CardHeader>
-        <CardContent className="text-sm text-slate-300">
-          {workspace.team.edition?.program?.title ?? 'Programa'} ·{' '}
-          {workspace.team.edition?.edition_name ?? 'Edición'}
+        <CardContent className="space-y-1 text-sm text-slate-300">
+          <div>
+            {workspace.team.edition?.program?.title ?? 'Programa'} Â·{' '}
+            {workspace.team.edition?.edition_name ?? 'EdiciÃ³n'}
+          </div>
+          <div className="text-xs text-slate-400">
+            Zona horaria oficial: {PLATFORM_TIMEZONE_LABEL}
+          </div>
         </CardContent>
       </Card>
 
@@ -287,7 +300,10 @@ export default function DocenteTeamWorkspacePage() {
           <CardTitle>Crear tarea para el equipo</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid gap-3 md:grid-cols-2">
+          <div className="text-xs text-slate-400">
+            Los deadlines se registran en {PLATFORM_TIMEZONE_LABEL}.
+          </div>
+          <div className="grid gap-3 md:grid-cols-3">
             <div className="space-y-2">
               <Label>Milestone</Label>
               <Select value={milestoneId} onValueChange={setMilestoneId}>
@@ -321,19 +337,37 @@ export default function DocenteTeamWorkspacePage() {
                 </SelectContent>
               </Select>
             </div>
+            <div className="space-y-2">
+              <Label>Tipo de entrega</Label>
+              <Select
+                value={allowedSubmissionType}
+                onValueChange={(value) =>
+                  setAllowedSubmissionType(value as 'link' | 'file' | 'both')
+                }
+              >
+                <SelectTrigger className="border-slate-800 bg-slate-950">
+                  <SelectValue placeholder="Tipo" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="link">Solo link</SelectItem>
+                  <SelectItem value="file">Solo archivo</SelectItem>
+                  <SelectItem value="both">Link y archivo</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           <Input
             value={title}
             onChange={(event) => setTitle(event.target.value)}
             className="border-slate-800 bg-slate-950"
-            placeholder="Título de tarea"
+            placeholder="TÃ­tulo de tarea"
           />
           <Textarea
             value={description}
             onChange={(event) => setDescription(event.target.value)}
             className="border-slate-800 bg-slate-950"
-            placeholder="Descripción"
+            placeholder="DescripciÃ³n"
           />
           <Textarea
             value={instructions}
@@ -348,12 +382,13 @@ export default function DocenteTeamWorkspacePage() {
               value={deadlineAt}
               onChange={(event) => setDeadlineAt(event.target.value)}
               className="border-slate-800 bg-slate-950"
+              aria-label="Deadline en hora de Buenos Aires"
             />
             <Input
               value={maxAttempts}
               onChange={(event) => setMaxAttempts(event.target.value)}
               className="border-slate-800 bg-slate-950"
-              placeholder="Máx intentos"
+              placeholder="MÃ¡x intentos"
               inputMode="numeric"
             />
             <Select
@@ -387,7 +422,7 @@ export default function DocenteTeamWorkspacePage() {
         <CardContent className="space-y-4">
           {workspace.assignments.length === 0 ? (
             <div className="text-sm text-slate-400">
-              No hay tareas asignadas todavía.
+              No hay tareas asignadas todavÃ­a.
             </div>
           ) : (
             workspace.assignments.map((assignment) => (
@@ -401,9 +436,15 @@ export default function DocenteTeamWorkspacePage() {
                       {assignment.task_template?.title ?? 'Tarea'}
                     </div>
                     <div className="text-xs text-slate-400">
-                      Modo: {assignment.submission_mode} · Estado:{' '}
-                      {assignment.status} · Deadline:{' '}
+                      Modo: {assignment.submission_mode} Â· Estado:{' '}
+                      {assignment.status} Â· Deadline:{' '}
                       {formatDate(assignment.deadline_at)}
+                    </div>
+                    <div className="text-xs text-slate-400">
+                      Tipo entrega:{' '}
+                      {submissionTypeLabel(
+                        assignment.allowed_submission_type ?? 'both'
+                      )}
                     </div>
                   </div>
                   <Badge className="border border-slate-700 bg-slate-800 text-slate-100">
@@ -424,8 +465,8 @@ export default function DocenteTeamWorkspacePage() {
                       >
                         <div className="flex flex-wrap items-center justify-between gap-2">
                           <div className="text-xs text-slate-300">
-                            Intento #{submission.attempt_number} ·{' '}
-                            {formatDate(submission.submitted_at)} ·{' '}
+                            Intento #{submission.attempt_number} Â·{' '}
+                            {formatDate(submission.submitted_at)} Â·{' '}
                             {submission.status}
                           </div>
                           <div className="flex flex-wrap gap-2">
@@ -466,7 +507,7 @@ export default function DocenteTeamWorkspacePage() {
 
                         {submission.latest_feedback?.comment ? (
                           <div className="mt-2 text-xs text-slate-400">
-                            Último feedback:{' '}
+                            Ãšltimo feedback:{' '}
                             {submission.latest_feedback.comment}
                           </div>
                         ) : null}
@@ -493,7 +534,7 @@ export default function DocenteTeamWorkspacePage() {
       >
         <DialogContent className="border border-slate-800 bg-slate-900 text-slate-100">
           <DialogHeader>
-            <DialogTitle>Revisión de entrega</DialogTitle>
+            <DialogTitle>RevisiÃ³n de entrega</DialogTitle>
           </DialogHeader>
 
           <div className="space-y-3">
@@ -501,7 +542,7 @@ export default function DocenteTeamWorkspacePage() {
               Entrega:{' '}
               {selectedSubmission
                 ? `${selectedSubmission.id.slice(0, 8)}...`
-                : '—'}
+                : 'â€”'}
             </div>
             <Select
               value={reviewStatus}
@@ -538,7 +579,7 @@ export default function DocenteTeamWorkspacePage() {
               value={reviewComment}
               onChange={(event) => setReviewComment(event.target.value)}
               className="border-slate-800 bg-slate-950"
-              placeholder="Comentario de devolución"
+              placeholder="Comentario de devoluciÃ³n"
             />
           </div>
 
@@ -559,3 +600,4 @@ export default function DocenteTeamWorkspacePage() {
     </div>
   )
 }
+

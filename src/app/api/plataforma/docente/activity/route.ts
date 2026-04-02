@@ -125,13 +125,19 @@ export async function GET(request: Request) {
     )
   }
 
-  const profileById = new Map((profilesRes.data ?? []).map((row) => [row.id, row]))
+  const profileById = new Map(
+    (profilesRes.data ?? []).map((row) => [row.id, row])
+  )
   const lastSeenById = new Map(
-    (lastSeenRes.data ?? []).map((row) => [row.user_id, row.last_relevant_activity_at])
+    (lastSeenRes.data ?? []).map((row) => [
+      row.user_id,
+      row.last_relevant_activity_at,
+    ])
   )
 
   const students = applicationRows.map((row) => {
-    const profile = profileById.get(String(row.applicant_profile_id ?? '')) ?? null
+    const profile =
+      profileById.get(String(row.applicant_profile_id ?? '')) ?? null
     const team = row.team as { name?: string | null } | null
 
     const lastActivity =
@@ -161,4 +167,3 @@ export async function GET(request: Request) {
     },
   })
 }
-

@@ -17,6 +17,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import {
+  formatDateTimeInTimeZone,
+  PLATFORM_TIMEZONE,
+  PLATFORM_TIMEZONE_LABEL,
+} from '@/lib/platform/timezone'
 
 type ProfessionalArea = {
   id: string
@@ -89,16 +94,7 @@ function buildFullName(docente: DocenteRow): string {
 }
 
 function formatDate(value: string | null): string {
-  if (!value) return 'â€”'
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return 'â€”'
-  return new Intl.DateTimeFormat('es-EC', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  }).format(date)
+  return formatDateTimeInTimeZone(value, PLATFORM_TIMEZONE)
 }
 
 export default function AdminDocentesPage() {
@@ -126,7 +122,7 @@ export default function AdminDocentesPage() {
   const [dayOfWeek, setDayOfWeek] = useState<string>('1')
   const [startTime, setStartTime] = useState('19:00')
   const [endTime, setEndTime] = useState('21:00')
-  const [timezone, setTimezone] = useState('America/Guayaquil')
+  const [timezone, setTimezone] = useState(PLATFORM_TIMEZONE)
 
   async function loadData() {
     setLoading(true)
@@ -720,6 +716,9 @@ export default function AdminDocentesPage() {
             <CardTitle>Horarios de equipo</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
+            <div className="text-xs text-slate-400">
+              Zona horaria oficial: {PLATFORM_TIMEZONE_LABEL}. Tambien puedes guardar otras zonas IANA.
+            </div>
             <div className="space-y-2">
               <Label>Equipo</Label>
               <Select value={scheduleTeamId} onValueChange={setScheduleTeamId}>
@@ -767,7 +766,7 @@ export default function AdminDocentesPage() {
                 value={timezone}
                 onChange={(event) => setTimezone(event.target.value)}
                 className="border-slate-800 bg-slate-950"
-                placeholder="Timezone"
+                placeholder={PLATFORM_TIMEZONE}
               />
             </div>
 
@@ -809,4 +808,3 @@ export default function AdminDocentesPage() {
     </div>
   )
 }
-

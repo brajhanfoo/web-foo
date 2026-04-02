@@ -1,5 +1,9 @@
 import { NextResponse } from 'next/server'
 
+import {
+  isValidIanaTimeZone,
+  PLATFORM_TIMEZONE,
+} from '@/lib/platform/timezone'
 import { isAdminRole, requirePlatformProfile } from '@/lib/platform/security'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 
@@ -80,7 +84,7 @@ export async function POST(request: Request) {
   const day = Number(body.day_of_week)
   const startTime = sanitizeText(body.start_time)
   const endTime = sanitizeText(body.end_time)
-  const timezone = sanitizeText(body.timezone, 60) || 'America/Guayaquil'
+  const timezone = sanitizeText(body.timezone, 60) || PLATFORM_TIMEZONE
 
   if (!teamId || !Number.isFinite(day) || day < 0 || day > 6) {
     return NextResponse.json(
@@ -95,6 +99,13 @@ export async function POST(request: Request) {
   ) {
     return NextResponse.json(
       { ok: false, message: 'Formato de hora inválido.' },
+      { status: 400 }
+    )
+  }
+
+  if (!isValidIanaTimeZone(timezone)) {
+    return NextResponse.json(
+      { ok: false, message: 'Timezone invalida. Usa formato IANA.' },
       { status: 400 }
     )
   }

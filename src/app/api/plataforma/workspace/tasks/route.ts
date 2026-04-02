@@ -64,6 +64,7 @@ export async function GET(request: Request) {
         'team_id',
         'milestone_id',
         'submission_mode',
+        'allowed_submission_type',
         'deadline_at',
         'allow_resubmission',
         'resubmission_deadline_at',
@@ -221,4 +222,3 @@ export async function GET(request: Request) {
     tasks: items,
   })
 }
-
