@@ -112,7 +112,7 @@ export async function POST(request: Request) {
 
   if (editionError || !editionRow?.program_id) {
     return NextResponse.json(
-      { ok: false, message: 'EdiciÃ³n no encontrada.' },
+      { ok: false, message: 'Edición no encontrada.' },
       { status: 404 }
     )
   }
@@ -144,7 +144,7 @@ export async function POST(request: Request) {
 
   if (error || !data) {
     return NextResponse.json(
-      { ok: false, message: error?.message ?? 'No se pudo crear asignaciÃ³n.' },
+      { ok: false, message: error?.message ?? 'No se pudo crear asignación.' },
       { status: 400 }
     )
   }
@@ -216,7 +216,7 @@ export async function PATCH(request: Request) {
 
   if (error) {
     return NextResponse.json(
-      { ok: false, message: 'No se pudo actualizar la asignaciÃ³n.' },
+      { ok: false, message: 'No se pudo actualizar la asignación.' },
       { status: 400 }
     )
   }
@@ -257,7 +257,7 @@ export async function DELETE(request: Request) {
 
   if (error) {
     return NextResponse.json(
-      { ok: false, message: 'No se pudo eliminar la asignaciÃ³n.' },
+      { ok: false, message: 'No se pudo eliminar la asignación.' },
       { status: 400 }
     )
   }

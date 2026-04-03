@@ -81,10 +81,10 @@ const DAY_LABELS: Record<number, string> = {
   0: 'Domingo',
   1: 'Lunes',
   2: 'Martes',
-  3: 'MiÃ©rcoles',
+  3: 'Miércoles',
   4: 'Jueves',
   5: 'Viernes',
-  6: 'SÃ¡bado',
+  6: 'Sábado',
 }
 
 function buildFullName(docente: DocenteRow): string {
@@ -224,8 +224,8 @@ export default function AdminDocentesPage() {
     showSuccess('Docente creado.')
     if (payload.temporary_password) {
       showWarning(
-        `ContraseÃ±a temporal: ${payload.temporary_password}`,
-        'CompÃ¡rtela por canal seguro.'
+        `Contraseña temporal: ${payload.temporary_password}`,
+        'Compártela por canal seguro.'
       )
     }
     setCreateEmail('')
@@ -279,14 +279,14 @@ export default function AdminDocentesPage() {
     } | null
     setBusy(false)
     if (!response.ok || !payload?.ok) {
-      showError(payload?.message ?? 'No se pudo resetear contraseÃ±a.')
+      showError(payload?.message ?? 'No se pudo resetear contraseña.')
       return
     }
-    showSuccess('ContraseÃ±a temporal regenerada.')
+    showSuccess('Contraseña temporal regenerada.')
     if (payload.temporary_password) {
       showWarning(
         `Nueva temporal: ${payload.temporary_password}`,
-        'CompÃ¡rtela por canal seguro.'
+        'Compártela por canal seguro.'
       )
     }
     await loadData()
@@ -320,13 +320,13 @@ export default function AdminDocentesPage() {
     } | null
     setBusy(false)
     if (!response.ok || !payload?.ok) {
-      showError(payload?.message ?? 'No se pudo crear asignaciÃ³n.')
+      showError(payload?.message ?? 'No se pudo crear asignación.')
       return
     }
 
     if (payload.conflicts?.length) {
       showWarning(
-        'AsignaciÃ³n creada con advertencia de solapamiento de horario.',
+        'Asignación creada con advertencia de solapamiento de horario.',
         payload.conflicts
           .slice(0, 2)
           .map(
@@ -336,7 +336,7 @@ export default function AdminDocentesPage() {
           .join(' | ')
       )
     } else {
-      showSuccess('AsignaciÃ³n docente-equipo creada.')
+      showSuccess('Asignación docente-equipo creada.')
     }
 
     setSelectedDocente('none')
@@ -358,10 +358,10 @@ export default function AdminDocentesPage() {
     } | null
     setBusy(false)
     if (!response.ok || !payload?.ok) {
-      showError(payload?.message ?? 'No se pudo eliminar asignaciÃ³n.')
+      showError(payload?.message ?? 'No se pudo eliminar asignación.')
       return
     }
-    showSuccess('AsignaciÃ³n eliminada.')
+    showSuccess('Asignación eliminada.')
     await loadData()
   }
 
@@ -415,7 +415,7 @@ export default function AdminDocentesPage() {
     return (
       <Card className="border border-slate-800 bg-slate-900 text-slate-100">
         <CardContent className="py-8 text-sm text-slate-300">
-          Cargando mÃ³dulo de docentes...
+          Cargando módulo de docentes...
         </CardContent>
       </Card>
     )
@@ -450,13 +450,13 @@ export default function AdminDocentesPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label>Ãrea</Label>
+                <Label>Área</Label>
                 <Select value={createAreaId} onValueChange={setCreateAreaId}>
                   <SelectTrigger className="border-slate-800 bg-slate-950">
-                    <SelectValue placeholder="Selecciona Ã¡rea" />
+                    <SelectValue placeholder="Selecciona área" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="none">Sin Ã¡rea</SelectItem>
+                    <SelectItem value="none">Sin área</SelectItem>
                     {areas.map((area) => (
                       <SelectItem key={area.id} value={area.id}>
                         {area.name}
@@ -484,12 +484,12 @@ export default function AdminDocentesPage() {
             </div>
 
             <div className="space-y-2">
-              <Label>ContraseÃ±a temporal (opcional)</Label>
+              <Label>Contraseña temporal (opcional)</Label>
               <Input
                 value={createTempPassword}
                 onChange={(event) => setCreateTempPassword(event.target.value)}
                 className="border-slate-800 bg-slate-950"
-                placeholder="si queda vacÃ­o se genera automÃ¡ticamente"
+                placeholder="si queda vacío se genera automáticamente"
               />
             </div>
 
@@ -504,15 +504,15 @@ export default function AdminDocentesPage() {
 
         <Card className="border border-slate-800 bg-slate-900 text-slate-100">
           <CardHeader>
-            <CardTitle>Asignacion contextual por equipo</CardTitle>
+            <CardTitle>Asignación contextual por equipo</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3 text-sm text-slate-300">
             <p>
-              La asignacion y desasignacion docente se realiza en la vista del
-              equipo: programa / edicion / equipo.
+              La asignación y desasignación docente se realiza en la vista del
+              equipo: programa / edición / equipo.
             </p>
             <p>
-              Desde ahi se visualizan juntos estudiantes, docentes asignados y
+              Desde ahí se visualizan juntos estudiantes, docentes asignados y
               conflictos de horario.
             </p>
             <div className="flex justify-end">
@@ -565,8 +565,8 @@ export default function AdminDocentesPage() {
                         {docente.email}
                       </div>
                       <div className="text-xs text-slate-400">
-                        Equipos activos: {docente.active_assignments_count} Â·
-                        Ãšltimo login: {formatDate(docente.last_login_at)}
+                        Equipos activos: {docente.active_assignments_count} ·
+                        Último login: {formatDate(docente.last_login_at)}
                       </div>
                     </div>
 
@@ -660,7 +660,7 @@ export default function AdminDocentesPage() {
                 const team = teamLookup.get(assignment.team_id)
                 const edition = team?.edition
                 const programTitle = edition?.program?.title ?? 'Programa'
-                const editionName = edition?.edition_name ?? 'EdiciÃ³n'
+                const editionName = edition?.edition_name ?? 'Edición'
                 return (
                   <div
                     key={assignment.id}
@@ -686,7 +686,7 @@ export default function AdminDocentesPage() {
                           )}
                         </div>
                         <div className="truncate text-xs text-slate-400">
-                          {programTitle} Â· {editionName} Â·{' '}
+                          {programTitle} · {editionName} ·{' '}
                           {team?.name ?? 'Equipo'}
                         </div>
                         {assignment.staff_role ? (
@@ -717,7 +717,7 @@ export default function AdminDocentesPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="text-xs text-slate-400">
-              Zona horaria oficial: {PLATFORM_TIMEZONE_LABEL}. Tambien puedes
+              Zona horaria oficial: {PLATFORM_TIMEZONE_LABEL}. También puedes
               guardar otras zonas IANA.
             </div>
             <div className="space-y-2">
@@ -740,7 +740,7 @@ export default function AdminDocentesPage() {
             <div className="grid gap-2 md:grid-cols-4">
               <Select value={dayOfWeek} onValueChange={setDayOfWeek}>
                 <SelectTrigger className="border-slate-800 bg-slate-950">
-                  <SelectValue placeholder="DÃ­a" />
+                  <SelectValue placeholder="Día" />
                 </SelectTrigger>
                 <SelectContent>
                   {Object.entries(DAY_LABELS).map(([value, label]) => (
@@ -789,7 +789,7 @@ export default function AdminDocentesPage() {
                     className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-slate-800 bg-slate-950 px-3 py-2"
                   >
                     <div className="text-xs text-slate-300">
-                      {DAY_LABELS[slot.day_of_week] ?? slot.day_of_week} Â·{' '}
+                      {DAY_LABELS[slot.day_of_week] ?? slot.day_of_week} ·{' '}
                       {slot.start_time} - {slot.end_time} ({slot.timezone})
                     </div>
                     <Button

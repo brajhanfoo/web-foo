@@ -270,7 +270,7 @@ export async function POST(request: Request) {
 
   if (editionError || !editionRow?.program_id) {
     return NextResponse.json(
-      { ok: false, message: 'No se pudo resolver programa/ediciÃ³n.' },
+      { ok: false, message: 'No se pudo resolver programa/edición.' },
       { status: 404 }
     )
   }
@@ -360,8 +360,8 @@ export async function POST(request: Request) {
     const title = 'Nueva tarea publicada'
     const bodyText =
       assignment.submission_mode === 'team'
-        ? 'Se publicÃ³ una tarea con entrega por equipo.'
-        : 'Se publicÃ³ una tarea con entrega individual.'
+        ? 'Se publicó una tarea con entrega por equipo.'
+        : 'Se publicó una tarea con entrega individual.'
 
     await notifyTeamMembers({
       teamId,
@@ -635,7 +635,7 @@ export async function PATCH(request: Request) {
       teamId: updated.team_id,
       type: 'task_resubmission_enabled',
       title: 'Reentrega habilitada',
-      body: 'Se habilitÃ³ reentrega para una tarea de tu equipo.',
+      body: 'Se habilitó reentrega para una tarea de tu equipo.',
       payload: { task_assignment_id: updated.id },
       source: 'task_assignments',
       createdBy: auth.profile.id,
@@ -643,7 +643,7 @@ export async function PATCH(request: Request) {
     await emailTeamMembers({
       teamId: updated.team_id,
       subject: 'Reentrega habilitada',
-      text: 'Se habilitÃ³ reentrega para una tarea. Revisa los plazos en tu workspace.',
+      text: 'Se habilitó reentrega para una tarea. Revisa los plazos en tu workspace.',
     })
   }
 

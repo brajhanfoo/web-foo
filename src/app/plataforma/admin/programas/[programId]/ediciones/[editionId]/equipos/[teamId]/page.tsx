@@ -10,6 +10,10 @@ import {
   PLATFORM_TIMEZONE,
   PLATFORM_TIMEZONE_LABEL,
 } from '@/lib/platform/timezone'
+import {
+  taskAssignmentStatusBadgeClass,
+  taskAssignmentStatusLabel,
+} from '@/lib/platform/status-labels'
 
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -285,7 +289,7 @@ export default function AdminTeamDetailPage() {
     }
 
     if (editionResponse.error || !editionResponse.data) {
-      showError('No se pudo cargar la edicion.')
+      showError('No se pudo cargar la edición.')
     } else {
       setEdition(editionResponse.data as EditionRow)
     }
@@ -876,6 +880,15 @@ export default function AdminTeamDetailPage() {
             </div>
           </div>
         </div>
+        <Button
+          asChild
+          variant="secondary"
+          className="border border-slate-700 bg-slate-900 text-slate-100 hover:bg-slate-800"
+        >
+          <Link href={`/plataforma/docente/equipos/${teamId}`}>
+            Abrir workspace de revisión
+          </Link>
+        </Button>
       </div>
 
       <Card className="bg-slate-900 border-slate-800 text-slate-100">
@@ -1243,7 +1256,11 @@ export default function AdminTeamDetailPage() {
                                   'Sin descripcion'}
                               </div>
                               <div className="text-xs text-slate-500">
-                                Entrega: {task.submission_mode} · Deadline:{' '}
+                                Entrega:{' '}
+                                {task.submission_mode === 'team'
+                                  ? 'Equipo'
+                                  : 'Individual'}{' '}
+                                · Deadline:{' '}
                                 {formatDate(task.deadline_at)} · Max intentos:{' '}
                                 {task.max_attempts}
                               </div>
@@ -1261,8 +1278,12 @@ export default function AdminTeamDetailPage() {
                                   : ''}
                               </div>
                             </div>
-                            <Badge className="border border-slate-700 bg-slate-800 text-slate-100">
-                              {task.status}
+                            <Badge
+                              className={taskAssignmentStatusBadgeClass(
+                                task.status
+                              )}
+                            >
+                              {taskAssignmentStatusLabel(task.status)}
                             </Badge>
                           </div>
 
@@ -1340,7 +1361,7 @@ export default function AdminTeamDetailPage() {
                     {task.task_template?.title ?? 'Tarea sin titulo'}
                   </div>
                   <div className="text-xs text-amber-200/80">
-                    Estado: {task.status} · Deadline:{' '}
+                    Estado: {taskAssignmentStatusLabel(task.status)} · Deadline:{' '}
                     {formatDate(task.deadline_at)}
                   </div>
                 </div>
@@ -1357,7 +1378,7 @@ export default function AdminTeamDetailPage() {
           if (!open) setEditingMilestone(null)
         }}
       >
-        <DialogContent className="border-slate-800 bg-slate-950 text-slate-100 sm:max-w-xl">
+        <DialogContent className="max-h-[85vh] overflow-y-auto border-slate-800 bg-slate-950 text-slate-100 sm:max-w-xl">
           <DialogHeader>
             <DialogTitle>
               {editingMilestone ? 'Editar hito' : 'Crear hito'}
@@ -1369,7 +1390,7 @@ export default function AdminTeamDetailPage() {
 
           <div className="space-y-3">
             <div className="space-y-2">
-              <Label>Titulo</Label>
+              <Label>Título</Label>
               <Input
                 value={milestoneTitle}
                 onChange={(event) => setMilestoneTitle(event.target.value)}
@@ -1437,7 +1458,7 @@ export default function AdminTeamDetailPage() {
           if (!open) setTaskMilestoneId(null)
         }}
       >
-        <DialogContent className="border-slate-800 bg-slate-950 text-slate-100 sm:max-w-2xl">
+        <DialogContent className="max-h-[85vh] overflow-y-auto border-slate-800 bg-slate-950 text-slate-100 sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle>Nueva tarea del hito</DialogTitle>
             <DialogDescription className="text-slate-400">
@@ -1447,7 +1468,7 @@ export default function AdminTeamDetailPage() {
 
           <div className="space-y-3">
             <div className="space-y-2">
-              <Label>Titulo</Label>
+              <Label>Título</Label>
               <Input
                 value={taskTitle}
                 onChange={(event) => setTaskTitle(event.target.value)}
@@ -1456,7 +1477,7 @@ export default function AdminTeamDetailPage() {
             </div>
 
             <div className="space-y-2">
-              <Label>Descripcion</Label>
+              <Label>Descripción</Label>
               <Textarea
                 value={taskDescription}
                 onChange={(event) => setTaskDescription(event.target.value)}
@@ -1530,7 +1551,9 @@ export default function AdminTeamDetailPage() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="score_100">Puntaje 0-100</SelectItem>
-                    <SelectItem value="pass_fail">Pass / Fail</SelectItem>
+                    <SelectItem value="pass_fail">
+                      Aprobado / Rechazado
+                    </SelectItem>
                     <SelectItem value="none">Sin nota</SelectItem>
                   </SelectContent>
                 </Select>
@@ -1587,7 +1610,7 @@ export default function AdminTeamDetailPage() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="false">No</SelectItem>
-                    <SelectItem value="true">Si</SelectItem>
+                    <SelectItem value="true">Sí</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -1629,7 +1652,7 @@ export default function AdminTeamDetailPage() {
           if (!open) setEditingTask(null)
         }}
       >
-        <DialogContent className="border-slate-800 bg-slate-950 text-slate-100 sm:max-w-2xl">
+        <DialogContent className="max-h-[85vh] overflow-y-auto border-slate-800 bg-slate-950 text-slate-100 sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle>Editar tarea</DialogTitle>
             <DialogDescription className="text-slate-400">
@@ -1639,7 +1662,7 @@ export default function AdminTeamDetailPage() {
 
           <div className="space-y-3">
             <div className="space-y-2">
-              <Label>Titulo</Label>
+              <Label>Título</Label>
               <Input
                 value={editTaskTitle}
                 onChange={(event) => setEditTaskTitle(event.target.value)}
@@ -1647,7 +1670,7 @@ export default function AdminTeamDetailPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label>Descripcion</Label>
+              <Label>Descripción</Label>
               <Textarea
                 value={editTaskDescription}
                 onChange={(event) => setEditTaskDescription(event.target.value)}

@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Bell, CheckCheck } from 'lucide-react'
 
 import { Badge } from '@/components/ui/badge'
@@ -23,6 +23,15 @@ type NotificationRow = {
   read_at: string | null
   created_at: string
 }
+
+type NotificationsPayload =
+  | {
+      ok: true
+      viewer_user_id?: string | null
+      notifications?: NotificationRow[]
+    }
+  | { ok: false; message?: string }
+  | null
 
 function formatRelativeDate(dateIso: string): string {
   const date = new Date(dateIso)
@@ -52,21 +61,21 @@ export function PlatformNotificationsMenu({
     [rows]
   )
 
-  async function loadNotifications() {
+  const loadNotifications = useCallback(async () => {
     setLoading(true)
     const response = await fetch('/api/plataforma/notifications?limit=20', {
       cache: 'no-store',
     })
-    const payload = (await response.json().catch(() => null)) as {
-      ok: boolean
-      notifications?: NotificationRow[]
-    } | null
+    const payload = (await response.json().catch(() => null)) as NotificationsPayload
 
     if (response.ok && payload?.ok) {
+      if (payload.viewer_user_id) {
+        setUserId(payload.viewer_user_id)
+      }
       setRows(payload.notifications ?? [])
     }
     setLoading(false)
-  }
+  }, [])
 
   async function markRead(ids: string[] | 'all') {
     setBusy(true)
@@ -86,16 +95,22 @@ export function PlatformNotificationsMenu({
   }
 
   useEffect(() => {
-    let cancelled = false
-    supabase.auth.getUser().then(({ data }) => {
-      if (cancelled) return
-      setUserId(data.user?.id ?? null)
+    void loadNotifications()
+    const { data } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUserId(session?.user?.id ?? null)
       void loadNotifications()
     })
+
+    supabase.auth.getUser().then(({ data: userData }) => {
+      if (userData.user?.id) {
+        setUserId(userData.user.id)
+      }
+    })
+
     return () => {
-      cancelled = true
+      data.subscription.unsubscribe()
     }
-  }, [])
+  }, [loadNotifications])
 
   useEffect(() => {
     if (!userId) return
@@ -105,7 +120,7 @@ export function PlatformNotificationsMenu({
       .on(
         'postgres_changes',
         {
-          event: '*',
+          event: 'INSERT',
           schema: 'public',
           table: 'notifications',
           filter: `user_id=eq.${userId}`,
@@ -119,7 +134,7 @@ export function PlatformNotificationsMenu({
     return () => {
       void supabase.removeChannel(channel)
     }
-  }, [userId])
+  }, [userId, loadNotifications])
 
   return (
     <DropdownMenu>

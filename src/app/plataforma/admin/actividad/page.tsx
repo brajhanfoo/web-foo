@@ -197,13 +197,13 @@ export default function AdminActivityPage() {
 
             <Select value={inactiveDays} onValueChange={setInactiveDays}>
               <SelectTrigger className="border-slate-800 bg-slate-950">
-                <SelectValue placeholder="DÃ­as" />
+                <SelectValue placeholder="Días" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="3">3 dÃ­as</SelectItem>
-                <SelectItem value="5">5 dÃ­as</SelectItem>
-                <SelectItem value="7">7 dÃ­as</SelectItem>
-                <SelectItem value="14">14 dÃ­as</SelectItem>
+                <SelectItem value="3">3 días</SelectItem>
+                <SelectItem value="5">5 días</SelectItem>
+                <SelectItem value="7">7 días</SelectItem>
+                <SelectItem value="14">14 días</SelectItem>
               </SelectContent>
             </Select>
 
@@ -316,9 +316,9 @@ export default function AdminActivityPage() {
                   </div>
                   <div className="text-xs text-slate-400">{row.email}</div>
                   <div className="text-xs text-slate-500">
-                    {row.program_title ?? 'Programa'} Â·{' '}
-                    {row.team_name ?? 'Sin equipo'} Â·{' '}
-                    {row.inactive_for_days ?? 0} dÃ­as inactivo
+                    {row.program_title ?? 'Programa'} ·{' '}
+                    {row.team_name ?? 'Sin equipo'} ·{' '}
+                    {row.inactive_for_days ?? 0} días inactivo
                   </div>
                 </div>
               ))
@@ -352,7 +352,7 @@ export default function AdminActivityPage() {
                         : 'border-emerald-500/40 bg-emerald-500/10 text-emerald-200'
                     }
                   >
-                    {row.inactive_for_days ?? 0} dÃ­as
+                    {row.inactive_for_days ?? 0} días
                   </Badge>
                 </div>
               ))

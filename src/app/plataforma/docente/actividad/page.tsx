@@ -111,7 +111,7 @@ export default function DocenteActivityPage() {
           </Badge>
           <Badge className="border border-amber-500/40 bg-amber-500/10 text-amber-200">
             {payload.totals.inactive} inactivos (&gt;= {payload.threshold_days}{' '}
-            dÃ­as)
+            días)
           </Badge>
         </CardContent>
       </Card>
@@ -149,7 +149,7 @@ export default function DocenteActivityPage() {
                       : 'border-emerald-500/40 bg-emerald-500/10 text-emerald-200'
                   }
                 >
-                  {row.inactive_for_days ?? 0} dÃ­as
+                  {row.inactive_for_days ?? 0} días
                 </Badge>
               </div>
             ))

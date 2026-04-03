@@ -30,6 +30,12 @@ import {
   PLATFORM_TIMEZONE,
   PLATFORM_TIMEZONE_LABEL,
 } from '@/lib/platform/timezone'
+import {
+  submissionStatusBadgeClass,
+  submissionStatusLabel,
+  taskAssignmentStatusBadgeClass,
+  taskAssignmentStatusLabel,
+} from '@/lib/platform/status-labels'
 
 type SubmissionRow = {
   id: string
@@ -191,7 +197,7 @@ export default function DocenteTeamWorkspacePage() {
 
   async function createTask() {
     if (!workspace || milestoneId === 'none' || !title.trim()) {
-      showError('Completa hito y tÃ­tulo.')
+      showError('Completa hito y título.')
       return
     }
     setBusy(true)
@@ -233,7 +239,7 @@ export default function DocenteTeamWorkspacePage() {
 
   async function submitReview() {
     if (!reviewSubmissionId || !reviewComment.trim()) {
-      showError('Debes escribir comentario de devoluciÃ³n.')
+      showError('Debes escribir comentario de devolución.')
       return
     }
     if (!selectedAssignment) {
@@ -307,6 +313,22 @@ export default function DocenteTeamWorkspacePage() {
     window.open(payload.signed_url, '_blank', 'noopener,noreferrer')
   }
 
+  async function openSubmissionLink(submissionId: string) {
+    const response = await fetch(
+      `/api/plataforma/submissions/link-url?submission_id=${submissionId}`
+    )
+    const payload = (await response.json().catch(() => null)) as {
+      ok: boolean
+      link_url?: string
+      message?: string
+    } | null
+    if (!response.ok || !payload?.ok || !payload.link_url) {
+      showError(payload?.message ?? 'No se pudo abrir link.')
+      return
+    }
+    window.open(payload.link_url, '_blank', 'noopener,noreferrer')
+  }
+
   if (loading || !workspace) {
     return (
       <Card className="border border-slate-800 bg-slate-900 text-slate-100">
@@ -325,8 +347,8 @@ export default function DocenteTeamWorkspacePage() {
         </CardHeader>
         <CardContent className="space-y-1 text-sm text-slate-300">
           <div>
-            {workspace.team.edition?.program?.title ?? 'Programa'} Â·{' '}
-            {workspace.team.edition?.edition_name ?? 'EdiciÃ³n'}
+            {workspace.team.edition?.program?.title ?? 'Programa'} ·{' '}
+            {workspace.team.edition?.edition_name ?? 'Edición'}
           </div>
           <div className="text-xs text-slate-400">
             Zona horaria oficial: {PLATFORM_TIMEZONE_LABEL}
@@ -344,7 +366,7 @@ export default function DocenteTeamWorkspacePage() {
           </div>
           <div className="grid gap-3 md:grid-cols-3">
             <div className="space-y-2">
-              <Label>Milestone</Label>
+              <Label>Hito</Label>
               <Select value={milestoneId} onValueChange={setMilestoneId}>
                 <SelectTrigger className="border-slate-800 bg-slate-950">
                   <SelectValue placeholder="Selecciona hito" />
@@ -400,13 +422,13 @@ export default function DocenteTeamWorkspacePage() {
             value={title}
             onChange={(event) => setTitle(event.target.value)}
             className="border-slate-800 bg-slate-950"
-            placeholder="TÃ­tulo de tarea"
+            placeholder="Título de tarea"
           />
           <Textarea
             value={description}
             onChange={(event) => setDescription(event.target.value)}
             className="border-slate-800 bg-slate-950"
-            placeholder="DescripciÃ³n"
+            placeholder="Descripción"
           />
           <Textarea
             value={instructions}
@@ -427,7 +449,7 @@ export default function DocenteTeamWorkspacePage() {
               value={maxAttempts}
               onChange={(event) => setMaxAttempts(event.target.value)}
               className="border-slate-800 bg-slate-950"
-              placeholder="MÃ¡x intentos"
+              placeholder="Máx. intentos"
               inputMode="numeric"
             />
             <Select
@@ -461,7 +483,7 @@ export default function DocenteTeamWorkspacePage() {
         <CardContent className="space-y-4">
           {workspace.assignments.length === 0 ? (
             <div className="text-sm text-slate-400">
-              No hay tareas asignadas todavÃ­a.
+              No hay tareas asignadas todavía.
             </div>
           ) : (
             workspace.assignments.map((assignment) => (
@@ -475,8 +497,12 @@ export default function DocenteTeamWorkspacePage() {
                       {assignment.task_template?.title ?? 'Tarea'}
                     </div>
                     <div className="text-xs text-slate-400">
-                      Modo: {assignment.submission_mode} Â· Estado:{' '}
-                      {assignment.status} Â· Deadline:{' '}
+                      Modo:{' '}
+                      {assignment.submission_mode === 'team'
+                        ? 'Equipo'
+                        : 'Individual'}{' '}
+                      · Estado: {taskAssignmentStatusLabel(assignment.status)} ·
+                      Deadline:{' '}
                       {formatDate(assignment.deadline_at)}
                     </div>
                     <div className="text-xs text-slate-400">
@@ -486,6 +512,9 @@ export default function DocenteTeamWorkspacePage() {
                       )}
                     </div>
                   </div>
+                  <Badge className={taskAssignmentStatusBadgeClass(assignment.status)}>
+                    {taskAssignmentStatusLabel(assignment.status)}
+                  </Badge>
                   <Badge className="border border-slate-700 bg-slate-800 text-slate-100">
                     {assignment.submissions.length} entregas
                   </Badge>
@@ -504,20 +533,18 @@ export default function DocenteTeamWorkspacePage() {
                       >
                         <div className="flex flex-wrap items-center justify-between gap-2">
                           <div className="text-xs text-slate-300">
-                            Intento #{submission.attempt_number} Â·{' '}
-                            {formatDate(submission.submitted_at)} Â·{' '}
-                            {submission.status}
+                            Intento #{submission.attempt_number} ·{' '}
+                            {formatDate(submission.submitted_at)} ·{' '}
+                            {submissionStatusLabel(submission.status)}
                           </div>
                           <div className="flex flex-wrap gap-2">
                             {submission.link_url ? (
-                              <Button size="sm" variant="secondary" asChild>
-                                <a
-                                  href={submission.link_url}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                >
-                                  Link <ExternalLink className="ml-1 h-3 w-3" />
-                                </a>
+                              <Button
+                                size="sm"
+                                variant="secondary"
+                                onClick={() => void openSubmissionLink(submission.id)}
+                              >
+                                Link <ExternalLink className="ml-1 h-3 w-3" />
                               </Button>
                             ) : null}
                             {submission.file_path ? (
@@ -543,10 +570,15 @@ export default function DocenteTeamWorkspacePage() {
                             </Button>
                           </div>
                         </div>
+                        <div className="mt-2">
+                          <Badge className={submissionStatusBadgeClass(submission.status)}>
+                            {submissionStatusLabel(submission.status)}
+                          </Badge>
+                        </div>
 
                         {submission.latest_feedback?.comment ? (
                           <div className="mt-2 text-xs text-slate-400">
-                            Ãšltimo feedback:{' '}
+                            Último feedback:{' '}
                             {submission.latest_feedback.comment}
                           </div>
                         ) : null}
@@ -572,9 +604,9 @@ export default function DocenteTeamWorkspacePage() {
           }
         }}
       >
-        <DialogContent className="border border-slate-800 bg-slate-900 text-slate-100">
+        <DialogContent className="max-h-[85vh] overflow-y-auto border border-slate-800 bg-slate-900 text-slate-100 sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle>RevisiÃ³n de entrega</DialogTitle>
+            <DialogTitle>Revisión de entrega</DialogTitle>
           </DialogHeader>
 
           <div className="space-y-3">
@@ -582,14 +614,14 @@ export default function DocenteTeamWorkspacePage() {
               Entrega:{' '}
               {selectedSubmission
                 ? `${selectedSubmission.id.slice(0, 8)}...`
-                : 'â€”'}
+                : '—'}
             </div>
             <div className="text-xs text-slate-400">
-              Modo de evaluacion:{' '}
+              Modo de evaluación:{' '}
               {selectedGradingMode === 'score_100'
                 ? 'Puntaje 0 a 100'
                 : selectedGradingMode === 'pass_fail'
-                  ? 'Pass / Fail'
+                  ? 'Aprobado / Rechazado'
                   : 'Sin nota'}
             </div>
             {selectedGradingMode !== 'pass_fail' ? (
@@ -622,8 +654,8 @@ export default function DocenteTeamWorkspacePage() {
                   <SelectValue placeholder="Resultado" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="pass">Pass</SelectItem>
-                  <SelectItem value="fail">Fail</SelectItem>
+                  <SelectItem value="pass">Aprobado</SelectItem>
+                  <SelectItem value="fail">Rechazado</SelectItem>
                 </SelectContent>
               </Select>
             )}
@@ -644,7 +676,7 @@ export default function DocenteTeamWorkspacePage() {
               value={reviewComment}
               onChange={(event) => setReviewComment(event.target.value)}
               className="border-slate-800 bg-slate-950"
-              placeholder="Comentario de devoluciÃ³n"
+              placeholder="Comentario de devolución"
             />
           </div>
 

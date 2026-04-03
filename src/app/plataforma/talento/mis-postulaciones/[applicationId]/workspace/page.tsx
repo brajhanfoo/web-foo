@@ -33,6 +33,12 @@ import {
   PLATFORM_TIMEZONE,
   PLATFORM_TIMEZONE_LABEL,
 } from '@/lib/platform/timezone'
+import {
+  submissionStatusBadgeClass,
+  submissionStatusLabel,
+  taskAssignmentStatusBadgeClass,
+  taskAssignmentStatusLabel,
+} from '@/lib/platform/status-labels'
 
 type WorkspaceTeamRow = {
   id: string
@@ -161,6 +167,9 @@ export default function WorkspacePage() {
   const [certificateBusy, setCertificateBusy] = useState(false)
   const [tasksLoading, setTasksLoading] = useState(false)
   const [tasks, setTasks] = useState<WorkspaceTaskAssignment[]>([])
+  const [milestoneTasksDialogId, setMilestoneTasksDialogId] = useState<
+    string | null
+  >(null)
   const [submissionDialogTaskId, setSubmissionDialogTaskId] = useState<
     string | null
   >(null)
@@ -392,6 +401,19 @@ export default function WorkspacePage() {
     })
   }, [state, tasks])
 
+  const selectedMilestoneForTasks = useMemo(() => {
+    if (!milestoneTasksDialogId) return null
+    return (
+      milestonesForTasks.find((milestone) => milestone.id === milestoneTasksDialogId) ??
+      null
+    )
+  }, [milestoneTasksDialogId, milestonesForTasks])
+
+  const selectedMilestoneTasks = useMemo(() => {
+    if (!milestoneTasksDialogId) return [] as WorkspaceTaskAssignment[]
+    return tasksByMilestone.grouped.get(milestoneTasksDialogId) ?? []
+  }, [milestoneTasksDialogId, tasksByMilestone.grouped])
+
   function renderTaskCard(task: WorkspaceTaskAssignment) {
     const currentSubmission = task.submissions[0] ?? null
     const isDeliverable = task.status === 'published'
@@ -417,12 +439,15 @@ export default function WorkspacePage() {
               {formatDateTimeInTimeZone(task.deadline_at, PLATFORM_TIMEZONE)}
             </div>
           </div>
+          <Badge className={taskAssignmentStatusBadgeClass(task.status)}>
+            {taskAssignmentStatusLabel(task.status)}
+          </Badge>
           <Badge className="border border-white/10 bg-white/10 text-white">
             {!isDeliverable
               ? 'No disponible'
               : currentSubmission
-                ? `Entregado (${currentSubmission.status})`
-                : 'Pendiente'}
+              ? `Entregado · ${submissionStatusLabel(currentSubmission.status)}`
+              : 'Pendiente'}
           </Badge>
         </div>
 
@@ -441,7 +466,7 @@ export default function WorkspacePage() {
         {currentSubmission ? (
           <div className="mt-3 space-y-2">
             <div className="text-xs text-white/60">
-              Intento #{currentSubmission.attempt_number} Â·{' '}
+              Intento #{currentSubmission.attempt_number} ·{' '}
               {formatDateTimeInTimeZone(
                 currentSubmission.submitted_at,
                 PLATFORM_TIMEZONE
@@ -449,15 +474,13 @@ export default function WorkspacePage() {
             </div>
             <div className="flex flex-wrap gap-2">
               {currentSubmission.link_url ? (
-                <Button size="sm" variant="secondary" asChild>
-                  <Link
-                    href={currentSubmission.link_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    Ver link
-                    <ExternalLink className="ml-1 h-3 w-3" />
-                  </Link>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  onClick={() => void openSubmissionLink(currentSubmission.id)}
+                >
+                  Ver link
+                  <ExternalLink className="ml-1 h-3 w-3" />
                 </Button>
               ) : null}
               {currentSubmission.file_path ? (
@@ -476,12 +499,18 @@ export default function WorkspacePage() {
                 Feedback: {currentSubmission.latest_feedback.comment}
               </div>
             ) : null}
+            <Badge className={submissionStatusBadgeClass(currentSubmission.status)}>
+              {submissionStatusLabel(currentSubmission.status)}
+            </Badge>
           </div>
         ) : null}
 
         <div className="mt-3 flex justify-end">
           <Button
-            onClick={() => setSubmissionDialogTaskId(task.id)}
+            onClick={() => {
+              setMilestoneTasksDialogId(null)
+              setSubmissionDialogTaskId(task.id)
+            }}
             className="gap-2 bg-emerald-700 text-white hover:bg-emerald-600"
             disabled={
               !isDeliverable || (currentSubmission && !task.allow_resubmission)
@@ -538,6 +567,22 @@ export default function WorkspacePage() {
       return
     }
     window.open(payload.signed_url, '_blank', 'noopener,noreferrer')
+  }
+
+  async function openSubmissionLink(submissionId: string) {
+    const response = await fetch(
+      `/api/plataforma/submissions/link-url?submission_id=${submissionId}`
+    )
+    const payload = (await response.json().catch(() => null)) as {
+      ok: boolean
+      link_url?: string
+      message?: string
+    } | null
+    if (!response.ok || !payload?.ok || !payload.link_url) {
+      showErrorRef.current(payload?.message ?? 'No se pudo abrir el link')
+      return
+    }
+    window.open(payload.link_url, '_blank', 'noopener,noreferrer')
   }
 
   async function submitTask() {
@@ -648,7 +693,7 @@ export default function WorkspacePage() {
 
   const { data } = state
   const programTitle = data.program.title ?? 'Programa'
-  const editionName = data.edition.edition_name ?? 'Edicion'
+  const editionName = data.edition.edition_name ?? 'Edición'
 
   const teamLinks = [
     {
@@ -683,7 +728,7 @@ export default function WorkspacePage() {
               {programTitle}
             </div>
             <div className="text-sm text-white/70 break-words">
-              Edicion: {editionName}
+              Edición: {editionName}
             </div>
             <div className="text-xs text-white/50">
               Zona horaria oficial: {PLATFORM_TIMEZONE_LABEL}
@@ -693,7 +738,7 @@ export default function WorkspacePage() {
             ) : null}
           </div>
           <Badge className="border border-emerald-500/30 bg-emerald-500/10 text-emerald-200">
-            Matricula confirmada
+            Matrícula confirmada
           </Badge>
         </div>
       </div>
@@ -744,13 +789,13 @@ export default function WorkspacePage() {
                   </div>
                 ) : (
                   <div className="text-sm text-white/70">
-                    No hay enlaces disponibles todavia.
+                    No hay enlaces disponibles todavía.
                   </div>
                 )}
               </>
             ) : (
               <div className="text-sm text-white/70">
-                Aun no tienes equipo asignado.
+                Aún no tienes equipo asignado.
               </div>
             )}
           </CardContent>
@@ -773,7 +818,7 @@ export default function WorkspacePage() {
                     Certificado disponible
                   </div>
                   <div className="text-xs text-white/70">
-                    Descarga tu constancia de participacion.
+                    Descarga tu constancia de participación.
                   </div>
                 </div>
               </div>
@@ -792,12 +837,12 @@ export default function WorkspacePage() {
       <Card className="border bg-background/10">
         <CardHeader className="pb-3">
           <CardTitle className="text-base text-white">
-            Hitos de la edicion
+            Hitos de la edición
           </CardTitle>
         </CardHeader>
         <CardContent>
           {!data.milestones.length ? (
-            <div className="text-sm text-white/70">No hay hitos todavia.</div>
+            <div className="text-sm text-white/70">No hay hitos todavía.</div>
           ) : (
             <div
               className="rounded-lg border border-white/10 overflow-hidden"
@@ -816,6 +861,8 @@ export default function WorkspacePage() {
                       PLATFORM_TIMEZONE
                     )
                   : '-'
+                const milestoneTasks =
+                  tasksByMilestone.grouped.get(milestone.id) ?? []
 
                 return (
                   <div
@@ -832,6 +879,14 @@ export default function WorkspacePage() {
                     </div>
                     <div className="md:col-span-3">
                       <div className="flex flex-wrap justify-start md:justify-end gap-2">
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          className="bg-white/10 hover:bg-white/15 border border-white/10 text-white"
+                          onClick={() => setMilestoneTasksDialogId(milestone.id)}
+                        >
+                          Tareas ({milestoneTasks.length})
+                        </Button>
                         {milestone.meet_url ? (
                           <Button
                             size="icon"
@@ -880,77 +935,46 @@ export default function WorkspacePage() {
         </CardContent>
       </Card>
 
-      <Card className="border bg-background/10">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base text-white">
-            Tareas y entregables
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {tasksLoading ? (
-            <div className="text-sm text-white/70">Cargando tareas...</div>
-          ) : tasks.length === 0 ? (
-            <div className="text-sm text-white/70">
-              No hay tareas publicadas para tu equipo aÃºn.
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {milestonesForTasks.map((milestone) => {
-                const milestoneTasks =
-                  tasksByMilestone.grouped.get(milestone.id) ?? []
-                return (
-                  <div
-                    key={milestone.id}
-                    className="rounded-lg border border-white/10 bg-black/15 p-3"
-                  >
-                    <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-                      <div>
-                        <div className="text-sm font-semibold text-white">
-                          {milestone.title}
-                        </div>
-                        <div className="text-xs text-white/50">
-                          Fecha:{' '}
-                          {formatDateOnlyInTimeZone(
-                            milestone.starts_at,
-                            PLATFORM_TIMEZONE
-                          ) || '—'}
-                        </div>
-                      </div>
-                      <Badge className="border border-white/10 bg-white/10 text-white">
-                        {milestoneTasks.length} tarea
-                        {milestoneTasks.length === 1 ? '' : 's'}
-                      </Badge>
-                    </div>
+      {tasksByMilestone.withoutMilestone.length > 0 ? (
+        <Card className="border border-amber-500/30 bg-amber-500/10">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base text-amber-100">
+              Tareas sin hito visible
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {tasksByMilestone.withoutMilestone.map((task) =>
+              renderTaskCard(task)
+            )}
+          </CardContent>
+        </Card>
+      ) : null}
 
-                    {milestoneTasks.length === 0 ? (
-                      <div className="text-xs text-white/60">
-                        Sin tareas publicadas para este hito.
-                      </div>
-                    ) : (
-                      <div className="space-y-3">
-                        {milestoneTasks.map((task) => renderTaskCard(task))}
-                      </div>
-                    )}
-                  </div>
-                )
-              })}
-
-              {tasksByMilestone.withoutMilestone.length > 0 ? (
-                <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3">
-                  <div className="mb-2 text-sm font-semibold text-amber-100">
-                    Tareas sin hito visible
-                  </div>
-                  <div className="space-y-3">
-                    {tasksByMilestone.withoutMilestone.map((task) =>
-                      renderTaskCard(task)
-                    )}
-                  </div>
-                </div>
-              ) : null}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      <Dialog
+        open={Boolean(milestoneTasksDialogId)}
+        onOpenChange={(open) => {
+          if (!open) setMilestoneTasksDialogId(null)
+        }}
+      >
+        <DialogContent className="max-h-[85vh] overflow-y-auto border border-white/10 bg-black text-white sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>
+              {selectedMilestoneForTasks?.title ?? 'Tareas del hito'}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 max-h-[65vh] overflow-y-auto pr-1">
+            {tasksLoading ? (
+              <div className="text-sm text-white/70">Cargando tareas...</div>
+            ) : selectedMilestoneTasks.length === 0 ? (
+              <div className="text-sm text-white/70">
+                No hay tareas publicadas para este hito.
+              </div>
+            ) : (
+              selectedMilestoneTasks.map((task) => renderTaskCard(task))
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <Dialog
         open={Boolean(submissionDialogTaskId)}
@@ -963,7 +987,7 @@ export default function WorkspacePage() {
           }
         }}
       >
-        <DialogContent className="border border-white/10 bg-black text-white sm:max-w-lg">
+        <DialogContent className="max-h-[85vh] overflow-y-auto border border-white/10 bg-black text-white sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>
               {selectedTask?.task_template?.title ?? 'Enviar entrega'}
@@ -1007,7 +1031,7 @@ export default function WorkspacePage() {
                   className="border-white/10 bg-white/5"
                 />
                 <div className="text-[11px] text-white/50">
-                  MÃ¡ximo 25MB. PDF, imÃ¡genes, ZIP, DOC/DOCX o TXT.
+                  Máximo 25MB. PDF, imágenes, ZIP, DOC/DOCX o TXT.
                 </div>
               </div>
             ) : null}

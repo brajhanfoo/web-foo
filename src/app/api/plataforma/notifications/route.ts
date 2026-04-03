@@ -44,6 +44,7 @@ export async function GET(request: Request) {
 
   return NextResponse.json({
     ok: true,
+    viewer_user_id: auth.profile.id,
     notifications: data ?? [],
     unread_count: unreadCount,
   })

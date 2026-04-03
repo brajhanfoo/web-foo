@@ -30,14 +30,14 @@ export async function GET(request: Request) {
 
   if (appError || !appRow?.team_id) {
     return NextResponse.json(
-      { ok: false, message: 'AplicaciÃ³n o equipo no encontrado.' },
+      { ok: false, message: 'Aplicación o equipo no encontrado.' },
       { status: 404 }
     )
   }
 
   if (appRow.status !== 'enrolled') {
     return NextResponse.json(
-      { ok: false, message: 'La aplicacion no esta enrolada en el equipo.' },
+      { ok: false, message: 'La aplicación no está enrolada en el equipo.' },
       { status: 403 }
     )
   }
