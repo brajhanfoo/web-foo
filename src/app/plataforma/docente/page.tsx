@@ -18,6 +18,7 @@ type TeamRow = {
     program?: { title?: string } | null
   } | null
 }
+const PRIMARY_CTA_CLASS = 'bg-[#00CCA4] text-slate-950 hover:bg-[#00b997]'
 
 export default function DocenteHomePage() {
   const { showError } = useToastEnhanced()
@@ -101,7 +102,7 @@ export default function DocenteHomePage() {
                   </span>
                 </div>
                 <div className="mt-4 flex justify-end">
-                  <Button asChild>
+                  <Button asChild className={PRIMARY_CTA_CLASS}>
                     <Link href={`/plataforma/docente/equipos/${team.id}`}>
                       Abrir equipo <ArrowRight className="ml-2 h-4 w-4" />
                     </Link>

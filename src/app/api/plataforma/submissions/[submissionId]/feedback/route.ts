@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server'
+﻿import { NextResponse } from 'next/server'
 
 import { touchPlatformActivity } from '@/lib/platform/activity'
 import {
@@ -47,7 +47,7 @@ export async function POST(
   const { data: submission, error: submissionError } = await supabaseAdmin
     .from('submissions')
     .select(
-      'id, team_id, task_assignment_id, submission_scope, owner_profile_id, status, task_assignment:task_assignments(id, edition_id, program_id, team_id, grading_mode)'
+      'id, team_id, task_assignment_id, submission_scope, owner_profile_id, status, reviewed_by, reviewed_at, task_assignment:task_assignments(id, edition_id, program_id, team_id, grading_mode)'
     )
     .eq('id', targetId)
     .maybeSingle()
@@ -80,6 +80,21 @@ export async function POST(
     )
   }
 
+  if (
+    auth.profile.role === 'docente' &&
+    submission.reviewed_by &&
+    submission.reviewed_by !== auth.profile.id
+  ) {
+    return NextResponse.json(
+      {
+        ok: false,
+        message:
+          'Esta entrega ya fue revisada por otro docente. Solo puedes verla.',
+      },
+      { status: 403 }
+    )
+  }
+
   const body = (await request.json().catch(() => ({}))) as FeedbackBody
   const comment = sanitizeFeedbackComment(
     sanitizeText(body.comment, 5000),
@@ -107,7 +122,7 @@ export async function POST(
       return NextResponse.json(
         {
           ok: false,
-          message: 'Debes enviar un puntaje valido entre 0 y 100.',
+          message: 'Debes enviar un puntaje válido entre 0 y 100.',
         },
         { status: 400 }
       )

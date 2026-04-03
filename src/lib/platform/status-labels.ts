@@ -7,7 +7,9 @@ export type SubmissionStatus =
   | 'rejected'
   | 'reviewed'
 
-export function taskAssignmentStatusLabel(status: TaskAssignmentStatus): string {
+export function taskAssignmentStatusLabel(
+  status: TaskAssignmentStatus
+): string {
   if (status === 'draft') return 'Borrador'
   if (status === 'published') return 'Publicada'
   if (status === 'closed') return 'Cerrada'
@@ -52,4 +54,3 @@ export function submissionStatusBadgeClass(status: SubmissionStatus): string {
   }
   return 'border border-slate-700 bg-slate-800 text-slate-100'
 }
-

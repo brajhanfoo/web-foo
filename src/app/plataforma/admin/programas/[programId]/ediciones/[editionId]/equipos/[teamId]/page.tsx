@@ -1013,7 +1013,11 @@ export default function AdminTeamDetailPage() {
             </div>
 
             <div className="flex justify-end">
-              <Button disabled={busy} onClick={() => void assignDocente()}>
+              <Button
+                disabled={busy}
+                onClick={() => void assignDocente()}
+                className="bg-[#00CCA4] text-slate-950 hover:bg-[#00b997]"
+              >
                 Asignar docente
               </Button>
             </div>
@@ -1260,9 +1264,8 @@ export default function AdminTeamDetailPage() {
                                 {task.submission_mode === 'team'
                                   ? 'Equipo'
                                   : 'Individual'}{' '}
-                                · Deadline:{' '}
-                                {formatDate(task.deadline_at)} · Max intentos:{' '}
-                                {task.max_attempts}
+                                · Deadline: {formatDate(task.deadline_at)} · Max
+                                intentos: {task.max_attempts}
                               </div>
                               <div className="text-xs text-slate-500">
                                 Tipo entrega:{' '}

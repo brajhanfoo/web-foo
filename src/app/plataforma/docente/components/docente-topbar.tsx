@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useMemo } from 'react'
 import { usePathname } from 'next/navigation'
@@ -41,10 +41,10 @@ export function DocenteTopbar({
         <div className="flex min-w-0 items-center gap-2">
           <Button
             type="button"
-            variant="secondary"
+            variant="ghost"
             size="icon"
             onClick={onMenuClick}
-            className="h-9 w-9 border border-slate-800 bg-slate-800 text-slate-100 hover:bg-slate-700 lg:hidden"
+            className="h-9 w-9 border border-slate-800 text-slate-100 hover:bg-slate-800 lg:hidden"
             aria-label="Abrir menú"
           >
             <Menu className="h-4 w-4" />
@@ -69,3 +69,4 @@ export function DocenteTopbar({
     </header>
   )
 }
+

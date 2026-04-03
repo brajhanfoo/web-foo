@@ -83,4 +83,3 @@ export async function GET(request: Request) {
 
   return NextResponse.json({ ok: true, link_url: linkUrl })
 }
-

@@ -404,8 +404,9 @@ export default function WorkspacePage() {
   const selectedMilestoneForTasks = useMemo(() => {
     if (!milestoneTasksDialogId) return null
     return (
-      milestonesForTasks.find((milestone) => milestone.id === milestoneTasksDialogId) ??
-      null
+      milestonesForTasks.find(
+        (milestone) => milestone.id === milestoneTasksDialogId
+      ) ?? null
     )
   }, [milestoneTasksDialogId, milestonesForTasks])
 
@@ -446,8 +447,8 @@ export default function WorkspacePage() {
             {!isDeliverable
               ? 'No disponible'
               : currentSubmission
-              ? `Entregado · ${submissionStatusLabel(currentSubmission.status)}`
-              : 'Pendiente'}
+                ? `Entregado · ${submissionStatusLabel(currentSubmission.status)}`
+                : 'Pendiente'}
           </Badge>
         </div>
 
@@ -499,7 +500,9 @@ export default function WorkspacePage() {
                 Feedback: {currentSubmission.latest_feedback.comment}
               </div>
             ) : null}
-            <Badge className={submissionStatusBadgeClass(currentSubmission.status)}>
+            <Badge
+              className={submissionStatusBadgeClass(currentSubmission.status)}
+            >
               {submissionStatusLabel(currentSubmission.status)}
             </Badge>
           </div>
@@ -883,7 +886,9 @@ export default function WorkspacePage() {
                           size="sm"
                           variant="secondary"
                           className="bg-white/10 hover:bg-white/15 border border-white/10 text-white"
-                          onClick={() => setMilestoneTasksDialogId(milestone.id)}
+                          onClick={() =>
+                            setMilestoneTasksDialogId(milestone.id)
+                          }
                         >
                           Tareas ({milestoneTasks.length})
                         </Button>

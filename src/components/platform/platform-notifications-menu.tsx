@@ -66,7 +66,9 @@ export function PlatformNotificationsMenu({
     const response = await fetch('/api/plataforma/notifications?limit=20', {
       cache: 'no-store',
     })
-    const payload = (await response.json().catch(() => null)) as NotificationsPayload
+    const payload = (await response
+      .json()
+      .catch(() => null)) as NotificationsPayload
 
     if (response.ok && payload?.ok) {
       if (payload.viewer_user_id) {

@@ -1,4 +1,4 @@
-import { randomBytes } from 'node:crypto'
+﻿import { randomBytes } from 'node:crypto'
 import { NextResponse } from 'next/server'
 
 import { sendTransactionalEmail } from '@/lib/platform/email'
@@ -82,3 +82,4 @@ export async function POST(
 
   return NextResponse.json({ ok: true, temporary_password: temporaryPassword })
 }
+

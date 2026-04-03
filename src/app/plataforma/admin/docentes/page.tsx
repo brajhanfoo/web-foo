@@ -1,13 +1,26 @@
 ﻿'use client'
 
-import Link from 'next/link'
-import { useEffect, useMemo, useState } from 'react'
-import { RotateCcw, UserPlus } from 'lucide-react'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { UserPlus } from 'lucide-react'
 
 import { useToastEnhanced } from '@/hooks/use-toast-enhanced'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
@@ -17,112 +30,61 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { DocentesTable } from './components/docentes-table'
 import {
-  formatDateTimeInTimeZone,
-  PLATFORM_TIMEZONE,
-  PLATFORM_TIMEZONE_LABEL,
-} from '@/lib/platform/timezone'
+  DocentesToolbar,
+  type DocenteStatusFilter,
+} from './components/docentes-toolbar'
+import type {
+  AssignmentRow,
+  DocenteRow,
+  ProfessionalArea,
+  TeamRef,
+} from './components/types'
 
-type ProfessionalArea = {
-  id: string
-  code: string
-  name: string
-  is_active: boolean
+type CreateDocenteForm = {
+  email: string
+  first_name: string
+  last_name: string
+  professional_area_id: string
+  temporary_password: string
 }
 
-type DocenteRow = {
-  id: string
-  email: string | null
-  first_name: string | null
-  last_name: string | null
-  is_active: boolean
-  role: string
-  professional_area_id: string | null
-  password_reset_required: boolean
-  created_at: string
-  last_login_at: string | null
-  active_assignments_count: number
+const DEFAULT_CREATE_FORM: CreateDocenteForm = {
+  email: '',
+  first_name: '',
+  last_name: '',
+  professional_area_id: 'none',
+  temporary_password: '',
 }
+const PRIMARY_CTA_CLASS = 'bg-[#00CCA4] text-slate-950 hover:bg-[#00b997]'
 
-type AssignmentRow = {
-  id: string
-  docente_profile_id: string
-  program_id: string
-  edition_id: string
-  team_id: string
-  staff_role: string | null
-  is_active: boolean
-  created_at: string
-}
-
-type TeamRef = {
-  id: string
-  name: string
-  edition_id: string
-  edition: {
-    id?: string
-    edition_name?: string
-    program_id?: string
-    program?: { id?: string; title?: string } | null
-  } | null
-}
-
-type ScheduleSlot = {
-  id: string
-  team_id: string
-  day_of_week: number
-  start_time: string
-  end_time: string
-  timezone: string
-  is_active: boolean
-}
-
-const DAY_LABELS: Record<number, string> = {
-  0: 'Domingo',
-  1: 'Lunes',
-  2: 'Martes',
-  3: 'Miércoles',
-  4: 'Jueves',
-  5: 'Viernes',
-  6: 'Sábado',
-}
-
-function buildFullName(docente: DocenteRow): string {
-  const fullName =
-    `${docente.first_name ?? ''} ${docente.last_name ?? ''}`.trim() || ''
-  return fullName || docente.email || 'Docente'
-}
-
-function formatDate(value: string | null): string {
-  return formatDateTimeInTimeZone(value, PLATFORM_TIMEZONE)
+function safeText(value: string | null | undefined): string {
+  return (value ?? '').trim()
 }
 
 export default function AdminDocentesPage() {
   const { showError, showSuccess, showWarning } = useToastEnhanced()
 
   const [loading, setLoading] = useState(true)
-  const [busy, setBusy] = useState(false)
   const [docentes, setDocentes] = useState<DocenteRow[]>([])
   const [areas, setAreas] = useState<ProfessionalArea[]>([])
-  const [assignments, setAssignments] = useState<AssignmentRow[]>([])
-  const [teams, setTeams] = useState<TeamRef[]>([])
 
-  const [createEmail, setCreateEmail] = useState('')
-  const [createFirstName, setCreateFirstName] = useState('')
-  const [createLastName, setCreateLastName] = useState('')
-  const [createAreaId, setCreateAreaId] = useState<string>('none')
-  const [createTempPassword, setCreateTempPassword] = useState('')
+  const [search, setSearch] = useState('')
+  const [statusFilter, setStatusFilter] =
+    useState<DocenteStatusFilter>('all')
+  const [areaFilter, setAreaFilter] = useState('all')
 
-  const [selectedDocente, setSelectedDocente] = useState<string>('none')
-  const [selectedTeam, setSelectedTeam] = useState<string>('none')
-  const [staffRole, setStaffRole] = useState('')
+  const [createOpen, setCreateOpen] = useState(false)
+  const [createBusy, setCreateBusy] = useState(false)
+  const [createForm, setCreateForm] = useState<CreateDocenteForm>(
+    DEFAULT_CREATE_FORM
+  )
 
-  const [scheduleTeamId, setScheduleTeamId] = useState<string>('none')
-  const [scheduleSlots, setScheduleSlots] = useState<ScheduleSlot[]>([])
-  const [dayOfWeek, setDayOfWeek] = useState<string>('1')
-  const [startTime, setStartTime] = useState('19:00')
-  const [endTime, setEndTime] = useState('21:00')
-  const [timezone, setTimezone] = useState(PLATFORM_TIMEZONE)
+  const [busyById, setBusyById] = useState<Record<string, boolean>>({})
+  const [toggleCandidate, setToggleCandidate] = useState<DocenteRow | null>(null)
+
+  const didLoadRef = useRef(false)
 
   async function loadData() {
     setLoading(true)
@@ -140,672 +102,361 @@ export default function AdminDocentesPage() {
 
     if (!response.ok || !payload?.ok) {
       showError(payload?.message ?? 'No se pudo cargar docentes.')
+      setDocentes([])
+      setAreas([])
       setLoading(false)
       return
     }
 
     setDocentes(payload.docentes ?? [])
     setAreas(payload.professional_areas ?? [])
-    setAssignments(payload.assignments ?? [])
-    setTeams((payload.teams ?? []) as TeamRef[])
     setLoading(false)
   }
 
-  async function loadTeamSchedule(teamId: string) {
-    if (!teamId || teamId === 'none') {
-      setScheduleSlots([])
-      return
-    }
-    const response = await fetch(
-      `/api/plataforma/admin/team-schedule-slots?team_id=${teamId}`,
-      {
-        cache: 'no-store',
-      }
-    )
-    const payload = (await response.json().catch(() => null)) as {
-      ok: boolean
-      slots?: ScheduleSlot[]
-      message?: string
-    } | null
-    if (!response.ok || !payload?.ok) {
-      showError(payload?.message ?? 'No se pudo cargar horarios.')
-      return
-    }
-    setScheduleSlots(payload.slots ?? [])
-  }
-
   useEffect(() => {
+    if (didLoadRef.current) return
+    didLoadRef.current = true
     void loadData()
   }, [])
 
-  useEffect(() => {
-    void loadTeamSchedule(scheduleTeamId)
-  }, [scheduleTeamId])
-
-  const docenteLookup = useMemo(() => {
-    const map = new Map<string, DocenteRow>()
-    for (const docente of docentes) map.set(docente.id, docente)
-    return map
-  }, [docentes])
-
-  const teamLookup = useMemo(() => {
-    const map = new Map<string, TeamRef>()
-    for (const team of teams) map.set(team.id, team)
-    return map
-  }, [teams])
+  function setRowBusy(docenteId: string, value: boolean) {
+    setBusyById((previous) => ({ ...previous, [docenteId]: value }))
+  }
 
   async function createDocente() {
-    if (!createEmail || !createFirstName || !createLastName) {
+    const email = safeText(createForm.email).toLowerCase()
+    const firstName = safeText(createForm.first_name)
+    const lastName = safeText(createForm.last_name)
+
+    if (!email || !firstName || !lastName) {
       showWarning('Completa email, nombres y apellidos.')
       return
     }
-    setBusy(true)
+
+    setCreateBusy(true)
     const response = await fetch('/api/plataforma/admin/docentes', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        email: createEmail,
-        first_name: createFirstName,
-        last_name: createLastName,
-        professional_area_id: createAreaId === 'none' ? null : createAreaId,
-        temporary_password: createTempPassword || undefined,
+        email,
+        first_name: firstName,
+        last_name: lastName,
+        professional_area_id:
+          createForm.professional_area_id === 'none'
+            ? null
+            : createForm.professional_area_id,
+        temporary_password: safeText(createForm.temporary_password) || undefined,
       }),
     })
+
     const payload = (await response.json().catch(() => null)) as {
       ok: boolean
       message?: string
       temporary_password?: string
     } | null
-    setBusy(false)
+
+    setCreateBusy(false)
+
     if (!response.ok || !payload?.ok) {
       showError(payload?.message ?? 'No se pudo crear docente.')
       return
     }
+
     showSuccess('Docente creado.')
     if (payload.temporary_password) {
       showWarning(
         `Contraseña temporal: ${payload.temporary_password}`,
-        'Compártela por canal seguro.'
+        'Compártela por un canal seguro.'
       )
     }
-    setCreateEmail('')
-    setCreateFirstName('')
-    setCreateLastName('')
-    setCreateAreaId('none')
-    setCreateTempPassword('')
+
+    setCreateForm(DEFAULT_CREATE_FORM)
+    setCreateOpen(false)
     await loadData()
   }
 
-  async function saveDocente(docente: DocenteRow) {
-    setBusy(true)
+  async function resetPassword(docente: DocenteRow) {
+    setRowBusy(docente.id, true)
     const response = await fetch(
-      `/api/plataforma/admin/docentes/${docente.id}`,
-      {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          first_name: docente.first_name,
-          last_name: docente.last_name,
-          professional_area_id: docente.professional_area_id,
-          is_active: docente.is_active,
-        }),
-      }
-    )
-    const payload = (await response.json().catch(() => null)) as {
-      ok: boolean
-      message?: string
-    } | null
-    setBusy(false)
-    if (!response.ok || !payload?.ok) {
-      showError(payload?.message ?? 'No se pudo guardar docente.')
-      return
-    }
-    showSuccess('Docente actualizado.')
-    await loadData()
-  }
-
-  async function resetDocentePassword(docenteId: string) {
-    setBusy(true)
-    const response = await fetch(
-      `/api/plataforma/admin/docentes/${docenteId}/reset-password`,
+      `/api/plataforma/admin/docentes/${docente.id}/reset-password`,
       {
         method: 'POST',
       }
     )
+
     const payload = (await response.json().catch(() => null)) as {
       ok: boolean
       temporary_password?: string
       message?: string
     } | null
-    setBusy(false)
+
+    setRowBusy(docente.id, false)
+
     if (!response.ok || !payload?.ok) {
       showError(payload?.message ?? 'No se pudo resetear contraseña.')
       return
     }
+
     showSuccess('Contraseña temporal regenerada.')
     if (payload.temporary_password) {
       showWarning(
         `Nueva temporal: ${payload.temporary_password}`,
-        'Compártela por canal seguro.'
+        'Compártela por un canal seguro.'
       )
     }
+
     await loadData()
   }
 
-  async function createAssignment() {
-    if (selectedDocente === 'none' || selectedTeam === 'none') {
-      showWarning('Selecciona docente y equipo.')
-      return
-    }
+  async function toggleDocenteActive(docente: DocenteRow) {
+    setRowBusy(docente.id, true)
 
-    setBusy(true)
-    const response = await fetch('/api/plataforma/admin/docente-assignments', {
-      method: 'POST',
+    const response = await fetch(`/api/plataforma/admin/docentes/${docente.id}`, {
+      method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        docente_profile_id: selectedDocente,
-        team_id: selectedTeam,
-        staff_role: staffRole || null,
+        is_active: !docente.is_active,
       }),
     })
+
     const payload = (await response.json().catch(() => null)) as {
       ok: boolean
-      conflicts?: Array<{
-        conflict_team_name?: string
-        day_of_week?: number
-        start_time?: string
-        end_time?: string
-      }>
       message?: string
     } | null
-    setBusy(false)
+
+    setRowBusy(docente.id, false)
+
     if (!response.ok || !payload?.ok) {
-      showError(payload?.message ?? 'No se pudo crear asignación.')
+      showError(payload?.message ?? 'No se pudo actualizar el estado del docente.')
       return
     }
 
-    if (payload.conflicts?.length) {
-      showWarning(
-        'Asignación creada con advertencia de solapamiento de horario.',
-        payload.conflicts
-          .slice(0, 2)
-          .map(
-            (conflict) =>
-              `${conflict.conflict_team_name ?? 'Equipo'} ${DAY_LABELS[conflict.day_of_week ?? 0] ?? ''} ${conflict.start_time ?? ''}-${conflict.end_time ?? ''}`
-          )
-          .join(' | ')
-      )
-    } else {
-      showSuccess('Asignación docente-equipo creada.')
-    }
-
-    setSelectedDocente('none')
-    setSelectedTeam('none')
-    setStaffRole('')
+    showSuccess(docente.is_active ? 'Docente desactivado.' : 'Docente reactivado.')
     await loadData()
   }
 
-  async function deleteAssignment(assignmentId: string) {
-    setBusy(true)
-    const response = await fetch('/api/plataforma/admin/docente-assignments', {
-      method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ assignment_id: assignmentId }),
-    })
-    const payload = (await response.json().catch(() => null)) as {
-      ok: boolean
-      message?: string
-    } | null
-    setBusy(false)
-    if (!response.ok || !payload?.ok) {
-      showError(payload?.message ?? 'No se pudo eliminar asignación.')
-      return
+  const areaNameById = useMemo(() => {
+    const map = new Map<string, string>()
+    for (const area of areas) {
+      map.set(area.id, area.name)
     }
-    showSuccess('Asignación eliminada.')
-    await loadData()
-  }
+    return map
+  }, [areas])
 
-  async function addScheduleSlot() {
-    if (scheduleTeamId === 'none') {
-      showWarning('Selecciona un equipo para configurar horarios.')
-      return
-    }
-    const response = await fetch('/api/plataforma/admin/team-schedule-slots', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        team_id: scheduleTeamId,
-        day_of_week: Number(dayOfWeek),
-        start_time: startTime,
-        end_time: endTime,
-        timezone,
-      }),
-    })
-    const payload = (await response.json().catch(() => null)) as {
-      ok: boolean
-      message?: string
-    } | null
-    if (!response.ok || !payload?.ok) {
-      showError(payload?.message ?? 'No se pudo crear horario.')
-      return
-    }
-    showSuccess('Horario agregado.')
-    await loadTeamSchedule(scheduleTeamId)
-  }
+  const filteredDocentes = useMemo(() => {
+    const q = safeText(search).toLowerCase()
 
-  async function deleteScheduleSlot(slotId: string) {
-    const response = await fetch('/api/plataforma/admin/team-schedule-slots', {
-      method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ slot_id: slotId }),
-    })
-    const payload = (await response.json().catch(() => null)) as {
-      ok: boolean
-      message?: string
-    } | null
-    if (!response.ok || !payload?.ok) {
-      showError(payload?.message ?? 'No se pudo eliminar horario.')
-      return
-    }
-    showSuccess('Horario eliminado.')
-    await loadTeamSchedule(scheduleTeamId)
-  }
+    return docentes.filter((docente) => {
+      if (statusFilter === 'active' && !docente.is_active) return false
+      if (statusFilter === 'inactive' && docente.is_active) return false
 
-  if (loading) {
-    return (
-      <Card className="border border-slate-800 bg-slate-900 text-slate-100">
-        <CardContent className="py-8 text-sm text-slate-300">
-          Cargando módulo de docentes...
-        </CardContent>
-      </Card>
-    )
-  }
+      if (areaFilter === 'none' && docente.professional_area_id) return false
+      if (
+        areaFilter !== 'all' &&
+        areaFilter !== 'none' &&
+        docente.professional_area_id !== areaFilter
+      ) {
+        return false
+      }
+
+      if (!q) return true
+      const haystack = `${safeText(docente.first_name)} ${safeText(
+        docente.last_name
+      )} ${safeText(docente.email)}`.toLowerCase()
+      return haystack.includes(q)
+    })
+  }, [docentes, search, statusFilter, areaFilter])
 
   return (
     <div className="space-y-6">
       <Card className="border border-slate-800 bg-slate-900 text-slate-100">
-        <CardHeader>
-          <CardTitle>Docentes y Asignaciones</CardTitle>
+        <CardHeader className="gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div className="space-y-1">
+            <CardTitle>Docentes</CardTitle>
+            <CardDescription className="text-slate-300">
+              Administra el staff docente y entra al detalle para gestionar
+              asignaciones por equipo.
+            </CardDescription>
+          </div>
+          <Button
+            onClick={() => setCreateOpen(true)}
+            className={PRIMARY_CTA_CLASS}
+          >
+            <UserPlus className="mr-2 h-4 w-4" />
+            Nuevo docente
+          </Button>
         </CardHeader>
-        <CardContent className="text-sm text-slate-300">
-          Gestiona docentes, asignaciones por equipo y horarios para advertir
-          solapamientos.
-        </CardContent>
       </Card>
 
-      <div className="grid gap-6 xl:grid-cols-2">
-        <Card className="border border-slate-800 bg-slate-900 text-slate-100">
-          <CardHeader>
-            <CardTitle>Crear docente</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid gap-3 md:grid-cols-2">
-              <div className="space-y-2">
-                <Label>Email</Label>
-                <Input
-                  value={createEmail}
-                  onChange={(event) => setCreateEmail(event.target.value)}
-                  className="border-slate-800 bg-slate-950"
-                  placeholder="docente@dominio.com"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Área</Label>
-                <Select value={createAreaId} onValueChange={setCreateAreaId}>
-                  <SelectTrigger className="border-slate-800 bg-slate-950">
-                    <SelectValue placeholder="Selecciona área" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">Sin área</SelectItem>
-                    {areas.map((area) => (
-                      <SelectItem key={area.id} value={area.id}>
-                        {area.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label>Nombres</Label>
-                <Input
-                  value={createFirstName}
-                  onChange={(event) => setCreateFirstName(event.target.value)}
-                  className="border-slate-800 bg-slate-950"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Apellidos</Label>
-                <Input
-                  value={createLastName}
-                  onChange={(event) => setCreateLastName(event.target.value)}
-                  className="border-slate-800 bg-slate-950"
-                />
-              </div>
+      <DocentesToolbar
+        search={search}
+        onSearchChange={setSearch}
+        statusFilter={statusFilter}
+        onStatusFilterChange={setStatusFilter}
+        areaFilter={areaFilter}
+        onAreaFilterChange={setAreaFilter}
+        areas={areas}
+        totalCount={docentes.length}
+        filteredCount={filteredDocentes.length}
+      />
+
+      <DocentesTable
+        rows={filteredDocentes}
+        loading={loading}
+        busyIds={busyById}
+        areaNameById={areaNameById}
+        onResetPassword={(docente) => void resetPassword(docente)}
+        onToggleActive={(docente) => setToggleCandidate(docente)}
+      />
+
+      <Dialog
+        open={createOpen}
+        onOpenChange={(open) => {
+          setCreateOpen(open)
+          if (!open) {
+            setCreateForm(DEFAULT_CREATE_FORM)
+          }
+        }}
+      >
+        <DialogContent className="border border-slate-800 bg-[#0F1117] text-slate-100 sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Nuevo docente</DialogTitle>
+            <DialogDescription className="text-slate-400">
+              Crea la cuenta docente y define su información base.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="grid gap-3 md:grid-cols-2">
+            <div className="space-y-2 md:col-span-2">
+              <Label>Email</Label>
+              <Input
+                value={createForm.email}
+                onChange={(event) =>
+                  setCreateForm((previous) => ({
+                    ...previous,
+                    email: event.target.value,
+                  }))
+                }
+                placeholder="docente@dominio.com"
+                className="border-slate-800 bg-slate-950"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Nombres</Label>
+              <Input
+                value={createForm.first_name}
+                onChange={(event) =>
+                  setCreateForm((previous) => ({
+                    ...previous,
+                    first_name: event.target.value,
+                  }))
+                }
+                className="border-slate-800 bg-slate-950"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Apellidos</Label>
+              <Input
+                value={createForm.last_name}
+                onChange={(event) =>
+                  setCreateForm((previous) => ({
+                    ...previous,
+                    last_name: event.target.value,
+                  }))
+                }
+                className="border-slate-800 bg-slate-950"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Área profesional</Label>
+              <Select
+                value={createForm.professional_area_id}
+                onValueChange={(value) =>
+                  setCreateForm((previous) => ({
+                    ...previous,
+                    professional_area_id: value,
+                  }))
+                }
+              >
+                <SelectTrigger className="border-slate-800 bg-slate-950">
+                  <SelectValue placeholder="Selecciona área" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Sin área</SelectItem>
+                  {areas.map((area) => (
+                    <SelectItem key={area.id} value={area.id}>
+                      {area.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="space-y-2">
               <Label>Contraseña temporal (opcional)</Label>
               <Input
-                value={createTempPassword}
-                onChange={(event) => setCreateTempPassword(event.target.value)}
+                value={createForm.temporary_password}
+                onChange={(event) =>
+                  setCreateForm((previous) => ({
+                    ...previous,
+                    temporary_password: event.target.value,
+                  }))
+                }
+                placeholder="Si no completas, se genera automáticamente"
                 className="border-slate-800 bg-slate-950"
-                placeholder="si queda vacío se genera automáticamente"
               />
             </div>
-
-            <div className="flex justify-end">
-              <Button disabled={busy} onClick={() => void createDocente()}>
-                <UserPlus className="mr-2 h-4 w-4" />
-                Crear docente
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border border-slate-800 bg-slate-900 text-slate-100">
-          <CardHeader>
-            <CardTitle>Asignación contextual por equipo</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3 text-sm text-slate-300">
-            <p>
-              La asignación y desasignación docente se realiza en la vista del
-              equipo: programa / edición / equipo.
-            </p>
-            <p>
-              Desde ahí se visualizan juntos estudiantes, docentes asignados y
-              conflictos de horario.
-            </p>
-            <div className="flex justify-end">
-              <Button asChild>
-                <Link href="/plataforma/admin/programas">
-                  Ir al flujo por equipo
-                </Link>
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      <Card className="border border-slate-800 bg-slate-900 text-slate-100">
-        <CardHeader>
-          <CardTitle>Staff docente</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-3">
-            {docentes.length === 0 ? (
-              <div className="text-sm text-slate-300">No hay docentes.</div>
-            ) : (
-              docentes.map((docente) => (
-                <div
-                  key={docente.id}
-                  className="rounded-lg border border-slate-800 bg-slate-950 p-3"
-                >
-                  <div className="grid gap-3 lg:grid-cols-[1.4fr_1fr_auto]">
-                    <div className="space-y-2">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <div className="text-sm font-semibold text-slate-100">
-                          {buildFullName(docente)}
-                        </div>
-                        <Badge
-                          className={
-                            docente.is_active
-                              ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-200'
-                              : 'border-slate-700 bg-slate-800 text-slate-300'
-                          }
-                        >
-                          {docente.is_active ? 'Activo' : 'Inactivo'}
-                        </Badge>
-                        {docente.password_reset_required ? (
-                          <Badge className="border-amber-500/40 bg-amber-500/10 text-amber-200">
-                            Reset obligatorio
-                          </Badge>
-                        ) : null}
-                      </div>
-                      <div className="text-xs text-slate-400">
-                        {docente.email}
-                      </div>
-                      <div className="text-xs text-slate-400">
-                        Equipos activos: {docente.active_assignments_count} ·
-                        Último login: {formatDate(docente.last_login_at)}
-                      </div>
-                    </div>
-
-                    <div className="grid gap-2 sm:grid-cols-2">
-                      <Input
-                        value={docente.first_name ?? ''}
-                        onChange={(event) =>
-                          setDocentes((prev) =>
-                            prev.map((row) =>
-                              row.id === docente.id
-                                ? { ...row, first_name: event.target.value }
-                                : row
-                            )
-                          )
-                        }
-                        className="border-slate-800 bg-slate-900"
-                        placeholder="Nombres"
-                      />
-                      <Input
-                        value={docente.last_name ?? ''}
-                        onChange={(event) =>
-                          setDocentes((prev) =>
-                            prev.map((row) =>
-                              row.id === docente.id
-                                ? { ...row, last_name: event.target.value }
-                                : row
-                            )
-                          )
-                        }
-                        className="border-slate-800 bg-slate-900"
-                        placeholder="Apellidos"
-                      />
-                    </div>
-
-                    <div className="flex flex-wrap items-center justify-start gap-2 lg:justify-end">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="border-slate-700 bg-slate-900"
-                        onClick={() =>
-                          setDocentes((prev) =>
-                            prev.map((row) =>
-                              row.id === docente.id
-                                ? { ...row, is_active: !row.is_active }
-                                : row
-                            )
-                          )
-                        }
-                      >
-                        {docente.is_active ? 'Desactivar' : 'Activar'}
-                      </Button>
-                      <Button
-                        size="sm"
-                        onClick={() => void saveDocente(docente)}
-                        disabled={busy}
-                      >
-                        Guardar
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="secondary"
-                        className="border border-slate-700 bg-slate-900 text-slate-100 hover:bg-slate-800"
-                        onClick={() => void resetDocentePassword(docente.id)}
-                        disabled={busy}
-                      >
-                        <RotateCcw className="mr-2 h-4 w-4" />
-                        Reset pass
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              ))
-            )}
           </div>
-        </CardContent>
-      </Card>
 
-      <div className="grid gap-6 xl:grid-cols-2">
-        <Card className="border border-slate-800 bg-slate-900 text-slate-100">
-          <CardHeader>
-            <CardTitle>Asignaciones activas</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {!assignments.length ? (
-              <div className="text-sm text-slate-300">
-                No hay asignaciones creadas.
-              </div>
-            ) : (
-              assignments.map((assignment) => {
-                const docente = docenteLookup.get(assignment.docente_profile_id)
-                const team = teamLookup.get(assignment.team_id)
-                const edition = team?.edition
-                const programTitle = edition?.program?.title ?? 'Programa'
-                const editionName = edition?.edition_name ?? 'Edición'
-                return (
-                  <div
-                    key={assignment.id}
-                    className="rounded-lg border border-slate-800 bg-slate-950 p-3"
-                  >
-                    <div className="flex flex-wrap items-start justify-between gap-2">
-                      <div className="min-w-0">
-                        <div className="truncate text-sm font-semibold text-slate-100">
-                          {buildFullName(
-                            docente ?? {
-                              id: '',
-                              email: null,
-                              first_name: null,
-                              last_name: null,
-                              is_active: true,
-                              role: 'docente',
-                              professional_area_id: null,
-                              password_reset_required: false,
-                              created_at: '',
-                              last_login_at: null,
-                              active_assignments_count: 0,
-                            }
-                          )}
-                        </div>
-                        <div className="truncate text-xs text-slate-400">
-                          {programTitle} · {editionName} ·{' '}
-                          {team?.name ?? 'Equipo'}
-                        </div>
-                        {assignment.staff_role ? (
-                          <div className="text-xs text-slate-500">
-                            Rol: {assignment.staff_role}
-                          </div>
-                        ) : null}
-                      </div>
-                      <Button
-                        size="sm"
-                        variant="destructive"
-                        onClick={() => void deleteAssignment(assignment.id)}
-                        disabled={busy}
-                      >
-                        Quitar
-                      </Button>
-                    </div>
-                  </div>
-                )
-              })
-            )}
-          </CardContent>
-        </Card>
+          <DialogFooter className="gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setCreateOpen(false)}
+              disabled={createBusy}
+              className="border-slate-700 bg-transparent text-slate-100 hover:bg-slate-800"
+            >
+              Cancelar
+            </Button>
+            <Button
+              disabled={createBusy}
+              onClick={() => void createDocente()}
+              className={PRIMARY_CTA_CLASS}
+            >
+              Crear docente
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
-        <Card className="border border-slate-800 bg-slate-900 text-slate-100">
-          <CardHeader>
-            <CardTitle>Horarios de equipo</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="text-xs text-slate-400">
-              Zona horaria oficial: {PLATFORM_TIMEZONE_LABEL}. También puedes
-              guardar otras zonas IANA.
-            </div>
-            <div className="space-y-2">
-              <Label>Equipo</Label>
-              <Select value={scheduleTeamId} onValueChange={setScheduleTeamId}>
-                <SelectTrigger className="border-slate-800 bg-slate-950">
-                  <SelectValue placeholder="Selecciona equipo" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">Selecciona</SelectItem>
-                  {teams.map((team) => (
-                    <SelectItem key={team.id} value={team.id}>
-                      {team.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="grid gap-2 md:grid-cols-4">
-              <Select value={dayOfWeek} onValueChange={setDayOfWeek}>
-                <SelectTrigger className="border-slate-800 bg-slate-950">
-                  <SelectValue placeholder="Día" />
-                </SelectTrigger>
-                <SelectContent>
-                  {Object.entries(DAY_LABELS).map(([value, label]) => (
-                    <SelectItem key={value} value={value}>
-                      {label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              <Input
-                type="time"
-                value={startTime}
-                onChange={(event) => setStartTime(event.target.value)}
-                className="border-slate-800 bg-slate-950"
-              />
-              <Input
-                type="time"
-                value={endTime}
-                onChange={(event) => setEndTime(event.target.value)}
-                className="border-slate-800 bg-slate-950"
-              />
-              <Input
-                value={timezone}
-                onChange={(event) => setTimezone(event.target.value)}
-                className="border-slate-800 bg-slate-950"
-                placeholder={PLATFORM_TIMEZONE}
-              />
-            </div>
-
-            <div className="flex justify-end">
-              <Button onClick={() => void addScheduleSlot()}>
-                Agregar horario
-              </Button>
-            </div>
-
-            <div className="space-y-2">
-              {scheduleSlots.length === 0 ? (
-                <div className="text-sm text-slate-400">
-                  Sin horarios para el equipo seleccionado.
-                </div>
-              ) : (
-                scheduleSlots.map((slot) => (
-                  <div
-                    key={slot.id}
-                    className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-slate-800 bg-slate-950 px-3 py-2"
-                  >
-                    <div className="text-xs text-slate-300">
-                      {DAY_LABELS[slot.day_of_week] ?? slot.day_of_week} ·{' '}
-                      {slot.start_time} - {slot.end_time} ({slot.timezone})
-                    </div>
-                    <Button
-                      size="sm"
-                      variant="destructive"
-                      onClick={() => void deleteScheduleSlot(slot.id)}
-                    >
-                      Eliminar
-                    </Button>
-                  </div>
-                ))
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      <ConfirmDialog
+        open={Boolean(toggleCandidate)}
+        onOpenChange={(open) => {
+          if (!open) setToggleCandidate(null)
+        }}
+        title={
+          toggleCandidate?.is_active
+            ? '¿Desactivar docente?'
+            : '¿Reactivar docente?'
+        }
+        description={
+          toggleCandidate?.is_active
+            ? 'El docente no podrá ingresar hasta que lo reactives.'
+            : 'El docente recuperará el acceso a la plataforma.'
+        }
+        confirmLabel={
+          toggleCandidate?.is_active ? 'Desactivar' : 'Reactivar'
+        }
+        confirmVariant={toggleCandidate?.is_active ? 'destructive' : 'default'}
+        confirmDisabled={!toggleCandidate}
+        onConfirm={() => {
+          if (!toggleCandidate) return
+          void toggleDocenteActive(toggleCandidate)
+          setToggleCandidate(null)
+        }}
+      />
     </div>
   )
 }

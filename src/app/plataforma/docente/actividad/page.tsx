@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 
 import { useToastEnhanced } from '@/hooks/use-toast-enhanced'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
 type StudentActivity = {
@@ -23,9 +24,23 @@ type ActivityPayload = {
   totals: { total: number; inactive: number }
   students: StudentActivity[]
 }
+const PRIMARY_CTA_CLASS = 'bg-[#00CCA4] text-slate-950 hover:bg-[#00b997]'
 
 function fullName(first: string | null, last: string | null): string {
   return `${first ?? ''} ${last ?? ''}`.trim() || 'Sin nombre'
+}
+
+function countLabel(
+  count: number,
+  singular: string,
+  plural: string = `${singular}s`
+): string {
+  return `${count} ${count === 1 ? singular : plural}`
+}
+
+function inactiveDurationLabel(days: number | null): string {
+  const safeDays = Math.max(1, days ?? 1)
+  return `Inactivo durante ${safeDays} ${safeDays === 1 ? 'día' : 'días'}`
 }
 
 export default function DocenteActivityPage() {
@@ -87,13 +102,14 @@ export default function DocenteActivityPage() {
           <div className="text-sm text-slate-300">
             {errorMessage ?? 'No se pudo cargar actividad.'}
           </div>
-          <button
+          <Button
             type="button"
+            size="sm"
             onClick={() => void loadData()}
-            className="inline-flex rounded-md border border-slate-700 bg-slate-800 px-3 py-2 text-xs text-slate-100 hover:bg-slate-700"
+            className={PRIMARY_CTA_CLASS}
           >
             Reintentar
-          </button>
+          </Button>
         </CardContent>
       </Card>
     )
@@ -107,11 +123,10 @@ export default function DocenteActivityPage() {
         </CardHeader>
         <CardContent className="flex flex-wrap items-center gap-3 text-sm text-slate-300">
           <Badge className="border border-slate-700 bg-slate-800 text-slate-100">
-            {payload.totals.total} estudiantes
+            {countLabel(payload.totals.total, 'estudiante', 'estudiantes')}
           </Badge>
           <Badge className="border border-amber-500/40 bg-amber-500/10 text-amber-200">
-            {payload.totals.inactive} inactivos (&gt;= {payload.threshold_days}{' '}
-            días)
+            {countLabel(payload.totals.inactive, 'inactivo', 'inactivos')}
           </Badge>
         </CardContent>
       </Card>
@@ -142,15 +157,22 @@ export default function DocenteActivityPage() {
                     {row.team_name ?? 'Equipo'}
                   </div>
                 </div>
-                <Badge
-                  className={
-                    row.is_inactive
-                      ? 'border-amber-500/40 bg-amber-500/10 text-amber-200'
-                      : 'border-emerald-500/40 bg-emerald-500/10 text-emerald-200'
-                  }
-                >
-                  {row.inactive_for_days ?? 0} días
-                </Badge>
+                <div className="flex flex-col items-start gap-1 sm:items-end">
+                  <Badge
+                    className={
+                      row.is_inactive
+                        ? 'border-amber-500/40 bg-amber-500/10 text-amber-200'
+                        : 'border-emerald-500/40 bg-emerald-500/10 text-emerald-200'
+                    }
+                  >
+                    {row.is_inactive ? 'Inactivo' : 'Activo'}
+                  </Badge>
+                  {row.is_inactive ? (
+                    <span className="text-xs text-amber-200">
+                      {inactiveDurationLabel(row.inactive_for_days)}
+                    </span>
+                  ) : null}
+                </div>
               </div>
             ))
           )}
