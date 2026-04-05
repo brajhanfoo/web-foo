@@ -54,6 +54,8 @@ export function UsersToolbar({
           <SelectContent>
             <SelectItem value="all">Todos los roles</SelectItem>
             <SelectItem value="talent">Talent</SelectItem>
+            <SelectItem value="docente">Docente</SelectItem>
+            <SelectItem value="admin">Admin</SelectItem>
             <SelectItem value="super_admin">Super admin</SelectItem>
           </SelectContent>
         </Select>

@@ -67,8 +67,8 @@ const UNITS: Unit[] = [
       'Career: Simulacros de entrevistas (Mock Interviews) con feedback en caliente.',
     ],
   },
-   {
-    id:6,
+  {
+    id: 6,
     title: 'Demo Day & Certificación Final',
     weeks: 'Semana 12',
     content: [
@@ -77,7 +77,7 @@ const UNITS: Unit[] = [
       'Demostración en vivo del producto funcionando ante un panel de jurados.',
       'Feedback experto, sign-off del proyecto y certificación del programa.',
     ],
-  }
+  },
 ]
 
 const ProgramStructureAccordion: React.FC = () => {

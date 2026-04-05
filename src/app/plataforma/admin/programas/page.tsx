@@ -133,7 +133,7 @@ export default function AdminProgramsPage() {
     if (priceRaw) {
       const parsed = Number(priceRaw)
       if (!Number.isFinite(parsed) || parsed < 0) {
-        return showError('Precio invÃ¡lido.')
+        return showError('Precio inválido.')
       }
       priceValue = parsed
     }
@@ -391,7 +391,7 @@ export default function AdminProgramsPage() {
                   disabled={paymentMode === 'none'}
                 />
                 <div className="text-xs text-slate-200">
-                  Dejalo vacÃ­o si no aplica.
+                  Déjalo vacío si no aplica.
                 </div>
               </div>
             </div>

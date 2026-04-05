@@ -3,13 +3,14 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 
+import { ActivityTracker } from '@/components/auth/activity-tracker'
 import { useToastEnhanced } from '@/hooks/use-toast-enhanced'
 import { supabase } from '@/lib/supabase/client'
 
 import { TalentSidebar } from './components/talent-sidebar'
 import { TalentTopBar } from './components/talent-topbar'
 
-type ProfileRole = 'talent' | 'admin' | 'super_admin' | 'staff'
+type ProfileRole = 'talent' | 'admin' | 'super_admin' | 'staff' | 'docente'
 
 type ProfileRow = {
   id: string
@@ -128,6 +129,7 @@ export default function TalentLayout({
 
   return (
     <div className="min-h-screen bg-black text-white">
+      <ActivityTracker />
       <div
         className={[
           'fixed inset-0 z-40 bg-black/70 transition-opacity duration-200 lg:hidden',

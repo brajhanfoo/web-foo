@@ -4,6 +4,7 @@ import { useEffect, useMemo } from 'react'
 import { usePathname } from 'next/navigation'
 import { Menu, Search } from 'lucide-react'
 
+import { PlatformNotificationsMenu } from '@/components/platform/platform-notifications-menu'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -13,11 +14,7 @@ function textOrEmpty(v: string | null | undefined) {
   return (v ?? '').trim()
 }
 
-export function AdminTopbar({
-  onMenuClick,
-}: {
-  onMenuClick?: () => void
-}) {
+export function AdminTopbar({ onMenuClick }: { onMenuClick?: () => void }) {
   const pathname = usePathname()
   const bootAuth = useAuthStore((s) => s.bootAuth)
   const profile = useAuthStore((s) => s.profile)
@@ -31,6 +28,9 @@ export function AdminTopbar({
   const title = useMemo(() => {
     if (pathname.includes('/postulaciones')) return 'Postulaciones'
     if (pathname.includes('/usuarios')) return 'Usuarios'
+    if (pathname.includes('/docentes')) return 'Docentes'
+    if (pathname.includes('/actividad')) return 'Actividad'
+    if (pathname.includes('/entregables')) return 'Entregables'
     if (pathname.includes('/programas')) return 'Programas'
     if (pathname.includes('/configuracion')) return 'Configuracion'
     return 'Panel de Admin'
@@ -79,6 +79,7 @@ export function AdminTopbar({
         </div>
 
         <div className="flex items-center gap-2">
+          <PlatformNotificationsMenu className="border-slate-800 bg-slate-800 hover:bg-slate-700" />
           <Badge className="border border-slate-800 bg-slate-800 text-slate-100">
             Admin
           </Badge>

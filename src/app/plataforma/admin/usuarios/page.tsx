@@ -21,7 +21,7 @@ import {
 } from './components/users-table'
 import { UsersToolbar } from './components/users-toolbar'
 
-const ROLE_OPTIONS: AppRole[] = ['talent', 'super_admin']
+const ROLE_OPTIONS: AppRole[] = ['talent', 'docente', 'admin', 'super_admin']
 
 type AdminUsersRpcRow = {
   user_id: string
@@ -65,7 +65,12 @@ export default function AdminUsersPage() {
     const q = searchParams.get('q') ?? ''
     const roleParam = searchParams.get('role')
     const normalizedRole =
-      roleParam === 'talent' || roleParam === 'super_admin' ? roleParam : 'all'
+      roleParam === 'talent' ||
+      roleParam === 'docente' ||
+      roleParam === 'admin' ||
+      roleParam === 'super_admin'
+        ? roleParam
+        : 'all'
 
     setSearch((previous) => (previous === q ? previous : q))
     setRoleFilter((previous) =>

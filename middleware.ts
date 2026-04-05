@@ -17,13 +17,14 @@ function isPublicPath(pathname: string): boolean {
     '/terminos-y-condiciones',
     '/politica-de-privacidad',
   ]
-  const publicStartsWith = ['/_next', '/favicon', '/images', '/legal']
 
+  const publicStartsWith = ['/_next', '/favicon', '/images', '/legal']
   const publicApiExactPaths = ['/api/auth/confirm']
 
   if (publicExactPaths.includes(pathname)) return true
-  if (publicStartsWith.some((prefix) => pathname.startsWith(prefix)))
+  if (publicStartsWith.some((prefix) => pathname.startsWith(prefix))) {
     return true
+  }
   if (publicApiExactPaths.includes(pathname)) return true
 
   return false
@@ -31,16 +32,14 @@ function isPublicPath(pathname: string): boolean {
 
 export async function middleware(request: NextRequest) {
   const { pathname, search } = request.nextUrl
-
   const isPlatformPath = pathname.startsWith('/plataforma')
   const isAdminPath = pathname.startsWith('/plataforma/admin')
+  const isDocentePath = pathname.startsWith('/plataforma/docente')
 
-  // público y no plataforma => pasa
   if (!isPlatformPath && isPublicPath(pathname)) {
     return NextResponse.next()
   }
 
-  // ✅ siempre creamos response para poder setear cookies correctamente
   const response = NextResponse.next()
 
   const supabase = createServerClient(
@@ -52,7 +51,6 @@ export async function middleware(request: NextRequest) {
           return request.cookies.getAll()
         },
         setAll(cookiesToSet) {
-          // ✅ CLAVE: aplicar options correctamente
           cookiesToSet.forEach(({ name, value, options }) => {
             response.cookies.set(name, value, options)
           })
@@ -72,14 +70,42 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(redirectUrl)
     }
 
-    if (isAdminPath) {
-      const { data: profile, error: profErr } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', user.id)
-        .maybeSingle()
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('role, is_active, password_reset_required')
+      .eq('id', user.id)
+      .maybeSingle()
 
-      if (profErr || profile?.role !== 'super_admin') {
+    if (profileError || !profile?.role || profile.is_active === false) {
+      const redirectUrl = request.nextUrl.clone()
+      redirectUrl.pathname = '/ingresar'
+      return NextResponse.redirect(redirectUrl)
+    }
+
+    if (profile.password_reset_required && pathname !== '/update-password') {
+      const redirectUrl = request.nextUrl.clone()
+      redirectUrl.pathname = '/update-password'
+      redirectUrl.searchParams.set('required', '1')
+      redirectUrl.searchParams.set('redirectTo', `${pathname}${search || ''}`)
+      return NextResponse.redirect(redirectUrl)
+    }
+
+    if (isAdminPath) {
+      const isAdminLevel =
+        profile.role === 'admin' || profile.role === 'super_admin'
+      if (!isAdminLevel) {
+        const redirectUrl = request.nextUrl.clone()
+        redirectUrl.pathname = '/plataforma'
+        return NextResponse.redirect(redirectUrl)
+      }
+    }
+
+    if (isDocentePath) {
+      const isDocenteLevel =
+        profile.role === 'docente' ||
+        profile.role === 'admin' ||
+        profile.role === 'super_admin'
+      if (!isDocenteLevel) {
         const redirectUrl = request.nextUrl.clone()
         redirectUrl.pathname = '/plataforma'
         return NextResponse.redirect(redirectUrl)

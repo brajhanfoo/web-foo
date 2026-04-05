@@ -51,7 +51,7 @@ export function statusToStepIndex(status: ApplicationStatus): number {
 
 export function statusBadgeLabel(status: ApplicationStatus): string {
   if (status === 'received') return 'Recibida'
-  if (status === 'in_review') return 'En revisiÃ³n'
+  if (status === 'in_review') return 'En revisión'
   if (status === 'admitted') return 'Admitida'
   if (status === 'payment_pending') return 'Pago pendiente'
   if (status === 'enrolled') return 'Matriculada'

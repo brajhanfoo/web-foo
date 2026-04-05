@@ -756,7 +756,9 @@ export async function POST(request: NextRequest) {
     .maybeSingle()
 
   const existingMp = isRecord(existingMpData) ? existingMpData : null
-  const rawPreferenceResponse = isRecord(existingMp?.['raw_preference_response'])
+  const rawPreferenceResponse = isRecord(
+    existingMp?.['raw_preference_response']
+  )
     ? (existingMp['raw_preference_response'] as Record<string, unknown>)
     : null
   const rawPreferenceId =
@@ -783,7 +785,9 @@ export async function POST(request: NextRequest) {
   const mergedMpStatus =
     fields.mpStatus ?? normalizeString(existingMp?.['mp_status']) ?? null
   const mergedStatusDetail =
-    fields.statusDetail ?? normalizeString(existingMp?.['status_detail']) ?? null
+    fields.statusDetail ??
+    normalizeString(existingMp?.['status_detail']) ??
+    null
   const mergedPaymentType =
     fields.paymentType ?? normalizeString(existingMp?.['payment_type']) ?? null
   const mergedPaymentMethod =

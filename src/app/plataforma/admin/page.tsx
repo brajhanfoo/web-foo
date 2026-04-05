@@ -3,8 +3,11 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import {
+  Activity,
   ArrowUpRight,
+  BookMarked,
   ClipboardCheck,
+  Briefcase,
   GraduationCap,
   Settings,
   Users,
@@ -110,6 +113,30 @@ export default function AdminHomePage() {
             </Button>
           </CardContent>
         </Card>
+
+        <Card className="border border-slate-800 bg-slate-900 text-slate-100">
+          <CardHeader>
+            <h2 className="flex items-center gap-2 text-base text-balance font-semibold leading-none tracking-tight">
+              <Briefcase
+                className="h-4 w-4 text-emerald-300"
+                aria-hidden="true"
+              />
+              Docentes
+            </h2>
+            <p className="text-sm text-slate-300 text-pretty">
+              Crea docentes, asigna equipos y revisa carga por horarios.
+            </p>
+          </CardHeader>
+          <CardContent>
+            <Button
+              variant="outline"
+              className="w-full border-slate-800 bg-slate-900 text-slate-200 hover:bg-slate-800"
+              asChild
+            >
+              <Link href="/plataforma/admin/docentes">Gestionar docentes</Link>
+            </Button>
+          </CardContent>
+        </Card>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-3">
@@ -178,6 +205,26 @@ export default function AdminHomePage() {
               asChild
             >
               <Link href="/plataforma/admin/usuarios">Revisar Permisos</Link>
+            </Button>
+            <Button
+              variant="outline"
+              className="w-full border-slate-800 bg-slate-900 text-slate-200 hover:bg-slate-800"
+              asChild
+            >
+              <Link href="/plataforma/admin/entregables">
+                <BookMarked className="mr-2 h-4 w-4" />
+                Gestionar Entregables
+              </Link>
+            </Button>
+            <Button
+              variant="outline"
+              className="w-full border-slate-800 bg-slate-900 text-slate-200 hover:bg-slate-800"
+              asChild
+            >
+              <Link href="/plataforma/admin/actividad">
+                <Activity className="mr-2 h-4 w-4" />
+                Ver Actividad
+              </Link>
             </Button>
           </CardContent>
         </Card>
