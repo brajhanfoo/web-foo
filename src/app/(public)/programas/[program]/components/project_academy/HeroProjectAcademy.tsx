@@ -2,10 +2,11 @@
 import { useRouter } from 'next/navigation'
 import { TfiWorld } from 'react-icons/tfi'
 import { IoMdCalendar } from 'react-icons/io'
-import { AiOutlineCode } from 'react-icons/ai'
 import { HiOutlineRocketLaunch } from 'react-icons/hi2'
 import { RiGraduationCapLine } from 'react-icons/ri'
 import { LuBadgeCheck } from 'react-icons/lu'
+import { MdOutlineClass } from "react-icons/md";
+
 
 const HeroProjectAcademy: React.FC = () => {
   const router = useRouter()
@@ -37,21 +38,21 @@ const HeroProjectAcademy: React.FC = () => {
                 <span className="text-[#BDBE0B]">
                   <IoMdCalendar />
                 </span>
-                INICIO: 20 FEBRERO 2026
+                INICIO: 04 MAYO 2026
               </span>
             </div>
 
             {/* Title */}
             <h1 className="text-4xl font-extrabold leading-none tracking-tight sm:text-5xl xl:text-6xl">
-              Entrena como si ya <br />
-              trabajaras en una{' '}
+              Domina el  <br />
+              desarrollo de{' '}
               <span
                 className="inline-block bg-gradient-to-r from-[#BDBE0B] to-[#00CCA4]
                bg-clip-text text-transparent"
               >
-                empresa tech
+                productos digitales.
               </span>
-              .
+              
             </h1>
 
             {/* Description */}
@@ -70,27 +71,27 @@ const HeroProjectAcademy: React.FC = () => {
             <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
               <p className="text-white ld-400 flex items-center text-[14px] font-bold">
                 <span className="mr-2 text-[#77039F]">
-                  <AiOutlineCode />
+                  <MdOutlineClass />
                 </span>{' '}
-                Proyecto production-ready
+                Workshops y Formación Práctica
               </p>
               <p className="text-white ld-400 flex items-center text-[14px] font-bold">
                 <span className="mr-2 text-[#77039F]">
                   <RiGraduationCapLine />
                 </span>{' '}
-                Mentores expertos por track
+                Mentoría Experta de Especialistas
               </p>
               <p className="text-white ld-400 flex items-center text-[14px] font-bold">
                 <span className="mr-2 text-[#D85DFB]">
                   <HiOutlineRocketLaunch />
                 </span>{' '}
-                Aceleración laboral
+                Plan de Carrera y Mentoría
               </p>
               <p className="text-white ld-400 flex items-center text-[14px] font-bold">
                 <span className="mr-2 text-[#BDBE0B]">
                   <LuBadgeCheck />
                 </span>{' '}
-                Experiencia real de trabajo
+                Proyecto Final de Portafolio
               </p>
             </div>
 
@@ -98,9 +99,9 @@ const HeroProjectAcademy: React.FC = () => {
             <div className="mt-10 flex flex-wrap items-center gap-4">
               <button
                 className="rounded-xl bg-[#00CCA4] cursor-pointer px-8 py-3 text-sm font-semibold text-black transition hover:bg-emerald-400"
-                onClick={() => router.push('/ingresar')}
+                onClick={() => router.push('/plataforma/talento')}
               >
-                Postular al programa
+                Inscribirme al programa
               </button>
               <span className="text-sm text-white/60">
                 Reserva tu lugar ·{' '}

@@ -84,7 +84,7 @@ const Hero = () => {
             </div>
 
             {/* CTA */}
-            <button
+            {/* <button
               onClick={() => {
                 const section = document.getElementById('contacto')
                 section?.scrollIntoView({ behavior: 'smooth' })
@@ -92,7 +92,16 @@ const Hero = () => {
               className="relative z-10 text-[#00D3D3] text-sm font-medium tracking-wide hover:underline cursor-pointer"
             >
               SOLICITAR INFORMACIÓN ↓
-            </button>
+            </button> */}
+                      {/* CTA */}
+          <a
+            href="https://wa.me/51901831491?text=Hola%20quiero%20informaci%C3%B3n%20sobre%20contratar%20talento"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="relative z-10 text-[#00D3D3] text-sm font-medium tracking-wide hover:underline cursor-pointer"
+          >
+            CONVERSAR CON UN ESPECIALISTA ↓
+          </a>
           </div>
         </div>
 
@@ -144,7 +153,7 @@ const Hero = () => {
 
           {/* CTA */}
           <a
-            href="https://wa.me/51930428602?text=Hola%20quiero%20informaci%C3%B3n%20sobre%20patrocinar%20los%20programas"
+            href="https://wa.me/51901831491?text=Hola%20quiero%20informaci%C3%B3n%20sobre%20patrocinar%20los%20programas"
             target="_blank"
             rel="noopener noreferrer"
             className="relative z-10 bottom-[-22px] text-[#780B90] text-sm font-medium tracking-wide hover:underline cursor-pointer"

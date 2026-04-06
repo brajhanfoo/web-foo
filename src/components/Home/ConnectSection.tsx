@@ -38,7 +38,7 @@ const ConnectSection: React.FC = () => {
             <br />
             <span className=" text-neutral-100">
               {' '}
-              Entrena en equipos reales
+              Aprende en equipos reales
             </span>
             , con plazos reales y metodologías de industria. Potencia tu{' '}
             <span className="text-[#00CCA4]">perfil</span> antes de saltar al

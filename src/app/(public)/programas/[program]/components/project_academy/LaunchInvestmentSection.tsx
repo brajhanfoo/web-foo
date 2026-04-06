@@ -29,7 +29,7 @@ const LaunchInvestmentSection = () => {
               <p className="text-sm text-white/40 line-through">$850 USD</p>
 
               <div className="flex items-end gap-2">
-                <span className="text-5xl font-bold text-[#BDBE0B]">$250</span>
+                <span className="text-5xl font-bold text-[#BDBE0B]">$350</span>
                 <span className="mb-1 text-sm text-white/70">USD</span>
               </div>
 
@@ -62,7 +62,7 @@ const LaunchInvestmentSection = () => {
                 <div>
                   <p className="font-medium text-white">Formato Part-time</p>
                   <p className="text-xs text-white/50">
-                    Martes y Jueves 09:00 – 11:00 GMT-3
+                    Turnos a elección: Mañana, Tarde o Noche (Hora ARG / GMT-3)
                   </p>
                 </div>
               </div>
@@ -79,7 +79,7 @@ const LaunchInvestmentSection = () => {
             </div>
 
             <button
-              onClick={() => router.push('/ingresar')}
+              onClick={() => router.push('/plataforma/talento')}
               className="mt-8 w-full rounded-xl bg-gradient-to-r from-[#BDBE0B] to-[#A5A70A] py-3 text-sm font-semibold text-black transition hover:opacity-90 cursor-pointer"
             >
               Asegurar mi cupo

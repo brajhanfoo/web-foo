@@ -18,28 +18,28 @@ export function getProgramCardContent(program: ProgramRow): ProgramCardContent {
       accent: 'academy',
       features: [
         feature(
-          'stakeholders',
-          'Proyectos con stakeholders Reales - Resuelves problemas reales',
+          'Proyecto aplicado de software',
+          'Aprende haciendo — Desarrolla un producto de software de forma práctica',
           true
         ),
         feature(
           'expert',
-          'Acompañamiento experto - Técnicos, de Producto y de Carrera',
+          'Ve más allá de tu especialidad — Entiende cómo se conectan negocio, producto y tech',
           true
         ),
         feature(
           '1-1',
-          'Mentoría técnica 1:1 - Resuelve tus dudas específicas',
+          'Mentoría técnica — Recibe acompañamiento personalizado durante el proceso',
           true
         ),
         feature(
           'workshops',
-          'Workshops en vivo - Clases de producto/UX/DEV/QA',
+          'Workshops en vivo — Aprende con especialistas en Producto, UX, Desarrollo y QA',
           true
         ),
-        feature('rituales', 'Rituales ágiles guiados', true),
-        feature('coaching', 'Career coaching dedicado', true),
-        feature('support', 'Soporte diario', true),
+        feature('rituales', 'Metodologías ágiles aplicadas — Fortalece tu forma de trabajar en equipos digitales', true),
+        feature('coaching', 'Career coaching — Mejora tu perfil, portafolio y preparación profesional', true),
+        feature('support', 'Acompañamiento continuo — Avanza con soporte cercano durante toda la experiencia', true),
       ],
     }
   }
@@ -54,19 +54,21 @@ export function getProgramCardContent(program: ProgramRow): ProgramCardContent {
       features: [
         feature(
           'admission',
-          'Proceso de admisión - Entrevista técnica + feedback',
+          'Proceso de admisión técnico — Entrevista, evaluación y feedback personalizado',
           true
         ),
         feature(
           'community',
-          'Comunidad de talento filtrado - Solo trabajas con los mejores',
+          'Comunidad de talento seleccionado — Trabaja con perfiles filtrados por nivel y compromiso',
           true
         ),
-        feature('briefs', 'Briefs de proyectos con stakeholders', true),
-        feature('sim', 'Entorno laboral simulado 100% realista', true),
-        feature('mentor', 'Mentoría experta dedicada', false),
-        feature('workshops', 'Workshops + career services', false),
-        feature('step', 'Acompañamiento paso a paso', false),
+        feature('briefs', 'Proyectos colaborativos de software — Construye soluciones junto a otras áreas', true),
+        feature('sim', 'Entorno exigente de ejecución — Dinámicas como reviews y demo day', true),
+             feature('aco', 'Acompañamiento estructurado', true),
+       feature('career', 'Desarrollo integral guiado por especialidad y contexto de producto', false),
+        feature('mentor', 'Mentoría técnica continua', false),
+        feature('workshops', 'Workshops o clases en vivo', false),
+        feature('step', 'Career coaching personalizado', false)
       ],
     }
   }

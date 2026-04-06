@@ -32,16 +32,14 @@ const AboutProjectAcademySection: React.FC = () => {
 
             {/* Description */}
             <p className="mt-6 max-w-xl text-base text-white/80 sm:text-[18px] font-light">
-              Project Academy es un programa intensivo de Ingeniería de Producto
-              donde entrenas como si ya formaras parte de una empresa
-              tecnológica.
+             Project Academy es un programa intensivo de Ingeniería de Producto diseñado para formarte como un Profesional en T. Dominarás la creación de productos digitales profundizando en tu especialidad y construyendo un producto de principio a fin, bajo mentoría de alto nivel.
             </p>
 
             {/* Cards */}
             <div className="mt-10 grid grid-cols-1 gap-6 sm:grid-cols-2">
               <ValueCard
                 title="No aprendes herramientas aisladas"
-                description="Aprendes cuándo, por qué y cómo usarlas en un proyecto real."
+                description="Aprendes cuándo, por qué y cómo usarlas en un proyecto de nivel profesional."
                 accent="violet"
               />
               <ValueCard
@@ -130,9 +128,8 @@ const ValueCard: React.FC<ValueCardProps> = ({
       </h3>
       <p className="mt-2 text-sm text-white/70">{description}</p>
       <div
-        className={`mt-4 h-1 w-10 rounded-full ${
-          accent === 'violet' ? 'bg-[#D85DFB]' : 'bg-[#00CCA4]'
-        }`}
+        className={`mt-4 h-1 w-10 rounded-full ${accent === 'violet' ? 'bg-[#D85DFB]' : 'bg-[#00CCA4]'
+          }`}
       />
     </div>
   )
@@ -167,9 +164,8 @@ const SprintItem: React.FC<SprintItemProps> = ({
         </div>
       </div>
       <span
-        className={`text-xs ${
-          status === 'In Progress' ? 'text-[#BDBE0B]' : 'text-white/40'
-        }`}
+        className={`text-xs ${status === 'In Progress' ? 'text-[#BDBE0B]' : 'text-white/40'
+          }`}
       >
         {status}
       </span>

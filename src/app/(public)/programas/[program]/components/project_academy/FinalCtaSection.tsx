@@ -29,7 +29,7 @@ const FinalCtaSection = () => {
         </p>
 
         <button
-          onClick={() => router.push('/ingresar')}
+          onClick={() => router.push('/plataforma/talento')}
           className="group mt-10 inline-flex items-center gap-2 rounded-full bg-emerald-400 px-8 py-3 text-sm font-semibold text-black transition hover:bg-emerald-300 cursor-pointer"
         >
           Aplicar Ahora

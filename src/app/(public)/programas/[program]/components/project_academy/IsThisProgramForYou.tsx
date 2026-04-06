@@ -18,7 +18,7 @@ const IsThisProgramForYou: React.FC = () => {
             items={[
               'Has finalizado algún curso de PM/BA/UX/Dev/QA & No-code',
               'Tienes compromiso de 12 semanas intensivas',
-              'Buscas experiencia real, no solo clases',
+              'Buscas aplicar la teoría en proyectos prácticos guiados por mentores',
               'Quieres saltar a roles de producto',
             ]}
           />

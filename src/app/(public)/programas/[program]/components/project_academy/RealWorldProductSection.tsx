@@ -26,8 +26,7 @@ const RealWorldProductSection: React.FC = () => {
 
                 {/* Quote */}
                 <p className="text-lg md:text-[24px] font-semibold leading-relaxed text-center">
-                  “Este proyecto no es un ejercicio académico. Es el centro de
-                  tu portfolio profesional.”
+                  “Este proyecto va mucho más allá de la teoría. Está diseñado para ser la pieza central y más fuerte de tu portafolio profesional.”
                 </p>
               </div>
             </div>
@@ -36,25 +35,24 @@ const RealWorldProductSection: React.FC = () => {
           {/* RIGHT CONTENT */}
           <div>
             <h2 className="text-3xl font-bold leading-tight sm:text-4xl">
-              Un producto complejo, real y{' '}
+              Un producto complejo, robusto y{' '}
               <span className="text-emerald-400">defendible</span>
             </h2>
 
             <p className="mt-4 max-w-xl text-base text-white/70">
-              No más proyectos académicos. Aquí construirás soluciones de
-              software reales que resuelven problemas de negocio.
+              Ve más allá de la teoría básica. Aquí construirás soluciones de software de nivel profesional, diseñadas para resolver problemas de negocio estructurados.
             </p>
 
             <div className="mt-10 space-y-4">
               <FeatureItem
                 accent="emerald"
                 icon={<FaUsers size={18} />}
-                text="1 proyecto por equipo (4–8 personas)"
+                text="1 proyecto por equipo (20 personas máximo por edición)"
               />
               <FeatureItem
                 accent="violet"
                 icon={<FaBriefcase size={18} />}
-                text="Stakeholder real / producto propio"
+                text="Caso de negocio avanzado / Producto propio"
               />
               <FeatureItem
                 accent="cyan"

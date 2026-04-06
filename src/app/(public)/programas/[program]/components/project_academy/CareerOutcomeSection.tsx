@@ -20,9 +20,9 @@ const outcomes: OutcomeItem[] = [
     icon: FiLayers,
   },
   {
-    title: 'Experiencia real',
+    title: 'Dinámica de equipo tech',
     description:
-      'Experiencia comprobable en equipo tech, trabajando con metodologías ágiles y CI/CD.',
+      'Trabajo colaborativo intensivo operando con metodologías ágiles y flujos CI/CD.',
     icon: FiUsers,
   },
   {

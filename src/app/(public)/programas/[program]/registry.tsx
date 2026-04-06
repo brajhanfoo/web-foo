@@ -17,13 +17,13 @@ import ProgramStructureAccordion from './components/project_academy/ProgramStruc
 import TracksSection from './components/project_academy/TracksSection'
 import SolutionDefinitionSection from './components/project_academy/SolutionDefinitionSection'
 import AgileRitualsSection from './components/project_academy/AgileRitualsSection'
-import MentorshipSection from './components/project_academy/MentorshipSection'
 import CareerIntensiveSection from './components/project_academy/CareerIntensiveSection'
 import EvaluationCertificationSection from './components/project_academy/EvaluationCertificationSection'
 import CareerOutcomeSection from './components/project_academy/CareerOutcomeSection'
 import LaunchInvestmentSection from './components/project_academy/LaunchInvestmentSection'
 import FinalCtaSection from './components/project_academy/FinalCtaSection'
 import FAQSection from './components/FAQSection'
+import EnrollmentStepsSection from './components/project_academy/ProjectAcademyEnrollmentSteps'
 
 type ProgramRenderSpec = {
   title: string
@@ -55,9 +55,10 @@ export const PROGRAM_SPECS: Record<string, ProgramRenderSpec> = {
         <AboutProjectAcademySection />
         <RealWorldProductSection />
         <ProgramStructureAccordion />
-        <TracksSection />
+        <EnrollmentStepsSection />
+        {/* <TracksSection /> */}
         {/* <SolutionDefinitionSection /> */}
-        <AgileRitualsSection />
+        {/* <AgileRitualsSection /> */}
         {/* <MentorshipSection /> */}
         <CareerIntensiveSection />
         <EvaluationCertificationSection />
