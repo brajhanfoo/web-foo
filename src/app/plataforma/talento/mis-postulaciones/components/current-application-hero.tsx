@@ -300,7 +300,8 @@ export function CurrentApplicationHero(props: { app: ApplicationRow }) {
       }
       icon={<Clock3 className="h-5 w-5 text-muted-foreground" />}
       title="Gracias por postular"
-      description="Por ahora no avanzaste en este batch. Te recomendamos reforzar algunos puntos y volver a intentarlo en la próxima apertura."
+      description="En esta edición no continuaste al siguiente paso del proceso.
+Si corresponde, recibirás por correo electrónico observaciones o recomendaciones para ayudarte a mejorar tu perfil de cara a futuras convocatorias."
       bottomLeft={
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
           <span className="h-2 w-2 rounded-full bg-muted-foreground/60" />
@@ -309,8 +310,8 @@ export function CurrentApplicationHero(props: { app: ApplicationRow }) {
       }
       bottomRight={
         <Button variant="secondary" className="gap-2" asChild>
-          <Link href="#">
-            Ver recomendaciones <ArrowRight className="h-4 w-4" />
+          <Link href="/plataforma/talento/">
+            Volver <ArrowRight className="h-4 w-4" />
           </Link>
         </Button>
       }
