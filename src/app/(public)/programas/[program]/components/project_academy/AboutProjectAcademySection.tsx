@@ -1,16 +1,18 @@
+'use client'
 import React from 'react'
 
 const AboutProjectAcademySection: React.FC = () => {
   return (
-    <section className="relative bg-black py-28 text-white">
-      {/* Background glow */}
+    <section className="relative bg-black py-28 text-white overflow-hidden">
+      {/* Background glow (FIX responsive) */}
       <div className="pointer-events-none absolute inset-0">
-        <div className="absolute left-0 top-1/4 h-[500px] w-[500px] rounded-full bg-emerald-500/10 blur-[140px]" />
-        <div className="absolute right-0 bottom-0 h-[500px] w-[500px] rounded-full bg-violet-600/10 blur-[140px]" />
+        <div className="absolute left-0 top-1/4 h-[260px] w-[260px] md:h-[500px] md:w-[500px] rounded-full bg-emerald-500/10 blur-[140px]" />
+        <div className="absolute right-0 bottom-0 h-[260px] w-[260px] md:h-[500px] md:w-[500px] rounded-full bg-violet-600/10 blur-[140px]" />
       </div>
 
       <div className="relative mx-auto max-w-7xl px-6">
         <div className="grid grid-cols-1 gap-16 lg:grid-cols-2 lg:items-center">
+          
           {/* LEFT CONTENT */}
           <div>
             {/* Badge */}
@@ -22,17 +24,17 @@ const AboutProjectAcademySection: React.FC = () => {
             {/* Title */}
             <h2 className="text-4xl font-extrabold leading-none tracking-tight sm:text-5xl">
               Formación profesional aplicada para{' '}
-              <span
-                className="inline-block bg-gradient-to-r from-[#D85DFB] to-[#77039F]
-               bg-clip-text text-transparent"
-              >
+              <span className="inline-block bg-gradient-to-r from-[#D85DFB] to-[#77039F] bg-clip-text text-transparent">
                 Digital Product Developers
               </span>
             </h2>
 
             {/* Description */}
             <p className="mt-6 max-w-xl text-base text-white/80 sm:text-[18px] font-light">
-             Project Academy es un programa intensivo de Ingeniería de Producto diseñado para formarte como un Profesional en T. Dominarás la creación de productos digitales profundizando en tu especialidad y construyendo un producto de principio a fin, bajo mentoría de alto nivel.
+              Project Academy es un programa intensivo de Ingeniería de Producto
+              diseñado para formarte como un Profesional en T. Dominarás la
+              creación de productos digitales profundizando en tu especialidad y
+              construyendo un producto de principio a fin, bajo mentoría de alto nivel.
             </p>
 
             {/* Cards */}
@@ -51,8 +53,9 @@ const AboutProjectAcademySection: React.FC = () => {
           </div>
 
           {/* RIGHT PANEL */}
-          <div className="relative">
-            <div className="rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur">
+          <div className="relative max-w-full">
+            <div className="rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur max-w-full">
+              
               {/* Window header */}
               <div className="mb-6 flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -97,8 +100,10 @@ const AboutProjectAcademySection: React.FC = () => {
                   <div className="h-full w-[87%] rounded-full bg-gradient-to-r from-[#77039F] to-[#00CCA4]" />
                 </div>
               </div>
+
             </div>
           </div>
+
         </div>
       </div>
     </section>
@@ -126,10 +131,13 @@ const ValueCard: React.FC<ValueCardProps> = ({
       <h3 className={`text-base font-semibold ${accentMap[accent]}`}>
         {title}
       </h3>
-      <p className="mt-2 text-sm text-white/70">{description}</p>
+      <p className="mt-2 text-sm text-white/70 leading-relaxed">
+        {description}
+      </p>
       <div
-        className={`mt-4 h-1 w-10 rounded-full ${accent === 'violet' ? 'bg-[#D85DFB]' : 'bg-[#00CCA4]'
-          }`}
+        className={`mt-4 h-1 w-10 rounded-full ${
+          accent === 'violet' ? 'bg-[#D85DFB]' : 'bg-[#00CCA4]'
+        }`}
       />
     </div>
   )
@@ -164,8 +172,9 @@ const SprintItem: React.FC<SprintItemProps> = ({
         </div>
       </div>
       <span
-        className={`text-xs ${status === 'In Progress' ? 'text-[#BDBE0B]' : 'text-white/40'
-          }`}
+        className={`text-xs ${
+          status === 'In Progress' ? 'text-[#BDBE0B]' : 'text-white/40'
+        }`}
       >
         {status}
       </span>

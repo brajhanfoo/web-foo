@@ -39,10 +39,10 @@ export default function ContactSection() {
 
         {/* texto */}
         <p className="text-gray-300 text-lg leading-relaxed max-w-2xl mx-auto mb-10">
-          Los <span className="text-white font-semibold">Smart Projects</span>{' '}
-          son gratuitos e ilimitados para toda la comunidad tech. Si eres
-          talento, puedes unirte. Si eres empresa, podemos apoyarnos mutuamente
-          para impulsar el crecimiento del ecosistema.
+          Forma parte de <span className="text-white font-semibold">Smart Projects</span>{' '}
+          , un programa selectivo donde trabajarás en proyectos reales junto a talento filtrado por nivel y compromiso.
+Postula y da el siguiente paso en tu crecimiento profesional.
+Si eres empresa, sumate al ecosistema y construyamos juntos.
         </p>
 
         {/* redes */}

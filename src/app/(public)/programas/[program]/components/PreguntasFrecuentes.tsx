@@ -11,24 +11,39 @@ export default function PreguntasFrecuentes() {
 
   const faqs = [
     {
-      question: '¿Quiénes pueden participar en los Smart Projects?',
+      question: '¿Quiénes pueden participar en Smart Projects?',
       answer:
-        'Personas motivadas por aprender sobre tecnología, diseño, desarrollo, producto o testing. No es requisito estar laboralmente en el área, sino tener interés genuino.',
+        'Personas con conocimientos base en su área (desarrollo, diseño, producto o QA) que buscan seguir creciendo a través de proyectos reales y trabajo colaborativo.',
     },
     {
-      question: '¿Qué nivel de experiencia se requiere para participar?',
+      question: '¿El programa es abierto para todos?',
       answer:
-        'Solo necesitas conocimientos básicos del rol al que postulas. Ofrecemos aprendizaje práctico y mentoría durante todo el programa.',
+        'No. Smart Projects es un programa selectivo. Para ingresar debes pasar por un proceso de admisión que evalúa tu nivel y tu forma de trabajo.',
     },
     {
-      question: '¿Cuál es la duración de los programas?',
+      question: '¿Cómo es el proceso de admisión?',
       answer:
-        'Smart Projects tiene una duración de 8 semanas intensivas con sesiones en vivo, trabajo en equipo y mentoría.',
+        'Incluye una revisión de perfil, una entrevista técnica y un desafío práctico. Además, recibirás feedback personalizado independientemente del resultado.',
     },
     {
-      question: '¿Recibiré un certificado al finalizar el programa?',
+      question: '¿El proceso de admisión tiene costo?',
       answer:
-        'Sí. Al finalizar recibirás un certificado de participación ideal para tu CV y portafolio.',
+        'Sí. El pago corresponde al acceso al proceso de evaluación técnica y al feedback personalizado. No garantiza el ingreso al programa.',
+    },
+    {
+      question: '¿Qué pasa si no soy seleccionado?',
+      answer:
+        'Recibirás una devolución clara sobre tu nivel actual y qué necesitas mejorar para futuras oportunidades.',
+    },
+    {
+      question: '¿Qué hace diferente a Smart Projects de un curso tradicional?',
+      answer:
+        'A diferencia de un curso, Smart Projects replica un entorno real de trabajo en tecnología. Aquí no realizas ejercicios aislados, sino que desarrollas soluciones alineadas a negocio y producto, atravesando todo el ciclo de vida del software. Incluye revisiones, validaciones y una defensa final ante expertos. La certificación no es automática: debes demostrar tu nivel para obtenerla.',
+    },
+    {
+      question: '¿Cuál es la duración del programa?',
+      answer:
+        'Smart Projects tiene una duración de 8 semanas intensivas, con trabajo colaborativo autogestionado y acompañamiento técnico, simulando dinámicas reales de equipos de producto.',
     },
   ]
 
@@ -60,11 +75,10 @@ export default function PreguntasFrecuentes() {
                 rounded-xl
                 border
                 transition-all duration-300
-                ${
-                  open
+                ${open
                     ? 'border-[#00CCA4] bg-[#050507] shadow-[0_0_25px_rgba(0,204,164,0.15)]'
                     : 'border-white/10 bg-[#0B0B0F] hover:border-[#77039F]/40'
-                }
+                  }
                 `}
               >
                 {/* pregunta */}
@@ -73,7 +87,7 @@ export default function PreguntasFrecuentes() {
                   className="
                   flex justify-between items-center w-full
                   text-left px-6 py-5
-                  group
+                  group cursor-pointer
                   "
                 >
                   <span
@@ -81,11 +95,10 @@ export default function PreguntasFrecuentes() {
                     text-[16px] md:text-[17px]
                     font-semibold tracking-wide
                     transition
-                    ${
-                      open
+                    ${open
                         ? 'text-[#00CCA4]'
                         : 'text-white group-hover:text-[#D85DFB]'
-                    }
+                      }
                     `}
                   >
                     {faq.question}
@@ -94,11 +107,10 @@ export default function PreguntasFrecuentes() {
                   <FaChevronDown
                     className={`
                     transition-all duration-300 text-sm
-                    ${
-                      open
+                    ${open
                         ? 'rotate-180 text-[#00CCA4]'
                         : 'text-gray-500 group-hover:text-[#D85DFB]'
-                    }
+                      }
                     `}
                   />
                 </button>

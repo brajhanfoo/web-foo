@@ -5,7 +5,7 @@ import Image from 'next/image'
 import { usePathname, useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase/client'
 import { FaBars, FaTimes } from 'react-icons/fa'
-import { FiUsers } from 'react-icons/fi'
+import { FiUsers, FiBriefcase, FiInfo } from 'react-icons/fi'
 
 interface NavbarProperties {
   logoSrc: string
@@ -13,15 +13,154 @@ interface NavbarProperties {
 }
 
 const navItems = [
-  { name: 'Servicios', href: '/servicios' },
-  { name: 'Programas', href: '/programas', icon: <FiUsers /> },
-  { name: 'Nosotros', href: '/aboutus', icon: <FiUsers /> },
+  { name: 'Servicios', href: '/servicios', icon: <FiBriefcase /> },
+  {
+    name: 'Programas',
+    href: '/programas',
+    icon: <FiUsers />,
+    children: [
+      { name: 'Project Academy', href: '/programas/project-academy' },
+      { name: 'Smart Projects', href: '/programas/smart-projects' },
+    ],
+  },
+  { name: 'Nosotros', href: '/aboutus', icon: <FiInfo /> },
 ]
+
+// 🔥 NavItem
+function NavItem({
+  item,
+  active,
+  mobile = false,
+  onClick,
+}: any) {
+  const [open, setOpen] = useState(false)
+  const hasChildren = item.children?.length > 0
+
+  if (hasChildren) {
+    return (
+      <div className="relative group">
+        <Link
+          href={item.href}
+          onClick={(e) => {
+            if (mobile) {
+              if (!open) {
+                e.preventDefault()
+                setOpen(true)
+              } else {
+                onClick?.()
+              }
+            }
+          }}
+          className="flex items-center gap-2 text-white relative cursor-pointer"
+        >
+          {item.icon && mobile && <span>{item.icon}</span>}
+          <span className={mobile ? 'text-lg' : ''}>{item.name}</span>
+
+          <span className={`transition-transform ${open ? 'rotate-180' : ''}`}>
+            ▼
+          </span>
+
+          {!mobile && (
+            <span
+              className={`
+                absolute left-0 -bottom-1 h-[2px] bg-yellow-400 transition-all duration-300
+                ${active ? 'w-full' : 'w-0 group-hover:w-full'}
+              `}
+            />
+          )}
+        </Link>
+
+        {!mobile && (
+          <div className="absolute top-full left-0 mt-2 hidden group-hover:block bg-black border border-gray-700 rounded-md shadow-lg min-w-[220px] z-50 overflow-hidden">
+            {item.children.map((child: any) => (
+              <Link
+                key={child.href}
+                href={child.href}
+                className="block px-4 py-2 text-white cursor-pointer transition-all duration-200 hover:bg-white/10 hover:text-yellow-400 hover:translate-x-1"
+              >
+                {child.name}
+              </Link>
+            ))}
+          </div>
+        )}
+
+        {mobile && open && (
+          <div className="ml-6 mt-2 flex flex-col gap-2">
+            {item.children.map((child: any) => (
+              <Link
+                key={child.href}
+                href={child.href}
+                onClick={onClick}
+                className="text-white cursor-pointer transition-all duration-200 hover:text-yellow-400 hover:translate-x-1"
+              >
+                {child.name}
+              </Link>
+            ))}
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  return (
+    <Link
+      href={item.href}
+      onClick={onClick}
+      className="group relative flex items-center gap-3 text-white cursor-pointer"
+    >
+      {item.icon && mobile && <span>{item.icon}</span>}
+      <span className={mobile ? 'text-lg' : ''}>{item.name}</span>
+
+      <span
+        className={`
+          absolute left-0 -bottom-1 h-[2px] bg-yellow-400 transition-all duration-300
+          ${active ? 'w-full' : 'w-0 group-hover:w-full'}
+        `}
+      />
+    </Link>
+  )
+}
+
+// 🔥 NavActions
+function NavActions({
+  isAuthed,
+  authReady,
+  isProgramActive,
+  onIngresar,
+  onPanel,
+  onPostular,
+  mobile = false,
+}: any) {
+  if (!authReady) return null
+
+  return (
+    <div className={`flex ${mobile ? 'flex-col gap-4' : 'items-center gap-4'}`}>
+      {isProgramActive && (
+        <button
+          onClick={onPostular}
+          className={`bg-[#00CCA4] hover:bg-[#00D3D3] text-black font-semibold rounded-md cursor-pointer transition
+          ${mobile ? 'w-full py-3' : 'px-5 py-2.5'}`}
+        >
+          Postular
+        </button>
+      )}
+
+      <button
+        onClick={isAuthed ? onPanel : onIngresar}
+        className={`text-white bg-white/20 hover:bg-white/30 rounded-md cursor-pointer transition
+        ${mobile ? 'w-full py-3 text-lg' : 'px-5 py-2.5'}`}
+      >
+        {isAuthed ? 'Mi panel' : 'Ingresar'}
+      </button>
+    </div>
+  )
+}
 
 export default function Navbar({ logoSrc, logoAlt }: NavbarProperties) {
   const [menuOpen, setMenuOpen] = useState(false)
   const [isAuthed, setIsAuthed] = useState(false)
   const [authReady, setAuthReady] = useState(false)
+
   const pathname = usePathname()
   const router = useRouter()
 
@@ -29,7 +168,7 @@ export default function Navbar({ logoSrc, logoAlt }: NavbarProperties) {
     pathname?.startsWith('/programas/') && pathname !== '/programas'
 
   useEffect(() => {
-    document.body.style.overflow = menuOpen ? 'hidden' : 'auto'
+    document.body.style.overflow = menuOpen ? 'hidden' : ''
   }, [menuOpen])
 
   useEffect(() => {
@@ -68,137 +207,75 @@ export default function Navbar({ logoSrc, logoAlt }: NavbarProperties) {
     router.push('/plataforma')
   }
 
-  // 🔥 función active
+  const handlePostularClick = () => {
+    setMenuOpen(false)
+    router.push('/plataforma')
+  }
+
   const isActive = (href: string) => {
     if (href === '/') return pathname === '/'
     return pathname === href || pathname.startsWith(href + '/')
   }
 
   return (
-    <nav className="sticky top-0 z-50 flex w-full items-center justify-between bg-black px-4 py-4 sm:px-6 md:px-4 lg:px-16 xl:px-32 shadow-lg">
-      {/* LOGO */}
+    <nav className="sticky top-0 z-50 flex w-full items-center justify-between bg-black px-4 py-4 sm:px-6 lg:px-16 xl:px-32 shadow-lg overflow-visible">
       <Link href="/" className="z-50">
-        <Image
-          src={logoSrc}
-          alt={logoAlt}
-          width={90}
-          height={50}
-          className="w-14 h-8 md:w-24 md:h-16"
-        />
+        <Image src={logoSrc} alt={logoAlt} width={90} height={50} />
       </Link>
 
-      {/* DESKTOP MENU */}
+      {/* DESKTOP */}
       <div className="hidden md:flex items-center space-x-8">
-        {navItems.map(({ name, href }) => {
-          const active = isActive(href)
-
-          return (
-            <Link key={href} href={href} className="text-white group relative">
-              {name}
-
-              {/* underline */}
-              <span
-                className={`
-                  absolute left-0 -bottom-1 h-[2px] bg-yellow transition-[width] duration-300
-                  ${active ? 'w-full' : 'w-0 group-hover:w-full'}
-                `}
-              />
-            </Link>
-          )
-        })}
+        {navItems.map((item) => (
+          <NavItem key={item.href} item={item} active={isActive(item.href)} />
+        ))}
       </div>
 
-      {/* BOTONES DESKTOP */}
-      <div className="hidden md:flex items-center gap-4">
-        {authReady ? (
-          isAuthed ? (
-            <button
-              onClick={handlePanelClick}
-              className="text-white bg-white/20 hover:bg-white/30 px-5 py-2.5 rounded-md transition-colors duration-300 cursor-pointer"
-            >
-              Mi panel
-            </button>
-          ) : (
-            <button
-              onClick={handleIngresarClick}
-              className="text-white bg-white/20 hover:bg-white/30 px-5 py-2.5 rounded-md transition-colors duration-300 cursor-pointer"
-            >
-              Ingresar
-            </button>
-          )
-        ) : null}
-
-        {isProgramActive && (
-          <button
-            className="bg-[#00CCA4] hover:bg-[#00D3D3] cursor-pointer text-black font-semibold px-5 py-2.5 rounded-md transition-colors duration-300 shadow-md hover:shadow-lg"
-            onClick={() => router.push('/ingresar')}
-          >
-            Postular
-          </button>
-        )}
+      <div className="hidden md:flex">
+        <NavActions
+          isAuthed={isAuthed}
+          authReady={authReady}
+          isProgramActive={isProgramActive}
+          onIngresar={handleIngresarClick}
+          onPanel={handlePanelClick}
+          onPostular={handlePostularClick}
+        />
       </div>
 
       {/* MOBILE BTN */}
       <button
         onClick={() => setMenuOpen(!menuOpen)}
-        className="md:hidden text-2xl text-white z-50"
-        aria-label={menuOpen ? 'Cerrar menu' : 'Abrir menu'}
+        className="md:hidden text-2xl text-white z-50 cursor-pointer"
       >
         {menuOpen ? <FaTimes /> : <FaBars />}
       </button>
 
       {/* MOBILE MENU */}
       <div
-        className={`fixed inset-0 z-40 flex flex-col overflow-y-auto bg-black px-6 py-24 pb-10 space-y-6 transition-transform duration-300 ease-in-out
+        className={`fixed inset-0 z-40 flex flex-col bg-black px-6 py-24 pb-10 transition-transform duration-300
         ${menuOpen ? 'translate-x-0' : 'translate-x-full'}`}
       >
-        {navItems.map(({ name, href, icon }) => {
-          const active = isActive(href)
-
-          return (
-            <Link
-              key={href}
-              href={href}
+        <div className="flex flex-col space-y-4">
+          {navItems.map((item) => (
+            <NavItem
+              key={item.href}
+              item={item}
+              active={isActive(item.href)}
+              mobile
               onClick={() => setMenuOpen(false)}
-              className={`flex items-center space-x-3 text-2xl transition-colors duration-200
-              ${active ? 'text-yellow-400' : 'text-white hover:text-yellow-400'}`}
-            >
-              {icon}
-              <span>{name}</span>
-            </Link>
-          )
-        })}
+            />
+          ))}
+        </div>
 
-        <div className="border-t border-gray-700 my-4 pt-4">
-          {isProgramActive && (
-            <button
-              onClick={() => {
-                setMenuOpen(false)
-                router.push('/ingresar')
-              }}
-              className="w-full bg-[#00CCA4] hover:bg-[#00D3D3] cursor-pointer text-black font-semibold text-lg py-3 px-4 rounded-md transition-colors duration-300 mb-4"
-            >
-              Postular al Programa
-            </button>
-          )}
-
-          {authReady ? (
-            isAuthed ? (
-              <button
-                onClick={handlePanelClick}
-                className="w-full text-center text-white bg-white/20 hover:bg-white/30 text-lg py-3 px-4 rounded-md transition-colors duration-300 cursor-pointer"
-              >
-                Mi panel
-              </button>
-            ) : (
-              <button
-                onClick={handleIngresarClick}
-                className="w-full text-center text-white bg-white/20 hover:bg-white/30 text-lg py-3 px-4 rounded-md transition-colors duration-300 cursor-pointer"
-              >
-                Ingresar
-              </button>
-            )
-          ) : null}
+        <div className="border-t border-gray-700 mt-6 pt-6">
+          <NavActions
+            mobile
+            isAuthed={isAuthed}
+            authReady={authReady}
+            isProgramActive={isProgramActive}
+            onIngresar={handleIngresarClick}
+            onPanel={handlePanelClick}
+            onPostular={handlePostularClick}
+          />
         </div>
       </div>
     </nav>

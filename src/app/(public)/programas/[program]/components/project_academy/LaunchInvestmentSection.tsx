@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 
 const LaunchInvestmentSection = () => {
   const router = useRouter()
+
   return (
     <section className="mx-auto max-w-7xl px-6 py-24">
       {/* Header */}
@@ -19,7 +20,8 @@ const LaunchInvestmentSection = () => {
       {/* Card */}
       <div className="mx-auto max-w-4xl rounded-3xl border border-white/10 bg-gradient-to-br from-[#1b1c12] via-[#15160f] to-[#0f100b] p-8 shadow-2xl">
         <div className="grid gap-8 md:grid-cols-2">
-          {/* Left */}
+          
+          {/* LEFT */}
           <div>
             <span className="inline-block rounded-full bg-[#BDBE0B]/20 px-3 py-1 text-xs font-medium text-[#BDBE0B]">
               CUPOS LIMITADOS
@@ -36,15 +38,19 @@ const LaunchInvestmentSection = () => {
               <p className="mt-1 text-xs uppercase tracking-wide text-[#BDBE0B]/80">
                 Precio Early Bird
               </p>
+
+              {/* 🔥 MICROCOPY OPTIMIZADO */}
+              <p className="mt-4 text-xs text-white/50">
+                No pagas nada hoy · Puedes dividir el pago en cuotas con tu tarjeta
+              </p>
             </div>
 
             <p className="mt-6 max-w-sm text-sm text-white/50">
-              *No pagas nada hoy. Aplica para iniciar tu proceso de admisión y
-              asegura este precio.
+              Aplica para iniciar tu proceso de admisión y asegurar este precio.
             </p>
           </div>
 
-          {/* Right */}
+          {/* RIGHT */}
           <div className="flex flex-col justify-between">
             <div className="space-y-4 text-sm text-white/80">
               <div className="flex items-start gap-3">
@@ -84,6 +90,11 @@ const LaunchInvestmentSection = () => {
             >
               Asegurar mi cupo
             </button>
+
+            {/* 🔥 confianza extra (opcional pero potente) */}
+            <p className="mt-3 text-center text-xs text-white/40">
+              Acceso inmediato tras admisión · Cupos limitados por cohorte
+            </p>
           </div>
         </div>
       </div>

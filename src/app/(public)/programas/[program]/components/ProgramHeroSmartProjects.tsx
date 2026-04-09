@@ -4,7 +4,7 @@ import { RiGraduationCapFill } from 'react-icons/ri'
 
 const ProgramHero = () => {
   return (
-    <section className="relative w-full h-[420px] flex items-center justify-center overflow-hidden">
+    <section className="relative w-full h-[380px] flex items-center justify-center overflow-hidden">
       {/* 🌈 Fondo gradiente exacto del diseño */}
       <div className="absolute inset-0 bg-gradient-to-r from-[#2b0a3d] via-[#071b22] to-[#00CCA4]/15" />
 

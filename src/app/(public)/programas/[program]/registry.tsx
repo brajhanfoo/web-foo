@@ -24,6 +24,8 @@ import LaunchInvestmentSection from './components/project_academy/LaunchInvestme
 import FinalCtaSection from './components/project_academy/FinalCtaSection'
 import FAQSection from './components/FAQSection'
 import EnrollmentStepsSection from './components/project_academy/ProjectAcademyEnrollmentSteps'
+import AdmissionProcess from './components/AdmissionProcess'
+import AdmissionPricing from './components/AdmissionPricing'
 
 type ProgramRenderSpec = {
   title: string
@@ -39,7 +41,9 @@ export const PROGRAM_SPECS: Record<string, ProgramRenderSpec> = {
       <Timeline key="timeline" />,
       <SprintsSection key="sprints" />,
       <AdmissionsSection key="admissions" />,
+      <AdmissionProcess key="admission-process" />,
       <InstructoresMentores key="mentors" />,
+      <AdmissionPricing key="admission-pricing" />,
       <PreguntasFrecuentes key="faq" />,
       <ContactSection key="contact" />,
     ],
@@ -56,10 +60,6 @@ export const PROGRAM_SPECS: Record<string, ProgramRenderSpec> = {
         <RealWorldProductSection />
         <ProgramStructureAccordion />
         <EnrollmentStepsSection />
-        {/* <TracksSection /> */}
-        {/* <SolutionDefinitionSection /> */}
-        {/* <AgileRitualsSection /> */}
-        {/* <MentorshipSection /> */}
         <CareerIntensiveSection />
         <EvaluationCertificationSection />
         <CareerOutcomeSection />

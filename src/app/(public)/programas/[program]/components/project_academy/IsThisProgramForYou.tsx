@@ -1,3 +1,5 @@
+'use client'
+
 import { FaCheck } from 'react-icons/fa6'
 
 const IsThisProgramForYou: React.FC = () => {
@@ -18,8 +20,12 @@ const IsThisProgramForYou: React.FC = () => {
             items={[
               'Has finalizado algún curso de PM/BA/UX/Dev/QA & No-code',
               'Tienes compromiso de 12 semanas intensivas',
-              'Buscas aplicar la teoría en proyectos prácticos guiados por mentores',
-              'Quieres saltar a roles de producto',
+              // 🔥 TEXTO ACTUALIZADO: Enfoque claro en la construcción del producto
+              'Buscas aplicar la teoría en la construcción de un producto de software',
+              'Buscas dominar la dinámica de un equipo interdisciplinario aplicando metodologías ágiles de la industria',
+              'Quieres validar la calidad de tus entregables con estándares del mercado',
+              'Deseas liderar la creación de un producto con criterio profesional',
+              'Buscas desarrollar un MVP sólido para dar el salto profesional',
             ]}
           />
 
@@ -53,13 +59,13 @@ const DecisionCard: React.FC<DecisionCardProps> = ({
 }) => {
   const accentStyles = {
     emerald: {
-      border: 'border-[#FFFFFF]/10',
+      border: 'border-white/10',
       bg: 'bg-[#161616]/40',
       icon: 'bg-[#00CCA4]/10 text-[#00CCA4]',
       dot: 'bg-[#00CCA4]',
     },
     violet: {
-      border: 'border-[#FFFFFF]/10',
+      border: 'border-white/10',
       bg: 'bg-[#161616]/40',
       icon: 'bg-[#77039F]/10 text-[#77039F]',
       dot: 'bg-[#77039F]',
@@ -70,7 +76,15 @@ const DecisionCard: React.FC<DecisionCardProps> = ({
 
   return (
     <div
-      className={`relative rounded-2xl border ${styles.border} ${styles.bg} p-8 backdrop-blur`}
+      className={`
+        relative
+        rounded-2xl
+        border ${styles.border}
+        ${styles.bg}
+        p-8
+        backdrop-blur
+        shadow-[0_0_30px_rgba(255,255,255,0.03)]
+      `}
     >
       {/* Header */}
       <div className="mb-6 flex items-center gap-3">
@@ -91,7 +105,9 @@ const DecisionCard: React.FC<DecisionCardProps> = ({
             <span
               className={`mt-1 h-2 w-2 flex-shrink-0 rounded-full ${styles.dot}`}
             />
-            <span className="text-white/80">{item}</span>
+            <span className="text-white/80 leading-relaxed">
+              {item}
+            </span>
           </li>
         ))}
       </ul>

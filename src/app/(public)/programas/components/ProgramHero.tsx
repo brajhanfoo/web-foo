@@ -2,7 +2,7 @@ import React from 'react'
 
 export function ProgramsHero() {
   return (
-    <section className="pt-12 pb-8 text-center">
+    <section className="pt-12 pb-12 text-center">
       <h1 className="text-3xl md:text-5xl font-semibold tracking-tight text-white">
         Elige tu ruta de <span className="text-purple-200/90">crecimiento</span>
       </h1>

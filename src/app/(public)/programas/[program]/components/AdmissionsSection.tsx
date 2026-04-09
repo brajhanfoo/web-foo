@@ -59,8 +59,8 @@ export default function AdmissionsSection() {
 
           {/* grid */}
           <div className="grid md:grid-cols-2 gap-6 mb-12">
-            {/* card */}
-            <div className="flex items-start gap-4 bg-[#0d0d0d] border border-white/10 p-6 rounded-2xl hover:border-[#00CCA4]/40 transition">
+            {/* card 1 */}
+            <div className="flex items-start gap-4 bg-[#0d0d0d] border border-[#00CCA4]/20 p-6 rounded-2xl shadow-[0_0_20px_rgba(0,204,164,0.05)]">
               <div className="w-12 h-12 flex items-center justify-center rounded-xl bg-[#00CCA4]/15 text-[#00CCA4] text-xl">
                 <FaUsers />
               </div>
@@ -72,8 +72,8 @@ export default function AdmissionsSection() {
               </div>
             </div>
 
-            {/* card */}
-            <div className="flex items-start gap-4 bg-[#0d0d0d] border border-white/10 p-6 rounded-2xl hover:border-[#77039F]/40 transition">
+            {/* card 2 */}
+            <div className="flex items-start gap-4 bg-[#0d0d0d] border border-[#77039F]/20 p-6 rounded-2xl shadow-[0_0_20px_rgba(119,3,159,0.05)]">
               <div className="w-12 h-12 flex items-center justify-center rounded-xl bg-[#77039F]/15 text-[#D85DFB] text-xl">
                 <FaChalkboardTeacher />
               </div>
@@ -85,8 +85,8 @@ export default function AdmissionsSection() {
               </div>
             </div>
 
-            {/* card */}
-            <div className="flex items-start gap-4 bg-[#0d0d0d] border border-white/10 p-6 rounded-2xl hover:border-[#BDBE0B]/40 transition">
+            {/* card 3 */}
+            <div className="flex items-start gap-4 bg-[#0d0d0d] border border-[#BDBE0B]/20 p-6 rounded-2xl shadow-[0_0_20px_rgba(189,190,11,0.05)]">
               <div className="w-12 h-12 flex items-center justify-center rounded-xl bg-[#BDBE0B]/15 text-[#BDBE0B] text-xl">
                 <FaClock />
               </div>
@@ -96,8 +96,8 @@ export default function AdmissionsSection() {
               </div>
             </div>
 
-            {/* card */}
-            <div className="flex items-start gap-4 bg-[#0d0d0d] border border-white/10 p-6 rounded-2xl hover:border-blue-400/40 transition">
+            {/* card 4 */}
+            <div className="flex items-start gap-4 bg-[#0d0d0d] border border-blue-400/20 p-6 rounded-2xl shadow-[0_0_20px_rgba(96,165,250,0.05)]">
               <div className="w-12 h-12 flex items-center justify-center rounded-xl bg-blue-500/15 text-blue-400 text-xl">
                 <FaLaptop />
               </div>
@@ -110,48 +110,28 @@ export default function AdmissionsSection() {
             </div>
           </div>
 
-          {/* boton */}
-          {/* <div className="text-center">
-            <Link
-              href="https://tally.so/r/wkqAM1"
-              target="_blank"
-              className="
-              inline-block
-              bg-gradient-to-r from-[#77039F] to-[#D85DFB]
-              hover:from-[#6a028a] hover:to-[#c94af0]
-              text-white
-              font-semibold
-              py-4 px-10
-              rounded-xl
-              shadow-[0_0_25px_rgba(216,93,251,0.45)]
-              transition
-              text-lg
-            "
-            >
-              Postular a la Novena Edición
-            </Link>
-          </div> */}
+          {/* estado cerrado */}
           <div className="text-center">
             <div
               className="
-    inline-block
-    bg-gradient-to-r from-gray-700 to-gray-800
-    text-gray-300
-    font-semibold
-    py-4 px-10
-    rounded-xl
-    border border-white/10
-    shadow-[0_0_20px_rgba(255,255,255,0.05)]
-    cursor-not-allowed
-    text-lg
-    opacity-80
-    "
+              inline-block
+              bg-gradient-to-r from-gray-700 to-gray-800
+              text-gray-300
+              font-semibold
+              py-4 px-10
+              rounded-xl
+              border border-white/10
+              shadow-[0_0_20px_rgba(255,255,255,0.05)]
+              cursor-not-allowed
+              text-lg
+              opacity-80
+              "
             >
               Convocatoria cerrada
             </div>
 
             <p className="text-gray-500 text-sm mt-4">
-              Próxima apertura: Novena edición próximamente
+              Próxima apertura: Octava edición próximamente
             </p>
           </div>
         </div>
