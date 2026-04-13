@@ -54,6 +54,14 @@ function safeString(value: FormValue | undefined): string {
   return typeof value === 'string' ? value : ''
 }
 
+function isFilledValue(field: FormInputField, value: FormValue | undefined) {
+  if (field.type === 'checkbox') {
+    return Boolean(value)
+  }
+
+  return safeString(value).trim().length > 0
+}
+
 export function StepExperience({
   experienceField,
   technologiesField,
@@ -83,6 +91,40 @@ export function StepExperience({
     (field): field is FormInputField =>
       field.type !== 'checkbox' && field.type !== 'link'
   )
+  const requiredInputFields = [
+    experienceField,
+    technologiesField,
+    motivationField,
+    ...extraInputFields,
+  ].filter((field): field is FormInputField => Boolean(field))
+
+  const hasMissingInputValues = requiredInputFields.some(
+    (field) => !isFilledValue(field, values[field.name])
+  )
+
+  const hasShiftSelection =
+    shiftFields.length === 0 ||
+    shiftFields.some((field) => Boolean(values[field.name]))
+
+  const requiredExtraCheckboxFields = extraCheckboxFields.filter(
+    (field) => field.required
+  )
+  const hasValidExtraCheckboxSelection =
+    extraCheckboxFields.length === 0
+      ? true
+      : requiredExtraCheckboxFields.length > 0
+        ? requiredExtraCheckboxFields.every((field) =>
+            Boolean(values[field.name])
+          )
+        : extraCheckboxFields.some((field) => Boolean(values[field.name]))
+
+  const canContinue =
+    !hasMissingInputValues && hasShiftSelection && hasValidExtraCheckboxSelection
+
+  const handleNext = () => {
+    if (!canContinue) return
+    onNext()
+  }
 
   return (
     <div className="space-y-10">
@@ -237,7 +279,7 @@ export function StepExperience({
       {extraCheckboxFields.length ? (
         <div className="rounded-3xl border border-white/10 bg-white/[0.02] p-6">
           <div className="mb-4 text-xs font-semibold uppercase tracking-[0.18em] text-emerald-300/80">
-            Campos adicionales
+            Selecciona la(s) franja(s) horaria(s) en la(s) que puedes participar en los workshops (lunes a viernes, sesiones de 1–2 horas dentro de la franja elegida)
           </div>
           <div className="grid gap-3">
             {extraCheckboxFields.map((field) => {
@@ -285,13 +327,26 @@ export function StepExperience({
 
         <button
           type="button"
-          onClick={onNext}
-          className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-400 px-5 py-3 text-sm font-semibold text-black transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/60 sm:w-auto"
+          onClick={handleNext}
+          disabled={!canContinue}
+          className={cn(
+            'inline-flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-400 px-5 py-3 text-sm font-semibold text-black transition hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/60 sm:w-auto',
+            !canContinue && 'cursor-not-allowed opacity-70 hover:brightness-100'
+          )}
         >
           Siguiente
           <span aria-hidden>→</span>
         </button>
       </div>
+      {!canContinue ? (
+        <div className="text-sm text-amber-200/90">
+          Completa todos los campos para continuar.
+          {!hasShiftSelection ? ' Debes seleccionar al menos un turno.' : ''}
+          {!hasValidExtraCheckboxSelection
+            ? ' Debes seleccionar al menos una franja horaria.'
+            : ''}
+        </div>
+      ) : null}
     </div>
   )
 }

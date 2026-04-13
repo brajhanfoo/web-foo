@@ -56,10 +56,20 @@ function statusBadgeClasses(status: ApplicationStatus): Record<string, string> {
       className: 'bg-sky-500/15 text-sky-300 border-sky-400/20',
       label: 'Aprobado',
     }
+  if (status === 'admitted')
+    return {
+      className: 'bg-sky-500/15 text-sky-300 border-sky-400/20',
+      label: 'Admitido',
+    }
   if (status === 'in_review')
     return {
       className: 'bg-yellow-500/15 text-yellow-200 border-yellow-400/20',
       label: 'En revisión',
+    }
+  if (status === 'interview_feedback')
+    return {
+      className: 'bg-cyan-500/15 text-cyan-200 border-cyan-400/20',
+      label: 'Entrevista + feedback',
     }
   if (status === 'payment_pending')
     return {
@@ -114,7 +124,9 @@ function statusLabel(status: ApplicationStatus | 'all'): string {
   if (status === 'all') return 'Todos'
   if (status === 'received') return 'Recibido'
   if (status === 'in_review') return 'En revisión'
+  if (status === 'interview_feedback') return 'Entrevista + feedback'
   if (status === 'approved') return 'Aprobado'
+  if (status === 'admitted') return 'Admitido'
   if (status === 'payment_pending') return 'Pago pendiente'
   if (status === 'enrolled') return 'Matriculado'
   if (status === 'rejected') return 'Rechazado'
@@ -586,7 +598,10 @@ export function ApplicationsTable() {
                         'all',
                         'received',
                         'in_review',
+                        'interview_feedback',
+                        'admitted',
                         'approved',
+                        'payment_pending',
                         'enrolled',
                         'rejected',
                       ] as const

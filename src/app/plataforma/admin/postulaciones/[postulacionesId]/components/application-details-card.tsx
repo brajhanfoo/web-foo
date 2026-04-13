@@ -119,6 +119,12 @@ export function ApplicationDetailsCard({
           <Badge className="bg-slate-800 text-slate-100 border border-slate-800">
             {application?.status === 'received'
               ? 'Postulacion recibida'
+              : application?.status === 'in_review'
+                ? 'En revisión'
+                : application?.status === 'interview_feedback'
+                  ? 'Entrevista + feedback'
+                  : application?.status === 'admitted'
+                    ? 'Admitida'
               : application?.status === 'payment_pending'
                 ? 'Pago pendiente'
                 : application?.status === 'enrolled'

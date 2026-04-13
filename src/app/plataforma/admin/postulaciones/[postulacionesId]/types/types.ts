@@ -8,6 +8,7 @@ import type { PaymentStatus } from '@/types/payments'
 export type ApplicationStatus =
   | 'received'
   | 'in_review'
+  | 'interview_feedback'
   | 'admitted'
   | 'payment_pending'
   | 'enrolled'
@@ -108,7 +109,7 @@ export type StatusStep = {
 
 export const STATUS_STEPS: StatusStep[] = [
   { index: 1, key: 'received', label: 'Recibido' },
-  { index: 2, key: 'admitted', label: 'Admitido' },
+  { index: 2, key: 'admitted', label: 'Entrevista / Admisión' },
   { index: 3, key: 'payment_pending', label: 'Pago pendiente' },
   { index: 4, key: 'enrolled', label: 'Matriculado' },
 ]

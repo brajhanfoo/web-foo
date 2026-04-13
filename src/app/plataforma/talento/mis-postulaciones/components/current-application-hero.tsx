@@ -10,11 +10,13 @@ import { PaymentMethodModal } from '@/components/payments/payment-method-modal'
 
 import {
   ArrowRight,
+  CalendarDays,
   CheckCircle2,
   ClipboardClock,
   Clock3,
   CreditCard,
   ExternalLink,
+  MessageSquare,
   Trophy,
 } from 'lucide-react'
 
@@ -45,6 +47,7 @@ function parsePriceToCents(priceUsd: string | number | null): number | null {
 
 export function CurrentApplicationHero(props: { app: ApplicationRow }) {
   const [checkoutOpen, setCheckoutOpen] = useState(false)
+  const interviewBookingUrl = 'https://calendar.app.google/3RxfFjt86saSuTVD7'
   const programTitle = props.app.program ? props.app.program.title : 'Programa'
   const role = safeTrim(props.app.applied_role)
   const appliedAt = fmtDateESFromISO(props.app.created_at)
@@ -161,6 +164,81 @@ export function CurrentApplicationHero(props: { app: ApplicationRow }) {
           >
             Revisión en curso…
           </Badge>
+        }
+      />
+    )
+  }
+
+  if (props.app.status === 'interview_feedback') {
+    return (
+      <ShellCard
+        status="interview_feedback"
+        className="
+    rounded-2xl
+    border border-cyan-500/25
+    bg-[linear-gradient(to_right,rgba(0,0,0,1),rgba(6,30,35,0.9),rgba(0,0,0,1))]
+    shadow-[0_8px_30px_rgba(0,0,0,0.35)]
+  "
+        topLeft={
+          <div className="flex flex-wrap items-center gap-2 text-sm md:text-base">
+            <span className="text-white font-semibold tracking-wide">
+              {programTitle}
+            </span>
+            {role ? (
+              <>
+                <span className="text-white/30">·</span>
+                <span className="text-cyan-300 font-medium tracking-wide">
+                  {role}
+                </span>
+              </>
+            ) : null}
+          </div>
+        }
+        topRight={
+          <span className="text-xs text-white/40">Postulado: {appliedAt}</span>
+        }
+        icon={
+          <div
+            className="
+        flex items-center justify-center
+        h-14 w-14 rounded-xl
+        bg-black/80
+        border border-cyan-500/20
+      "
+          >
+            <MessageSquare className="h-6 w-6 text-cyan-300" />
+          </div>
+        }
+        title="Entrevista personal + feedback"
+        description="Tu perfil avanzó a la siguiente etapa. Agenda tu entrevista para recibir feedback personalizado y continuar con el proceso."
+        bottomLeft={<span />}
+        bottomRight={
+          <>
+            <Button
+              className={[
+                'h-11 w-full justify-center gap-2',
+                'bg-cyan-300/90 text-black hover:bg-cyan-300',
+                'shadow-[0_0_25px_rgba(34,211,238,0.25)]',
+              ].join(' ')}
+              asChild
+            >
+              <Link
+                href={interviewBookingUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Agendar entrevista <CalendarDays className="h-4 w-4" />
+              </Link>
+            </Button>
+
+            <Badge className="border border-cyan-500/30 bg-cyan-500/10 text-cyan-300">
+              Si ya agendaste, te contactaremos por WhatsApp o email.
+            </Badge>
+
+            <div className="text-xs text-amber-200/90">
+              Si aún no agendaste, debes hacerlo para avanzar al siguiente paso.
+            </div>
+          </>
         }
       />
     )

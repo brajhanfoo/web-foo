@@ -43,6 +43,7 @@ export function buildWhatsAppLink(whatsappE164: string): string {
 export function statusToStepIndex(status: ApplicationStatus): number {
   if (status === 'received') return 1
   if (status === 'in_review') return 1
+  if (status === 'interview_feedback') return 2
   if (status === 'admitted') return 2
   if (status === 'payment_pending') return 3
   if (status === 'enrolled') return 4
@@ -52,6 +53,7 @@ export function statusToStepIndex(status: ApplicationStatus): number {
 export function statusBadgeLabel(status: ApplicationStatus): string {
   if (status === 'received') return 'Recibida'
   if (status === 'in_review') return 'En revisión'
+  if (status === 'interview_feedback') return 'Entrevista + feedback'
   if (status === 'admitted') return 'Admitida'
   if (status === 'payment_pending') return 'Pago pendiente'
   if (status === 'enrolled') return 'Matriculada'
@@ -74,6 +76,7 @@ export function isApplicationStatus(
 ): value is ApplicationStatus {
   return (
     value === 'received' ||
+    value === 'interview_feedback' ||
     value === 'admitted' ||
     value === 'payment_pending' ||
     value === 'enrolled' ||

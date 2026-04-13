@@ -61,6 +61,7 @@ export function fmtMonthYearFromDateISO(dateIso: string): string {
 export function statusLabel(status: ApplicationStatus): string {
   if (status === 'received') return 'RECIBIDO'
   if (status === 'in_review') return 'EN REVISIÓN'
+  if (status === 'interview_feedback') return 'ENTREVISTA + FEEDBACK'
   if (status === 'approved') return 'ACEPTADO'
   if (status === 'admitted') return 'ADMITIDO'
   if (status === 'payment_pending') return 'PAGO PENDIENTE'
@@ -71,6 +72,7 @@ export function statusLabel(status: ApplicationStatus): string {
 export function topDotClass(status: ApplicationStatus): string {
   if (status === 'received') return 'bg-[#3B82F6]'
   if (status === 'in_review') return 'bg-orange-500'
+  if (status === 'interview_feedback') return 'bg-cyan-400'
   if (
     status === 'approved' ||
     status === 'admitted' ||
@@ -84,6 +86,7 @@ export function topDotClass(status: ApplicationStatus): string {
 export function borderAccentClass(status: ApplicationStatus): string {
   if (status === 'received') return 'ring-1 ring-blue-500/20'
   if (status === 'in_review') return 'ring-1 ring-orange-500/20'
+  if (status === 'interview_feedback') return 'ring-1 ring-cyan-500/20'
   if (
     status === 'approved' ||
     status === 'admitted' ||
@@ -99,6 +102,8 @@ export function badgeClass(status: ApplicationStatus): string {
     return 'border-blue-500/30 bg-blue-500/10 text-blue-300'
   if (status === 'in_review')
     return 'border-orange-500/30 bg-orange-500/10 text-orange-400'
+  if (status === 'interview_feedback')
+    return 'border-cyan-500/30 bg-cyan-500/10 text-cyan-300'
   if (
     status === 'approved' ||
     status === 'admitted' ||
@@ -215,6 +220,9 @@ export function iconGlowClass(status: ApplicationStatus): string {
 
   if (status === 'in_review')
     return 'shadow-[0_0_30px_rgba(249,115,22,0.35)] border-orange-500/40'
+
+  if (status === 'interview_feedback')
+    return 'shadow-[0_0_30px_rgba(6,182,212,0.35)] border-cyan-500/40'
 
   if (
     status === 'approved' ||
