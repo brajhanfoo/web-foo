@@ -10,6 +10,7 @@ import type { PaymentStatus } from '@/types/payments'
 export type ApplicationStatus =
   | 'received'
   | 'in_review'
+  | 'interview_feedback'
   | 'approved'
   | 'admitted'
   | 'payment_pending'

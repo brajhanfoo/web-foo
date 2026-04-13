@@ -35,6 +35,7 @@ function isApplicationStatus(value: unknown): value is ApplicationStatus {
   return (
     value === 'received' ||
     value === 'admitted' ||
+    value === 'interview_feedback' ||
     value === 'in_review' ||
     value === 'payment_pending' ||
     value === 'enrolled' ||
