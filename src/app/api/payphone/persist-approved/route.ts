@@ -17,6 +17,7 @@ type ProgramRowSummary = Pick<
 type PaymentRow = {
   id: string
   user_id: string
+  edition_id: string | null
   provider: PaymentProvider
   status: 'initiated' | 'pending' | 'paid' | 'failed' | 'canceled'
   program_id: string
@@ -31,11 +32,31 @@ function resolvePaymentMode(program: ProgramRowSummary): ProgramPaymentMode {
   return program.requires_payment_pre ? 'pre' : 'none'
 }
 
-async function buildRedirect(_: {
-  purpose: PaymentPurpose
-  programId: string
-}): Promise<string> {
+async function buildRedirect(): Promise<string> {
   return '/plataforma/talento/mis-postulaciones'
+}
+
+async function cancelOtherOpenAttemptsForSameConcept(params: {
+  payment: PaymentRow
+}): Promise<void> {
+  let q = supabaseAdmin
+    .from('payments')
+    .update({ status: 'canceled' })
+    .eq('user_id', params.payment.user_id)
+    .eq('program_id', params.payment.program_id)
+    .eq('purpose', params.payment.purpose)
+    .in('status', ['initiated', 'pending'])
+    .neq('id', params.payment.id)
+
+  q = params.payment.edition_id
+    ? q.eq('edition_id', params.payment.edition_id)
+    : q.is('edition_id', null)
+
+  q = params.payment.application_id
+    ? q.eq('application_id', params.payment.application_id)
+    : q.is('application_id', null)
+
+  await q
 }
 
 export async function POST(req: NextRequest) {
@@ -68,7 +89,9 @@ export async function POST(req: NextRequest) {
 
   const { data: payment, error } = await supabaseAdmin
     .from('payments')
-    .select('id,user_id,provider,status,program_id,application_id,purpose')
+    .select(
+      'id,user_id,edition_id,provider,status,program_id,application_id,purpose'
+    )
     .eq('client_transaction_id', clientTxId)
     .eq('provider', PAYPHONE_PROVIDER)
     .maybeSingle()
@@ -90,10 +113,7 @@ export async function POST(req: NextRequest) {
   }
 
   if (p.status === 'paid') {
-    const redirectTo = await buildRedirect({
-      purpose: p.purpose,
-      programId: p.program_id,
-    })
+    const redirectTo = await buildRedirect()
     return NextResponse.json({ ok: true, redirectTo }, { status: 200 })
   }
 
@@ -108,6 +128,8 @@ export async function POST(req: NextRequest) {
     })
     .eq('id', p.id)
     .eq('provider', PAYPHONE_PROVIDER)
+
+  await cancelOtherOpenAttemptsForSameConcept({ payment: p })
 
   await supabaseAdmin.from('payphone_payments').upsert(
     {
@@ -145,10 +167,7 @@ export async function POST(req: NextRequest) {
       .eq('id', p.application_id)
   }
 
-  const redirectTo = await buildRedirect({
-    purpose: p.purpose,
-    programId: p.program_id,
-  })
+  const redirectTo = await buildRedirect()
 
   return NextResponse.json({ ok: true, redirectTo }, { status: 200 })
 }

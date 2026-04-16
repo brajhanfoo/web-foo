@@ -29,6 +29,8 @@ type KnownPaymentStatus = PaymentStatus
 
 type PaymentRow = {
   id: string
+  user_id: string
+  edition_id: string | null
   provider: PaymentProvider
   status: KnownPaymentStatus
   purpose: PaymentPurpose
@@ -458,6 +460,47 @@ async function findInternalPaymentId(params: {
   return null
 }
 
+async function hasPaidPaymentForApplication(params: {
+  applicationId: string
+  excludePaymentId: string
+}): Promise<boolean> {
+  const { data, error } = await supabaseAdmin
+    .from('payments')
+    .select('id')
+    .eq('application_id', params.applicationId)
+    .eq('status', 'paid')
+    .neq('id', params.excludePaymentId)
+    .limit(1)
+    .maybeSingle()
+
+  if (error) return false
+  return Boolean(data?.id)
+}
+
+async function cancelOtherOpenAttemptsForSameConcept(params: {
+  payment: PaymentRow
+}): Promise<string | null> {
+  let q = supabaseAdmin
+    .from('payments')
+    .update({ status: 'canceled' })
+    .eq('user_id', params.payment.user_id)
+    .eq('program_id', params.payment.program_id)
+    .eq('purpose', params.payment.purpose)
+    .in('status', ['initiated', 'pending'])
+    .neq('id', params.payment.id)
+
+  q = params.payment.edition_id
+    ? q.eq('edition_id', params.payment.edition_id)
+    : q.is('edition_id', null)
+
+  q = params.payment.application_id
+    ? q.eq('application_id', params.payment.application_id)
+    : q.is('application_id', null)
+
+  const { error } = await q
+  return error ? extractErrorMessage(error, 'unknown_error') : null
+}
+
 async function persistEvent(context: Context): Promise<{
   eventId: string | null
   duplicateProcessed: boolean
@@ -634,12 +677,14 @@ async function processWebhook(context: Context) {
       return
     }
 
-    const { data: paymentData, error: paymentErr } = await supabaseAdmin
-      .from('payments')
-      .select('id,provider,status,purpose,application_id,program_id,paid_at')
-      .eq('id', paymentId)
-      .eq('provider', MERCADO_PAGO_PROVIDER)
-      .maybeSingle()
+  const { data: paymentData, error: paymentErr } = await supabaseAdmin
+    .from('payments')
+    .select(
+      'id,user_id,edition_id,provider,status,purpose,application_id,program_id,paid_at'
+    )
+    .eq('id', paymentId)
+    .eq('provider', MERCADO_PAGO_PROVIDER)
+    .maybeSingle()
 
     if (paymentErr || !paymentData) {
       await safeMarkWebhookEvent({
@@ -755,8 +800,28 @@ async function processWebhook(context: Context) {
       return
     }
 
+    if (nextStatus === 'paid') {
+      const cancelOtherErr = await cancelOtherOpenAttemptsForSameConcept({
+        payment: paymentRow,
+      })
+      if (cancelOtherErr) {
+        warnings.push(`cancel_other_open_attempts_error:${cancelOtherErr}`)
+      }
+    }
+
     if (paymentRow.application_id && paymentRow.purpose === 'tuition') {
-      const appUpdate: Record<string, unknown> = { payment_status: nextStatus }
+      const hasOtherPaid = await hasPaidPaymentForApplication({
+        applicationId: paymentRow.application_id,
+        excludePaymentId: paymentRow.id,
+      })
+      const shouldPreservePaid = nextStatus !== 'paid' && hasOtherPaid
+      const appUpdate: Record<string, unknown> = {
+        payment_status: shouldPreservePaid ? 'paid' : nextStatus,
+      }
+
+      if (shouldPreservePaid) {
+        warnings.push('application_payment_status_preserved_as_paid')
+      }
       if (nextStatus === 'paid') {
         appUpdate['paid_at'] = approvedAt
         const { data: programData } = await supabaseAdmin
