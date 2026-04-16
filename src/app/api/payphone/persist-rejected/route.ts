@@ -76,8 +76,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true }, { status: 200 })
   }
 
-  const nextStatus: PaymentRow['status'] = canceledByUser ? 'canceled' : 'failed'
-  const resolvedMessage = msg || (canceledByUser ? 'Pago cancelado' : 'Pago rechazado')
+  const nextStatus: PaymentRow['status'] = canceledByUser
+    ? 'canceled'
+    : 'failed'
+  const resolvedMessage =
+    msg || (canceledByUser ? 'Pago cancelado' : 'Pago rechazado')
 
   await supabaseAdmin
     .from('payments')

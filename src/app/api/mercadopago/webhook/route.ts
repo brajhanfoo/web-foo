@@ -677,14 +677,14 @@ async function processWebhook(context: Context) {
       return
     }
 
-  const { data: paymentData, error: paymentErr } = await supabaseAdmin
-    .from('payments')
-    .select(
-      'id,user_id,edition_id,provider,status,purpose,application_id,program_id,paid_at'
-    )
-    .eq('id', paymentId)
-    .eq('provider', MERCADO_PAGO_PROVIDER)
-    .maybeSingle()
+    const { data: paymentData, error: paymentErr } = await supabaseAdmin
+      .from('payments')
+      .select(
+        'id,user_id,edition_id,provider,status,purpose,application_id,program_id,paid_at'
+      )
+      .eq('id', paymentId)
+      .eq('provider', MERCADO_PAGO_PROVIDER)
+      .maybeSingle()
 
     if (paymentErr || !paymentData) {
       await safeMarkWebhookEvent({
