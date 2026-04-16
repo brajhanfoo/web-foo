@@ -35,6 +35,11 @@ export async function middleware(request: NextRequest) {
   const isPlatformPath = pathname.startsWith('/plataforma')
   const isAdminPath = pathname.startsWith('/plataforma/admin')
   const isDocentePath = pathname.startsWith('/plataforma/docente')
+  const isMercadoPagoWebhookPath = pathname === '/api/mercadopago/webhook'
+
+  if (isMercadoPagoWebhookPath) {
+    return NextResponse.next()
+  }
 
   if (!isPlatformPath && isPublicPath(pathname)) {
     return NextResponse.next()
