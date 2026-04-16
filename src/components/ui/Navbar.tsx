@@ -27,12 +27,7 @@ const navItems = [
 ]
 
 // 🔥 NavItem
-function NavItem({
-  item,
-  active,
-  mobile = false,
-  onClick,
-}: any) {
+function NavItem({ item, active, mobile = false, onClick }: any) {
   const [open, setOpen] = useState(false)
   const hasChildren = item.children?.length > 0
 

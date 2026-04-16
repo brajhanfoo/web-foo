@@ -147,62 +147,38 @@ async function findExistingPaid(params: {
   return data as PaymentRow
 }
 
-async function findReusableOpen(params: {
+async function cancelOpenAttempts(params: {
   userId: string
   programId: string
   editionId: string | null
   purpose: PaymentPurpose
-  provider: PaymentProvider
-}): Promise<PaymentRow | null> {
+  applicationId: string | null
+}): Promise<{
+  canceledCount: number
+  error: unknown
+}> {
   let q = supabaseAdmin
     .from('payments')
-    .select(
-      'id,status,edition_id,client_transaction_id,payphone_transaction_id,provider'
-    )
+    .update({ status: 'canceled' })
     .eq('user_id', params.userId)
     .eq('program_id', params.programId)
     .eq('purpose', params.purpose)
-    .eq('provider', params.provider)
     .in('status', ['initiated', 'pending'])
-    .order('created_at', { ascending: false })
-    .limit(1)
 
   q = params.editionId
     ? q.eq('edition_id', params.editionId)
     : q.is('edition_id', null)
 
-  const { data, error } = await q.maybeSingle()
-  if (error || !data) return null
-  return data as PaymentRow
-}
+  q = params.applicationId
+    ? q.eq('application_id', params.applicationId)
+    : q.is('application_id', null)
 
-async function findOpenOtherProvider(params: {
-  userId: string
-  programId: string
-  editionId: string | null
-  purpose: PaymentPurpose
-  provider: PaymentProvider
-}): Promise<PaymentRow | null> {
-  let q = supabaseAdmin
-    .from('payments')
-    .select(
-      'id,status,edition_id,client_transaction_id,payphone_transaction_id,provider'
-    )
-    .eq('user_id', params.userId)
-    .eq('program_id', params.programId)
-    .eq('purpose', params.purpose)
-    .neq('provider', params.provider)
-    .in('status', ['initiated', 'pending'])
-    .order('created_at', { ascending: false })
-    .limit(1)
+  const { data, error } = await q.select('id')
 
-  q = params.editionId
-    ? q.eq('edition_id', params.editionId)
-    : q.is('edition_id', null)
-
-  const { data, error } = await q.maybeSingle()
-  if (error || !data) return null
-  return data as PaymentRow
+  return {
+    canceledCount: Array.isArray(data) ? data.length : 0,
+    error,
+  }
 }
 
 export async function POST(
@@ -346,39 +322,22 @@ export async function POST(
     )
   }
 
-  const openOtherProvider = await findOpenOtherProvider({
+  const cancelOpen = await cancelOpenAttempts({
     userId,
     programId,
     editionId: resolvedEditionId,
     purpose,
-    provider: PAYPHONE_PROVIDER,
+    applicationId,
   })
 
-  if (openOtherProvider) {
+  if (cancelOpen.error) {
     return NextResponse.json(
       {
         ok: false,
-        message:
-          'Ya existe un pago pendiente con otro proveedor para este concepto.',
+        message: 'No se pudo preparar un nuevo intento de pago.',
       },
-      { status: 409 }
+      { status: 500 }
     )
-  }
-
-  const openRow = await findReusableOpen({
-    userId,
-    programId,
-    editionId: resolvedEditionId,
-    purpose,
-    provider: PAYPHONE_PROVIDER,
-  })
-
-  if (openRow) {
-    await supabaseAdmin
-      .from('payments')
-      .update({ status: 'canceled' })
-      .eq('id', openRow.id)
-      .eq('provider', PAYPHONE_PROVIDER)
   }
 
   const { data: inserted, error: insertErr } = await supabaseAdmin

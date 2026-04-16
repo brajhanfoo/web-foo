@@ -29,6 +29,8 @@ type KnownPaymentStatus = PaymentStatus
 
 type PaymentRow = {
   id: string
+  user_id: string
+  edition_id: string | null
   provider: PaymentProvider
   status: KnownPaymentStatus
   purpose: PaymentPurpose

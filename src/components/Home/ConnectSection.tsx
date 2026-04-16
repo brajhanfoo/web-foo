@@ -40,9 +40,9 @@ const ConnectSection: React.FC = () => {
               {' '}
               Aprende en equipos multidisciplinarios
             </span>
-            , operando con plazos exigentes y metodologías de industria. Potencia tu{' '}
-            <span className="text-[#00CCA4]">perfil</span> antes de saltar al
-            mercado laboral.
+            , operando con plazos exigentes y metodologías de industria.
+            Potencia tu <span className="text-[#00CCA4]">perfil</span> antes de
+            saltar al mercado laboral.
           </p>
 
           {/* CTA */}

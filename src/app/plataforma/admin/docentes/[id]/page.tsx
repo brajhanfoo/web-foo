@@ -132,13 +132,16 @@ export default function AdminDocenteDetailPage() {
     if (!docenteId) return
     setLoading(true)
 
-    const response = await fetch(`/api/plataforma/admin/docentes/${docenteId}`, {
-      cache: 'no-store',
-    })
+    const response = await fetch(
+      `/api/plataforma/admin/docentes/${docenteId}`,
+      {
+        cache: 'no-store',
+      }
+    )
 
-    const payload = (await response.json().catch(() => null)) as
-      | DetailPayload
-      | null
+    const payload = (await response
+      .json()
+      .catch(() => null)) as DetailPayload | null
 
     if (!response.ok || !payload?.ok || !payload.docente) {
       showError(payload?.message ?? 'No se pudo cargar el detalle del docente.')
@@ -279,18 +282,21 @@ export default function AdminDocenteDetailPage() {
 
     setEditBusy(true)
 
-    const response = await fetch(`/api/plataforma/admin/docentes/${docente.id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        first_name: firstName,
-        last_name: lastName,
-        professional_area_id:
-          editForm.professional_area_id === 'none'
-            ? null
-            : editForm.professional_area_id,
-      }),
-    })
+    const response = await fetch(
+      `/api/plataforma/admin/docentes/${docente.id}`,
+      {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          first_name: firstName,
+          last_name: lastName,
+          professional_area_id:
+            editForm.professional_area_id === 'none'
+              ? null
+              : editForm.professional_area_id,
+        }),
+      }
+    )
 
     const payload = (await response.json().catch(() => null)) as {
       ok: boolean
@@ -350,13 +356,16 @@ export default function AdminDocenteDetailPage() {
 
     setActionsBusy(true)
 
-    const response = await fetch(`/api/plataforma/admin/docentes/${docente.id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        is_active: !docente.is_active,
-      }),
-    })
+    const response = await fetch(
+      `/api/plataforma/admin/docentes/${docente.id}`,
+      {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          is_active: !docente.is_active,
+        }),
+      }
+    )
 
     const payload = (await response.json().catch(() => null)) as {
       ok: boolean
@@ -370,7 +379,9 @@ export default function AdminDocenteDetailPage() {
       return
     }
 
-    showSuccess(docente.is_active ? 'Docente desactivado.' : 'Docente reactivado.')
+    showSuccess(
+      docente.is_active ? 'Docente desactivado.' : 'Docente reactivado.'
+    )
     setToggleConfirmOpen(false)
     await loadDetail()
   }
@@ -534,7 +545,7 @@ export default function AdminDocenteDetailPage() {
             </Badge>
             <Badge className="border-slate-700 bg-slate-800 text-slate-200">
               {docente.professional_area_id
-                ? areaNameById.get(docente.professional_area_id) ?? 'Sin área'
+                ? (areaNameById.get(docente.professional_area_id) ?? 'Sin área')
                 : 'Sin área'}
             </Badge>
             {docente.password_reset_required ? (
@@ -546,7 +557,10 @@ export default function AdminDocenteDetailPage() {
         </div>
 
         <div className="flex w-full flex-wrap justify-start gap-2 sm:w-auto sm:justify-end">
-          <Button onClick={() => setAssignOpen(true)} className={PRIMARY_CTA_CLASS}>
+          <Button
+            onClick={() => setAssignOpen(true)}
+            className={PRIMARY_CTA_CLASS}
+          >
             <Plus className="mr-2 h-4 w-4" />
             Asignar a equipo
           </Button>
@@ -637,13 +651,27 @@ export default function AdminDocenteDetailPage() {
                 <table className="min-w-[920px] w-full text-sm">
                   <thead className="bg-slate-900/60 text-slate-300">
                     <tr className="border-b border-slate-800">
-                      <th className="px-3 py-2 text-left font-medium">Programa</th>
-                      <th className="px-3 py-2 text-left font-medium">Edición</th>
-                      <th className="px-3 py-2 text-left font-medium">Equipo</th>
-                      <th className="px-3 py-2 text-left font-medium">Rol staff</th>
-                      <th className="px-3 py-2 text-left font-medium">Estado</th>
-                      <th className="px-3 py-2 text-left font-medium">Creada</th>
-                      <th className="px-3 py-2 text-right font-medium">Acciones</th>
+                      <th className="px-3 py-2 text-left font-medium">
+                        Programa
+                      </th>
+                      <th className="px-3 py-2 text-left font-medium">
+                        Edición
+                      </th>
+                      <th className="px-3 py-2 text-left font-medium">
+                        Equipo
+                      </th>
+                      <th className="px-3 py-2 text-left font-medium">
+                        Rol staff
+                      </th>
+                      <th className="px-3 py-2 text-left font-medium">
+                        Estado
+                      </th>
+                      <th className="px-3 py-2 text-left font-medium">
+                        Creada
+                      </th>
+                      <th className="px-3 py-2 text-right font-medium">
+                        Acciones
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
@@ -814,7 +842,8 @@ export default function AdminDocenteDetailPage() {
           <DialogHeader>
             <DialogTitle>Asignar a equipo</DialogTitle>
             <DialogDescription className="text-slate-400">
-              Define programa, edición y equipo para crear la asignación del docente.
+              Define programa, edición y equipo para crear la asignación del
+              docente.
             </DialogDescription>
           </DialogHeader>
 
@@ -950,7 +979,9 @@ export default function AdminDocenteDetailPage() {
       <ConfirmDialog
         open={toggleConfirmOpen}
         onOpenChange={setToggleConfirmOpen}
-        title={docente.is_active ? '¿Desactivar docente?' : '¿Reactivar docente?'}
+        title={
+          docente.is_active ? '¿Desactivar docente?' : '¿Reactivar docente?'
+        }
         description={
           docente.is_active
             ? 'El docente no podrá ingresar hasta que se reactive.'

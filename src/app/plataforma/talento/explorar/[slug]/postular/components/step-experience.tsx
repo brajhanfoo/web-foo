@@ -119,7 +119,9 @@ export function StepExperience({
         : extraCheckboxFields.some((field) => Boolean(values[field.name]))
 
   const canContinue =
-    !hasMissingInputValues && hasShiftSelection && hasValidExtraCheckboxSelection
+    !hasMissingInputValues &&
+    hasShiftSelection &&
+    hasValidExtraCheckboxSelection
 
   const handleNext = () => {
     if (!canContinue) return
@@ -279,7 +281,9 @@ export function StepExperience({
       {extraCheckboxFields.length ? (
         <div className="rounded-3xl border border-white/10 bg-white/[0.02] p-6">
           <div className="mb-4 text-xs font-semibold uppercase tracking-[0.18em] text-emerald-300/80">
-            Selecciona la(s) franja(s) horaria(s) en la(s) que puedes participar en los workshops (lunes a viernes, sesiones de 1–2 horas dentro de la franja elegida)
+            Selecciona la(s) franja(s) horaria(s) en la(s) que puedes participar
+            en los workshops (lunes a viernes, sesiones de 1–2 horas dentro de
+            la franja elegida)
           </div>
           <div className="grid gap-3">
             {extraCheckboxFields.map((field) => {

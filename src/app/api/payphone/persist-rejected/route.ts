@@ -7,7 +7,12 @@ export const runtime = 'nodejs'
 
 const PAYPHONE_PROVIDER: PaymentProvider = 'payphone'
 
-type Body = { clientTxId: string; id: number; message?: string }
+type Body = {
+  clientTxId: string
+  id: number
+  message?: string
+  canceled?: boolean
+}
 
 type PaymentRow = {
   id: string
@@ -36,6 +41,7 @@ export async function POST(req: NextRequest) {
   const clientTxId = (body?.clientTxId ?? '').trim()
   const transactionIdNum = Number(body?.id)
   const msg = (body?.message ?? '').trim()
+  const canceledByUser = Boolean(body?.canceled)
 
   if (!clientTxId || !Number.isFinite(transactionIdNum)) {
     return NextResponse.json(
@@ -70,11 +76,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true }, { status: 200 })
   }
 
+  const nextStatus: PaymentRow['status'] = canceledByUser ? 'canceled' : 'failed'
+  const resolvedMessage = msg || (canceledByUser ? 'Pago cancelado' : 'Pago rechazado')
+
   await supabaseAdmin
     .from('payments')
     .update({
-      status: 'failed',
-      error_message: msg || 'Pago rechazado',
+      status: nextStatus,
+      error_message: resolvedMessage,
       payphone_transaction_id: String(transactionIdNum),
     })
     .eq('id', p.id)
@@ -88,7 +97,8 @@ export async function POST(req: NextRequest) {
         persisted_from: 'payphone_persist_rejected',
         transaction_id: transactionIdNum,
         client_transaction_id: clientTxId,
-        message: msg || 'Pago rechazado',
+        message: resolvedMessage,
+        canceled: canceledByUser,
       },
     },
     { onConflict: 'payment_id' }

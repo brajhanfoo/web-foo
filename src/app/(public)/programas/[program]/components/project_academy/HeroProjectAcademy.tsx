@@ -20,7 +20,6 @@ const HeroProjectAcademy: React.FC = () => {
 
       <div className="relative mx-auto max-w-7xl px-6 py-24">
         <div className="grid grid-cols-1 gap-16 lg:grid-cols-2 lg:items-center">
-          
           {/* LEFT */}
           <div>
             {/* Badges */}
@@ -165,7 +164,6 @@ await developer.launchCareer();`}
               </div>
             </div>
           </div>
-
         </div>
       </div>
     </section>

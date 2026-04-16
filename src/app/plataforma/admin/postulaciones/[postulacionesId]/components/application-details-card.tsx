@@ -125,13 +125,13 @@ export function ApplicationDetailsCard({
                   ? 'Entrevista + feedback'
                   : application?.status === 'admitted'
                     ? 'Admitida'
-              : application?.status === 'payment_pending'
-                ? 'Pago pendiente'
-                : application?.status === 'enrolled'
-                  ? 'Inscrito'
-                  : application?.status === 'rejected'
-                    ? 'Rechazado'
-                    : '-'}
+                    : application?.status === 'payment_pending'
+                      ? 'Pago pendiente'
+                      : application?.status === 'enrolled'
+                        ? 'Inscrito'
+                        : application?.status === 'rejected'
+                          ? 'Rechazado'
+                          : '-'}
           </Badge>
         </div>
 

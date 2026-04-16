@@ -20,7 +20,6 @@ const LaunchInvestmentSection = () => {
       {/* Card */}
       <div className="mx-auto max-w-4xl rounded-3xl border border-white/10 bg-gradient-to-br from-[#1b1c12] via-[#15160f] to-[#0f100b] p-8 shadow-2xl">
         <div className="grid gap-8 md:grid-cols-2">
-          
           {/* LEFT */}
           <div>
             <span className="inline-block rounded-full bg-[#BDBE0B]/20 px-3 py-1 text-xs font-medium text-[#BDBE0B]">
@@ -41,7 +40,8 @@ const LaunchInvestmentSection = () => {
 
               {/* 🔥 MICROCOPY OPTIMIZADO */}
               <p className="mt-4 text-xs text-white/50">
-                No pagas nada hoy · Puedes dividir el pago en cuotas con tu tarjeta
+                No pagas nada hoy · Puedes dividir el pago en cuotas con tu
+                tarjeta
               </p>
             </div>
 

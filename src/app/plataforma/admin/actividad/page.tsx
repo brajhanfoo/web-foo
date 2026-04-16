@@ -185,7 +185,9 @@ export default function AdminActivityPage() {
 
   const programs = useMemo(() => {
     const rows = payload?.by_program ?? []
-    return [...rows].sort((a, b) => compareText(a.program_title, b.program_title))
+    return [...rows].sort((a, b) =>
+      compareText(a.program_title, b.program_title)
+    )
   }, [payload?.by_program])
 
   const editions = useMemo(() => {
@@ -365,7 +367,11 @@ export default function AdminActivityPage() {
               <CardContent className="pt-5">
                 <div className="text-xs text-slate-400">Estudiantes</div>
                 <div className="text-2xl font-semibold">
-                  {countLabel(visibleTotals.students, 'estudiante', 'estudiantes')}
+                  {countLabel(
+                    visibleTotals.students,
+                    'estudiante',
+                    'estudiantes'
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -491,7 +497,9 @@ export default function AdminActivityPage() {
 
             <Select
               value={sortDirection}
-              onValueChange={(value) => setSortDirection(value as SortDirection)}
+              onValueChange={(value) =>
+                setSortDirection(value as SortDirection)
+              }
             >
               <SelectTrigger className="border-slate-800 bg-slate-950">
                 <SelectValue placeholder="Dirección" />
@@ -517,7 +525,9 @@ export default function AdminActivityPage() {
                     </th>
                     <th className="px-3 py-2 text-left font-medium">Correo</th>
                     <th className="px-3 py-2 text-left font-medium">Estado</th>
-                    <th className="px-3 py-2 text-left font-medium">Programa</th>
+                    <th className="px-3 py-2 text-left font-medium">
+                      Programa
+                    </th>
                     <th className="px-3 py-2 text-left font-medium">
                       Rol / Tipo
                     </th>
@@ -565,7 +575,9 @@ export default function AdminActivityPage() {
                       </td>
                       <td className="px-3 py-3">
                         <Badge className="border border-slate-700 bg-slate-800 text-slate-100">
-                          {row.role_type === 'student' ? 'Estudiante' : 'Docente'}
+                          {row.role_type === 'student'
+                            ? 'Estudiante'
+                            : 'Docente'}
                         </Badge>
                       </td>
                     </tr>

@@ -153,7 +153,9 @@ export async function GET(request: Request) {
       edition_id: (row.edition_id as string | null) ?? null,
       edition_name:
         ((row.edition as { edition_name?: string | null } | null)
-          ?.edition_name ?? null) || null,
+          ?.edition_name ??
+          null) ||
+        null,
       inactive_for_days: inactiveForDays,
       is_inactive: inactiveForDays !== null && inactiveForDays >= inactiveDays,
     }
@@ -191,9 +193,7 @@ export async function GET(request: Request) {
             team_id: string | null
             is_active: boolean
             program: { id?: string | null; title?: string | null } | null
-            edition:
-              | { id?: string | null; edition_name?: string | null }
-              | null
+            edition: { id?: string | null; edition_name?: string | null } | null
             team: { id?: string | null; name?: string | null } | null
           }>,
           error: null,
@@ -251,7 +251,9 @@ export async function GET(request: Request) {
       edition_id: row.edition_id ?? null,
       edition_name:
         ((row.edition as { edition_name?: string | null } | null)
-          ?.edition_name ?? null) || null,
+          ?.edition_name ??
+          null) ||
+        null,
       team_id: row.team_id ?? null,
       team_name:
         ((row.team as { name?: string | null } | null)?.name ?? null) || null,
@@ -262,8 +264,7 @@ export async function GET(request: Request) {
   const docentes = docenteRows.flatMap((row) => {
     const profileId = String(row.id ?? '')
     const lastActivity =
-      docenteLastSeenById.get(profileId) ??
-      row.last_relevant_activity_at
+      docenteLastSeenById.get(profileId) ?? row.last_relevant_activity_at
     const inactiveForDays = toDaysSince(lastActivity)
     const isInactive =
       inactiveForDays !== null && inactiveForDays >= inactiveDays

@@ -589,36 +589,36 @@ export default function ProgramPostularPage() {
       return true
     }
 
-if (currentStep === 3) {
-  const acceptedTermsPdf = Boolean(values['acepto_terminos_pdf'])
+    if (currentStep === 3) {
+      const acceptedTermsPdf = Boolean(values['acepto_terminos_pdf'])
 
-  if (!acceptedTermsPdf) {
-    toast.showError(
-      'Debes leer y aceptar los términos de participación antes de enviar tu postulación.'
-    )
-    return false
-  }
+      if (!acceptedTermsPdf) {
+        toast.showError(
+          'Debes leer y aceptar los términos de participación antes de enviar tu postulación.'
+        )
+        return false
+      }
 
-  const requiredChecks = [
-    termsField?.name,
-    quorumField?.name,
-    availabilityField?.name,
-  ].filter((x): x is string => Boolean(x))
+      const requiredChecks = [
+        termsField?.name,
+        quorumField?.name,
+        availabilityField?.name,
+      ].filter((x): x is string => Boolean(x))
 
-  for (const fieldName of requiredChecks) {
-    const field = fieldByName.get(fieldName)
-    const checked = Boolean(values[fieldName])
+      for (const fieldName of requiredChecks) {
+        const field = fieldByName.get(fieldName)
+        const checked = Boolean(values[fieldName])
 
-    if (field?.required && !checked) {
-      toast.showError(
-        'Para enviar la postulación, tenés que aceptar los compromisos.'
-      )
-      return false
+        if (field?.required && !checked) {
+          toast.showError(
+            'Para enviar la postulación, tenés que aceptar los compromisos.'
+          )
+          return false
+        }
+      }
+
+      return true
     }
-  }
-
-  return true
-}
 
     return true
   }

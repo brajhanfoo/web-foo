@@ -75,10 +75,11 @@ export default function PreguntasFrecuentes() {
                 rounded-xl
                 border
                 transition-all duration-300
-                ${open
+                ${
+                  open
                     ? 'border-[#00CCA4] bg-[#050507] shadow-[0_0_25px_rgba(0,204,164,0.15)]'
                     : 'border-white/10 bg-[#0B0B0F] hover:border-[#77039F]/40'
-                  }
+                }
                 `}
               >
                 {/* pregunta */}
@@ -95,10 +96,11 @@ export default function PreguntasFrecuentes() {
                     text-[16px] md:text-[17px]
                     font-semibold tracking-wide
                     transition
-                    ${open
+                    ${
+                      open
                         ? 'text-[#00CCA4]'
                         : 'text-white group-hover:text-[#D85DFB]'
-                      }
+                    }
                     `}
                   >
                     {faq.question}
@@ -107,10 +109,11 @@ export default function PreguntasFrecuentes() {
                   <FaChevronDown
                     className={`
                     transition-all duration-300 text-sm
-                    ${open
+                    ${
+                      open
                         ? 'rotate-180 text-[#00CCA4]'
                         : 'text-gray-500 group-hover:text-[#D85DFB]'
-                      }
+                    }
                     `}
                   />
                 </button>

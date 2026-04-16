@@ -1,7 +1,13 @@
 'use client'
 
 import React from 'react'
-import { FaUserPlus, FaCheck, FaCreditCard, FaComments, FaTasks } from 'react-icons/fa'
+import {
+  FaUserPlus,
+  FaCheck,
+  FaCreditCard,
+  FaComments,
+  FaTasks,
+} from 'react-icons/fa'
 import { AiOutlineCheckCircle } from 'react-icons/ai'
 
 const steps = [
@@ -52,22 +58,18 @@ const steps = [
 const AdmissionFlow: React.FC = () => {
   return (
     <section className="w-full bg-black text-white py-20 px-6">
-      
       {/* Header */}
       <div className="max-w-3xl mx-auto text-center">
-        <h2 className="text-3xl md:text-4xl font-bold">
-          Proceso de Ingreso
-        </h2>
+        <h2 className="text-3xl md:text-4xl font-bold">Proceso de Ingreso</h2>
         <p className="text-gray-400 mt-4">
-          Un flujo claro para evaluar tu nivel y asegurar una experiencia real de trabajo.
+          Un flujo claro para evaluar tu nivel y asegurar una experiencia real
+          de trabajo.
         </p>
       </div>
 
       {/* Timeline */}
       <div className="mt-20 max-w-6xl mx-auto">
-        
         <div className="flex flex-col md:flex-row items-start justify-between gap-12 md:gap-6 relative">
-          
           {/* Línea */}
           <div className="hidden md:block absolute top-12 left-0 right-0 h-[2px] bg-gray-800" />
 
@@ -94,9 +96,7 @@ const AdmissionFlow: React.FC = () => {
                 {/* Texto */}
                 <h3 className="mt-4 font-semibold">{step.title}</h3>
 
-                <p className="text-gray-400 text-sm mt-1">
-                  {step.desc}
-                </p>
+                <p className="text-gray-400 text-sm mt-1">{step.desc}</p>
 
                 <p className="text-gray-600 text-xs mt-2 leading-snug">
                   {step.detail}
@@ -117,12 +117,13 @@ const AdmissionFlow: React.FC = () => {
       {/* Cierre */}
       <div className="mt-16 text-center max-w-xl mx-auto">
         <p className="text-gray-400 text-sm">
-          No todos avanzan. Este proceso asegura que trabajes con perfiles alineados en nivel y compromiso.
+          No todos avanzan. Este proceso asegura que trabajes con perfiles
+          alineados en nivel y compromiso.
         </p>
 
         <p className="text-gray-600 text-xs mt-4">
-          El acceso al proceso incluye evaluación técnica y feedback personalizado. 
-          El pago no garantiza el ingreso al programa.
+          El acceso al proceso incluye evaluación técnica y feedback
+          personalizado. El pago no garantiza el ingreso al programa.
         </p>
       </div>
     </section>

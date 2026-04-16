@@ -29,7 +29,8 @@ export default function IdentifyUserType() {
               Soy Talento Tech
             </h3>
             <p className="relative z-10 text-sm text-neutral-400 mb-8 max-w-md">
-              Busco desarrollar mi perfil profesional, construir un portafolio sólido y acelerar mi empleabilidad.
+              Busco desarrollar mi perfil profesional, construir un portafolio
+              sólido y acelerar mi empleabilidad.
             </p>
 
             {/* CTA */}

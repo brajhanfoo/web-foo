@@ -93,15 +93,15 @@ const Hero = () => {
             >
               SOLICITAR INFORMACIÓN ↓
             </button> */}
-                      {/* CTA */}
-          <a
-            href="https://wa.me/51901831491?text=Hola%20quiero%20informaci%C3%B3n%20sobre%20contratar%20talento"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="relative z-10 text-[#00D3D3] text-sm font-medium tracking-wide hover:underline cursor-pointer"
-          >
-            CONVERSAR CON UN ESPECIALISTA ↓
-          </a>
+            {/* CTA */}
+            <a
+              href="https://wa.me/51901831491?text=Hola%20quiero%20informaci%C3%B3n%20sobre%20contratar%20talento"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="relative z-10 text-[#00D3D3] text-sm font-medium tracking-wide hover:underline cursor-pointer"
+            >
+              CONVERSAR CON UN ESPECIALISTA ↓
+            </a>
           </div>
         </div>
 

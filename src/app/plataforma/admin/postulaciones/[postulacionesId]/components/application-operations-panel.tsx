@@ -202,8 +202,8 @@ export function ApplicationOperationsPanel({
   const canBackToReview: boolean =
     Boolean(applicationId) &&
     (isInterviewFeedback ||
-      ((usesPaymentPending && isPaymentPending) ||
-        (!usesPaymentPending && isAdmitted))) &&
+      (usesPaymentPending && isPaymentPending) ||
+      (!usesPaymentPending && isAdmitted)) &&
     !isBackToReviewLoading
 
   const canBackToInterview: boolean =
@@ -383,7 +383,9 @@ export function ApplicationOperationsPanel({
           <div className="text-[11px] uppercase tracking-[0.14em] text-[#7CF7DC]">
             {recommendedAction.title}
           </div>
-          <div className="text-sm text-slate-100">{recommendedAction.description}</div>
+          <div className="text-sm text-slate-100">
+            {recommendedAction.description}
+          </div>
           {recommendedAction.nextStatus && recommendedAction.ctaLabel ? (
             <Button
               className="w-full bg-[#00CCA4] text-black hover:bg-[#00e6b3]"

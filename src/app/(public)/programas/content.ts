@@ -37,9 +37,21 @@ export function getProgramCardContent(program: ProgramRow): ProgramCardContent {
           'Workshops en vivo — Aprende con especialistas en Producto, UX, Desarrollo y QA',
           true
         ),
-        feature('rituales', 'Metodologías ágiles aplicadas — Fortalece tu forma de trabajar en equipos digitales', true),
-        feature('coaching', 'Career coaching — Mejora tu perfil, portafolio y preparación profesional', true),
-        feature('support', 'Acompañamiento continuo — Avanza con soporte cercano durante toda la experiencia', true),
+        feature(
+          'rituales',
+          'Metodologías ágiles aplicadas — Fortalece tu forma de trabajar en equipos digitales',
+          true
+        ),
+        feature(
+          'coaching',
+          'Career coaching — Mejora tu perfil, portafolio y preparación profesional',
+          true
+        ),
+        feature(
+          'support',
+          'Acompañamiento continuo — Avanza con soporte cercano durante toda la experiencia',
+          true
+        ),
       ],
     }
   }
@@ -62,13 +74,25 @@ export function getProgramCardContent(program: ProgramRow): ProgramCardContent {
           'Comunidad de talento seleccionado — Trabaja con perfiles filtrados por nivel y compromiso',
           true
         ),
-        feature('briefs', 'Proyectos colaborativos de software — Construye soluciones junto a otras áreas', true),
-        feature('sim', 'Entorno exigente de ejecución — Dinámicas como reviews y demo day', true),
-             feature('aco', 'Acompañamiento estructurado', true),
-       feature('career', 'Desarrollo integral guiado por especialidad y contexto de producto', false),
+        feature(
+          'briefs',
+          'Proyectos colaborativos de software — Construye soluciones junto a otras áreas',
+          true
+        ),
+        feature(
+          'sim',
+          'Entorno exigente de ejecución — Dinámicas como reviews y demo day',
+          true
+        ),
+        feature('aco', 'Acompañamiento estructurado', true),
+        feature(
+          'career',
+          'Desarrollo integral guiado por especialidad y contexto de producto',
+          false
+        ),
         feature('mentor', 'Mentoría técnica continua', false),
         feature('workshops', 'Workshops o clases en vivo', false),
-        feature('step', 'Career coaching personalizado', false)
+        feature('step', 'Career coaching personalizado', false),
       ],
     }
   }

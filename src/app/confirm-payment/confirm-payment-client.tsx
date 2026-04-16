@@ -116,6 +116,22 @@ export default function ConfirmPaymentClient() {
       setStatus('canceled')
       setMessage('Pago cancelado por el usuario.')
       setIsPolling(false)
+
+      const transactionIdNum = transactionId ? Number(transactionId) : NaN
+      if (Number.isFinite(transactionIdNum)) {
+        void fetch('/api/payphone/persist-rejected', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            clientTxId,
+            id: transactionIdNum,
+            message: 'Pago cancelado por el usuario.',
+            canceled: true,
+          }),
+          cache: 'no-store',
+        })
+      }
+
       return
     }
 

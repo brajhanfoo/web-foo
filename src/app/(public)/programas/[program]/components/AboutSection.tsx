@@ -24,10 +24,10 @@ const AboutSection: React.FC = () => {
           <span className="text-[#77039F] font-semibold">
             productos digitales de práctica.
           </span>
-           <br /> <br />
+          <br /> <br />
           <span className="text-[14px]">
-            Durante todo el proceso se aplica una metodología guiada por
-            nuestro equipo, en un entorno que simula la experiencia laboral usando
+            Durante todo el proceso se aplica una metodología guiada por nuestro
+            equipo, en un entorno que simula la experiencia laboral usando
             herramientas de la industria como Figma, metodologías ágiles y
             buenas prácticas de diseño y desarrollo.
           </span>
@@ -89,7 +89,8 @@ const AboutSection: React.FC = () => {
           <AiOutlineBook className="w-10 h-10 mb-3 text-indigo-500" />
           <h3 className="text-lg font-bold">Estructura guiada</h3>
           <p className="text-gray-400 text-sm mt-2">
-            Te brindamos guías, sesiones de trabajo y retroalimentación en cada fase para que puedas desarrollar tu producto con claridad.
+            Te brindamos guías, sesiones de trabajo y retroalimentación en cada
+            fase para que puedas desarrollar tu producto con claridad.
           </p>
         </div>
       </div>

@@ -98,9 +98,13 @@ export function DocentesTable({
                     ) : null}
                   </td>
 
-                  <td className="px-3 py-3 text-slate-300">{docente.email ?? '--'}</td>
+                  <td className="px-3 py-3 text-slate-300">
+                    {docente.email ?? '--'}
+                  </td>
 
-                  <td className="px-3 py-3 text-slate-300">{areaName ?? 'Sin área'}</td>
+                  <td className="px-3 py-3 text-slate-300">
+                    {areaName ?? 'Sin área'}
+                  </td>
 
                   <td className="px-3 py-3">
                     <Badge
@@ -164,7 +168,9 @@ export function DocentesTable({
                                 : 'text-emerald-300 focus:text-emerald-200'
                             }
                           >
-                            {docente.is_active ? 'Desactivar docente' : 'Reactivar docente'}
+                            {docente.is_active
+                              ? 'Desactivar docente'
+                              : 'Reactivar docente'}
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>

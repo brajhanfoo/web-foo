@@ -53,7 +53,6 @@ export default function AboutHero() {
 
         {/* Valores */}
         <div className="flex flex-col sm:flex-row justify-center gap-10">
-          
           {/* Card 1 */}
           <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl px-8 py-6 shadow-[0_0_40px_rgba(255,255,255,0.03)]">
             <FaUsers className="text-4xl text-[#00CCA4] mb-3 mx-auto" />
