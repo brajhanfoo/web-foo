@@ -434,7 +434,8 @@ export default function DocenteTeamWorkspacePage() {
           <DialogHeader>
             <DialogTitle>Crear tarea</DialogTitle>
             <DialogDescription className="text-slate-400">
-              Define hito, modalidad de entrega y reglas de revisión para esta tarea.
+              Define hito, modalidad de entrega y reglas de revisión para esta
+              tarea.
             </DialogDescription>
           </DialogHeader>
 
@@ -540,7 +541,8 @@ export default function DocenteTeamWorkspacePage() {
             </div>
 
             <div className="rounded-md border border-slate-800 bg-slate-950 px-3 py-2 text-xs text-slate-400">
-              Modalidad seleccionada: {submissionModeLabel(taskForm.submission_mode)} ·{' '}
+              Modalidad seleccionada:{' '}
+              {submissionModeLabel(taskForm.submission_mode)} ·{' '}
               {submissionTypeLabel(taskForm.allowed_submission_type)}
             </div>
 
@@ -707,7 +709,9 @@ export default function DocenteTeamWorkspacePage() {
             </div>
             <div>
               <div className="text-xs text-slate-400">Rol asignado</div>
-              <div>{participantRoleLabel(selectedMember?.assigned_role, '--')}</div>
+              <div>
+                {participantRoleLabel(selectedMember?.assigned_role, '--')}
+              </div>
             </div>
             <div>
               <div className="text-xs text-slate-400">Estado</div>

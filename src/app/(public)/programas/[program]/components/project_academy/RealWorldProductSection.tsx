@@ -14,11 +14,9 @@ const RealWorldProductSection: React.FC = () => {
 
       <div className="relative mx-auto max-w-7xl px-6">
         <div className="grid grid-cols-1 gap-16 lg:grid-cols-2 lg:items-center">
-          
           {/* LEFT */}
           <div className="flex justify-center lg:justify-start max-w-full">
             <div className="relative max-w-md w-full rounded-2xl border border-white/10 bg-white/5 p-8 backdrop-blur">
-              
               {/* Accent line */}
               <div className="absolute inset-x-0 top-0 h-[2px] rounded-t-2xl bg-gradient-to-r from-[#BDBE0B] via-[#00CCA4] to-[#77039F]" />
 
@@ -74,7 +72,6 @@ const RealWorldProductSection: React.FC = () => {
               />
             </div>
           </div>
-
         </div>
       </div>
     </section>
@@ -102,9 +99,7 @@ const FeatureItem: React.FC<FeatureItemProps> = ({ text, accent, icon }) => {
       >
         {icon}
       </span>
-      <span className="text-sm text-white/80 leading-relaxed">
-        {text}
-      </span>
+      <span className="text-sm text-white/80 leading-relaxed">{text}</span>
     </div>
   )
 }

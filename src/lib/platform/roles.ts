@@ -67,4 +67,3 @@ export function participantRoleLabel(
   const normalized = normalizeRoleKey(raw)
   return PARTICIPANT_ROLE_LABELS[normalized] ?? roleFallbackLabel(normalized)
 }
-

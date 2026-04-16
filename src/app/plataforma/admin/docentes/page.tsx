@@ -71,18 +71,18 @@ export default function AdminDocentesPage() {
   const [areas, setAreas] = useState<ProfessionalArea[]>([])
 
   const [search, setSearch] = useState('')
-  const [statusFilter, setStatusFilter] =
-    useState<DocenteStatusFilter>('all')
+  const [statusFilter, setStatusFilter] = useState<DocenteStatusFilter>('all')
   const [areaFilter, setAreaFilter] = useState('all')
 
   const [createOpen, setCreateOpen] = useState(false)
   const [createBusy, setCreateBusy] = useState(false)
-  const [createForm, setCreateForm] = useState<CreateDocenteForm>(
-    DEFAULT_CREATE_FORM
-  )
+  const [createForm, setCreateForm] =
+    useState<CreateDocenteForm>(DEFAULT_CREATE_FORM)
 
   const [busyById, setBusyById] = useState<Record<string, boolean>>({})
-  const [toggleCandidate, setToggleCandidate] = useState<DocenteRow | null>(null)
+  const [toggleCandidate, setToggleCandidate] = useState<DocenteRow | null>(
+    null
+  )
 
   const didLoadRef = useRef(false)
 
@@ -145,7 +145,8 @@ export default function AdminDocentesPage() {
           createForm.professional_area_id === 'none'
             ? null
             : createForm.professional_area_id,
-        temporary_password: safeText(createForm.temporary_password) || undefined,
+        temporary_password:
+          safeText(createForm.temporary_password) || undefined,
       }),
     })
 
@@ -211,13 +212,16 @@ export default function AdminDocentesPage() {
   async function toggleDocenteActive(docente: DocenteRow) {
     setRowBusy(docente.id, true)
 
-    const response = await fetch(`/api/plataforma/admin/docentes/${docente.id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        is_active: !docente.is_active,
-      }),
-    })
+    const response = await fetch(
+      `/api/plataforma/admin/docentes/${docente.id}`,
+      {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          is_active: !docente.is_active,
+        }),
+      }
+    )
 
     const payload = (await response.json().catch(() => null)) as {
       ok: boolean
@@ -227,11 +231,15 @@ export default function AdminDocentesPage() {
     setRowBusy(docente.id, false)
 
     if (!response.ok || !payload?.ok) {
-      showError(payload?.message ?? 'No se pudo actualizar el estado del docente.')
+      showError(
+        payload?.message ?? 'No se pudo actualizar el estado del docente.'
+      )
       return
     }
 
-    showSuccess(docente.is_active ? 'Docente desactivado.' : 'Docente reactivado.')
+    showSuccess(
+      docente.is_active ? 'Docente desactivado.' : 'Docente reactivado.'
+    )
     await loadData()
   }
 
@@ -446,9 +454,7 @@ export default function AdminDocentesPage() {
             ? 'El docente no podrá ingresar hasta que lo reactives.'
             : 'El docente recuperará el acceso a la plataforma.'
         }
-        confirmLabel={
-          toggleCandidate?.is_active ? 'Desactivar' : 'Reactivar'
-        }
+        confirmLabel={toggleCandidate?.is_active ? 'Desactivar' : 'Reactivar'}
         confirmVariant={toggleCandidate?.is_active ? 'destructive' : 'default'}
         confirmDisabled={!toggleCandidate}
         onConfirm={() => {

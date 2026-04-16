@@ -46,68 +46,74 @@ export async function GET(
     )
   }
 
-  const [docenteRes, areasRes, assignmentsRes, editionsRes, teamsRes, programsRes] =
-    await Promise.all([
-      supabaseAdmin
-        .from('profiles')
-        .select(
-          [
-            'id',
-            'email',
-            'first_name',
-            'last_name',
-            'role',
-            'is_active',
-            'professional_area_id',
-            'password_reset_required',
-            'last_login_at',
-            'created_at',
-            'updated_at',
-            'professional_area:professional_areas(id, code, name, is_active)',
-          ].join(', ')
-        )
-        .eq('id', targetId)
-        .eq('role', 'docente')
-        .maybeSingle(),
-      supabaseAdmin
-        .from('professional_areas')
-        .select('id, code, name, is_active')
-        .order('name', { ascending: true }),
-      supabaseAdmin
-        .from('docente_team_assignments')
-        .select(
-          [
-            'id',
-            'docente_profile_id',
-            'program_id',
-            'edition_id',
-            'team_id',
-            'staff_role',
-            'is_active',
-            'assigned_by',
-            'created_at',
-            'updated_at',
-            'team:program_edition_teams(id, name, edition_id)',
-          ].join(', ')
-        )
-        .eq('docente_profile_id', targetId)
-        .order('created_at', { ascending: false }),
-      supabaseAdmin
-        .from('program_editions')
-        .select('id, program_id, edition_name, is_open, starts_at, ends_at')
-        .eq('is_open', true)
-        .order('starts_at', { ascending: false }),
-      supabaseAdmin
-        .from('program_edition_teams')
-        .select('id, name, edition_id, program_editions!inner(id, is_open)')
-        .eq('program_editions.is_open', true)
-        .order('name', { ascending: true }),
-      supabaseAdmin
-        .from('programs')
-        .select('id, title, is_published, program_editions!inner(id, is_open)')
-        .eq('program_editions.is_open', true)
-        .order('title', { ascending: true }),
-    ])
+  const [
+    docenteRes,
+    areasRes,
+    assignmentsRes,
+    editionsRes,
+    teamsRes,
+    programsRes,
+  ] = await Promise.all([
+    supabaseAdmin
+      .from('profiles')
+      .select(
+        [
+          'id',
+          'email',
+          'first_name',
+          'last_name',
+          'role',
+          'is_active',
+          'professional_area_id',
+          'password_reset_required',
+          'last_login_at',
+          'created_at',
+          'updated_at',
+          'professional_area:professional_areas(id, code, name, is_active)',
+        ].join(', ')
+      )
+      .eq('id', targetId)
+      .eq('role', 'docente')
+      .maybeSingle(),
+    supabaseAdmin
+      .from('professional_areas')
+      .select('id, code, name, is_active')
+      .order('name', { ascending: true }),
+    supabaseAdmin
+      .from('docente_team_assignments')
+      .select(
+        [
+          'id',
+          'docente_profile_id',
+          'program_id',
+          'edition_id',
+          'team_id',
+          'staff_role',
+          'is_active',
+          'assigned_by',
+          'created_at',
+          'updated_at',
+          'team:program_edition_teams(id, name, edition_id)',
+        ].join(', ')
+      )
+      .eq('docente_profile_id', targetId)
+      .order('created_at', { ascending: false }),
+    supabaseAdmin
+      .from('program_editions')
+      .select('id, program_id, edition_name, is_open, starts_at, ends_at')
+      .eq('is_open', true)
+      .order('starts_at', { ascending: false }),
+    supabaseAdmin
+      .from('program_edition_teams')
+      .select('id, name, edition_id, program_editions!inner(id, is_open)')
+      .eq('program_editions.is_open', true)
+      .order('name', { ascending: true }),
+    supabaseAdmin
+      .from('programs')
+      .select('id, title, is_published, program_editions!inner(id, is_open)')
+      .eq('program_editions.is_open', true)
+      .order('title', { ascending: true }),
+  ])
 
   if (docenteRes.error || !docenteRes.data) {
     return NextResponse.json(
@@ -242,4 +248,3 @@ export async function PATCH(
 
   return NextResponse.json({ ok: true })
 }
-

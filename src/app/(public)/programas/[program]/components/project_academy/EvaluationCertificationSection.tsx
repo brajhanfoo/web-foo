@@ -79,7 +79,7 @@ const EvaluationCertificationSection = () => {
 
             <div className="mt-8 inline-flex items-center gap-2 rounded-full border border-[#00CCA4]/30 bg-[#00CCA4]/10 px-4 py-2 text-xs font-medium text-[#00CCA4]">
               <FiShield className="h-4 w-4" />
-              Aprobado por expertos 
+              Aprobado por expertos
             </div>
           </div>
         </div>

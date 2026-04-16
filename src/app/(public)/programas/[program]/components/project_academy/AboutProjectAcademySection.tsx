@@ -12,7 +12,6 @@ const AboutProjectAcademySection: React.FC = () => {
 
       <div className="relative mx-auto max-w-7xl px-6">
         <div className="grid grid-cols-1 gap-16 lg:grid-cols-2 lg:items-center">
-          
           {/* LEFT CONTENT */}
           <div>
             {/* Badge */}
@@ -34,7 +33,8 @@ const AboutProjectAcademySection: React.FC = () => {
               Project Academy es un programa intensivo de Ingeniería de Producto
               diseñado para formarte como un Profesional en T. Dominarás la
               creación de productos digitales profundizando en tu especialidad y
-              construyendo un producto de principio a fin, bajo mentoría de alto nivel.
+              construyendo un producto de principio a fin, bajo mentoría de alto
+              nivel.
             </p>
 
             {/* Cards */}
@@ -55,7 +55,6 @@ const AboutProjectAcademySection: React.FC = () => {
           {/* RIGHT PANEL */}
           <div className="relative max-w-full">
             <div className="rounded-2xl border border-white/10 bg-white/5 p-6 backdrop-blur max-w-full">
-              
               {/* Window header */}
               <div className="mb-6 flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -100,10 +99,8 @@ const AboutProjectAcademySection: React.FC = () => {
                   <div className="h-full w-[87%] rounded-full bg-gradient-to-r from-[#77039F] to-[#00CCA4]" />
                 </div>
               </div>
-
             </div>
           </div>
-
         </div>
       </div>
     </section>

@@ -218,4 +218,3 @@ export async function POST(request: Request) {
     temporary_password: temporaryPassword,
   })
 }
-

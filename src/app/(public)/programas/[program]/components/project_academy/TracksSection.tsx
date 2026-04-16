@@ -72,7 +72,9 @@ const TracksSection = () => {
       </h2>
 
       <p className="mx-auto mt-4 max-w-2xl text-sm text-white/60 md:text-base">
-        Los workshops no siguen un temario rígido. Cada sesión se adapta a las necesidades del equipo para avanzar, replicando los más altos estándares de la industria tecnológica.
+        Los workshops no siguen un temario rígido. Cada sesión se adapta a las
+        necesidades del equipo para avanzar, replicando los más altos estándares
+        de la industria tecnológica.
       </p>
 
       {/* Cards */}
@@ -116,7 +118,8 @@ const TracksSection = () => {
       <div className="mt-12 flex justify-center">
         <div className="flex items-center gap-3 rounded-full border border-white/10 bg-white/5 px-6 py-3 text-sm text-white/70 backdrop-blur">
           <FaRegCircleCheck className="text-[#BDBE0B]" />
-          No estudias para un examen. Construyes y entregas un producto de nivel profesional.
+          No estudias para un examen. Construyes y entregas un producto de nivel
+          profesional.
         </div>
       </div>
     </section>

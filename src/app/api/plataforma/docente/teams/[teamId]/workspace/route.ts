@@ -214,7 +214,7 @@ export async function GET(
     if (!submissionId) continue
 
     const actorId = sanitizeText(row.actor_id, 80)
-    const actorProfile = actorId ? profileById.get(actorId) ?? null : null
+    const actorProfile = actorId ? (profileById.get(actorId) ?? null) : null
 
     feedbackBySubmission.set(submissionId, {
       ...row,
@@ -248,12 +248,12 @@ export async function GET(
       ...(submission as Record<string, unknown>),
       latest_feedback:
         (submissionId ? feedbackBySubmission.get(submissionId) : null) ?? null,
-      owner_profile: ownerId ? profileById.get(ownerId) ?? null : null,
+      owner_profile: ownerId ? (profileById.get(ownerId) ?? null) : null,
       submitted_by_profile: submittedById
-        ? profileById.get(submittedById) ?? null
+        ? (profileById.get(submittedById) ?? null)
         : null,
       reviewed_by_profile: reviewedById
-        ? profileById.get(reviewedById) ?? null
+        ? (profileById.get(reviewedById) ?? null)
         : null,
     })
     submissionsByAssignment.set(assignmentId, bucket)
@@ -264,7 +264,7 @@ export async function GET(
     return {
       ...assignment,
       submissions: assignmentId
-        ? submissionsByAssignment.get(assignmentId) ?? []
+        ? (submissionsByAssignment.get(assignmentId) ?? [])
         : [],
     }
   })
