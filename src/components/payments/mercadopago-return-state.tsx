@@ -27,6 +27,8 @@ type StatusApiResponse =
 
 const SUCCESS_REDIRECT_PATH = '/plataforma/talento/mis-postulaciones'
 const SUCCESS_REDIRECT_SECONDS = 5
+const STATUS_POLL_INTERVAL_MS = 2500
+const STATUS_POLL_MAX_DURATION_MS = 20000
 
 function normalizeStatusHint(value: string | null): string | null {
   if (!value) return null
@@ -121,7 +123,6 @@ export function MercadoPagoReturnState(props: { variant: ReturnVariant }) {
   const [isLoading, setIsLoading] = useState(true)
   const [backendStatus, setBackendStatus] = useState<PaymentStatus | null>(null)
   const [backendLookupFailed, setBackendLookupFailed] = useState(false)
-  const [pollTick, setPollTick] = useState(0)
   const [countdown, setCountdown] = useState(SUCCESS_REDIRECT_SECONDS)
 
   const supportUrl = useMemo(() => buildSupportWhatsAppUrl(), [])
@@ -153,6 +154,22 @@ export function MercadoPagoReturnState(props: { variant: ReturnVariant }) {
   useEffect(() => {
     let cancelled = false
     let retryTimer: ReturnType<typeof setTimeout> | null = null
+    const startedAtMs = Date.now()
+
+    const canRetry = () =>
+      Date.now() - startedAtMs < STATUS_POLL_MAX_DURATION_MS
+
+    const scheduleRetry = (run: () => Promise<void>) => {
+      if (!canRetry()) {
+        setIsLoading(false)
+        return
+      }
+
+      setIsLoading(true)
+      retryTimer = setTimeout(() => {
+        void run()
+      }, STATUS_POLL_INTERVAL_MS)
+    }
 
     const run = async () => {
       if (!fetchUrl) {
@@ -164,8 +181,6 @@ export function MercadoPagoReturnState(props: { variant: ReturnVariant }) {
         return
       }
 
-      setIsLoading(true)
-
       try {
         const response = await fetch(fetchUrl, { cache: 'no-store' })
         const json = (await response.json()) as StatusApiResponse
@@ -174,36 +189,38 @@ export function MercadoPagoReturnState(props: { variant: ReturnVariant }) {
         if (!response.ok || !json.ok) {
           setBackendStatus(null)
           setBackendLookupFailed(true)
-          setIsLoading(false)
+          scheduleRetry(run)
           return
         }
 
         setBackendStatus(json.payment.status)
         setBackendLookupFailed(false)
-        setIsLoading(false)
 
         if (
           json.payment.status === 'pending' ||
           json.payment.status === 'initiated'
         ) {
-          retryTimer = setTimeout(() => {
-            setPollTick((prev) => prev + 1)
-          }, 3500)
+          scheduleRetry(run)
+          return
         }
+
+        setIsLoading(false)
       } catch {
         if (cancelled) return
         setBackendStatus(null)
         setBackendLookupFailed(true)
-        setIsLoading(false)
+        scheduleRetry(run)
       }
     }
 
+    setIsLoading(true)
     void run()
+
     return () => {
       cancelled = true
       if (retryTimer) clearTimeout(retryTimer)
     }
-  }, [fetchUrl, pollTick])
+  }, [fetchUrl])
 
   useEffect(() => {
     if (presentationState !== 'success') {
@@ -234,7 +251,8 @@ export function MercadoPagoReturnState(props: { variant: ReturnVariant }) {
     router.replace(SUCCESS_REDIRECT_PATH)
   }
 
-  const isValidationErrorState = backendLookupFailed && backendStatus === null
+  const isValidationErrorState =
+    !isLoading && backendLookupFailed && backendStatus === null
 
   const title =
     presentationState === 'success'
