@@ -1,3 +1,4 @@
+//src/app/plataforma/admin/postulaciones/components/applications-table.tsx
 'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
@@ -44,16 +45,46 @@ type ApplicationsAdminViewRow = {
 type DatePreset = 'all' | '7d' | '30d' | 'this_month'
 type OpenMenu = null | 'date' | 'role' | 'status' | 'actions'
 
-function statusBadgeClasses(status: ApplicationStatus): string {
+function statusBadgeClasses(status: ApplicationStatus): Record<string, string> {
   if (status === 'enrolled')
-    return 'bg-emerald-500/15 text-emerald-300 border-emerald-400/20'
+    return {
+      className: 'bg-emerald-500/15 text-emerald-300 border-emerald-400/20',
+      label: 'Matriculado',
+    }
   if (status === 'approved')
-    return 'bg-sky-500/15 text-sky-300 border-sky-400/20'
+    return {
+      className: 'bg-sky-500/15 text-sky-300 border-sky-400/20',
+      label: 'Aprobado',
+    }
+  if (status === 'admitted')
+    return {
+      className: 'bg-sky-500/15 text-sky-300 border-sky-400/20',
+      label: 'Admitido',
+    }
   if (status === 'in_review')
-    return 'bg-yellow-500/15 text-yellow-200 border-yellow-400/20'
+    return {
+      className: 'bg-yellow-500/15 text-yellow-200 border-yellow-400/20',
+      label: 'En revisión',
+    }
+  if (status === 'interview_feedback')
+    return {
+      className: 'bg-cyan-500/15 text-cyan-200 border-cyan-400/20',
+      label: 'Entrevista + feedback',
+    }
+  if (status === 'payment_pending')
+    return {
+      className: 'bg-orange-500/15 text-orange-200 border-orange-400/20',
+      label: 'Pago pendiente',
+    }
   if (status === 'rejected')
-    return 'bg-red-500/15 text-red-300 border-red-400/20'
-  return 'bg-white/5 text-white/70 border-white/10'
+    return {
+      className: 'bg-red-500/15 text-red-300 border-red-400/20',
+      label: 'Rechazado',
+    }
+  return {
+    className: 'bg-slate-900 text-slate-300 border-slate-800',
+    label: 'Recibido',
+  }
 }
 
 function getDateRangeFromPreset(preset: DatePreset): {
@@ -93,7 +124,10 @@ function statusLabel(status: ApplicationStatus | 'all'): string {
   if (status === 'all') return 'Todos'
   if (status === 'received') return 'Recibido'
   if (status === 'in_review') return 'En revisión'
+  if (status === 'interview_feedback') return 'Entrevista + feedback'
   if (status === 'approved') return 'Aprobado'
+  if (status === 'admitted') return 'Admitido'
+  if (status === 'payment_pending') return 'Pago pendiente'
   if (status === 'enrolled') return 'Matriculado'
   if (status === 'rejected') return 'Rechazado'
   return status
@@ -330,15 +364,15 @@ export function ApplicationsTable() {
   }
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-black p-4">
+    <div className="rounded-2xl border border-slate-800 bg-slate-900 p-4">
       {/* Top bar */}
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-lg font-semibold text-white">
+          <h1 className="text-lg font-semibold text-slate-100">
             Gestión de Postulaciones
           </h1>
-          <p className="text-xs text-white/50">
-            Total: <span className="text-white/70">{totalCount}</span>
+          <p className="text-xs text-slate-400">
+            Total: <span className="text-slate-300">{totalCount}</span>
           </p>
         </div>
 
@@ -347,7 +381,7 @@ export function ApplicationsTable() {
           <select
             value={selectedProgramId}
             onChange={(element) => setSelectedProgramId(element.target.value)}
-            className="w-full md:w-72 rounded-xl bg-black/30 border border-white/10 px-3 py-3 text-white outline-none focus:border-emerald-400/60"
+            className="w-full md:w-72 rounded-xl bg-slate-900 border border-slate-800 px-3 py-3 text-slate-100 outline-none focus:border-emerald-400/60"
           >
             <option value="all">Todos los programas</option>
             {programs.map((p) => (
@@ -359,12 +393,12 @@ export function ApplicationsTable() {
 
           {/* Search */}
           <div className="relative w-full md:w-80">
-            <Search className="pointer-events-none absolute left-3 top-3.5 h-4 w-4 text-white/40" />
+            <Search className="pointer-events-none absolute left-3 top-3.5 h-4 w-4 text-slate-400" />
             <input
               value={searchText}
               onChange={(element) => setSearchText(element.target.value)}
               placeholder="Buscar..."
-              className="w-full rounded-xl bg-black/30 border border-white/10 pl-9 pr-3 py-3 text-white outline-none focus:border-emerald-400/60 placeholder:text-white/40"
+              className="w-full rounded-xl bg-slate-900 border border-slate-800 pl-9 pr-3 py-3 text-slate-100 outline-none focus:border-emerald-400/60 placeholder:text-slate-400"
             />
           </div>
 
@@ -377,7 +411,7 @@ export function ApplicationsTable() {
               if (v === 'export_page') await exportCurrentPage()
               if (v === 'export_all') await exportAllFiltered()
             }}
-            className="w-full md:w-56 rounded-xl bg-black/30 border border-white/10 px-3 py-3 text-white outline-none focus:border-emerald-400/60"
+            className="w-full md:w-56 rounded-xl bg-slate-900 border border-slate-800 px-3 py-3 text-slate-100 outline-none focus:border-emerald-400/60"
           >
             <option value="" disabled>
               Acciones…
@@ -389,297 +423,317 @@ export function ApplicationsTable() {
       </div>
 
       {/* Table */}
-      <div className="mt-4 overflow-hidden rounded-2xl border border-white/10">
-        {/* Header row with dropdown filters on Fecha/Rol/Estado */}
-        <div
-          ref={menuWrapReference}
-          className="relative grid grid-cols-12 gap-0 bg-black/30 px-4 py-3 text-xs text-white/50"
-        >
-          {/* Fecha (dropdown) */}
-          <div className="col-span-2 flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => toggleMenu('date')}
-              className="inline-flex items-center gap-1 rounded-lg px-2 py-1 hover:bg-white/5 text-white/70"
-              title="Filtrar por fecha"
+      <div className="mt-4 rounded-2xl border border-slate-800">
+        <div className="overflow-x-auto overflow-y-visible">
+          <div className="min-w-[980px]">
+            {/* Header row with dropdown filters on Fecha/Rol/Estado */}
+            <div
+              ref={menuWrapReference}
+              className="relative grid grid-cols-12 gap-0 bg-slate-900 px-4 py-3 text-xs text-slate-400"
             >
-              Fecha
-              <ChevronDown className="h-3.5 w-3.5" />
-            </button>
-
-            {datePreset !== 'all' ? (
-              <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[11px] text-white/70">
-                {datePresetLabel(datePreset)}
-              </span>
-            ) : null}
-
-            {openMenu === 'date' ? (
-              <div className="absolute left-4 top-11 z-20 w-56 rounded-xl border border-white/10 bg-black p-2 shadow-xl">
+              {/* Fecha (dropdown) */}
+              <div className="col-span-2 flex items-center gap-2">
                 <button
                   type="button"
-                  onClick={() => {
-                    setDatePreset('all')
-                    setOpenMenu(null)
-                  }}
-                  className="w-full rounded-lg px-3 py-2 text-left text-sm text-white/80 hover:bg-white/5"
+                  onClick={() => toggleMenu('date')}
+                  className="inline-flex items-center gap-1 rounded-lg px-2 py-1 hover:bg-slate-900 text-slate-300"
+                  title="Filtrar por fecha"
                 >
-                  Todas
+                  Fecha
+                  <ChevronDown className="h-3.5 w-3.5" />
                 </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setDatePreset('7d')
-                    setOpenMenu(null)
-                  }}
-                  className="w-full rounded-lg px-3 py-2 text-left text-sm text-white/80 hover:bg-white/5"
-                >
-                  Últimos 7 días
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setDatePreset('30d')
-                    setOpenMenu(null)
-                  }}
-                  className="w-full rounded-lg px-3 py-2 text-left text-sm text-white/80 hover:bg-white/5"
-                >
-                  Últimos 30 días
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setDatePreset('this_month')
-                    setOpenMenu(null)
-                  }}
-                  className="w-full rounded-lg px-3 py-2 text-left text-sm text-white/80 hover:bg-white/5"
-                >
-                  Este mes
-                </button>
-              </div>
-            ) : null}
-          </div>
 
-          <div className="col-span-3">Candidato</div>
-          <div className="col-span-2">Programa</div>
+                {datePreset !== 'all' ? (
+                  <span className="rounded-full border border-slate-800 bg-slate-900 px-2 py-0.5 text-[11px] text-slate-300">
+                    {datePresetLabel(datePreset)}
+                  </span>
+                ) : null}
 
-          {/* Rol (dropdown) */}
-          <div className="col-span-2 flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => toggleMenu('role')}
-              className="inline-flex items-center gap-1 rounded-lg px-2 py-1 hover:bg-white/5 text-white/70"
-              title="Filtrar por rol"
-            >
-              Rol
-              <ChevronDown className="h-3.5 w-3.5" />
-            </button>
-
-            {roleFilter.trim() ? (
-              <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[11px] text-white/70">
-                {roleFilter.trim()}
-              </span>
-            ) : null}
-
-            {openMenu === 'role' ? (
-              <div className="absolute left-[52%] top-11 z-20 w-72 -translate-x-1/2 rounded-xl border border-white/10 bg-black p-3 shadow-xl">
-                <div className="text-xs text-white/50">Contiene</div>
-                <input
-                  value={roleFilter}
-                  onChange={(element) => setRoleFilter(element.target.value)}
-                  placeholder="Ej: Frontend, Designer…"
-                  className="mt-2 w-full rounded-xl bg-black/30 border border-white/10 px-3 py-2 text-sm text-white outline-none focus:border-emerald-400/60 placeholder:text-white/40"
-                />
-
-                <div className="mt-3 flex items-center justify-between">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setRoleFilter('')
-                      setOpenMenu(null)
-                    }}
-                    className="rounded-xl bg-white/5 px-3 py-2 text-xs text-white/80 hover:bg-white/10"
-                  >
-                    Limpiar
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setOpenMenu(null)}
-                    className="rounded-xl bg-emerald-500/15 px-3 py-2 text-xs text-emerald-200 hover:bg-emerald-500/20"
-                  >
-                    Aplicar
-                  </button>
-                </div>
-
-                {roleSuggestions.length > 0 ? (
-                  <div className="mt-3">
-                    <div className="text-xs text-white/50">
-                      Sugerencias (página actual)
-                    </div>
-                    <div className="mt-2 flex flex-wrap gap-2">
-                      {roleSuggestions.slice(0, 8).map((role) => (
-                        <button
-                          key={role}
-                          type="button"
-                          onClick={() => setRoleFilter(role)}
-                          className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-white/70 hover:bg-white/10"
-                        >
-                          {role}
-                        </button>
-                      ))}
-                    </div>
+                {openMenu === 'date' ? (
+                  <div className="absolute left-4 top-11 z-20 w-56 rounded-xl border border-slate-800 bg-slate-900 p-2 shadow-xl">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setDatePreset('all')
+                        setOpenMenu(null)
+                      }}
+                      className="w-full rounded-lg px-3 py-2 text-left text-sm text-slate-200 hover:bg-slate-900"
+                    >
+                      Todas
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setDatePreset('7d')
+                        setOpenMenu(null)
+                      }}
+                      className="w-full rounded-lg px-3 py-2 text-left text-sm text-slate-200 hover:bg-slate-900"
+                    >
+                      Últimos 7 días
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setDatePreset('30d')
+                        setOpenMenu(null)
+                      }}
+                      className="w-full rounded-lg px-3 py-2 text-left text-sm text-slate-200 hover:bg-slate-900"
+                    >
+                      Últimos 30 días
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setDatePreset('this_month')
+                        setOpenMenu(null)
+                      }}
+                      className="w-full rounded-lg px-3 py-2 text-left text-sm text-slate-200 hover:bg-slate-900"
+                    >
+                      Este mes
+                    </button>
                   </div>
                 ) : null}
               </div>
-            ) : null}
-          </div>
 
-          <div className="col-span-1">LinkedIn</div>
+              <div className="col-span-3">Candidato</div>
+              <div className="col-span-2">Programa</div>
 
-          {/* Estado (dropdown) */}
-          <div className="col-span-1 flex items-center justify-start gap-2">
-            <button
-              type="button"
-              onClick={() => toggleMenu('status')}
-              className="inline-flex items-center gap-1 rounded-lg px-2 py-1 hover:bg-white/5 text-white/70"
-              title="Filtrar por estado"
-            >
-              Estado
-              <ChevronDown className="h-3.5 w-3.5" />
-            </button>
-
-            {statusFilter !== 'all' ? (
-              <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[11px] text-white/70">
-                {statusLabel(statusFilter)}
-              </span>
-            ) : null}
-
-            {openMenu === 'status' ? (
-              <div className="absolute right-24 top-11 z-20 w-56 rounded-xl border border-white/10 bg-black p-2 shadow-xl">
-                {(
-                  [
-                    'all',
-                    'received',
-                    'in_review',
-                    'approved',
-                    'enrolled',
-                    'rejected',
-                  ] as const
-                ).map((v) => (
-                  <button
-                    key={v}
-                    type="button"
-                    onClick={() => {
-                      setStatusFilter(v)
-                      setOpenMenu(null)
-                    }}
-                    className="w-full rounded-lg px-3 py-2 text-left text-sm text-white/80 hover:bg-white/5"
-                  >
-                    {statusLabel(v)}
-                  </button>
-                ))}
-              </div>
-            ) : null}
-          </div>
-
-          <div className="col-span-1 text-right">Acciones</div>
-        </div>
-
-        {isLoading ? (
-          <div className="px-4 py-6 text-sm text-white/70">Cargando...</div>
-        ) : visibleRows.length === 0 ? (
-          <div className="px-4 py-10 text-sm text-white/60">
-            No hay postulaciones todavía.
-          </div>
-        ) : (
-          <div className="divide-y divide-white/10">
-            {visibleRows.map((row) => {
-              const fullName =
-                `${row.applicant?.first_name ?? ''} ${row.applicant?.last_name ?? ''}`.trim() ||
-                '—'
-
-              const programTitle = row.programs?.title ?? '—'
-              const createdAt = new Date(row.created_at).toLocaleDateString(
-                'es-EC'
-              )
-              const linkedinUrl = row.applicant?.linkedin_url
-
-              return (
-                <div
-                  key={row.id}
-                  className="grid grid-cols-12 px-4 py-3 text-sm text-white/80"
+              {/* Rol (dropdown) */}
+              <div className="col-span-2 flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => toggleMenu('role')}
+                  className="inline-flex items-center gap-1 rounded-lg px-2 py-1 hover:bg-slate-900 text-slate-300"
+                  title="Filtrar por rol"
                 >
-                  <div className="col-span-2">{createdAt}</div>
+                  Rol
+                  <ChevronDown className="h-3.5 w-3.5" />
+                </button>
 
-                  <div className="col-span-3">
-                    <div className="font-medium text-white">{fullName}</div>
-                    <div className="text-xs text-white/50">
-                      {row.applicant?.whatsapp_e164 ?? '—'}
-                    </div>
-                  </div>
+                {roleFilter.trim() ? (
+                  <span className="rounded-full border border-slate-800 bg-slate-900 px-2 py-0.5 text-[11px] text-slate-300">
+                    {roleFilter.trim()}
+                  </span>
+                ) : null}
 
-                  <div className="col-span-2">
-                    <div className="text-white">{programTitle}</div>
-                    <div className="text-xs text-white/50">
-                      {row.editions?.edition_name ?? ''}
-                    </div>
-                  </div>
+                {openMenu === 'role' ? (
+                  <div className="absolute left-[52%] top-11 z-20 w-72 -translate-x-1/2 rounded-xl border border-slate-800 bg-slate-900 p-3 shadow-xl">
+                    <div className="text-xs text-slate-400">Contiene</div>
+                    <input
+                      value={roleFilter}
+                      onChange={(element) =>
+                        setRoleFilter(element.target.value)
+                      }
+                      placeholder="Ej: Frontend, Designer…"
+                      className="mt-2 w-full rounded-xl bg-slate-900 border border-slate-800 px-3 py-2 text-sm text-slate-100 outline-none focus:border-emerald-400/60 placeholder:text-slate-400"
+                    />
 
-                  <div className="col-span-2">{row.applied_role ?? '—'}</div>
-
-                  <div className="col-span-1">
-                    {linkedinUrl ? (
-                      <Link
-                        href={linkedinUrl}
-                        target="_blank"
-                        className="inline-flex items-center gap-1 text-emerald-300 hover:text-emerald-200"
+                    <div className="mt-3 flex items-center justify-between">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setRoleFilter('')
+                          setOpenMenu(null)
+                        }}
+                        className="rounded-xl bg-slate-900 px-3 py-2 text-xs text-slate-200 hover:bg-slate-800"
                       >
-                        <ExternalLink className="h-4 w-4" />
-                      </Link>
-                    ) : (
-                      <span className="text-white/40">—</span>
-                    )}
-                  </div>
+                        Limpiar
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setOpenMenu(null)}
+                        className="rounded-xl bg-emerald-500/15 px-3 py-2 text-xs text-emerald-200 hover:bg-emerald-500/20"
+                      >
+                        Aplicar
+                      </button>
+                    </div>
 
-                  <div className="col-span-1">
-                    <span
-                      className={[
-                        'inline-flex items-center rounded-full border px-2 py-1 text-[11px]',
-                        statusBadgeClasses(row.status),
-                      ].join(' ')}
-                    >
-                      {row.status}
-                    </span>
+                    {roleSuggestions.length > 0 ? (
+                      <div className="mt-3">
+                        <div className="truncate text-xs text-slate-400">
+                          Sugerencias (página actual)
+                        </div>
+                        <div className="mt-2 flex flex-wrap gap-2">
+                          {roleSuggestions.slice(0, 8).map((role) => (
+                            <button
+                              key={role}
+                              type="button"
+                              onClick={() => setRoleFilter(role)}
+                              className="rounded-full border border-slate-800 bg-slate-900 px-3 py-1 text-xs text-slate-300 hover:bg-slate-800"
+                            >
+                              {role}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    ) : null}
                   </div>
+                ) : null}
+              </div>
 
-                  <div className="col-span-1 text-right">
-                    <button
-                      type="button"
-                      className="rounded-xl bg-emerald-500/15 px-3 py-1.5 text-xs text-emerald-200 hover:bg-emerald-500/20"
-                      disabled
-                      title="Luego hacemos la ficha / detalle"
-                    >
-                      Ver ficha
-                    </button>
+              <div className="col-span-1">LinkedIn</div>
+
+              {/* Estado (dropdown) */}
+              <div className="col-span-1 flex items-center justify-start gap-2">
+                <button
+                  type="button"
+                  onClick={() => toggleMenu('status')}
+                  className="inline-flex items-center gap-1 rounded-lg px-2 py-1 hover:bg-slate-900 text-slate-300"
+                  title="Filtrar por estado"
+                >
+                  Estado
+                  <ChevronDown className="h-3.5 w-3.5" />
+                </button>
+
+                {statusFilter !== 'all' ? (
+                  <span className="rounded-full border border-slate-800 bg-slate-900 px-2 py-0.5 text-[11px] text-slate-300">
+                    {statusLabel(statusFilter)}
+                  </span>
+                ) : null}
+
+                {openMenu === 'status' ? (
+                  <div className="absolute right-24 top-11 z-20 w-56 rounded-xl border border-slate-800 bg-slate-900 p-2 shadow-xl">
+                    {(
+                      [
+                        'all',
+                        'received',
+                        'in_review',
+                        'interview_feedback',
+                        'admitted',
+                        'approved',
+                        'payment_pending',
+                        'enrolled',
+                        'rejected',
+                      ] as const
+                    ).map((v) => (
+                      <button
+                        key={v}
+                        type="button"
+                        onClick={() => {
+                          setStatusFilter(v)
+                          setOpenMenu(null)
+                        }}
+                        className="w-full rounded-lg px-3 py-2 text-left text-sm text-slate-200 hover:bg-slate-900"
+                      >
+                        {statusLabel(v)}
+                      </button>
+                    ))}
                   </div>
-                </div>
-              )
-            })}
+                ) : null}
+              </div>
+
+              <div className="col-span-1 text-right">Acciones</div>
+            </div>
+
+            {isLoading ? (
+              <div className="px-4 py-6 text-sm text-slate-300">
+                Cargando...
+              </div>
+            ) : visibleRows.length === 0 ? (
+              <div className="px-4 py-10 text-sm text-slate-300">
+                No hay postulaciones todavía.
+              </div>
+            ) : (
+              <div className="divide-y divide-white/10">
+                {visibleRows.map((row) => {
+                  const fullName =
+                    `${row.applicant?.first_name ?? ''} ${row.applicant?.last_name ?? ''}`.trim() ||
+                    '—'
+
+                  const programTitle = row.programs?.title ?? '—'
+                  const createdAt = new Date(row.created_at).toLocaleDateString(
+                    'es-EC'
+                  )
+                  const linkedinUrl = row.applicant?.linkedin_url
+
+                  return (
+                    <div
+                      key={row.id}
+                      className="grid grid-cols-12 items-center px-4 py-3 text-sm text-slate-200"
+                    >
+                      <div className="col-span-2">{createdAt}</div>
+
+                      <div className="col-span-3 min-w-0">
+                        <div className="truncate font-medium text-slate-100">
+                          {fullName}
+                        </div>
+                        <div className="truncate text-xs text-slate-400">
+                          {row.applicant?.whatsapp_e164 ?? '—'}
+                        </div>
+                      </div>
+
+                      <div className="col-span-2 min-w-0">
+                        <div className="truncate text-slate-100">
+                          {programTitle}
+                        </div>
+                        <div className="truncate text-xs text-slate-400">
+                          {row.editions?.edition_name ?? ''}
+                        </div>
+                      </div>
+
+                      <div className="col-span-2 min-w-0 truncate">
+                        {row.applied_role ?? '-'}
+                      </div>
+
+                      <div className="col-span-1">
+                        {linkedinUrl ? (
+                          <Link
+                            href={linkedinUrl}
+                            target="_blank"
+                            className="inline-flex items-center gap-1 text-emerald-300 hover:text-emerald-200"
+                          >
+                            <ExternalLink className="h-4 w-4" />
+                          </Link>
+                        ) : (
+                          <span className="text-slate-400">—</span>
+                        )}
+                      </div>
+
+                      <div className="col-span-1">
+                        <span
+                          className={[
+                            'inline-flex items-center rounded-full border px-2 py-1 text-[11px]',
+                            statusBadgeClasses(row.status).className,
+                          ].join(' ')}
+                        >
+                          {statusBadgeClasses(row.status).label}
+                        </span>
+                      </div>
+
+                      <div className="col-span-1 text-right">
+                        <button
+                          type="button"
+                          className="rounded-xl bg-emerald-500/15 px-3 py-1.5 text-xs text-emerald-200 hover:bg-emerald-500/20"
+                          title="ver detalles de la postulación"
+                        >
+                          <Link
+                            href={`/plataforma/admin/postulaciones/${row.id}`}
+                          >
+                            Ver ficha
+                          </Link>
+                        </button>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
           </div>
-        )}
+        </div>
       </div>
 
       {/* Pagination */}
       <div className="mt-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-        <div className="text-xs text-white/50">
-          Página <span className="text-white/70">{page}</span> de{' '}
-          <span className="text-white/70">{totalPages}</span>
+        <div className="text-xs text-slate-400">
+          Página <span className="text-slate-300">{page}</span> de{' '}
+          <span className="text-slate-300">{totalPages}</span>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2 md:justify-end">
           <select
             value={pageSize}
             onChange={(element) => setPageSize(Number(element.target.value))}
-            className="rounded-xl bg-black/30 border border-white/10 px-3 py-2 text-sm text-white outline-none focus:border-emerald-400/60"
+            className="rounded-xl bg-slate-900 border border-slate-800 px-3 py-2 text-sm text-slate-100 outline-none focus:border-emerald-400/60"
           >
             <option value={10}>10</option>
             <option value={20}>20</option>
@@ -691,7 +745,7 @@ export function ApplicationsTable() {
             type="button"
             onClick={() => setPage((p) => Math.max(1, p - 1))}
             disabled={page <= 1}
-            className="rounded-xl bg-white/5 px-3 py-2 text-sm text-white/80 hover:bg-white/10 disabled:opacity-40"
+            className="rounded-xl bg-slate-900 px-3 py-2 text-sm text-slate-200 hover:bg-slate-800 disabled:opacity-40"
           >
             Anterior
           </button>
@@ -699,7 +753,7 @@ export function ApplicationsTable() {
             type="button"
             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
             disabled={page >= totalPages}
-            className="rounded-xl bg-white/5 px-3 py-2 text-sm text-white/80 hover:bg-white/10 disabled:opacity-40"
+            className="rounded-xl bg-slate-900 px-3 py-2 text-sm text-slate-200 hover:bg-slate-800 disabled:opacity-40"
           >
             Siguiente
           </button>

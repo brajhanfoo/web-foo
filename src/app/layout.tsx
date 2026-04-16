@@ -1,9 +1,5 @@
-import Navbar from '@/components/ui/Navbar'
-import { LOGOWEB } from '@/lib/imagePaths'
 import './globals.css'
-
 import type { Metadata } from 'next'
-import Footer from '@/components/ui/Footer'
 import { Toaster } from 'sonner'
 
 export const metadata: Metadata = {
@@ -18,10 +14,8 @@ export default function RootLayout({
 }) {
   return (
     <html lang="es" suppressHydrationWarning>
-      <body>
-        <Navbar logoSrc={LOGOWEB} logoAlt="Foo Talent Group" />
+      <body className="overflow-x-hidden">
         {children}
-        <Footer />
         <Toaster richColors position="top-right" expand={false} closeButton />
       </body>
     </html>

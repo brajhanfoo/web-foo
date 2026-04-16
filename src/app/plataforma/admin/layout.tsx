@@ -1,36 +1,29 @@
-'use client'
+import { redirect } from 'next/navigation'
+import { createClient } from '@/lib/supabase/server'
 
-import { useEffect, useRef } from 'react'
-import { AdminSidebar } from './components/admin-sidebar'
-import { useAuthStore } from '@/stores/auth-stores'
+import { AdminShell } from './components/admin-shell'
 
-export default function AdminLayout({
+export default async function AdminLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  const bootAuth = useAuthStore((state) => state.bootAuth)
-  const isBooting = useAuthStore((state) => state.isBooting)
+  const supabase = await createClient()
 
-  const hasBootedReference = useRef(false)
+  // 1) sesión
+  const { data: userRes } = await supabase.auth.getUser()
+  const user = userRes.user
+  if (!user) redirect('/ingresar')
 
-  useEffect(() => {
-    if (hasBootedReference.current) return
-    hasBootedReference.current = true
-    void bootAuth()
-  }, [bootAuth])
+  // 2) rol
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .maybeSingle()
 
-  return (
-    <div className="flex min-h-[calc(100vh-80px)] bg-black">
-      <AdminSidebar />
+  const role = profile?.role ?? null
+  if (role !== 'admin' && role !== 'super_admin') redirect('/plataforma')
 
-      <main className="flex-1 p-6">
-        {isBooting ? (
-          <div className="text-white/70">Cargando...</div>
-        ) : (
-          children
-        )}
-      </main>
-    </div>
-  )
+  return <AdminShell>{children}</AdminShell>
 }

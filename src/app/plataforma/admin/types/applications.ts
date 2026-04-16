@@ -1,9 +1,12 @@
 export type ApplicationStatus =
   | 'received'
   | 'in_review'
+  | 'interview_feedback'
   | 'approved'
+  | 'admitted'
   | 'rejected'
   | 'enrolled'
+  | 'payment_pending'
 
 export type ApplicationRowForAdminTable = {
   id: string

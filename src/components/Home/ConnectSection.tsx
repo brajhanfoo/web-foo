@@ -1,169 +1,136 @@
 'use client'
 
-import React from 'react'
-import Image from 'next/image'
 import { useRouter } from 'next/navigation'
+import { MdOutlineBugReport, MdCode } from 'react-icons/md'
+import IdentifyUserType from './IdentifyUserType'
 
 const ConnectSection: React.FC = () => {
   const router = useRouter()
   return (
-    <section className="w-full h-[calc(100vh-60px)] bg-black text-white relative overflow-hidden">
-      {/* Imágenes decorativas */}
-      <div className="absolute inset-0 pointer-events-none">
-        {/* 1. superior izquierda */}
-        {/* <div className="absolute top-0 left-0 w-24 h-24 sm:w-32 sm:h-32 md:w-48 md:h-48 transform
-                        -translate-x-1/3 -translate-y-1/3">
-          <div className="relative w-full h-full">
-            <Image
-              src="https://res.cloudinary.com/dtaybaydq/image/upload/fl_preserve_transparency/v1759017728/Foo%20Talent%20group/ImagesPersons/concepto-de-collage-html-y-css-con-persona_1_1_jshhg0.jpg?_s=public-apps"
-              alt="Decorativo 1"
-              fill
-              className="object-cover"
-            />
-          </div>
-        </div> */}
+    <section className="relative min-h-screen bg-black text-white overflow-hidden">
+      {/* Background glow */}
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(60%_50%_at_70%_40%,rgba(34,211,238,0.12),transparent_60%)]" />
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(50%_40%_at_85%_30%,rgba(168,85,247,0.12),transparent_60%)]" />
 
-        {/* 2. superior centro izquierdo */}
-        <div
-          className="absolute top-0 left-1/3 w-20 h-20 sm:w-28 sm:h-28 md:w-[330px] md:h-40  transform
-                        -translate-x-1/2 -translate-y-1/3 hidden md:block"
-        >
-          <div className="relative w-full h-full">
-            <Image
-              src="https://res.cloudinary.com/dtaybaydq/image/upload/v1759017728/Foo%20Talent%20group/ImagesPersons/Sin_t%C3%ADtulo_5_1_1_vpcmul.png"
-              alt="Decorativo 2"
-              fill
-              className=""
-            />
+      <div className="relative z-10 mx-auto grid max-w-7xl grid-cols-1 items-center gap-16 px-4 pb-24 pt-32 sm:px-6 lg:grid-cols-2">
+        {/* LEFT */}
+        <div>
+          {/* System ready */}
+          <div className="flex items-center gap-2 mb-6 text-xs font-mono text-[#00D3D3]">
+            <span className="h-2 w-2 rounded-full bg-[#E7E51A]" />
+            SYSTEM.READY()
           </div>
+
+          {/* Title */}
+          <h1 className="text-4xl md:text-5xl xl:text-6xl font-bold leading-tight mb-6">
+            Tu puente entre <br />
+            la formación y <br />
+            <span className="relative inline-block text-[#E7E51A]">
+              la industria.
+              <span className="absolute left-0 -bottom-1 h-1 w-full bg-[#E7E51A]/80 rounded-full" />
+            </span>
+          </h1>
+
+          {/* Description */}
+          <p className="text-neutral-400 text-sm md:text-base max-w-xl mb-10 leading-relaxed">
+            <span className="text-neutral-500 font-mono"> </span> {'//'} Deja de
+            hacer tutoriales.
+            <br />
+            <span className=" text-neutral-100">
+              {' '}
+              Aprende en equipos multidisciplinarios
+            </span>
+            , operando con plazos exigentes y metodologías de industria. Potencia tu{' '}
+            <span className="text-[#00CCA4]">perfil</span> antes de saltar al
+            mercado laboral.
+          </p>
+
+          {/* CTA */}
+          <button
+            className="inline-flex items-center gap-3 rounded-sm bg-[#00CCA4]/90 hover:bg-[#00CCA4] cursor-pointer transition px-6 py-3 text-sm font-semibold text-black"
+            onClick={() => router.push('/programas')}
+          >
+            Inicia tu Camino
+            <span className="text-lg">➜</span>
+          </button>
         </div>
 
-        {/* 3. superior derecha */}
-        <div
-          className="absolute top-0 left-8/12 w-24 h-24 sm:w-32 sm:h-32 md:w-48 md:h-48  transform
-                        translate-x-1/3 -translate-y-1/3 hidden md:block"
-        >
-          <div className="relative w-full h-full">
-            <Image
-              src="https://res.cloudinary.com/dtaybaydq/image/upload/fl_preserve_transparency/v1759017728/Foo%20Talent%20group/ImagesPersons/naturaleza-muerta-de-una-oficina-de-diseno-grafico_1_snpadw.jpg?_s=public-apps"
-              alt="Decorativo 3"
-              fill
-              className="object-cover"
-            />
-          </div>
-        </div>
+        {/* RIGHT – Mock / Terminal */}
+        <div className="relative hidden lg:flex justify-center">
+          {/* Glow ring */}
+          <div className="absolute h-[420px] w-[420px] rounded-full border border-purple-500/30 blur-[1px]" />
 
-        {/* 4. centro izquierda */}
-        <div
-          className="absolute top-2/5 left-0 w-20 h-20 sm:w-28 sm:h-28 md:w-40 md:h-40 lg:h-[330px]  transform
-                        -translate-x-1/4 -translate-y-1/2 hidden md:block"
-        >
-          <div className="relative w-full h-full">
-            <Image
-              src="https://res.cloudinary.com/dtaybaydq/image/upload/v1759017729/Foo%20Talent%20group/ImagesPersons/grupo-de-disenadores-graficos-usando-tableta-digital_1_sggb8j.png"
-              alt="Decorativo 4"
-              fill
-              className=""
-            />
-          </div>
-        </div>
+          {/* Window */}
+          <div className="relative z-10 w-[420px] rounded-2xl bg-neutral-900 border border-white/10 shadow-[0_0_60px_rgba(0,0,0,0.8)] overflow-hidden">
+            {/* Top bar */}
+            <div className="flex items-center justify-between px-4 py-2 bg-black/40 border-b border-white/10">
+              <div className="flex gap-2">
+                <span className="h-3 w-3 rounded-full bg-red-500" />
+                <span className="h-3 w-3 rounded-full bg-yellow-400" />
+                <span className="h-3 w-3 rounded-full bg-green-500" />
+              </div>
+              <span className="text-xs text-neutral-500 font-mono">
+                user@foo-talent:~
+              </span>
+            </div>
 
-        {/* 5. centro derecha */}
-        <div
-          className="absolute top-2/5 right-0 w-20 h-20 sm:w-28 sm:h-28 md:w-40 md:h-40 transform
-                        translate-x-1/4 -translate-y-1/2 hidden md:block"
-        >
-          <div className="relative w-full h-full">
-            <Image
-              src="https://res.cloudinary.com/dtaybaydq/image/upload/v1759017728/Foo%20Talent%20group/ImagesPersons/propietario-de-la-empresa-que-presenta-los-informes-de-datos-financieros-los-inversores_1_njzec4.png"
-              alt="Decorativo 5"
-              fill
-              className="object-cover"
-            />
-          </div>
-        </div>
+            {/* Content */}
+            <div className="p-6 space-y-6 text-sm font-mono">
+              {/* Component */}
+              <div className="rounded-xl border border-[#780B90]/40 p-4">
+                <span className="text-xs text-[#780B90]">COMPONENT</span>
+                <div className="mt-2 text-white">AuthService</div>
+                <div className="mt-2 h-1 w-24 bg-[#780B90] rounded-full" />
+              </div>
 
-        {/* 6. inferior izquierda */}
-        <div
-          className="absolute bottom-20 left-0 w-28 h-28 sm:w-40 sm:h-40 md:w-56 md:h-56  transform
-                        -translate-x-1/3 translate-y-1/6 hidden md:block"
-        >
-          <div className="relative w-full h-full">
-            <Image
-              src="https://res.cloudinary.com/dtaybaydq/image/upload/fl_preserve_transparency/v1759017728/Foo%20Talent%20group/ImagesPersons/Sin_t%C3%ADtulo_14_1_xnadd7.jpg?_s=public-apps"
-              alt="Decorativo 6"
-              fill
-              className=""
-            />
-          </div>
-        </div>
+              {/* Sprint */}
+              <div className="rounded-xl border border-[#00D3D3]/40 p-4">
+                <div className="flex justify-between text-xs text-[#00D3D3] mb-2">
+                  <span>Active Sprints</span>
+                  <span>v2.4</span>
+                </div>
+                <ul className="space-y-2 text-neutral-300">
+                  <li className=" flex items-center gap-2">
+                    {' '}
+                    <MdOutlineBugReport className="text-[#E7E51A]" /> Fix API
+                    Latency
+                  </li>
+                  <li className=" flex items-center gap-2">
+                    {' '}
+                    <MdCode className="text-[#00D3D3]" /> Refactor Core
+                  </li>
+                </ul>
+              </div>
 
-        {/* 7. inferior centro derecho */}
-        <div
-          className="absolute bottom-30 left-2/3 w-20 h-20 sm:w-28 sm:h-28 md:w-40 md:h-40 transform
-                        -translate-x-1/2 translate-y-1/6 hidden md:block"
-        >
-          <div className="relative w-full h-full">
-            <Image
-              src="https://res.cloudinary.com/dtaybaydq/image/upload/v1759017728/Foo%20Talent%20group/ImagesPersons/freelancer-buscando-en-su-telefono-un-proyecto_1_vczgwt.png"
-              alt="Decorativo 7"
-              fill
-              className="object-cover"
-            />
-          </div>
-        </div>
+              {/* Output */}
+              <div className="rounded-xl border border-[#E7E51A]/40 p-4 text-[#E7E51A]">
+                <span className="text-xs">OUTPUT</span>
+                <div className="mt-2 text-[#4ADE80]">&gt; Build Success</div>
+                <div className="text-xs text-neutral-400">420ms</div>
+              </div>
 
-        {/* 8. inferior derecha */}
-        <div
-          className="absolute bottom-30 right-0 w-24 h-24 sm:w-32 sm:h-32 md:w-48 md:h-48  transform
-                        translate-x-1/3 translate-y-1/6 hidden md:block"
-        >
-          <div className="relative w-full h-full">
-            <Image
-              src="https://res.cloudinary.com/dtaybaydq/image/upload/fl_preserve_transparency/v1759017728/Foo%20Talent%20group/ImagesPersons/mujer-en-una-videoconferencia-en-su-oficina-en-casa-durante-la-pandemia-de-coronavirus_1_nxxjsf.jpg?_s=public-apps"
-              alt="Decorativo 8"
-              fill
-              className="object-cover"
-            />
+              {/* Terminal */}
+              <div className="text-xs text-neutral-400">
+                <div>
+                  &gt; <span className=" text-[#780B90]">~/projects </span> npm
+                  run dev
+                </div>
+                <div className=" flex gap-1.5">
+                  <div>✓ ready in</div>
+                  <div className="text-[#E7E51A]"> 124ms</div>
+                </div>
+
+                <div>
+                  local:{' '}
+                  <span className="text-[#00CCA4]">http://localhost:3000</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Contenido principal */}
-      <div className="relative z-10 flex flex-col justify-center items-center h-full px-6 text-center max-w-3xl mx-auto space-y-6">
-        <h2 className="text-3xl sm:text-4xl md:text-5xl font-semibold">
-          <span className="text-[#E7E51A]">Creando Oportunidades</span>, <br />
-          <span className="text-[#E7E51A]">Impulsando Empresas</span>
-        </h2>
-
-        <p className="text-gray-300 leading-relaxed px-4 sm:px-0">
-          En <span className="text-[#E7E51A]">Foo Talent Group</span>{' '}
-          desarrollamos{' '}
-          <span className="text-[#E7E51A]">programas educativos gratuitos</span>{' '}
-          para talentos en tecnología, donde crean{' '}
-          <span className="text-[#E7E51A]">proyectos reales</span> que funcionan
-          como una vitrina de sus habilidades. Nuestra misión es generar{' '}
-          <span className="text-white">innovación</span>, fortalecer la{' '}
-          <span className="text-white">comunidad</span> y abrir{' '}
-          <span className="text-white">oportunidades reales</span> al conectar
-          estos proyectos con empresas que buscan nuevos talentos.
-        </p>
-
-        <div className="flex flex-wrap justify-center gap-4 mt-8">
-          <button
-            className="bg-[#E7E51A] text-black font-semibold px-6 py-3 rounded-full hover:bg-amber-600 transition cursor-pointer shadow-lg"
-            onClick={() => router.push('/talents')}
-          >
-            Soy Talento
-          </button>
-          <button
-            className="border border-[#E7E51A] text-white font-semibold px-6 py-3 rounded-full hover:bg-amber-600 hover:text-white transition cursor-pointer"
-            onClick={() => router.push('/services')}
-          >
-            Soy Empresa
-          </button>
-        </div>
-      </div>
+      <IdentifyUserType />
     </section>
   )
 }

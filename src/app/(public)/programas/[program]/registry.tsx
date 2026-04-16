@@ -1,0 +1,72 @@
+import React from 'react'
+
+// Smart Projects (tus componentes)
+import ProgramHeroSmartProjects from '@/app/(public)/programas/[program]/components/ProgramHeroSmartProjects'
+import AboutSection from '@/app/(public)/programas/[program]/components/AboutSection'
+import Timeline from '@/app/(public)/programas/[program]/components/Timeline'
+import SprintsSection from '@/app/(public)/programas/[program]/components/SprintsSection'
+import AdmissionsSection from '@/app/(public)/programas/[program]/components/AdmissionsSection'
+import InstructoresMentores from '@/app/(public)/programas/[program]/components/InstructoresMentores'
+import PreguntasFrecuentes from '@/app/(public)/programas/[program]/components/PreguntasFrecuentes'
+import ContactSection from '@/app/(public)/programas/[program]/components/ContactSection'
+import HeroProjectAcademy from './components/project_academy/HeroProjectAcademy'
+import IsThisProgramForYou from './components/project_academy/IsThisProgramForYou'
+import AboutProjectAcademySection from './components/project_academy/AboutProjectAcademySection'
+import RealWorldProductSection from './components/project_academy/RealWorldProductSection'
+import ProgramStructureAccordion from './components/project_academy/ProgramStructureAccordion'
+import TracksSection from './components/project_academy/TracksSection'
+import SolutionDefinitionSection from './components/project_academy/SolutionDefinitionSection'
+import AgileRitualsSection from './components/project_academy/AgileRitualsSection'
+import CareerIntensiveSection from './components/project_academy/CareerIntensiveSection'
+import EvaluationCertificationSection from './components/project_academy/EvaluationCertificationSection'
+import CareerOutcomeSection from './components/project_academy/CareerOutcomeSection'
+import LaunchInvestmentSection from './components/project_academy/LaunchInvestmentSection'
+import FinalCtaSection from './components/project_academy/FinalCtaSection'
+import FAQSection from './components/FAQSection'
+import EnrollmentStepsSection from './components/project_academy/ProjectAcademyEnrollmentSteps'
+import AdmissionProcess from './components/AdmissionProcess'
+import AdmissionPricing from './components/AdmissionPricing'
+
+type ProgramRenderSpec = {
+  title: string
+  sections: React.ReactNode[]
+}
+
+export const PROGRAM_SPECS: Record<string, ProgramRenderSpec> = {
+  'smart-projects': {
+    title: 'Smart Projects',
+    sections: [
+      <ProgramHeroSmartProjects key="hero" />,
+      <AboutSection key="about" />,
+      <Timeline key="timeline" />,
+      <SprintsSection key="sprints" />,
+      <AdmissionsSection key="admissions" />,
+      <AdmissionProcess key="admission-process" />,
+      <InstructoresMentores key="mentors" />,
+      <AdmissionPricing key="admission-pricing" />,
+      <PreguntasFrecuentes key="faq" />,
+      <ContactSection key="contact" />,
+    ],
+  },
+
+  // Project Academy (arrancá así y luego le metés sus secciones propias)
+  'project-academy': {
+    title: 'Project Academy',
+    sections: [
+      <div key="placeholder" className="px-6 md:py-16 text-white">
+        <HeroProjectAcademy />
+        <IsThisProgramForYou />
+        <AboutProjectAcademySection />
+        <RealWorldProductSection />
+        <ProgramStructureAccordion />
+        <EnrollmentStepsSection />
+        <CareerIntensiveSection />
+        <EvaluationCertificationSection />
+        <CareerOutcomeSection />
+        <LaunchInvestmentSection />
+        <FinalCtaSection />
+        <FAQSection />
+      </div>,
+    ],
+  },
+}
