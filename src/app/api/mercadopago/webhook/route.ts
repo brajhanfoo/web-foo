@@ -1,25 +1,27 @@
 import crypto from 'node:crypto'
 
-import { NextRequest, NextResponse } from 'next/server'
+import { after, NextRequest, NextResponse } from 'next/server'
 
-import { supabaseAdmin } from '@/lib/supabase/admin'
 import {
   buildMercadoPagoSignatureManifest,
   calculateMercadoPagoSignatureHmac,
   createMercadoPagoPaymentClient,
-  getMercadoPagoWebhookSecretsForValidation,
   getMercadoPagoRuntimeDebugInfo,
-  parseMercadoPagoSignatureHeader,
-  resolveMercadoPagoWebhookTopic,
+  getMercadoPagoWebhookSecretsForValidation,
   mapMercadoPagoStatusToPaymentStatus,
+  normalizeMercadoPagoCanonicalStatus,
+  parseMercadoPagoSignatureHeader,
   resolveMercadoPagoDataId,
+  resolveMercadoPagoWebhookTopic,
   type MercadoPagoNamedSecret,
 } from '@/lib/payments/mercadopago'
+import { supabaseAdmin } from '@/lib/supabase/admin'
 import type { PaymentProvider, PaymentStatus } from '@/types/payments'
 import type { ProgramPaymentMode, ProgramRow } from '@/types/programs'
 
 export const runtime = 'nodejs'
 
+const LOG_PREFIX = '[mp-webhook]'
 const MERCADO_PAGO_PROVIDER: PaymentProvider = 'mercado_pago'
 
 type PaymentPurpose = 'pre_enrollment' | 'tuition'
@@ -40,17 +42,52 @@ type ProgramRowSummary = Pick<
   'id' | 'payment_mode' | 'requires_payment_pre'
 >
 
-type PaymentWebhookSignatureValidationReason =
+type SignatureReason =
   | 'ok'
   | 'missing_secret'
   | 'missing_signature'
   | 'missing_manifest'
   | 'signature_mismatch'
 
-type PaymentWebhookSignatureValidation = {
+type SignatureValidation = {
   signatureValid: boolean
-  reason: PaymentWebhookSignatureValidationReason
+  reason: SignatureReason
   ts: string | null
+}
+
+type Metadata = {
+  webhookTopic: 'payment' | 'merchant_order' | 'unknown'
+  isLegacyPaymentFeed: boolean
+  eventType: string | null
+  providerEventId: string | null
+  providerResourceId: string | null
+}
+
+type Context = {
+  requestMethod: string
+  requestPath: string
+  requestId: string | null
+  queryParams: Record<string, string>
+  headers: Record<string, string>
+  payload: Record<string, unknown>
+  payloadParseError: string | null
+  rawBody: string
+  metadata: Metadata
+  signature: SignatureValidation | null
+  shouldValidateSignature: boolean
+  hasWebhookSecret: boolean
+}
+
+function logInfo(message: string, context?: Record<string, unknown>) {
+  console.info(`${LOG_PREFIX} ${message}`, context ?? {})
+}
+
+function logWarn(message: string, context?: Record<string, unknown>) {
+  console.warn(`${LOG_PREFIX} ${message}`, context ?? {})
+}
+
+function logError(message: string, context?: Record<string, unknown>) {
+  console.error(`${LOG_PREFIX} ${message}`, context ?? {})
 }
 
 function isRecord(v: unknown): v is Record<string, unknown> {
@@ -59,8 +96,8 @@ function isRecord(v: unknown): v is Record<string, unknown> {
 
 function normalizeString(v: unknown): string | null {
   if (typeof v !== 'string') return null
-  const trimmed = v.trim()
-  return trimmed || null
+  const t = v.trim()
+  return t || null
 }
 
 function normalizeNumberToString(v: unknown): string | null {
@@ -71,8 +108,8 @@ function normalizeNumberToString(v: unknown): string | null {
 function normalizeNumber(v: unknown): number | null {
   if (typeof v === 'number' && Number.isFinite(v)) return v
   if (typeof v === 'string') {
-    const parsed = Number(v.trim())
-    if (Number.isFinite(parsed)) return parsed
+    const n = Number(v.trim())
+    if (Number.isFinite(n)) return n
   }
   return null
 }
@@ -83,21 +120,12 @@ function normalizeBoolean(v: unknown): boolean | null {
 }
 
 function extractErrorMessage(error: unknown, fallback: string): string {
-  if (error instanceof Error) {
-    const message = error.message.trim()
-    return message || fallback
-  }
-
-  if (typeof error === 'string') {
-    const message = error.trim()
-    return message || fallback
-  }
-
+  if (error instanceof Error) return error.message.trim() || fallback
+  if (typeof error === 'string') return error.trim() || fallback
   if (isRecord(error)) {
-    const direct = normalizeString(error['message'])
-    if (direct) return direct
+    const msg = normalizeString(error['message'])
+    if (msg) return msg
   }
-
   return fallback
 }
 
@@ -110,25 +138,27 @@ function resolvePaymentMode(
 }
 
 function isDuplicateError(error: unknown): boolean {
-  if (!error || typeof error !== 'object') return false
-  const message = String((error as { message?: unknown }).message ?? '')
+  if (!isRecord(error)) return false
+  const msg = String(error['message'] ?? '')
     .trim()
     .toLowerCase()
-  return message.includes('duplicate key') || message.includes('23505')
+  return msg.includes('duplicate key') || msg.includes('23505')
 }
 
 function snapshotHeaders(request: NextRequest): Record<string, string> {
-  const sensitiveHeaders = new Set([
+  const relevant = [
+    'content-type',
+    'user-agent',
+    'x-request-id',
     'x-signature',
-    'authorization',
-    'cookie',
-    'set-cookie',
-    'x-api-key',
-  ])
+    'x-forwarded-for',
+    'x-forwarded-proto',
+  ]
   const out: Record<string, string> = {}
-  for (const [key, value] of request.headers.entries()) {
-    const normalizedKey = key.trim().toLowerCase()
-    out[key] = sensitiveHeaders.has(normalizedKey) ? '[redacted]' : value
+  for (const key of relevant) {
+    const value = request.headers.get(key)
+    if (!value) continue
+    out[key] = key === 'x-signature' ? '[redacted]' : value
   }
   return out
 }
@@ -139,129 +169,153 @@ function snapshotQueryParams(requestUrl: URL): Record<string, string> {
   return out
 }
 
-function ackWebhook(params: {
-  webhookTopic: 'payment' | 'merchant_order' | 'unknown'
-  status: number
-  reason: string
+function parsePayload(rawBody: string): {
   payload: Record<string, unknown>
-  providerEventId: string | null
-  providerResourceId: string | null
-}) {
-  if (params.webhookTopic === 'payment') {
-    console.info('[MercadoPago][webhook][payment] ack', {
-      status: params.status,
-      reason: params.reason,
-      providerEventId: params.providerEventId,
-      providerResourceId: params.providerResourceId,
-    })
-  }
+  parseError: string | null
+} {
+  const trimmed = rawBody.trim()
+  if (!trimmed) return { payload: {}, parseError: null }
 
-  return NextResponse.json(params.payload, { status: params.status })
+  try {
+    const parsed = JSON.parse(trimmed) as unknown
+    if (isRecord(parsed)) return { payload: parsed, parseError: null }
+    return {
+      payload: { _raw_body: rawBody, _parse_note: 'payload_not_object' },
+      parseError: 'payload_not_object',
+    }
+  } catch (error) {
+    return {
+      payload: {
+        _raw_body: rawBody,
+        _parse_note: extractErrorMessage(error, 'invalid_json'),
+      },
+      parseError: 'invalid_json',
+    }
+  }
 }
 
 function safeHexEquals(left: string, right: string): boolean {
-  const normalizedLeft = left.trim().toLowerCase()
-  const normalizedRight = right.trim().toLowerCase()
-  if (!normalizedLeft || !normalizedRight) return false
-
-  const leftIsHex = /^[0-9a-f]+$/.test(normalizedLeft)
-  const rightIsHex = /^[0-9a-f]+$/.test(normalizedRight)
-  if (!leftIsHex || !rightIsHex) return false
-  if (normalizedLeft.length % 2 !== 0 || normalizedRight.length % 2 !== 0) {
+  const a = left.trim().toLowerCase()
+  const b = right.trim().toLowerCase()
+  if (!a || !b || a.length % 2 !== 0 || b.length % 2 !== 0) return false
+  if (!/^[0-9a-f]+$/.test(a) || !/^[0-9a-f]+$/.test(b)) return false
+  const ab = Buffer.from(a, 'hex')
+  const bb = Buffer.from(b, 'hex')
+  if (ab.length === 0 || bb.length === 0 || ab.length !== bb.length) {
     return false
   }
-
-  const leftBuffer = Buffer.from(normalizedLeft, 'hex')
-  const rightBuffer = Buffer.from(normalizedRight, 'hex')
-  if (leftBuffer.length === 0 || rightBuffer.length === 0) return false
-  if (leftBuffer.length !== rightBuffer.length) return false
-  return crypto.timingSafeEqual(leftBuffer, rightBuffer)
+  return crypto.timingSafeEqual(ab, bb)
 }
 
 function extractBodyDataId(payload: unknown): string | null {
-  if (!isRecord(payload)) return null
-  if (!isRecord(payload['data'])) return null
+  if (!isRecord(payload) || !isRecord(payload['data'])) return null
   return normalizeNumberToString(payload['data']['id'])
 }
 
-function buildPaymentWebhookSignatureValidation(params: {
+function buildSignatureValidation(params: {
   request: NextRequest
   requestUrl: URL
   payload: unknown
   providerResourceId: string | null
   webhookSecrets: MercadoPagoNamedSecret[]
-}): PaymentWebhookSignatureValidation {
-  const signatureHeader = params.request.headers.get('x-signature')
-  const requestIdHeader = params.request.headers.get('x-request-id')
-  const parsedSignature = parseMercadoPagoSignatureHeader(signatureHeader)
-  const ts = normalizeString(parsedSignature.ts)
-  const v1 = normalizeString(parsedSignature.v1)?.toLowerCase() ?? null
+}): SignatureValidation {
+  const header = params.request.headers.get('x-signature')
+  const requestId = params.request.headers.get('x-request-id')
+  const parsed = parseMercadoPagoSignatureHeader(header)
+  const ts = normalizeString(parsed.ts)
+  const v1 = normalizeString(parsed.v1)?.toLowerCase() ?? null
 
-  const bodyDataId = extractBodyDataId(params.payload)
-  const queryDataId = normalizeString(
-    params.requestUrl.searchParams.get('data.id')
-  )
-  const legacyQueryId = normalizeString(
-    params.requestUrl.searchParams.get('id')
-  )
-
-  const officialManifestDataId =
-    queryDataId ??
-    bodyDataId ??
+  const dataId =
+    normalizeString(params.requestUrl.searchParams.get('data.id')) ??
+    extractBodyDataId(params.payload) ??
     params.providerResourceId ??
-    legacyQueryId ??
+    normalizeString(params.requestUrl.searchParams.get('id')) ??
     null
 
-  const officialManifest = buildMercadoPagoSignatureManifest({
-    dataId: officialManifestDataId,
-    requestId: requestIdHeader,
+  const manifest = buildMercadoPagoSignatureManifest({
+    dataId,
+    requestId,
     ts,
     includeRequestId: true,
     trailingSemicolon: true,
   })
 
-  if (!v1) {
-    return {
-      signatureValid: false,
-      reason: 'missing_signature',
-      ts,
-    }
-  }
-
+  if (!v1) return { signatureValid: false, reason: 'missing_signature', ts }
   if (params.webhookSecrets.length === 0) {
-    return {
-      signatureValid: false,
-      reason: 'missing_secret',
-      ts,
-    }
+    return { signatureValid: false, reason: 'missing_secret', ts }
   }
+  if (!manifest) return { signatureValid: false, reason: 'missing_manifest', ts }
 
-  if (!officialManifest) {
-    return {
-      signatureValid: false,
-      reason: 'missing_manifest',
-      ts,
-    }
-  }
-
-  for (const secretCandidate of params.webhookSecrets) {
-    const calculatedHmac = calculateMercadoPagoSignatureHmac({
-      secret: secretCandidate.value,
-      manifest: officialManifest,
+  for (const secret of params.webhookSecrets) {
+    const hmac = calculateMercadoPagoSignatureHmac({
+      secret: secret.value,
+      manifest,
     })
-    if (safeHexEquals(calculatedHmac, v1)) {
-      return {
-        signatureValid: true,
-        reason: 'ok',
-        ts,
-      }
+    if (safeHexEquals(hmac, v1)) {
+      return { signatureValid: true, reason: 'ok', ts }
     }
   }
+
+  return { signatureValid: false, reason: 'signature_mismatch', ts }
+}
+
+function resolveMetadata(params: {
+  payload: unknown
+  requestUrl: URL
+  requestId: string | null
+}): Metadata {
+  const webhookTopic = resolveMercadoPagoWebhookTopic(
+    params.requestUrl,
+    params.payload
+  )
+
+  let eventType: string | null = null
+  let providerEventId: string | null = null
+  let providerResourceId = resolveMercadoPagoDataId(
+    params.requestUrl,
+    params.payload
+  )
+
+  const legacyId = normalizeString(params.requestUrl.searchParams.get('id'))
+  if (!providerResourceId && webhookTopic === 'merchant_order' && legacyId) {
+    providerResourceId = legacyId
+  }
+
+  if (isRecord(params.payload)) {
+    eventType =
+      normalizeString(params.payload['action']) ??
+      normalizeString(params.payload['type'])
+    providerEventId = normalizeNumberToString(params.payload['id'])
+  }
+
+  const isLegacyPaymentFeed =
+    webhookTopic === 'payment' &&
+    (normalizeString(params.requestUrl.searchParams.get('topic')) ?? '')
+      .toLowerCase()
+      .trim() === 'payment' &&
+    isRecord(params.payload) &&
+    normalizeString(params.payload['resource']) !== null &&
+    normalizeString(params.payload['action']) === null &&
+    normalizeString(params.payload['type']) === null
+
+  if (!eventType) {
+    if (webhookTopic === 'payment') {
+      eventType = isLegacyPaymentFeed
+        ? 'payment.legacy_feed'
+        : 'payment.webhook'
+    } else if (webhookTopic === 'merchant_order') {
+      eventType = 'merchant_order.webhook'
+    }
+  }
+
+  if (!providerEventId) providerEventId = normalizeString(params.requestId)
 
   return {
-    signatureValid: false,
-    reason: 'signature_mismatch',
-    ts,
+    webhookTopic,
+    isLegacyPaymentFeed,
+    eventType,
+    providerEventId,
+    providerResourceId,
   }
 }
 
@@ -282,90 +336,29 @@ async function markWebhookEvent(params: {
     .eq('id', params.eventId)
 }
 
-function resolveWebhookEventMetadata(params: {
-  payload: unknown
-  requestUrl: URL
-  requestIdHeader: string | null
-}): {
-  webhookTopic: 'payment' | 'merchant_order' | 'unknown'
-  isLegacyPaymentFeed: boolean
-  eventType: string | null
-  providerEventId: string | null
-  providerResourceId: string | null
-} {
-  const webhookTopic = resolveMercadoPagoWebhookTopic(
-    params.requestUrl,
-    params.payload
-  )
-
-  let eventType: string | null = null
-  let providerEventId: string | null = null
-  let providerResourceId = resolveMercadoPagoDataId(
-    params.requestUrl,
-    params.payload
-  )
-
-  const queryLegacyId = normalizeString(
-    params.requestUrl.searchParams.get('id')
-  )
-  if (
-    !providerResourceId &&
-    webhookTopic === 'merchant_order' &&
-    queryLegacyId
-  ) {
-    providerResourceId = queryLegacyId
-  }
-
-  if (isRecord(params.payload)) {
-    const action = normalizeString(params.payload['action'])
-    const type = normalizeString(params.payload['type'])
-    eventType = action ?? type
-    providerEventId = normalizeNumberToString(params.payload['id'])
-  }
-
-  const hasLegacyPaymentTopic =
-    (normalizeString(params.requestUrl.searchParams.get('topic')) ?? '')
-      .toLowerCase()
-      .trim() === 'payment'
-  const hasResourcePayload =
-    isRecord(params.payload) &&
-    normalizeString(params.payload['resource']) !== null
-  const hasActionPayload =
-    isRecord(params.payload) &&
-    normalizeString(params.payload['action']) !== null
-  const hasTypePayload =
-    isRecord(params.payload) && normalizeString(params.payload['type']) !== null
-
-  const isLegacyPaymentFeed =
-    webhookTopic === 'payment' &&
-    hasLegacyPaymentTopic &&
-    hasResourcePayload &&
-    !hasActionPayload &&
-    !hasTypePayload
-
-  if (!eventType) {
-    if (webhookTopic === 'payment') {
-      eventType = isLegacyPaymentFeed
-        ? 'payment.legacy_feed'
-        : 'payment.webhook'
-    }
-    if (webhookTopic === 'merchant_order') eventType = 'merchant_order.webhook'
-  }
-
-  if (!providerEventId) {
-    providerEventId = normalizeString(params.requestIdHeader)
-  }
-
-  return {
-    webhookTopic,
-    isLegacyPaymentFeed,
-    eventType,
-    providerEventId,
-    providerResourceId,
+async function safeMarkWebhookEvent(params: {
+  eventId: string | null
+  processed: boolean
+  processingError?: string | null
+  paymentId?: string | null
+}) {
+  if (!params.eventId) return
+  try {
+    await markWebhookEvent({
+      eventId: params.eventId,
+      processed: params.processed,
+      processingError: params.processingError,
+      paymentId: params.paymentId,
+    })
+  } catch (error) {
+    logError('failed to update payment_webhook_events', {
+      eventId: params.eventId,
+      error: extractErrorMessage(error, 'unknown_error'),
+    })
   }
 }
 
-function extractMercadoPagoFields(payment: unknown): {
+function extractPaymentFields(payment: unknown): {
   mercadoPagoPaymentId: string | null
   merchantOrderId: string | null
   externalReference: string | null
@@ -376,6 +369,9 @@ function extractMercadoPagoFields(payment: unknown): {
   paymentMethod: string | null
   installments: number | null
   liveMode: boolean | null
+  dateApproved: string | null
+  transactionAmount: number | null
+  payerEmail: string | null
 } {
   if (!isRecord(payment)) {
     return {
@@ -389,11 +385,17 @@ function extractMercadoPagoFields(payment: unknown): {
       paymentMethod: null,
       installments: null,
       liveMode: null,
+      dateApproved: null,
+      transactionAmount: null,
+      payerEmail: null,
     }
   }
 
   const order = isRecord(payment['order'])
     ? (payment['order'] as Record<string, unknown>)
+    : null
+  const payer = isRecord(payment['payer'])
+    ? (payment['payer'] as Record<string, unknown>)
     : null
 
   return {
@@ -413,6 +415,9 @@ function extractMercadoPagoFields(payment: unknown): {
       normalizeString(payment['payment_method']),
     installments: normalizeNumber(payment['installments']),
     liveMode: normalizeBoolean(payment['live_mode']),
+    dateApproved: normalizeString(payment['date_approved']),
+    transactionAmount: normalizeNumber(payment['transaction_amount']),
+    payerEmail: normalizeString(payer?.['email']),
   }
 }
 
@@ -422,471 +427,454 @@ async function findInternalPaymentId(params: {
   preferenceId: string | null
 }): Promise<string | null> {
   if (params.externalReference) {
-    const { data: paymentByExternalReference } = await supabaseAdmin
+    const { data } = await supabaseAdmin
       .from('payments')
       .select('id')
       .eq('id', params.externalReference)
       .eq('provider', MERCADO_PAGO_PROVIDER)
       .maybeSingle()
-
-    if (paymentByExternalReference?.id)
-      return String(paymentByExternalReference.id)
+    if (data?.id) return String(data.id)
   }
 
   if (params.mercadoPagoPaymentId) {
-    const { data: byMpPaymentId } = await supabaseAdmin
+    const { data } = await supabaseAdmin
       .from('mercadopago_payments')
       .select('payment_id')
       .eq('mercadopago_payment_id', params.mercadoPagoPaymentId)
       .maybeSingle()
-    if (byMpPaymentId?.payment_id) return String(byMpPaymentId.payment_id)
+    if (data?.payment_id) return String(data.payment_id)
   }
 
   if (params.preferenceId) {
-    const { data: byPreferenceId } = await supabaseAdmin
+    const { data } = await supabaseAdmin
       .from('mercadopago_payments')
       .select('payment_id')
       .eq('preference_id', params.preferenceId)
       .maybeSingle()
-    if (byPreferenceId?.payment_id) return String(byPreferenceId.payment_id)
+    if (data?.payment_id) return String(data.payment_id)
   }
 
   return null
 }
 
-export async function POST(request: NextRequest) {
-  const requestUrl = new URL(request.url)
-  const requestIdHeader = request.headers.get('x-request-id')
-  const bodyText = await request.text()
-
-  let payload: unknown = {}
-  try {
-    payload = bodyText ? (JSON.parse(bodyText) as unknown) : {}
-  } catch {
-    payload = {}
-  }
-
-  const webhookMetadata = resolveWebhookEventMetadata({
-    payload,
-    requestUrl,
-    requestIdHeader: request.headers.get('x-request-id'),
-  })
-  const {
-    webhookTopic,
-    isLegacyPaymentFeed,
-    eventType,
-    providerEventId,
-    providerResourceId,
-  } = webhookMetadata
-
-  const runtimeDebug = getMercadoPagoRuntimeDebugInfo()
-  const webhookSecrets = getMercadoPagoWebhookSecretsForValidation()
-  const shouldValidateSignature =
-    webhookTopic === 'payment' && !isLegacyPaymentFeed
-
-  let signature: PaymentWebhookSignatureValidation | null = null
-  if (shouldValidateSignature) {
-    signature = buildPaymentWebhookSignatureValidation({
-      request,
-      requestUrl,
-      payload,
-      providerResourceId,
-      webhookSecrets,
-    })
-  }
-
-  if (webhookTopic === 'payment') {
-    console.info('[MercadoPago][webhook] received', {
-      eventType,
-      providerEventId,
-      providerResourceId,
-      hasWebhookSecret: runtimeDebug.hasWebhookSecret,
-      signatureValid: signature?.signatureValid ?? null,
-    })
-  }
+async function persistEvent(context: Context): Promise<{
+  eventId: string | null
+  duplicateProcessed: boolean
+}> {
+  const { providerEventId, providerResourceId, eventType } = context.metadata
 
   if (providerEventId) {
-    const { data: existingProcessed } = await supabaseAdmin
+    const { data } = await supabaseAdmin
       .from('payment_webhook_events')
-      .select('id, processed')
+      .select('id,processed')
       .eq('provider', MERCADO_PAGO_PROVIDER)
       .eq('provider_event_id', providerEventId)
       .eq('processed', true)
       .limit(1)
       .maybeSingle()
-
-    if (existingProcessed?.id) {
-      return ackWebhook({
-        webhookTopic,
-        status: 200,
-        reason: 'duplicate_already_processed',
-        payload: { ok: true, duplicate: true },
-        providerEventId,
-        providerResourceId,
-      })
+    if (data?.id) {
+      return { eventId: String(data.id), duplicateProcessed: true }
     }
   }
 
-  const { data: insertedEvent, error: insertEventErr } = await supabaseAdmin
+  const payloadToStore: Record<string, unknown> = { ...context.payload }
+  if (context.payloadParseError) {
+    payloadToStore['_parse_error'] = context.payloadParseError
+    payloadToStore['_raw_body'] = context.rawBody
+  }
+
+  const { data, error } = await supabaseAdmin
     .from('payment_webhook_events')
     .insert({
       provider: MERCADO_PAGO_PROVIDER,
       event_type: eventType,
       provider_event_id: providerEventId,
       provider_resource_id: providerResourceId,
-      signature_valid: signature ? signature.signatureValid : null,
+      signature_valid: context.signature ? context.signature.signatureValid : null,
       processed: false,
-      payload: payload,
-      headers: snapshotHeaders(request),
-      query_params: snapshotQueryParams(requestUrl),
+      payload: payloadToStore,
+      headers: context.headers,
+      query_params: context.queryParams,
     })
     .select('id')
     .maybeSingle()
 
-  if (insertEventErr) {
-    if (isDuplicateError(insertEventErr)) {
-      return ackWebhook({
-        webhookTopic,
-        status: 200,
-        reason: 'duplicate_on_insert',
-        payload: { ok: true, duplicate: true },
-        providerEventId,
-        providerResourceId,
-      })
-    }
-    return ackWebhook({
-      webhookTopic,
-      status: 200,
-      reason: 'event_insert_error_acknowledged',
-      payload: { ok: true },
-      providerEventId,
-      providerResourceId,
-    })
-  }
-
-  const eventId = String(insertedEvent?.id ?? '')
-  if (!eventId) {
-    return ackWebhook({
-      webhookTopic,
-      status: 200,
-      reason: 'missing_event_id_after_insert',
-      payload: { ok: true },
-      providerEventId,
-      providerResourceId,
-    })
-  }
-
-  if (webhookTopic === 'merchant_order') {
-    await markWebhookEvent({
-      eventId,
-      processed: true,
-      processingError:
-        'Evento merchant_order ignorado para cierre de pagos canonicos.',
-    })
-    return ackWebhook({
-      webhookTopic,
-      status: 200,
-      reason: 'merchant_order_ignored',
-      payload: { ok: true, ignored: true },
-      providerEventId,
-      providerResourceId,
-    })
-  }
-
-  if (isLegacyPaymentFeed) {
-    await markWebhookEvent({
-      eventId,
-      processed: true,
-      processingError:
-        'Evento payment legacy (topic=payment) auditado e ignorado para cierre canonico. Se espera payment.created/payment.updated.',
-    })
-    return ackWebhook({
-      webhookTopic,
-      status: 200,
-      reason: 'legacy_payment_feed_ignored',
-      payload: { ok: true, ignored: true },
-      providerEventId,
-      providerResourceId,
-    })
-  }
-
-  if (webhookTopic !== 'payment') {
-    await markWebhookEvent({
-      eventId,
-      processed: true,
-      processingError: 'Evento webhook no soportado para procesamiento.',
-    })
-    return ackWebhook({
-      webhookTopic,
-      status: 200,
-      reason: 'unsupported_topic_ignored',
-      payload: { ok: true, ignored: true },
-      providerEventId,
-      providerResourceId,
-    })
-  }
-
-  if (!signature || !signature.signatureValid) {
-    const signatureIssue = !signature
-      ? 'Webhook rechazado: validacion de firma no ejecutada.'
-      : signature.reason === 'missing_secret'
-        ? 'Webhook rechazado: falta configurar MERCADOPAGO_WEBHOOK_SECRET.'
-        : signature.reason === 'missing_signature'
-          ? 'Webhook rechazado: falta x-signature (v1).'
-          : signature.reason === 'missing_manifest'
-            ? 'Webhook rechazado: no se pudo construir manifest.'
-            : 'Webhook rechazado: firma invalida.'
-
-    await markWebhookEvent({
-      eventId,
-      processed: true,
-      processingError: `${signatureIssue} reason=${signature?.reason ?? 'not_checked'}; provider_resource_id=${providerResourceId ?? 'null'}`,
-    })
-    return ackWebhook({
-      webhookTopic,
-      status: 200,
-      reason: 'invalid_signature_acknowledged',
-      payload: { ok: true },
-      providerEventId,
-      providerResourceId,
-    })
-  }
-
-  if (!providerResourceId) {
-    await markWebhookEvent({
-      eventId,
-      processed: true,
-      processingError: 'Webhook de payment recibido sin id de recurso.',
-    })
-    return ackWebhook({
-      webhookTopic,
-      status: 200,
-      reason: 'missing_provider_resource_id',
-      payload: { ok: true },
-      providerEventId,
-      providerResourceId,
-    })
-  }
-
-  const paymentClient = createMercadoPagoPaymentClient()
-  let remotePayment: unknown = null
-  try {
-    remotePayment = await paymentClient.get({ id: providerResourceId })
-  } catch (error) {
-    await markWebhookEvent({
-      eventId,
-      processed: true,
-      processingError: extractErrorMessage(
-        error,
-        'No se pudo consultar pago en Mercado Pago.'
-      ),
-    })
-    return ackWebhook({
-      webhookTopic,
-      status: 200,
-      reason: 'remote_payment_lookup_failed',
-      payload: { ok: true },
-      providerEventId,
-      providerResourceId,
-    })
-  }
-
-  const fields = extractMercadoPagoFields(remotePayment)
-  const paymentId = await findInternalPaymentId({
-    externalReference: fields.externalReference,
-    mercadoPagoPaymentId: fields.mercadoPagoPaymentId,
-    preferenceId: fields.preferenceId,
-  })
-
-  if (!paymentId) {
-    await markWebhookEvent({
-      eventId,
-      processed: true,
-      processingError:
-        'No se encontro el pago interno para external_reference/preference_id/mercadopago_payment_id.',
-    })
-    return ackWebhook({
-      webhookTopic,
-      status: 200,
-      reason: 'internal_payment_not_found',
-      payload: { ok: true },
-      providerEventId,
-      providerResourceId,
-    })
-  }
-
-  const { data: paymentRowData, error: paymentRowErr } = await supabaseAdmin
-    .from('payments')
-    .select('id,provider,status,purpose,application_id,program_id,paid_at')
-    .eq('id', paymentId)
-    .eq('provider', MERCADO_PAGO_PROVIDER)
-    .maybeSingle()
-
-  if (paymentRowErr || !paymentRowData) {
-    await markWebhookEvent({
-      eventId,
-      processed: true,
-      paymentId,
-      processingError: 'No se encontro pago canonico provider=mercado_pago.',
-    })
-    return ackWebhook({
-      webhookTopic,
-      status: 200,
-      reason: 'canonical_payment_missing_or_provider_mismatch',
-      payload: { ok: true },
-      providerEventId,
-      providerResourceId,
-    })
-  }
-
-  const paymentRow = paymentRowData as PaymentRow
-  const mappedStatus = mapMercadoPagoStatusToPaymentStatus(fields.mpStatus)
-  const nextStatus: KnownPaymentStatus =
-    paymentRow.status === 'paid' && mappedStatus !== 'paid'
-      ? 'paid'
-      : mappedStatus
-
-  const nowIso = new Date().toISOString()
-  const { data: existingMpData } = await supabaseAdmin
-    .from('mercadopago_payments')
-    .select(
-      'preference_id,mercadopago_payment_id,merchant_order_id,external_reference,mp_status,status_detail,payment_type,payment_method,installments,live_mode,raw_preference_response'
-    )
-    .eq('payment_id', paymentRow.id)
-    .maybeSingle()
-
-  const existingMp = isRecord(existingMpData) ? existingMpData : null
-  const rawPreferenceResponse = isRecord(
-    existingMp?.['raw_preference_response']
-  )
-    ? (existingMp['raw_preference_response'] as Record<string, unknown>)
-    : null
-  const rawPreferenceId =
-    normalizeString(rawPreferenceResponse?.['id']) ??
-    normalizeNumberToString(rawPreferenceResponse?.['id']) ??
-    null
-  const mergedPreferenceId =
-    fields.preferenceId ??
-    normalizeString(existingMp?.['preference_id']) ??
-    rawPreferenceId ??
-    null
-  const mergedMercadoPagoPaymentId =
-    fields.mercadoPagoPaymentId ??
-    normalizeString(existingMp?.['mercadopago_payment_id']) ??
-    null
-  const mergedMerchantOrderId =
-    fields.merchantOrderId ??
-    normalizeString(existingMp?.['merchant_order_id']) ??
-    null
-  const mergedExternalReference =
-    fields.externalReference ??
-    normalizeString(existingMp?.['external_reference']) ??
-    paymentRow.id
-  const mergedMpStatus =
-    fields.mpStatus ?? normalizeString(existingMp?.['mp_status']) ?? null
-  const mergedStatusDetail =
-    fields.statusDetail ??
-    normalizeString(existingMp?.['status_detail']) ??
-    null
-  const mergedPaymentType =
-    fields.paymentType ?? normalizeString(existingMp?.['payment_type']) ?? null
-  const mergedPaymentMethod =
-    fields.paymentMethod ??
-    normalizeString(existingMp?.['payment_method']) ??
-    null
-  const mergedInstallments =
-    fields.installments ?? normalizeNumber(existingMp?.['installments']) ?? null
-  const mergedLiveMode =
-    fields.liveMode ?? normalizeBoolean(existingMp?.['live_mode']) ?? null
-
-  await supabaseAdmin.from('mercadopago_payments').upsert(
-    {
-      payment_id: paymentRow.id,
-      preference_id: mergedPreferenceId,
-      mercadopago_payment_id: mergedMercadoPagoPaymentId,
-      merchant_order_id: mergedMerchantOrderId,
-      external_reference: mergedExternalReference,
-      mp_status: mergedMpStatus,
-      status_detail: mergedStatusDetail,
-      payment_type: mergedPaymentType,
-      payment_method: mergedPaymentMethod,
-      installments: mergedInstallments,
-      live_mode: mergedLiveMode,
-      last_webhook_at: nowIso,
-      last_synced_at: nowIso,
-      raw_payment_response: remotePayment,
-    },
-    { onConflict: 'payment_id' }
-  )
-
-  const paymentUpdate: Record<string, unknown> = {
-    status: nextStatus,
-  }
-
-  if (nextStatus === 'paid' && !paymentRow.paid_at) {
-    paymentUpdate['paid_at'] = nowIso
-  }
-
-  if (nextStatus === 'paid') {
-    paymentUpdate['error_message'] = null
-  }
-
-  if (nextStatus === 'failed' || nextStatus === 'canceled') {
-    paymentUpdate['error_message'] = fields.statusDetail ?? fields.mpStatus
-  }
-
-  await supabaseAdmin
-    .from('payments')
-    .update(paymentUpdate)
-    .eq('id', paymentRow.id)
-    .eq('provider', MERCADO_PAGO_PROVIDER)
-
-  if (paymentRow.application_id && paymentRow.purpose === 'tuition') {
-    const applicationUpdate: Record<string, unknown> = {
-      payment_status: nextStatus,
-    }
-
-    if (nextStatus === 'paid') {
-      applicationUpdate['paid_at'] = paymentRow.paid_at ?? nowIso
-
-      const { data: programRow } = await supabaseAdmin
-        .from('programs')
-        .select('id,payment_mode,requires_payment_pre')
-        .eq('id', paymentRow.program_id)
+  if (error) {
+    if (isDuplicateError(error)) {
+      const { data: existing } = await supabaseAdmin
+        .from('payment_webhook_events')
+        .select('id,processed')
+        .eq('provider', MERCADO_PAGO_PROVIDER)
+        .eq('provider_event_id', providerEventId)
+        .order('created_at', { ascending: false })
+        .limit(1)
         .maybeSingle()
-
-      const program = (programRow as ProgramRowSummary | null) ?? null
-      if (resolvePaymentMode(program) === 'post') {
-        applicationUpdate['status'] = 'enrolled'
+      return {
+        eventId: normalizeNumberToString(existing?.id),
+        duplicateProcessed: Boolean(existing?.processed),
       }
     }
 
-    await supabaseAdmin
-      .from('applications')
-      .update(applicationUpdate)
-      .eq('id', paymentRow.application_id)
+    logError('failed to insert payment_webhook_events', {
+      providerEventId,
+      providerResourceId,
+      error: extractErrorMessage(error, 'unknown_error'),
+    })
+    return { eventId: null, duplicateProcessed: false }
   }
 
-  console.info('[MercadoPago][webhook] payment-updated', {
-    eventType,
-    providerResourceId,
-    paymentId: paymentRow.id,
-    status: nextStatus,
-  })
+  return {
+    eventId: normalizeNumberToString(data?.id),
+    duplicateProcessed: false,
+  }
+}
 
-  await markWebhookEvent({
-    eventId,
-    processed: true,
-    paymentId: paymentRow.id,
-    processingError: null,
-  })
+function signatureIssue(signature: SignatureValidation | null): string {
+  if (!signature) return 'signature_not_checked'
+  if (signature.reason === 'missing_secret') return 'missing_secret'
+  if (signature.reason === 'missing_signature') return 'missing_x_signature'
+  if (signature.reason === 'missing_manifest') return 'missing_manifest'
+  if (signature.reason === 'signature_mismatch') return 'signature_mismatch'
+  return 'ok'
+}
 
-  return ackWebhook({
-    webhookTopic,
-    status: 200,
-    reason: 'processed_successfully',
-    payload: { ok: true },
-    providerEventId,
-    providerResourceId,
+async function processWebhook(context: Context) {
+  const startMs = Date.now()
+  const warnings: string[] = []
+  const { metadata } = context
+
+  let eventId: string | null = null
+  try {
+    const persisted = await persistEvent(context)
+    eventId = persisted.eventId
+
+    if (persisted.duplicateProcessed) {
+      logInfo('duplicate webhook already processed', {
+        eventId,
+        providerEventId: metadata.providerEventId,
+      })
+      return
+    }
+
+    if (metadata.webhookTopic === 'merchant_order') {
+      await safeMarkWebhookEvent({
+        eventId,
+        processed: true,
+        processingError: 'merchant_order ignored',
+      })
+      logInfo('merchant_order ignored', {
+        eventId,
+        providerEventId: metadata.providerEventId,
+      })
+      return
+    }
+
+    if (metadata.isLegacyPaymentFeed || metadata.webhookTopic !== 'payment') {
+      await safeMarkWebhookEvent({
+        eventId,
+        processed: true,
+        processingError: 'unsupported_or_legacy_topic_ignored',
+      })
+      return
+    }
+
+    if (context.shouldValidateSignature) {
+      const valid = context.signature?.signatureValid ?? false
+      if (!valid && context.hasWebhookSecret) {
+        await safeMarkWebhookEvent({
+          eventId,
+          processed: true,
+          processingError: `invalid_signature:${signatureIssue(context.signature)}`,
+        })
+        logWarn('invalid signature, webhook ignored', {
+          eventId,
+          providerEventId: metadata.providerEventId,
+          reason: signatureIssue(context.signature),
+        })
+        return
+      }
+      if (!valid && !context.hasWebhookSecret) {
+        warnings.push('signature_validation_skipped_no_secret')
+      }
+    }
+
+    if (!metadata.providerResourceId) {
+      await safeMarkWebhookEvent({
+        eventId,
+        processed: true,
+        processingError: 'missing_provider_resource_id',
+      })
+      return
+    }
+
+    const paymentClient = createMercadoPagoPaymentClient()
+    const remotePayment = await paymentClient.get({ id: metadata.providerResourceId })
+    const fields = extractPaymentFields(remotePayment)
+    const canonicalMpStatus = normalizeMercadoPagoCanonicalStatus(fields.mpStatus)
+
+    const paymentId = await findInternalPaymentId({
+      externalReference: fields.externalReference,
+      mercadoPagoPaymentId: fields.mercadoPagoPaymentId,
+      preferenceId: fields.preferenceId,
+    })
+
+    if (!paymentId) {
+      await safeMarkWebhookEvent({
+        eventId,
+        processed: true,
+        processingError: 'internal_payment_not_found',
+      })
+      return
+    }
+
+    const { data: paymentData, error: paymentErr } = await supabaseAdmin
+      .from('payments')
+      .select('id,provider,status,purpose,application_id,program_id,paid_at')
+      .eq('id', paymentId)
+      .eq('provider', MERCADO_PAGO_PROVIDER)
+      .maybeSingle()
+
+    if (paymentErr || !paymentData) {
+      await safeMarkWebhookEvent({
+        eventId,
+        processed: true,
+        paymentId,
+        processingError: 'canonical_payment_not_found',
+      })
+      return
+    }
+
+    const paymentRow = paymentData as PaymentRow
+    const mappedStatus = mapMercadoPagoStatusToPaymentStatus(fields.mpStatus)
+    const nextStatus: KnownPaymentStatus =
+      paymentRow.status === 'paid' && mappedStatus === 'pending'
+        ? 'paid'
+        : mappedStatus
+    const nowIso = new Date().toISOString()
+    const approvedAt = fields.dateApproved ?? nowIso
+
+    const { data: existingMp } = await supabaseAdmin
+      .from('mercadopago_payments')
+      .select(
+        'preference_id,mercadopago_payment_id,merchant_order_id,external_reference,mp_status,status_detail,payment_type,payment_method,installments,live_mode,raw_preference_response'
+      )
+      .eq('payment_id', paymentRow.id)
+      .maybeSingle()
+
+    const existing = isRecord(existingMp) ? existingMp : null
+    const rawPreference = isRecord(existing?.['raw_preference_response'])
+      ? (existing['raw_preference_response'] as Record<string, unknown>)
+      : null
+
+    const { error: upsertErr } = await supabaseAdmin.from('mercadopago_payments').upsert(
+      {
+        payment_id: paymentRow.id,
+        preference_id:
+          fields.preferenceId ??
+          normalizeString(existing?.['preference_id']) ??
+          normalizeString(rawPreference?.['id']) ??
+          normalizeNumberToString(rawPreference?.['id']) ??
+          null,
+        mercadopago_payment_id:
+          fields.mercadoPagoPaymentId ??
+          normalizeString(existing?.['mercadopago_payment_id']) ??
+          null,
+        merchant_order_id:
+          fields.merchantOrderId ??
+          normalizeString(existing?.['merchant_order_id']) ??
+          null,
+        external_reference:
+          fields.externalReference ??
+          normalizeString(existing?.['external_reference']) ??
+          paymentRow.id,
+        mp_status: fields.mpStatus ?? normalizeString(existing?.['mp_status']) ?? null,
+        status_detail:
+          fields.statusDetail ?? normalizeString(existing?.['status_detail']) ?? null,
+        payment_type:
+          fields.paymentType ?? normalizeString(existing?.['payment_type']) ?? null,
+        payment_method:
+          fields.paymentMethod ?? normalizeString(existing?.['payment_method']) ?? null,
+        installments:
+          fields.installments ?? normalizeNumber(existing?.['installments']) ?? null,
+        live_mode: fields.liveMode ?? normalizeBoolean(existing?.['live_mode']) ?? null,
+        last_webhook_at: nowIso,
+        last_synced_at: nowIso,
+        raw_payment_response: remotePayment,
+      },
+      { onConflict: 'payment_id' }
+    )
+
+    if (upsertErr) {
+      warnings.push(`mercadopago_payments_upsert_error:${extractErrorMessage(upsertErr, 'unknown_error')}`)
+    }
+
+    const paymentUpdate: Record<string, unknown> = { status: nextStatus }
+    if (nextStatus === 'paid' && !paymentRow.paid_at) paymentUpdate['paid_at'] = approvedAt
+    if (nextStatus === 'paid') paymentUpdate['error_message'] = null
+    if (nextStatus === 'failed' || nextStatus === 'canceled') {
+      paymentUpdate['error_message'] = fields.statusDetail ?? fields.mpStatus
+    }
+
+    const { error: paymentUpdateErr } = await supabaseAdmin
+      .from('payments')
+      .update(paymentUpdate)
+      .eq('id', paymentRow.id)
+      .eq('provider', MERCADO_PAGO_PROVIDER)
+
+    if (paymentUpdateErr) {
+      await safeMarkWebhookEvent({
+        eventId,
+        processed: true,
+        paymentId: paymentRow.id,
+        processingError: `payments_update_error:${extractErrorMessage(paymentUpdateErr, 'unknown_error')}`,
+      })
+      return
+    }
+
+    if (paymentRow.application_id && paymentRow.purpose === 'tuition') {
+      const appUpdate: Record<string, unknown> = { payment_status: nextStatus }
+      if (nextStatus === 'paid') {
+        appUpdate['paid_at'] = approvedAt
+        const { data: programData } = await supabaseAdmin
+          .from('programs')
+          .select('id,payment_mode,requires_payment_pre')
+          .eq('id', paymentRow.program_id)
+          .maybeSingle()
+        const program = (programData as ProgramRowSummary | null) ?? null
+        if (resolvePaymentMode(program) === 'post') appUpdate['status'] = 'enrolled'
+      }
+      const { error: appErr } = await supabaseAdmin
+        .from('applications')
+        .update(appUpdate)
+        .eq('id', paymentRow.application_id)
+      if (appErr) {
+        warnings.push(`applications_update_error:${extractErrorMessage(appErr, 'unknown_error')}`)
+      }
+    }
+
+    await safeMarkWebhookEvent({
+      eventId,
+      processed: true,
+      paymentId: paymentRow.id,
+      processingError: warnings.length > 0 ? warnings.join(' | ') : null,
+    })
+
+    logInfo('payment webhook processed', {
+      eventId,
+      providerEventId: metadata.providerEventId,
+      providerResourceId: metadata.providerResourceId,
+      paymentId: paymentRow.id,
+      externalReference: fields.externalReference,
+      canonicalMpStatus,
+      localStatus: nextStatus,
+      statusDetail: fields.statusDetail,
+      payerEmail: fields.payerEmail,
+      transactionAmount: fields.transactionAmount,
+      dateApproved: fields.dateApproved,
+      durationMs: Date.now() - startMs,
+      warningCount: warnings.length,
+    })
+  } catch (error) {
+    await safeMarkWebhookEvent({
+      eventId,
+      processed: true,
+      processingError: `unhandled_error:${extractErrorMessage(error, 'unknown_error')}`,
+    })
+    logError('unhandled error while processing webhook', {
+      eventId,
+      providerEventId: metadata.providerEventId,
+      providerResourceId: metadata.providerResourceId,
+      error: extractErrorMessage(error, 'unknown_error'),
+    })
+  }
+}
+
+function ack() {
+  return NextResponse.json({ ok: true, accepted: true }, { status: 200 })
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const requestUrl = new URL(request.url)
+    const requestId = request.headers.get('x-request-id')
+    const rawBody = await request.text()
+    const parsed = parsePayload(rawBody)
+    const metadata = resolveMetadata({
+      payload: parsed.payload,
+      requestUrl,
+      requestId,
+    })
+
+    const runtimeDebug = getMercadoPagoRuntimeDebugInfo()
+    const webhookSecrets = getMercadoPagoWebhookSecretsForValidation()
+    const shouldValidateSignature =
+      metadata.webhookTopic === 'payment' && !metadata.isLegacyPaymentFeed
+
+    let signature: SignatureValidation | null = null
+    if (shouldValidateSignature) {
+      signature = buildSignatureValidation({
+        request,
+        requestUrl,
+        payload: parsed.payload,
+        providerResourceId: metadata.providerResourceId,
+        webhookSecrets,
+      })
+    }
+
+    const context: Context = {
+      requestMethod: request.method,
+      requestPath: requestUrl.pathname,
+      requestId,
+      queryParams: snapshotQueryParams(requestUrl),
+      headers: snapshotHeaders(request),
+      payload: parsed.payload,
+      payloadParseError: parsed.parseError,
+      rawBody,
+      metadata,
+      signature,
+      shouldValidateSignature,
+      hasWebhookSecret: runtimeDebug.hasWebhookSecret,
+    }
+
+    logInfo('incoming webhook accepted', {
+      requestMethod: context.requestMethod,
+      requestPath: context.requestPath,
+      requestId: context.requestId,
+      eventType: metadata.eventType,
+      webhookTopic: metadata.webhookTopic,
+      providerEventId: metadata.providerEventId,
+      providerResourceId: metadata.providerResourceId,
+      signatureValid: signature?.signatureValid ?? null,
+      signatureReason: signature?.reason ?? null,
+      payloadParseError: context.payloadParseError,
+      hasWebhookSecret: context.hasWebhookSecret,
+    })
+
+    after(async () => {
+      await processWebhook(context)
+    })
+
+    return ack()
+  } catch (error) {
+    logError('exception before ack, returning safe 200', {
+      error: extractErrorMessage(error, 'unknown_error'),
+    })
+    return ack()
+  }
+}
+
+export async function GET(request: NextRequest) {
+  const requestUrl = new URL(request.url)
+  logInfo('webhook GET reached', {
+    requestPath: requestUrl.pathname,
+    queryParams: snapshotQueryParams(requestUrl),
+  })
+  return NextResponse.json({ ok: true, method: 'GET' }, { status: 200 })
+}
+
+export async function OPTIONS() {
+  return new NextResponse(null, {
+    status: 204,
+    headers: { Allow: 'POST,GET,OPTIONS' },
   })
 }

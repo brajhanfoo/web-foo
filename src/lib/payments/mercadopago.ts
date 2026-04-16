@@ -6,6 +6,15 @@ import { getSiteUrl } from '@/lib/site-url'
 import type { PaymentStatus } from '@/types/payments'
 
 export type MercadoPagoWebhookTopic = 'payment' | 'merchant_order' | 'unknown'
+export type MercadoPagoCanonicalStatus =
+  | 'approved'
+  | 'pending'
+  | 'in_process'
+  | 'rejected'
+  | 'cancelled'
+  | 'refunded'
+  | 'charged_back'
+  | 'unknown'
 export type MercadoPagoNamedSecret = {
   source: string
   value: string
@@ -21,6 +30,7 @@ export type MercadoPagoPaymentClient = {
 }
 
 const MERCADO_PAGO_API_BASE_URL = 'https://api.mercadopago.com'
+const MERCADO_PAGO_HTTP_TIMEOUT_MS = 12_000
 
 export type MercadoPagoSignatureParts = {
   ts: string | null
@@ -50,30 +60,8 @@ function firstNonEmpty(values: Array<string | undefined>): string {
   return ''
 }
 
-function firstNonEmptyWithSource(
-  values: Array<{ name: string; value: string | undefined }>
-): {
-  value: string
-  source: string | null
-} {
-  for (const entry of values) {
-    const normalized = normalizeEnv(entry.value)
-    if (normalized) {
-      return {
-        value: normalized,
-        source: entry.name,
-      }
-    }
-  }
-
-  return {
-    value: '',
-    source: null,
-  }
-}
-
 function normalizeSecretValue(value: string | undefined): string {
-  return (value ?? '').trim()
+  return normalizeEnv(value)
 }
 
 function firstNonEmptySecretWithSource(
@@ -268,7 +256,34 @@ async function mercadoPagoApiRequest(params: {
     requestInit.body = JSON.stringify(params.body)
   }
 
-  const response = await fetch(url, requestInit)
+  const abortController = new AbortController()
+  const timeout = setTimeout(
+    () => abortController.abort(),
+    MERCADO_PAGO_HTTP_TIMEOUT_MS
+  )
+
+  let response: Response
+  try {
+    response = await fetch(url, {
+      ...requestInit,
+      signal: abortController.signal,
+    })
+  } catch (error) {
+    if (
+      error instanceof Error &&
+      (error.name === 'AbortError' ||
+        error.name === 'TimeoutError' ||
+        /aborted|timeout/i.test(error.message))
+    ) {
+      throw new Error(
+        `Mercado Pago API timeout (${MERCADO_PAGO_HTTP_TIMEOUT_MS}ms).`
+      )
+    }
+    throw error
+  } finally {
+    clearTimeout(timeout)
+  }
+
   const rawText = await response.text()
 
   let payload: unknown = {}
@@ -320,18 +335,44 @@ export function createMercadoPagoPaymentClient(): MercadoPagoPaymentClient {
   }
 }
 
-export function mapMercadoPagoStatusToPaymentStatus(
+export function normalizeMercadoPagoCanonicalStatus(
   mercadoPagoStatus: string | null | undefined
-): PaymentStatus {
+): MercadoPagoCanonicalStatus {
   const normalized = normalizeEnv(mercadoPagoStatus).toLowerCase()
 
-  if (normalized === 'approved') return 'paid'
-  if (normalized === 'pending' || normalized === 'in_process') return 'pending'
-  if (normalized === 'rejected') return 'failed'
+  if (normalized === 'approved') return 'approved'
+  if (normalized === 'pending') return 'pending'
+  if (normalized === 'in_process') return 'in_process'
+  if (normalized === 'rejected') return 'rejected'
+  if (normalized === 'refunded' || normalized === 'partially_refunded') {
+    return 'refunded'
+  }
+  if (normalized === 'charged_back') return 'charged_back'
   if (
     normalized === 'cancelled' ||
     normalized === 'canceled' ||
     normalized === 'expired'
+  ) {
+    return 'cancelled'
+  }
+
+  return 'unknown'
+}
+
+export function mapMercadoPagoStatusToPaymentStatus(
+  mercadoPagoStatus: string | null | undefined
+): PaymentStatus {
+  const canonicalStatus = normalizeMercadoPagoCanonicalStatus(mercadoPagoStatus)
+
+  if (canonicalStatus === 'approved') return 'paid'
+  if (canonicalStatus === 'pending' || canonicalStatus === 'in_process') {
+    return 'pending'
+  }
+  if (canonicalStatus === 'rejected') return 'failed'
+  if (
+    canonicalStatus === 'cancelled' ||
+    canonicalStatus === 'refunded' ||
+    canonicalStatus === 'charged_back'
   ) {
     return 'canceled'
   }
