@@ -33,7 +33,7 @@ export default function ExampleComponent({ user }: { user: User }) {
 
         {/* 7) Next.js routing con `<Link>` (evita advertencia `no-html-link-for-pages`) */}
         <Link href={`/users/${user.id}`}>
-          <a className="text-blue-600 hover:underline">View Profile</a>
+          <a className="text-blue-600 hover:underline cursor-pointer">View Profile</a>
         </Link>
       </div>
     </article>

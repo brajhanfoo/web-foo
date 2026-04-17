@@ -190,7 +190,7 @@ export default function AdminProgramsPage() {
 
         <button
           onClick={openCreate}
-          className="inline-flex items-center gap-2 rounded-md  px-3 py-2 text-sm bg-[#00CCA4]"
+          className="inline-flex items-center gap-2 rounded-md px-3 py-2 text-sm bg-[#00CCA4] cursor-pointer"
         >
           <Plus className="h-4 w-4" /> Nuevo programa
         </button>

@@ -74,7 +74,7 @@ export function TalentTopBar({
 
           <Button
             variant="secondary"
-            className="hidden border border-white/10 bg-white/10 text-white hover:bg-white/15 sm:inline-flex"
+            className="hidden border border-white/10 bg-white/10 text-white hover:bg-white/15 sm:inline-flex cursor-pointer"
             onClick={() => router.push(rightActionHref)}
           >
             {rightActionLabel}
@@ -82,7 +82,7 @@ export function TalentTopBar({
 
           <Button
             variant="secondary"
-            className="border border-white/10 bg-white/10 px-3 text-white hover:bg-white/15 sm:hidden"
+            className="border border-white/10 bg-white/10 px-3 text-white hover:bg-white/15 sm:hidden cursor-pointer"
             onClick={() => router.push(rightActionHref)}
           >
             Perfil

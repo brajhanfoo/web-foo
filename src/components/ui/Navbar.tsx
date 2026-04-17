@@ -33,7 +33,7 @@ function NavItem({ item, active, mobile = false, onClick }: any) {
 
   if (hasChildren) {
     return (
-      <div className="relative group">
+      <div className="relative group py-2">
         <Link
           href={item.href}
           onClick={(e) => {
@@ -46,15 +46,12 @@ function NavItem({ item, active, mobile = false, onClick }: any) {
               }
             }
           }}
-          className="flex items-center gap-2 text-white relative cursor-pointer"
+          className="group relative flex items-center gap-2 text-white/80 hover:text-white transition-colors cursor-pointer"
         >
           {item.icon && mobile && <span>{item.icon}</span>}
           <span className={mobile ? 'text-lg' : ''}>{item.name}</span>
 
-          <span className={`transition-transform ${open ? 'rotate-180' : ''}`}>
-            ▼
-          </span>
-
+          {/* underline ACTIVADO */}
           {!mobile && (
             <span
               className={`
@@ -65,20 +62,24 @@ function NavItem({ item, active, mobile = false, onClick }: any) {
           )}
         </Link>
 
+        {/* Dropdown Desktop */}
         {!mobile && (
-          <div className="absolute top-full left-0 mt-2 hidden group-hover:block bg-black border border-gray-700 rounded-md shadow-lg min-w-[220px] z-50 overflow-hidden">
-            {item.children.map((child: any) => (
-              <Link
-                key={child.href}
-                href={child.href}
-                className="block px-4 py-2 text-white cursor-pointer transition-all duration-200 hover:bg-white/10 hover:text-yellow-400 hover:translate-x-1"
-              >
-                {child.name}
-              </Link>
-            ))}
+          <div className="absolute top-full left-0 hidden group-hover:block pt-2 z-50">
+            <div className="bg-black/95 backdrop-blur border border-white/10 rounded-xl shadow-xl min-w-[220px] overflow-hidden">
+              {item.children.map((child: any) => (
+                <Link
+                  key={child.href}
+                  href={child.href}
+                  className="block px-4 py-3 text-white/80 hover:text-white hover:bg-white/5 transition-all"
+                >
+                  {child.name}
+                </Link>
+              ))}
+            </div>
           </div>
         )}
 
+        {/* Mobile dropdown */}
         {mobile && open && (
           <div className="ml-6 mt-2 flex flex-col gap-2">
             {item.children.map((child: any) => (
@@ -86,7 +87,7 @@ function NavItem({ item, active, mobile = false, onClick }: any) {
                 key={child.href}
                 href={child.href}
                 onClick={onClick}
-                className="text-white cursor-pointer transition-all duration-200 hover:text-yellow-400 hover:translate-x-1"
+                className="text-white/80 hover:text-white transition"
               >
                 {child.name}
               </Link>
@@ -101,7 +102,7 @@ function NavItem({ item, active, mobile = false, onClick }: any) {
     <Link
       href={item.href}
       onClick={onClick}
-      className="group relative flex items-center gap-3 text-white cursor-pointer"
+      className="group relative flex items-center gap-3 text-white/80 hover:text-white transition-colors cursor-pointer"
     >
       {item.icon && mobile && <span>{item.icon}</span>}
       <span className={mobile ? 'text-lg' : ''}>{item.name}</span>
@@ -133,7 +134,7 @@ function NavActions({
       {isProgramActive && (
         <button
           onClick={onPostular}
-          className={`bg-[#00CCA4] hover:bg-[#00D3D3] text-black font-semibold rounded-md cursor-pointer transition
+          className={`bg-[#00CCA4] hover:bg-[#00D3D3] text-black font-semibold rounded-md transition cursor-pointer
           ${mobile ? 'w-full py-3' : 'px-5 py-2.5'}`}
         >
           Postular
@@ -142,7 +143,7 @@ function NavActions({
 
       <button
         onClick={isAuthed ? onPanel : onIngresar}
-        className={`text-white bg-white/20 hover:bg-white/30 rounded-md cursor-pointer transition
+        className={`text-white bg-white/10 hover:bg-white/20 rounded-md transition cursor-pointer
         ${mobile ? 'w-full py-3 text-lg' : 'px-5 py-2.5'}`}
       >
         {isAuthed ? 'Mi panel' : 'Ingresar'}
@@ -213,7 +214,7 @@ export default function Navbar({ logoSrc, logoAlt }: NavbarProperties) {
   }
 
   return (
-    <nav className="sticky top-0 z-50 flex w-full items-center justify-between bg-black px-4 py-4 sm:px-6 lg:px-16 xl:px-32 shadow-lg overflow-visible">
+    <nav className="sticky top-0 z-50 flex w-full items-center justify-between bg-black px-4 py-4 sm:px-6 lg:px-16 xl:px-32 shadow-lg">
       <Link href="/" className="z-50">
         <Image src={logoSrc} alt={logoAlt} width={90} height={50} />
       </Link>
@@ -239,7 +240,7 @@ export default function Navbar({ logoSrc, logoAlt }: NavbarProperties) {
       {/* MOBILE BTN */}
       <button
         onClick={() => setMenuOpen(!menuOpen)}
-        className="md:hidden text-2xl text-white z-50 cursor-pointer"
+        className="md:hidden text-2xl text-white z-50"
       >
         {menuOpen ? <FaTimes /> : <FaBars />}
       </button>
