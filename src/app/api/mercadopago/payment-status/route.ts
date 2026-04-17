@@ -4,6 +4,10 @@ import { supabaseAdmin } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 import type { PaymentProvider, PaymentStatus } from '@/types/payments'
 
+export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 const MERCADO_PAGO_PROVIDER: PaymentProvider = 'mercado_pago'
 
 type PaymentPurpose = 'pre_enrollment' | 'tuition'
@@ -35,21 +39,29 @@ function clean(value: string | null): string | null {
 }
 
 async function resolvePaymentId(params: {
-  userId: string
+  userId: string | null
   externalReference: string | null
   preferenceId: string | null
   mercadoPagoPaymentId: string | null
 }): Promise<string | null> {
   if (params.externalReference) {
-    const { data } = await supabaseAdmin
+    let q = supabaseAdmin
       .from('payments')
       .select('id')
       .eq('id', params.externalReference)
       .eq('provider', MERCADO_PAGO_PROVIDER)
-      .eq('user_id', params.userId)
-      .maybeSingle()
+
+    if (params.userId) {
+      q = q.eq('user_id', params.userId)
+    }
+
+    const { data } = await q.maybeSingle()
+
     if (data?.id) return String(data.id)
   }
+
+  // For unauthenticated lookup, only external_reference is allowed.
+  if (!params.userId) return null
 
   if (params.preferenceId) {
     const { data } = await supabaseAdmin
@@ -74,13 +86,8 @@ async function resolvePaymentId(params: {
 
 export async function GET(request: NextRequest) {
   const supabaseServer = await createClient()
-  const { data: userRes, error: userErr } = await supabaseServer.auth.getUser()
-  if (userErr || !userRes.user) {
-    return NextResponse.json(
-      { ok: false, message: 'No autenticado' },
-      { status: 401 }
-    )
-  }
+  const { data: userRes } = await supabaseServer.auth.getUser()
+  const requesterUserId = userRes.user?.id ?? null
 
   const externalReference = clean(
     request.nextUrl.searchParams.get('external_reference')
@@ -90,8 +97,19 @@ export async function GET(request: NextRequest) {
     request.nextUrl.searchParams.get('payment_id')
   )
 
+  if (!requesterUserId && !externalReference) {
+    return NextResponse.json(
+      {
+        ok: false,
+        message:
+          'Falta external_reference para consultar el estado sin sesion activa.',
+      },
+      { status: 400 }
+    )
+  }
+
   const paymentId = await resolvePaymentId({
-    userId: userRes.user.id,
+    userId: requesterUserId,
     externalReference,
     preferenceId,
     mercadoPagoPaymentId,
@@ -121,14 +139,14 @@ export async function GET(request: NextRequest) {
   }
 
   const payment = paymentData as PaymentRow
-  if (payment.user_id !== userRes.user.id) {
+  if (requesterUserId && payment.user_id !== requesterUserId) {
     return NextResponse.json(
       { ok: false, message: 'Pago no encontrado.' },
       { status: 404 }
     )
   }
 
-  if (payment.application_id) {
+  if (requesterUserId && payment.application_id) {
     const { data: applicationData, error: applicationErr } = await supabaseAdmin
       .from('applications')
       .select('applicant_profile_id')
@@ -143,7 +161,7 @@ export async function GET(request: NextRequest) {
     }
 
     const application = applicationData as ApplicationOwnerRow
-    if (application.applicant_profile_id !== userRes.user.id) {
+    if (application.applicant_profile_id !== requesterUserId) {
       return NextResponse.json(
         { ok: false, message: 'Pago no encontrado.' },
         { status: 404 }

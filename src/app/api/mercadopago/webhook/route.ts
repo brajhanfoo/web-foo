@@ -631,7 +631,10 @@ async function processWebhook(context: Context) {
 
     const { data: paymentData, error: paymentErr } = await supabaseAdmin
       .from('payments')
-      .select('id,provider,status,purpose,application_id,program_id,paid_at')
+      .select(
+        'id,user_id,edition_id,provider,status,purpose,application_id,program_id,paid_at'
+      )
+
       .eq('id', paymentId)
       .eq('provider', MERCADO_PAGO_PROVIDER)
       .maybeSingle()
