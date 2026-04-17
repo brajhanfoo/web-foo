@@ -436,7 +436,7 @@ export function ApplicationsTable() {
                 <button
                   type="button"
                   onClick={() => toggleMenu('date')}
-                  className="inline-flex items-center gap-1 rounded-lg px-2 py-1 hover:bg-slate-900 text-slate-300"
+                  className="inline-flex items-center gap-1 rounded-lg px-2 py-1 hover:bg-slate-900 text-slate-300 cursor-pointer"
                   title="Filtrar por fecha"
                 >
                   Fecha
@@ -457,7 +457,7 @@ export function ApplicationsTable() {
                         setDatePreset('all')
                         setOpenMenu(null)
                       }}
-                      className="w-full rounded-lg px-3 py-2 text-left text-sm text-slate-200 hover:bg-slate-900"
+                      className="w-full rounded-lg px-3 py-2 text-left text-sm text-slate-200 hover:bg-slate-900 cursor-pointer"
                     >
                       Todas
                     </button>
@@ -467,7 +467,7 @@ export function ApplicationsTable() {
                         setDatePreset('7d')
                         setOpenMenu(null)
                       }}
-                      className="w-full rounded-lg px-3 py-2 text-left text-sm text-slate-200 hover:bg-slate-900"
+                      className="w-full rounded-lg px-3 py-2 text-left text-sm text-slate-200 hover:bg-slate-900 cursor-pointer"
                     >
                       Últimos 7 días
                     </button>
@@ -477,7 +477,7 @@ export function ApplicationsTable() {
                         setDatePreset('30d')
                         setOpenMenu(null)
                       }}
-                      className="w-full rounded-lg px-3 py-2 text-left text-sm text-slate-200 hover:bg-slate-900"
+                      className="w-full rounded-lg px-3 py-2 text-left text-sm text-slate-200 hover:bg-slate-900 cursor-pointer"
                     >
                       Últimos 30 días
                     </button>
@@ -487,7 +487,7 @@ export function ApplicationsTable() {
                         setDatePreset('this_month')
                         setOpenMenu(null)
                       }}
-                      className="w-full rounded-lg px-3 py-2 text-left text-sm text-slate-200 hover:bg-slate-900"
+                      className="w-full rounded-lg px-3 py-2 text-left text-sm text-slate-200 hover:bg-slate-900 cursor-pointer"
                     >
                       Este mes
                     </button>
@@ -503,7 +503,7 @@ export function ApplicationsTable() {
                 <button
                   type="button"
                   onClick={() => toggleMenu('role')}
-                  className="inline-flex items-center gap-1 rounded-lg px-2 py-1 hover:bg-slate-900 text-slate-300"
+                  className="inline-flex items-center gap-1 rounded-lg px-2 py-1 hover:bg-slate-900 text-slate-300 cursor-pointer"
                   title="Filtrar por rol"
                 >
                   Rol
@@ -535,14 +535,14 @@ export function ApplicationsTable() {
                           setRoleFilter('')
                           setOpenMenu(null)
                         }}
-                        className="rounded-xl bg-slate-900 px-3 py-2 text-xs text-slate-200 hover:bg-slate-800"
+                        className="rounded-xl bg-slate-900 px-3 py-2 text-xs text-slate-200 hover:bg-slate-800 cursor-pointer"
                       >
                         Limpiar
                       </button>
                       <button
                         type="button"
                         onClick={() => setOpenMenu(null)}
-                        className="rounded-xl bg-emerald-500/15 px-3 py-2 text-xs text-emerald-200 hover:bg-emerald-500/20"
+                        className="rounded-xl bg-emerald-500/15 px-3 py-2 text-xs text-emerald-200 hover:bg-emerald-500/20 cursor-pointer"
                       >
                         Aplicar
                       </button>
@@ -559,7 +559,7 @@ export function ApplicationsTable() {
                               key={role}
                               type="button"
                               onClick={() => setRoleFilter(role)}
-                              className="rounded-full border border-slate-800 bg-slate-900 px-3 py-1 text-xs text-slate-300 hover:bg-slate-800"
+                              className="rounded-full border border-slate-800 bg-slate-900 px-3 py-1 text-xs text-slate-300 hover:bg-slate-800 cursor-pointer"
                             >
                               {role}
                             </button>
@@ -578,7 +578,7 @@ export function ApplicationsTable() {
                 <button
                   type="button"
                   onClick={() => toggleMenu('status')}
-                  className="inline-flex items-center gap-1 rounded-lg px-2 py-1 hover:bg-slate-900 text-slate-300"
+                  className="inline-flex items-center gap-1 rounded-lg px-2 py-1 hover:bg-slate-900 text-slate-300 cursor-pointer"
                   title="Filtrar por estado"
                 >
                   Estado
@@ -613,7 +613,7 @@ export function ApplicationsTable() {
                           setStatusFilter(v)
                           setOpenMenu(null)
                         }}
-                        className="w-full rounded-lg px-3 py-2 text-left text-sm text-slate-200 hover:bg-slate-900"
+                        className="w-full rounded-lg px-3 py-2 text-left text-sm text-slate-200 hover:bg-slate-900 cursor-pointer"
                       >
                         {statusLabel(v)}
                       </button>
@@ -703,7 +703,7 @@ export function ApplicationsTable() {
                       <div className="col-span-1 text-right">
                         <button
                           type="button"
-                          className="rounded-xl bg-emerald-500/15 px-3 py-1.5 text-xs text-emerald-200 hover:bg-emerald-500/20"
+                          className="rounded-xl bg-emerald-500/15 px-3 py-1.5 text-xs text-emerald-200 hover:bg-emerald-500/20 cursor-pointer"
                           title="ver detalles de la postulación"
                         >
                           <Link
@@ -745,7 +745,7 @@ export function ApplicationsTable() {
             type="button"
             onClick={() => setPage((p) => Math.max(1, p - 1))}
             disabled={page <= 1}
-            className="rounded-xl bg-slate-900 px-3 py-2 text-sm text-slate-200 hover:bg-slate-800 disabled:opacity-40"
+            className="rounded-xl bg-slate-900 px-3 py-2 text-sm text-slate-200 hover:bg-slate-800 disabled:opacity-40 cursor-pointer"
           >
             Anterior
           </button>
@@ -753,7 +753,7 @@ export function ApplicationsTable() {
             type="button"
             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
             disabled={page >= totalPages}
-            className="rounded-xl bg-slate-900 px-3 py-2 text-sm text-slate-200 hover:bg-slate-800 disabled:opacity-40"
+            className="rounded-xl bg-slate-900 px-3 py-2 text-sm text-slate-200 hover:bg-slate-800 disabled:opacity-40 cursor-pointer"
           >
             Siguiente
           </button>

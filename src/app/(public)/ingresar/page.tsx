@@ -260,7 +260,7 @@ function LoginForm() {
             type="button"
             onClick={onGoogleSignIn}
             disabled={isSubmitting || isGoogleSubmitting}
-            className="gsi-material-button mt-6 w-full"
+            className="gsi-material-button mt-6 w-full cursor-pointer"
           >
             <div className="gsi-material-button-state" />
             <div className="gsi-material-button-content-wrapper">
