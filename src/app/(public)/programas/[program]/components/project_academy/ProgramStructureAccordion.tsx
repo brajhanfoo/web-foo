@@ -4,6 +4,8 @@ import React, { useState } from 'react'
 import { FiChevronDown } from 'react-icons/fi'
 import { GiAlliedStar } from 'react-icons/gi'
 import { MdOutlineFileDownload } from 'react-icons/md'
+import Link from 'next/link'
+
 type Unit = {
   id: number
   title: string
@@ -97,23 +99,22 @@ const ProgramStructureAccordion: React.FC = () => {
         </h2>
 
         {/* Accordion */}
-        <div className="space-y-4">
+        <div className="space-y-4 ">
           {UNITS.map((unit) => {
             const isOpen = openUnit === unit.id
 
             return (
               <div
                 key={unit.id}
-                className={`rounded-xl border transition ${
-                  isOpen
-                    ? 'border-emerald-500/40 bg-white/5'
-                    : 'border-white/10 bg-white/5'
-                }`}
+                className={`rounded-xl border transition  ${isOpen
+                  ? 'border-emerald-500/40 bg-white/5'
+                  : 'border-white/10 bg-white/5'
+                  }`}
               >
                 {/* Header */}
                 <button
                   onClick={() => toggleUnit(unit.id)}
-                  className="flex w-full items-center justify-between gap-4 px-6 py-5 text-left"
+                  className="flex w-full items-center justify-between gap-4 px-6 py-5 text-left cursor-pointer"
                 >
                   <div className="flex items-center gap-4">
                     <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#BCBC0B]/10 text-sm font-bold text-[#BCBC0B]">
@@ -129,9 +130,8 @@ const ProgramStructureAccordion: React.FC = () => {
                   </div>
 
                   <FiChevronDown
-                    className={`h-5 w-5 transition ${
-                      isOpen ? 'rotate-180 text-emerald-400' : 'text-white/60'
-                    }`}
+                    className={`h-5 w-5 transition ${isOpen ? 'rotate-180 text-emerald-400' : 'text-white/60'
+                      }`}
                   />
                 </button>
 
@@ -170,12 +170,14 @@ const ProgramStructureAccordion: React.FC = () => {
             laboral global.
           </p>
 
-          <button className="mt-6 rounded-lg border border-white/20 px-4 py-2 text-sm transition hover:border-white/40 cursor-pointer flex items-center bg-white/10 hover:bg-white/20">
-            <span className="mr-2">
-              <MdOutlineFileDownload className="inline-block" />
+          <Link href="/ProjectAcademy-brochure.pdf" target="_blank">
+            <span className="mt-6 inline-flex items-center rounded-lg border border-white/20 px-4 py-2 text-sm transition hover:border-white/40 cursor-pointer bg-white/10 hover:bg-white/20">
+              <span className="mr-2">
+                <MdOutlineFileDownload className="inline-block" />
+              </span>
+              Descargar brochure del programa
             </span>
-            Descargar brochure del programa
-          </button>
+          </Link>
         </div>
       </div>
     </section>

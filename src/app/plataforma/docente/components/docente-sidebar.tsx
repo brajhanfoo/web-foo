@@ -94,7 +94,7 @@ export function DocenteSidebar({
         <button
           type="button"
           onClick={handleSignOut}
-          className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm text-slate-300 transition hover:bg-slate-800 hover:text-slate-100"
+          className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm text-slate-300 transition hover:bg-slate-800 hover:text-slate-100 cursor-pointer"
         >
           <LogOut className="h-4 w-4" />
           Cerrar sesión

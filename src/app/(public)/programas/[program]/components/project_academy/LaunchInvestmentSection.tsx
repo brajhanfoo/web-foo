@@ -56,7 +56,7 @@ const LaunchInvestmentSection = () => {
               <div className="flex items-start gap-3">
                 <FiCalendar className="mt-0.5 h-4 w-4 text-[#BDBE0B]" />
                 <div>
-                  <p className="font-medium text-white">Inicio: 04 de mayo</p>
+                  <p className="font-medium text-white">Inicio: 18 de mayo</p>
                   <p className="text-xs text-white/50">
                     Duración de 12 semanas
                   </p>
