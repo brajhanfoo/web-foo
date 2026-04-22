@@ -62,16 +62,28 @@ const LaunchInvestmentSection = (props: {
             <div className="mt-6">
               {isArgentinaVisitor ? (
                 <>
-                  <div className="flex flex-col gap-2">
-                    <span className="text-5xl font-bold text-[#BDBE0B]">
-                      495 000
-                    </span>
-                    <span className="text-sm text-white/70">Pesos ARG</span>
-                  </div>
+                  <div className="max-w-md rounded-3xl border border-white/10 bg-white px-5 py-4 text-[#1a1a1a] shadow-[0_20px_60px_rgba(0,0,0,0.22)]">
+                    <div className="flex flex-wrap items-center gap-3">
+                      <span className="inline-flex rounded-full bg-[#39d97b] px-4 py-2 text-sm font-semibold text-[#08361b]">
+                        20% OFF
+                      </span>
+                      <span className="text-3xl font-medium text-[#4b5563] line-through">
+                        $620.000 ARS
+                      </span>
+                    </div>
 
-                  <p className="text-sm text-white/55">
-                    o en 6 cuotas de 103 000
-                  </p>
+                    <p className="mt-3 text-3xl font-medium text-[#3f3f46]">
+                      Hasta 6 cuotas sin interés de
+                    </p>
+
+                    <div className="mt-2 text-6xl font-bold leading-none text-[#111827]">
+                      $103.000 ARS
+                    </div>
+
+                    <p className="mt-3 text-3xl font-medium text-[#4b5563]">
+                      Precio final: $495.000 ARS
+                    </p>
+                  </div>
                 </>
               ) : (
                 <>
