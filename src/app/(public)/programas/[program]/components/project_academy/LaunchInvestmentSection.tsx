@@ -89,7 +89,7 @@ const LaunchInvestmentSection = () => {
             </div>
 
             <p className="mt-6 max-w-sm text-sm text-white/50">
-              Aplica para iniciar tu proceso de admisión y asegurar este precio.
+              Aplica para iniciar tu proceso de admisión y asegurar este precio
             </p>
           </div>
 
