@@ -21,13 +21,22 @@ function detectArgentinaVisitor(): boolean {
   return typeof timezone === 'string' && timezone.startsWith('America/Argentina')
 }
 
-const LaunchInvestmentSection = () => {
+const LaunchInvestmentSection = (props: {
+  isArgentinaVisitor?: boolean
+}) => {
   const router = useRouter()
-  const [isArgentinaVisitor, setIsArgentinaVisitor] = useState(false)
+  const [isArgentinaVisitor, setIsArgentinaVisitor] = useState(
+    props.isArgentinaVisitor ?? false
+  )
 
   useEffect(() => {
+    if (typeof props.isArgentinaVisitor === 'boolean') {
+      setIsArgentinaVisitor(props.isArgentinaVisitor)
+      return
+    }
+
     setIsArgentinaVisitor(detectArgentinaVisitor())
-  }, [])
+  }, [props.isArgentinaVisitor])
 
   return (
     <section className="mx-auto max-w-7xl px-6 py-24">

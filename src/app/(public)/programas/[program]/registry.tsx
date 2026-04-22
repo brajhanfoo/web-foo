@@ -29,13 +29,13 @@ import AdmissionPricing from './components/AdmissionPricing'
 
 type ProgramRenderSpec = {
   title: string
-  sections: React.ReactNode[]
+  renderSections: (params: { isArgentinaVisitor: boolean }) => React.ReactNode[]
 }
 
 export const PROGRAM_SPECS: Record<string, ProgramRenderSpec> = {
   'smart-projects': {
     title: 'Smart Projects',
-    sections: [
+    renderSections: () => [
       <ProgramHeroSmartProjects key="hero" />,
       <AboutSection key="about" />,
       <Timeline key="timeline" />,
@@ -52,7 +52,7 @@ export const PROGRAM_SPECS: Record<string, ProgramRenderSpec> = {
   // Project Academy (arrancá así y luego le metés sus secciones propias)
   'project-academy': {
     title: 'Project Academy',
-    sections: [
+    renderSections: ({ isArgentinaVisitor }) => [
       <div key="placeholder" className="px-6 md:py-16 text-white">
         <HeroProjectAcademy />
         <IsThisProgramForYou />
@@ -63,7 +63,7 @@ export const PROGRAM_SPECS: Record<string, ProgramRenderSpec> = {
         <CareerIntensiveSection />
         <EvaluationCertificationSection />
         <CareerOutcomeSection />
-        <LaunchInvestmentSection />
+        <LaunchInvestmentSection isArgentinaVisitor={isArgentinaVisitor} />
         <FinalCtaSection />
         <FAQSection />
       </div>,
