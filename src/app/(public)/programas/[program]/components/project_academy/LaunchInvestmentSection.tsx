@@ -1,9 +1,33 @@
 'use client'
+import { useEffect, useState } from 'react'
 import { FiCalendar, FiClock, FiMonitor } from 'react-icons/fi'
 import { useRouter } from 'next/navigation'
 
+function detectArgentinaVisitor(): boolean {
+  if (typeof window === 'undefined') return false
+
+  const locales = [
+    navigator.language,
+    ...(Array.isArray(navigator.languages) ? navigator.languages : []),
+  ]
+    .filter(Boolean)
+    .map((value) => value.toLowerCase())
+
+  if (locales.some((locale) => locale.includes('-ar') || locale === 'es-ar')) {
+    return true
+  }
+
+  const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone
+  return typeof timezone === 'string' && timezone.startsWith('America/Argentina')
+}
+
 const LaunchInvestmentSection = () => {
   const router = useRouter()
+  const [isArgentinaVisitor, setIsArgentinaVisitor] = useState(false)
+
+  useEffect(() => {
+    setIsArgentinaVisitor(detectArgentinaVisitor())
+  }, [])
 
   return (
     <section className="mx-auto max-w-7xl px-6 py-24">
@@ -27,12 +51,31 @@ const LaunchInvestmentSection = () => {
             </span>
 
             <div className="mt-6">
-              <p className="text-sm text-white/40 line-through">$850 USD</p>
+              {isArgentinaVisitor ? (
+                <>
+                  <div className="flex flex-col gap-2">
+                    <span className="text-5xl font-bold text-[#BDBE0B]">
+                      495 000
+                    </span>
+                    <span className="text-sm text-white/70">Pesos ARG</span>
+                  </div>
 
-              <div className="flex items-end gap-2">
-                <span className="text-5xl font-bold text-[#BDBE0B]">$350</span>
-                <span className="mb-1 text-sm text-white/70">USD</span>
-              </div>
+                  <p className="text-sm text-white/55">
+                    o en 6 cuotas de 103 000
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p className="text-sm text-white/40 line-through">$850 USD</p>
+
+                  <div className="flex items-end gap-2">
+                    <span className="text-5xl font-bold text-[#BDBE0B]">
+                      $350
+                    </span>
+                    <span className="mb-1 text-sm text-white/70">USD</span>
+                  </div>
+                </>
+              )}
 
               <p className="mt-1 text-xs uppercase tracking-wide text-[#BDBE0B]/80">
                 Precio Early Bird
