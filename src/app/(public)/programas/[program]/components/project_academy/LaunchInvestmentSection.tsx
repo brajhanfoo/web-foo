@@ -62,28 +62,29 @@ const LaunchInvestmentSection = (props: {
             <div className="mt-6">
               {isArgentinaVisitor ? (
                 <>
-                  <div className="max-w-md rounded-3xl border border-white/10 bg-white px-5 py-4 text-[#1a1a1a] shadow-[0_20px_60px_rgba(0,0,0,0.22)]">
-                    <div className="flex flex-wrap items-center gap-3">
-                      <span className="inline-flex rounded-full bg-[#39d97b] px-4 py-2 text-sm font-semibold text-[#08361b]">
+                  <div className="flex flex-wrap items-center gap-3">
+                    <span className="inline-flex rounded-full bg-emerald-400/15 px-3 py-1 text-xs font-semibold text-emerald-300">
                         20% OFF
-                      </span>
-                      <span className="text-3xl font-medium text-[#4b5563] line-through">
+                    </span>
+                    <span className="text-base text-white/40 line-through sm:text-lg">
                         $620.000 ARS
-                      </span>
-                    </div>
-
-                    <p className="mt-3 text-3xl font-medium text-[#3f3f46]">
-                      Hasta 6 cuotas sin interés de
-                    </p>
-
-                    <div className="mt-2 text-6xl font-bold leading-none text-[#111827]">
-                      $103.000 ARS
-                    </div>
-
-                    <p className="mt-3 text-3xl font-medium text-[#4b5563]">
-                      Precio final: $495.000 ARS
-                    </p>
+                    </span>
                   </div>
+
+                  <p className="mt-3 text-lg text-white/85 sm:text-xl">
+                    Hasta 6 cuotas sin interés de
+                  </p>
+
+                  <div className="mt-2 flex flex-wrap items-end gap-2">
+                    <span className="text-4xl font-bold leading-none text-[#BDBE0B] sm:text-5xl">
+                      $103.000
+                    </span>
+                    <span className="mb-1 text-sm text-white/70">ARS</span>
+                  </div>
+
+                  <p className="mt-3 text-sm text-white/65 sm:text-base">
+                    Precio final: $495.000 ARS
+                  </p>
                 </>
               ) : (
                 <>
