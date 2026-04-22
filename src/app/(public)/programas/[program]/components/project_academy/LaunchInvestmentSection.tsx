@@ -64,10 +64,10 @@ const LaunchInvestmentSection = (props: {
                 <>
                   <div className="flex flex-wrap items-center gap-3">
                     <span className="inline-flex rounded-full bg-emerald-400/15 px-3 py-1 text-xs font-semibold text-emerald-300">
-                        20% OFF
+                        40% OFF
                     </span>
                     <span className="text-base text-white/40 line-through sm:text-lg">
-                        $620.000 ARS
+                        $868.000 ARS
                     </span>
                   </div>
 
