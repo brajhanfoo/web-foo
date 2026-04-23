@@ -41,7 +41,9 @@ function resolvePaymentMode(program: ProgramRow | null): ProgramPaymentMode {
 }
 
 export function CurrentApplicationHero(props: { app: ApplicationRow }) {
-  const profileCountry = useAuthStore((state) => state.profile?.country_residence)
+  const profileCountry = useAuthStore(
+    (state) => state.profile?.country_residence
+  )
   const viewerCountryCode = resolveCountryCode(profileCountry ?? null)
   const [checkoutOpen, setCheckoutOpen] = useState(false)
   const interviewBookingUrl = 'https://calendar.app.google/3RxfFjt86saSuTVD7'

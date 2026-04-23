@@ -3,7 +3,10 @@ import { headers } from 'next/headers'
 import { notFound } from 'next/navigation'
 import type { JSX } from 'react'
 import { createClient } from '@/lib/supabase/server'
-import { resolveCountryCodeFromHeaders, resolveProgramPricing } from '@/lib/pricing'
+import {
+  resolveCountryCodeFromHeaders,
+  resolveProgramPricing,
+} from '@/lib/pricing'
 import type { ProgramRow } from '@/types/programs'
 import { PROGRAM_SPECS } from './registry'
 

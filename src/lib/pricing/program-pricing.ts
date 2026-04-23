@@ -183,7 +183,9 @@ export function isArgentinaCountry(countryCodeOrLabel: string | null): boolean {
   return resolveCountryCode(countryCodeOrLabel) === 'AR'
 }
 
-function resolveRegion(countryCodeOrLabel: string | null | undefined): PricingRegion {
+function resolveRegion(
+  countryCodeOrLabel: string | null | undefined
+): PricingRegion {
   return isArgentinaCountry(countryCodeOrLabel ?? null) ? 'AR' : 'GLOBAL'
 }
 
@@ -195,7 +197,9 @@ function resolveUsdPricing(program: ProgramRow): ProgramPricingBlock {
   const installmentsEnabled = Boolean(
     toNullableBoolean(program.price_usd_has_installments)
   )
-  const installmentsPrice = toNonNegativeMoney(program.price_usd_final_installments)
+  const installmentsPrice = toNonNegativeMoney(
+    program.price_usd_final_installments
+  )
   const hasInstallments = installmentsEnabled && installmentsPrice !== null
 
   return {
@@ -222,7 +226,9 @@ function resolveArsPricing(program: ProgramRow): ProgramPricingBlock {
   const installmentsEnabled = Boolean(
     toNullableBoolean(program.price_ars_has_installments)
   )
-  const installmentsPrice = toNonNegativeMoney(program.price_ars_final_installments)
+  const installmentsPrice = toNonNegativeMoney(
+    program.price_ars_final_installments
+  )
   const hasInstallments = installmentsEnabled && installmentsPrice !== null
 
   return {
@@ -256,13 +262,17 @@ export function resolveProgramPricing(
   selectedPaymentVariant?: ProgramPaymentVariant | null
 ): ResolvedProgramPricing {
   const region = resolveRegion(countryCodeOrLabel)
-  const regionPricing = region === 'AR' ? resolveArsPricing(program) : resolveUsdPricing(program)
+  const regionPricing =
+    region === 'AR' ? resolveArsPricing(program) : resolveUsdPricing(program)
 
   const availableVariants: ProgramPaymentVariant[] = []
   if (regionPricing.singlePaymentPrice !== null) {
     availableVariants.push('single_payment')
   }
-  if (regionPricing.hasInstallments && regionPricing.installmentsPrice !== null) {
+  if (
+    regionPricing.hasInstallments &&
+    regionPricing.installmentsPrice !== null
+  ) {
     availableVariants.push('installments')
   }
 
@@ -278,7 +288,9 @@ export function resolveProgramPricing(
       : (availableVariants[0] ?? 'single_payment')
 
   const nextSelected = selectedPaymentVariant ?? defaultPaymentVariant
-  const selectedPaymentVariantResolved = availableVariants.includes(nextSelected)
+  const selectedPaymentVariantResolved = availableVariants.includes(
+    nextSelected
+  )
     ? nextSelected
     : defaultPaymentVariant
 

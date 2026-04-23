@@ -303,7 +303,9 @@ export default function ProgramPostularPage() {
   const [values, setValues] = useState<FormValuesMap>({})
   const [hasPaidPre, setHasPaidPre] = useState<boolean | null>(null)
   const [checkoutOpen, setCheckoutOpen] = useState(false)
-  const viewerCountryCode = resolveCountryCode(profile?.country_residence ?? null)
+  const viewerCountryCode = resolveCountryCode(
+    profile?.country_residence ?? null
+  )
 
   useEffect(() => {
     if (hasBootedOnceRef.current) return

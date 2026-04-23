@@ -106,10 +106,11 @@ const ProgramStructureAccordion: React.FC = () => {
             return (
               <div
                 key={unit.id}
-                className={`rounded-xl border transition  ${isOpen
-                  ? 'border-emerald-500/40 bg-white/5'
-                  : 'border-white/10 bg-white/5'
-                  }`}
+                className={`rounded-xl border transition  ${
+                  isOpen
+                    ? 'border-emerald-500/40 bg-white/5'
+                    : 'border-white/10 bg-white/5'
+                }`}
               >
                 {/* Header */}
                 <button
@@ -130,8 +131,9 @@ const ProgramStructureAccordion: React.FC = () => {
                   </div>
 
                   <FiChevronDown
-                    className={`h-5 w-5 transition ${isOpen ? 'rotate-180 text-emerald-400' : 'text-white/60'
-                      }`}
+                    className={`h-5 w-5 transition ${
+                      isOpen ? 'rotate-180 text-emerald-400' : 'text-white/60'
+                    }`}
                   />
                 </button>
 

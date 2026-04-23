@@ -119,7 +119,8 @@ function buildPricingState(program: ProgramRow, currency: 'usd' | 'ars') {
     hasInstallments: Boolean(program.price_ars_has_installments),
     finalInstallments: toInputValue(program.price_ars_final_installments),
     installmentsCount: toInputValue(program.price_ars_installments_count),
-    installmentsInterestFree: program.price_ars_installments_interest_free !== false,
+    installmentsInterestFree:
+      program.price_ars_installments_interest_free !== false,
     installmentAmount: toInputValue(program.price_ars_installment_amount),
   } satisfies PricingFormState
 }
@@ -160,7 +161,8 @@ function PricingEditor(props: PricingEditorProps) {
       <div>
         <h3 className="text-sm font-semibold text-slate-100">{props.title}</h3>
         <p className="text-xs text-slate-400">
-          Configura precio de lista, precio final y metadata de cuotas en {props.currency}.
+          Configura precio de lista, precio final y metadata de cuotas en{' '}
+          {props.currency}.
         </p>
       </div>
 
@@ -287,8 +289,8 @@ function PricingEditor(props: PricingEditorProps) {
 
       {props.showInstallmentsHint ? (
         <div className="rounded-md border border-slate-800 bg-slate-900/40 px-3 py-2 text-xs text-slate-400">
-          Nota: en esta iteracion, cuotas USD no se muestran de forma explicita en UI publica,
-          pero quedan configuradas para compatibilidad futura.
+          Nota: en esta iteracion, cuotas USD no se muestran de forma explicita
+          en UI publica, pero quedan configuradas para compatibilidad futura.
         </div>
       ) : null}
     </div>
@@ -395,7 +397,10 @@ export default function AdminProgramDetailPage() {
     if (!nextSlug) return showError('El slug es obligatorio.')
 
     try {
-      const usdList = parseOptionalDecimal('Precio lista USD', usdPricing.listPrice)
+      const usdList = parseOptionalDecimal(
+        'Precio lista USD',
+        usdPricing.listPrice
+      )
       const usdDiscount = parseOptionalDecimal(
         'Descuento USD',
         usdPricing.discountPercent
@@ -417,13 +422,13 @@ export default function AdminProgramDetailPage() {
           )
         : null
       const usdInstallmentAmount = usdPricing.hasInstallments
-        ? parseOptionalDecimal(
-            'Monto cuota USD',
-            usdPricing.installmentAmount
-          )
+        ? parseOptionalDecimal('Monto cuota USD', usdPricing.installmentAmount)
         : null
 
-      const arsList = parseOptionalDecimal('Precio lista ARS', arsPricing.listPrice)
+      const arsList = parseOptionalDecimal(
+        'Precio lista ARS',
+        arsPricing.listPrice
+      )
       const arsDiscount = parseOptionalDecimal(
         'Descuento ARS',
         arsPricing.discountPercent
@@ -445,10 +450,7 @@ export default function AdminProgramDetailPage() {
           )
         : null
       const arsInstallmentAmount = arsPricing.hasInstallments
-        ? parseOptionalDecimal(
-            'Monto cuota ARS',
-            arsPricing.installmentAmount
-          )
+        ? parseOptionalDecimal('Monto cuota ARS', arsPricing.installmentAmount)
         : null
 
       setSaving(true)
@@ -642,7 +644,8 @@ export default function AdminProgramDetailPage() {
           <CardHeader>
             <CardTitle>Configuracion del programa</CardTitle>
             <CardDescription className="text-slate-300">
-              Actualiza datos base, modalidad de pago y pricing completo por moneda.
+              Actualiza datos base, modalidad de pago y pricing completo por
+              moneda.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-5">
@@ -754,7 +757,9 @@ export default function AdminProgramDetailPage() {
                   >
                     <div className="flex flex-wrap items-start justify-between gap-3">
                       <div className="min-w-0">
-                        <div className="font-medium">{edition.edition_name}</div>
+                        <div className="font-medium">
+                          {edition.edition_name}
+                        </div>
                         <div className="text-xs text-slate-300">
                           {formatDateRange(edition.starts_at, edition.ends_at)}
                         </div>
@@ -821,7 +826,9 @@ export default function AdminProgramDetailPage() {
                   id="editionEnd"
                   type="date"
                   value={newEditionEndsAt}
-                  onChange={(element) => setNewEditionEndsAt(element.target.value)}
+                  onChange={(element) =>
+                    setNewEditionEndsAt(element.target.value)
+                  }
                 />
               </div>
             </div>
@@ -831,7 +838,9 @@ export default function AdminProgramDetailPage() {
               <Input
                 id="editionTeams"
                 value={newEditionTeamCount}
-                onChange={(element) => setNewEditionTeamCount(element.target.value)}
+                onChange={(element) =>
+                  setNewEditionTeamCount(element.target.value)
+                }
                 inputMode="numeric"
                 placeholder="Ej: 4"
               />

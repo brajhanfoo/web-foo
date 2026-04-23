@@ -149,7 +149,9 @@ export default function ProgramsPage() {
   const [checkoutProgram, setCheckoutProgram] = useState<ProgramCardVM | null>(
     null
   )
-  const viewerCountryCode = resolveCountryCode(profile?.country_residence ?? null)
+  const viewerCountryCode = resolveCountryCode(
+    profile?.country_residence ?? null
+  )
 
   useEffect(() => {
     if (didBootReference.current) return

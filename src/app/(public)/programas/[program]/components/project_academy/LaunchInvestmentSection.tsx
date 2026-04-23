@@ -32,7 +32,8 @@ const LaunchInvestmentSection = (props: LaunchInvestmentSectionProps) => {
   }, [basePricing.defaultPaymentVariant])
 
   const pricing = useMemo(
-    () => resolveProgramPricing(props.program, props.countryCode, paymentVariant),
+    () =>
+      resolveProgramPricing(props.program, props.countryCode, paymentVariant),
     [props.program, props.countryCode, paymentVariant]
   )
 
@@ -119,7 +120,9 @@ const LaunchInvestmentSection = (props: LaunchInvestmentSectionProps) => {
 
             <div className="mt-6">
               {pricing.hasListPrice && listPriceLabel ? (
-                <p className="text-sm text-white/40 line-through">{listPriceLabel}</p>
+                <p className="text-sm text-white/40 line-through">
+                  {listPriceLabel}
+                </p>
               ) : null}
 
               <div className="flex items-end gap-2">
@@ -172,7 +175,9 @@ const LaunchInvestmentSection = (props: LaunchInvestmentSectionProps) => {
                 <FiCalendar className="mt-0.5 h-4 w-4 text-[#BDBE0B]" />
                 <div>
                   <p className="font-medium text-white">Inicio: 18 de mayo</p>
-                  <p className="text-xs text-white/50">Duracion de 12 semanas</p>
+                  <p className="text-xs text-white/50">
+                    Duracion de 12 semanas
+                  </p>
                 </div>
               </div>
 
@@ -205,7 +210,7 @@ const LaunchInvestmentSection = (props: LaunchInvestmentSectionProps) => {
             </button>
 
             <p className="mt-3 text-center text-xs text-white/40">
-              Acceso inmediato tras admision · Cupos limitados por cohorte
+              Acceso inmediato tras admision ï¿½ Cupos limitados por cohorte
             </p>
           </div>
         </div>

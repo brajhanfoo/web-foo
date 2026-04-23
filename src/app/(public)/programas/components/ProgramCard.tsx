@@ -259,7 +259,7 @@ export function ProgramCard(props: ProgramCardProps): React.JSX.Element {
               <div className="text-xs text-white/50">
                 {editionLine}
                 {rangeChip ? (
-                  <span className="text-white/40"> · {rangeChip}</span>
+                  <span className="text-white/40"> ï¿½ {rangeChip}</span>
                 ) : null}
               </div>
             ) : (

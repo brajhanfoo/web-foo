@@ -5,10 +5,7 @@ import { CreditCard, Wallet } from 'lucide-react'
 
 import type { PaymentStatus } from '@/types/payments'
 import type { ProgramPaymentVariant, ProgramRow } from '@/types/programs'
-import {
-  formatCurrencyAmount,
-  resolveProgramPricing,
-} from '@/lib/pricing'
+import { formatCurrencyAmount, resolveProgramPricing } from '@/lib/pricing'
 
 import { Button } from '@/components/ui/button'
 import {
@@ -50,12 +47,12 @@ export function PaymentMethodModal(props: PaymentMethodModalProps) {
   const [isStartingMp, setIsStartingMp] = useState(false)
   const [methodError, setMethodError] = useState<string | null>(null)
 
-  const [paymentVariant, setPaymentVariant] = useState<ProgramPaymentVariant>(
-    'single_payment'
-  )
+  const [paymentVariant, setPaymentVariant] =
+    useState<ProgramPaymentVariant>('single_payment')
 
   const pricing = useMemo(
-    () => resolveProgramPricing(props.program, props.countryCode, paymentVariant),
+    () =>
+      resolveProgramPricing(props.program, props.countryCode, paymentVariant),
     [props.program, props.countryCode, paymentVariant]
   )
 

@@ -88,7 +88,8 @@ const AdmissionPricing: React.FC<AdmissionPricingProps> = (props) => {
               <span className="text-xs px-3 py-1 rounded-full bg-yellow-500/20 text-yellow-400">
                 Cupos limitados
               </span>
-              {selectedPricing.hasDiscount && selectedPricing.discountPercent ? (
+              {selectedPricing.hasDiscount &&
+              selectedPricing.discountPercent ? (
                 <span className="text-xs px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300">
                   {Math.round(selectedPricing.discountPercent)}% OFF
                 </span>
@@ -175,7 +176,8 @@ const AdmissionPricing: React.FC<AdmissionPricingProps> = (props) => {
             installmentsPriceLabel &&
             singlePriceLabel ? (
               <p className="mt-3 text-xs text-gray-400">
-                Cuotas: {installmentsPriceLabel} � Pago unico: {singlePriceLabel}
+                Cuotas: {installmentsPriceLabel} ï¿½ Pago unico:{' '}
+                {singlePriceLabel}
               </p>
             ) : null}
           </div>
