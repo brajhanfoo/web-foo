@@ -142,4 +142,3 @@ export default async function PublicProgramsPage(): Promise<React.JSX.Element> {
     </div>
   )
 }
-

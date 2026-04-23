@@ -89,4 +89,3 @@ const EvaluationCertificationSection = () => {
 }
 
 export default EvaluationCertificationSection
-

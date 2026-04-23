@@ -57,4 +57,3 @@ export function ComingSoonStrip(props: { items?: ComingSoonItem[] }) {
     </section>
   )
 }
-

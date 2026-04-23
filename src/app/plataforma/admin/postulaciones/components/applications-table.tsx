@@ -760,4 +760,3 @@ export function ApplicationsTable() {
     </div>
   )
 }
-

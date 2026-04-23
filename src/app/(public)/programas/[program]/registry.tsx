@@ -28,6 +28,10 @@ import EnrollmentStepsSection from './components/project_academy/ProjectAcademyE
 import AdmissionProcess from './components/AdmissionProcess'
 import AdmissionPricing from './components/AdmissionPricing'
 
+// Temporal: ocultar bloque de inversión/precio en landing pública de Project Academy.
+// Para reactivar, cambiar a `true`.
+const SHOW_PROJECT_ACADEMY_PRICING_SECTION = false
+
 type ProgramRenderParams = {
   program: ProgramRow
   countryCode: string | null
@@ -74,11 +78,13 @@ export const PROGRAM_SPECS: Record<string, ProgramRenderSpec> = {
         <CareerIntensiveSection />
         <EvaluationCertificationSection />
         <CareerOutcomeSection />
-        <LaunchInvestmentSection
-          program={program}
-          countryCode={countryCode}
-          initialPricing={pricing}
-        />
+        {SHOW_PROJECT_ACADEMY_PRICING_SECTION ? (
+          <LaunchInvestmentSection
+            program={program}
+            countryCode={countryCode}
+            initialPricing={pricing}
+          />
+        ) : null}
         <FinalCtaSection />
         <FAQSection />
       </div>,

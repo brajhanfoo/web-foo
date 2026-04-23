@@ -139,4 +139,3 @@ export function MisPostulacionesView(props: {
     </div>
   )
 }
-

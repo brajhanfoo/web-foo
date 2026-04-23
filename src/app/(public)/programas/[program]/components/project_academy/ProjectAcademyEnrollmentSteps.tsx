@@ -150,4 +150,3 @@ const EnrollmentStepsSection = () => {
 }
 
 export default EnrollmentStepsSection
-
