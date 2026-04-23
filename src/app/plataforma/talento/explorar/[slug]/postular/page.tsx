@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
@@ -897,7 +897,9 @@ export default function ProgramPostularPage() {
           <div className="mt-4">
             <Link
               className="inline-flex w-full items-center justify-center rounded-xl bg-emerald-400 px-5 py-3 text-sm font-semibold text-black hover:brightness-110"
-              href="/ingresar"
+              href={`/ingresar?redirectTo=${encodeURIComponent(
+                `/plataforma/talento/explorar/${program.slug}/postular`
+              )}`}
             >
               Iniciar sesión
             </Link>
@@ -1090,3 +1092,4 @@ export default function ProgramPostularPage() {
     </PostulationShell>
   )
 }
+

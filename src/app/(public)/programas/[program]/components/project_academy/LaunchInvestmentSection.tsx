@@ -1,8 +1,9 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import { FiCalendar, FiClock, FiMonitor } from 'react-icons/fi'
 import { useRouter } from 'next/navigation'
+import { FiCalendar, FiClock, FiMonitor } from 'react-icons/fi'
+
 import {
   formatCurrencyAmount,
   resolveProgramPricing,
@@ -18,6 +19,8 @@ type LaunchInvestmentSectionProps = {
 
 const LaunchInvestmentSection = (props: LaunchInvestmentSectionProps) => {
   const router = useRouter()
+  const postulationPath = `/plataforma/talento/explorar/${props.program.slug}/postular`
+
   const basePricing = useMemo(
     () => resolveProgramPricing(props.program, props.countryCode),
     [props.program, props.countryCode]
@@ -68,10 +71,10 @@ const LaunchInvestmentSection = (props: LaunchInvestmentSectionProps) => {
     <section className="mx-auto max-w-7xl px-6 py-24">
       <div className="mb-12 text-center">
         <h2 className="text-3xl font-semibold text-white md:text-4xl">
-          Inversion por Lanzamiento
+          Inversión por lanzamiento
         </h2>
         <p className="mt-3 text-sm text-white/60">
-          Tu futuro profesional comienza con una decision inteligente.
+          Tu futuro profesional comienza con una decisión inteligente.
         </p>
       </div>
 
@@ -127,7 +130,7 @@ const LaunchInvestmentSection = (props: LaunchInvestmentSectionProps) => {
 
               <div className="flex items-end gap-2">
                 <span className="text-4xl font-bold leading-none text-[#BDBE0B] sm:text-5xl">
-                  {selectedPriceLabel ?? 'Proximamente'}
+                  {selectedPriceLabel ?? 'Próximamente'}
                 </span>
               </div>
 
@@ -139,8 +142,8 @@ const LaunchInvestmentSection = (props: LaunchInvestmentSectionProps) => {
                     <p>
                       Hasta {pricing.installmentsCount} cuotas{' '}
                       {pricing.installmentsInterestFree === false
-                        ? 'con interes'
-                        : 'sin interes'}
+                        ? 'con interés'
+                        : 'sin interés'}
                     </p>
                   ) : null}
                   {installmentAmountLabel ? (
@@ -161,7 +164,7 @@ const LaunchInvestmentSection = (props: LaunchInvestmentSectionProps) => {
             </div>
 
             <p className="mt-6 max-w-sm text-sm text-white/50">
-              Aplica para iniciar tu proceso de admision y asegurar este precio.
+              Aplica para iniciar tu proceso de admisión y asegurar este precio.
             </p>
           </div>
 
@@ -172,7 +175,7 @@ const LaunchInvestmentSection = (props: LaunchInvestmentSectionProps) => {
                 <div>
                   <p className="font-medium text-white">Inicio: 18 de mayo</p>
                   <p className="text-xs text-white/50">
-                    Duracion de 12 semanas
+                    Duración de 12 semanas
                   </p>
                 </div>
               </div>
@@ -182,7 +185,7 @@ const LaunchInvestmentSection = (props: LaunchInvestmentSectionProps) => {
                 <div>
                   <p className="font-medium text-white">Formato Part-time</p>
                   <p className="text-xs text-white/50">
-                    Turnos a eleccion: manana, tarde o noche.
+                    Turnos a elección: mañana, tarde o noche.
                   </p>
                 </div>
               </div>
@@ -199,14 +202,14 @@ const LaunchInvestmentSection = (props: LaunchInvestmentSectionProps) => {
             </div>
 
             <button
-              onClick={() => router.push('/plataforma/talento')}
+              onClick={() => router.push(postulationPath)}
               className="mt-8 w-full rounded-xl bg-gradient-to-r from-[#BDBE0B] to-[#A5A70A] py-3 text-sm font-semibold text-black transition hover:opacity-90 cursor-pointer"
             >
               Asegurar mi cupo
             </button>
 
             <p className="mt-3 text-center text-xs text-white/40">
-              Acceso inmediato tras admision � Cupos limitados por cohorte
+              Acceso inmediato tras admisión - Cupos limitados por cohorte
             </p>
           </div>
         </div>
@@ -216,3 +219,4 @@ const LaunchInvestmentSection = (props: LaunchInvestmentSectionProps) => {
 }
 
 export default LaunchInvestmentSection
+

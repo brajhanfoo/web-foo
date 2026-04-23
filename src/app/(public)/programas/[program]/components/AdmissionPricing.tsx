@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import React, { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
@@ -74,10 +74,10 @@ const AdmissionPricing: React.FC<AdmissionPricingProps> = (props) => {
       <div className="max-w-5xl mx-auto">
         <div className="text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-bold">
-            Acceso al proceso de admision
+            Acceso al proceso de admisión
           </h2>
           <p className="text-gray-400 mt-4">
-            Da el primer paso para ingresar a Smart Projects con una evaluacion
+            Da el primer paso para ingresar a Smart Projects con una evaluación
             real de tu nivel.
           </p>
         </div>
@@ -120,7 +120,7 @@ const AdmissionPricing: React.FC<AdmissionPricingProps> = (props) => {
                       : 'text-white/75 hover:text-white',
                   ].join(' ')}
                 >
-                  Pago unico
+                  Pago único
                 </button>
               </div>
             ) : null}
@@ -143,8 +143,8 @@ const AdmissionPricing: React.FC<AdmissionPricingProps> = (props) => {
                     <p>
                       Hasta {selectedPricing.installmentsCount} cuotas{' '}
                       {selectedPricing.installmentsInterestFree === false
-                        ? 'con interes'
-                        : 'sin interes'}
+                        ? 'con interés'
+                        : 'sin interés'}
                     </p>
                   ) : null}
                   {installmentAmountLabel ? (
@@ -155,19 +155,19 @@ const AdmissionPricing: React.FC<AdmissionPricingProps> = (props) => {
 
               {paymentVariant === 'installments' && singlePriceLabel ? (
                 <p className="text-gray-400 text-sm mt-2">
-                  Pago unico: {singlePriceLabel}
+                  Pago único: {singlePriceLabel}
                 </p>
               ) : null}
             </div>
 
             <p className="text-gray-300 mt-6 max-w-md">
-              Accede a una evaluacion tecnica real y recibe feedback
+              Accede a una evaluación técnica real y recibe feedback
               personalizado sobre tu nivel actual.
             </p>
 
             <Link href="/plataforma">
               <button className="mt-6 px-6 py-3 bg-[#00CCA4] text-black font-semibold rounded-lg hover:opacity-90 transition cursor-pointer">
-                Iniciar proceso de admision
+                Iniciar proceso de admisión
               </button>
             </Link>
 
@@ -176,7 +176,7 @@ const AdmissionPricing: React.FC<AdmissionPricingProps> = (props) => {
             installmentsPriceLabel &&
             singlePriceLabel ? (
               <p className="mt-3 text-xs text-gray-400">
-                Cuotas: {installmentsPriceLabel} ï¿½ Pago unico:{' '}
+                Cuotas: {installmentsPriceLabel} · Pago único:{' '}
                 {singlePriceLabel}
               </p>
             ) : null}
@@ -201,8 +201,8 @@ const AdmissionPricing: React.FC<AdmissionPricingProps> = (props) => {
         </div>
 
         <div className="text-center mt-8 max-w-xl mx-auto">
-          <p className="text-gray-500 text-xs">
-            Este pago corresponde unicamente al proceso de admision y no
+            <p className="text-gray-500 text-xs">
+            Este pago corresponde únicamente al proceso de admisión y no
             garantiza el ingreso al programa.
           </p>
 
@@ -216,3 +216,4 @@ const AdmissionPricing: React.FC<AdmissionPricingProps> = (props) => {
 }
 
 export default AdmissionPricing
+

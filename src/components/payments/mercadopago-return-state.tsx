@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
@@ -22,6 +22,7 @@ type StatusApiResponse =
         application_id: string | null
         paid_at: string | null
       }
+      nextUrl?: string | null
     }
   | { ok: false; message: string }
 
@@ -97,6 +98,15 @@ function normalizeWhatsAppNumber(value: string | undefined): string {
   return (value ?? '').replace(/[^\d]/g, '')
 }
 
+function safeRedirectPath(value: string | null | undefined): string | null {
+  if (!value) return null
+  const normalized = value.trim()
+  if (!normalized.startsWith('/') || normalized.startsWith('//')) {
+    return null
+  }
+  return normalized
+}
+
 function buildSupportWhatsAppUrl(): string | null {
   const number = normalizeWhatsAppNumber(
     process.env.NEXT_PUBLIC_PAYMENT_SUPPORT_WHATSAPP
@@ -123,6 +133,7 @@ export function MercadoPagoReturnState(props: { variant: ReturnVariant }) {
   const [isLoading, setIsLoading] = useState(true)
   const [backendStatus, setBackendStatus] = useState<PaymentStatus | null>(null)
   const [backendLookupFailed, setBackendLookupFailed] = useState(false)
+  const [resolvedNextUrl, setResolvedNextUrl] = useState<string | null>(null)
   const [countdown, setCountdown] = useState(SUCCESS_REDIRECT_SECONDS)
 
   const supportUrl = useMemo(() => buildSupportWhatsAppUrl(), [])
@@ -195,6 +206,7 @@ export function MercadoPagoReturnState(props: { variant: ReturnVariant }) {
 
         setBackendStatus(json.payment.status)
         setBackendLookupFailed(false)
+        setResolvedNextUrl(safeRedirectPath(json.nextUrl))
 
         if (
           json.payment.status === 'pending' ||
@@ -242,13 +254,13 @@ export function MercadoPagoReturnState(props: { variant: ReturnVariant }) {
     if (countdown > 0 || redirectInProgressRef.current) return
 
     redirectInProgressRef.current = true
-    router.replace(SUCCESS_REDIRECT_PATH)
-  }, [countdown, presentationState, router])
+    router.replace(resolvedNextUrl ?? SUCCESS_REDIRECT_PATH)
+  }, [countdown, presentationState, resolvedNextUrl, router])
 
   function redirectNow() {
     if (redirectInProgressRef.current) return
     redirectInProgressRef.current = true
-    router.replace(SUCCESS_REDIRECT_PATH)
+    router.replace(resolvedNextUrl ?? SUCCESS_REDIRECT_PATH)
   }
 
   const isValidationErrorState =
@@ -265,17 +277,17 @@ export function MercadoPagoReturnState(props: { variant: ReturnVariant }) {
 
   const message =
     presentationState === 'success'
-      ? 'Tu pago fue procesado correctamente y tu postulacion quedo actualizada.'
+      ? 'Tu pago fue procesado correctamente y tu postulación quedó actualizada.'
       : presentationState === 'pending'
-        ? 'Recibimos tu operacion, pero todavia no pudimos confirmarla de forma definitiva.'
+        ? 'Recibimos tu operación, pero todavía no pudimos confirmarla de forma definitiva.'
         : isValidationErrorState
           ? 'No pudimos validar tu pago en este momento por un problema temporal.'
-          : 'Ocurrio un problema al procesar o validar tu pago.'
+          : 'Ocurrió un problema al procesar o validar tu pago.'
 
   const secondary =
     presentationState === 'success'
-      ? `Seras redirigido en ${countdown} segundos...`
-      : 'Si el estado no se actualiza en breve, contactanos por WhatsApp para ayudarte.'
+      ? `Serás redirigido en ${countdown} segundos...`
+      : 'Si el estado no se actualiza en breve, contáctanos por WhatsApp para ayudarte.'
 
   return (
     <div className="min-h-dvh bg-black px-6 py-10">
@@ -324,15 +336,18 @@ export function MercadoPagoReturnState(props: { variant: ReturnVariant }) {
             </Button>
           ) : (
             <Button type="button" disabled>
-              Contactanos por soporte
+              Contáctanos por soporte
             </Button>
           )}
 
           <Button asChild variant="secondary">
-            <Link href={SUCCESS_REDIRECT_PATH}>Ir a mis postulaciones</Link>
+            <Link href={resolvedNextUrl ?? SUCCESS_REDIRECT_PATH}>
+              Ir a mis postulaciones
+            </Link>
           </Button>
         </div>
       </div>
     </div>
   )
 }
+

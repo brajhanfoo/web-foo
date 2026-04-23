@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { Suspense, useEffect, useId, useState } from 'react'
 import { HiRocketLaunch, HiEye, HiEyeSlash } from 'react-icons/hi2'
@@ -29,8 +29,11 @@ type ResendResponse =
 
 function safeRedirectTo(value: string | null) {
   if (!value) return '/plataforma'
-  if (!value.startsWith('/')) return '/plataforma'
-  return value
+  const normalized = value.trim()
+  if (!normalized.startsWith('/') || normalized.startsWith('//')) {
+    return '/plataforma'
+  }
+  return normalized
 }
 
 function LoginForm() {
@@ -140,10 +143,13 @@ function LoginForm() {
     setIsGoogleSubmitting(true)
 
     try {
+      const callbackUrl = new URL('/auth/callback', window.location.origin)
+      callbackUrl.searchParams.set('redirectTo', redirectTo)
+
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
+          redirectTo: callbackUrl.toString(),
         },
       })
 
@@ -417,3 +423,4 @@ export default function LoginPage() {
     </Suspense>
   )
 }
+
