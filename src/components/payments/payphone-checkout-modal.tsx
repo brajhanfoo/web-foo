@@ -6,6 +6,7 @@ import { Loader2 } from 'lucide-react'
 import { useToastEnhanced } from '@/hooks/use-toast-enhanced'
 
 import type { PaymentStatus } from '@/types/payments'
+import type { ProgramPaymentVariant } from '@/types/programs'
 
 import {
   Dialog,
@@ -42,13 +43,12 @@ type PayphoneCheckoutModalProps = {
   editionId: string | null
   purpose: PaymentPurpose
   applicationId?: string | null
-  amountCents: number
+  paymentVariant: ProgramPaymentVariant
   onPaid?: (paymentId: string) => void
 }
 
 type PayphoneBoxOptions = {
   token: string
-  // 👇 OJO: el script de PayPhone usa ESTA clave
   clientTransactionId: string
   amount: number
   amountWithoutTax: number
@@ -80,7 +80,7 @@ function buildRequestKey(props: PayphoneCheckoutModalProps): string {
     props.editionId ?? 'none',
     props.purpose,
     props.applicationId ?? 'none',
-    String(props.amountCents),
+    props.paymentVariant,
   ].join('|')
 }
 
@@ -171,20 +171,15 @@ export function PayphoneCheckoutModal(props: PayphoneCheckoutModalProps) {
     setRequestKey(nextKey)
     latestKeyRef.current = nextKey
 
-    if (!Number.isFinite(props.amountCents) || props.amountCents <= 0) {
-      setErrorMessage('Monto inválido para iniciar el pago.')
-      return
-    }
-
     void startCheckout(nextKey)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     props.open,
-    props.amountCents,
     props.programId,
     props.editionId,
     props.purpose,
     props.applicationId,
+    props.paymentVariant,
   ])
 
   useEffect(() => {
@@ -213,8 +208,9 @@ export function PayphoneCheckoutModal(props: PayphoneCheckoutModalProps) {
         const instance = new Constructor(boxOptions)
         instance.render(containerId)
       } catch (err) {
-        const message = err instanceof Error ? err.message : 'Error PayPhone'
-        setBoxError(message)
+        setBoxError(
+          'No pudimos cargar el módulo de pago. Inténtalo nuevamente.'
+        )
       }
     }
 
@@ -244,7 +240,8 @@ export function PayphoneCheckoutModal(props: PayphoneCheckoutModalProps) {
           editionId: props.editionId,
           purpose: props.purpose,
           applicationId: props.applicationId ?? null,
-          amountCents: props.amountCents,
+          paymentVariant: props.paymentVariant,
+          payment_variant: props.paymentVariant,
         }),
         cache: 'no-store',
       })
@@ -290,22 +287,8 @@ export function PayphoneCheckoutModal(props: PayphoneCheckoutModalProps) {
           reference: data.reference,
         })
       } else {
-        const debug = JSON.stringify(
-          {
-            hasToken: Boolean(data.token),
-            hasClientTxId: Boolean(data.clientTxId),
-            hasStoreId: Boolean(data.storeId),
-            amount: data.amount,
-            amountWithoutTax: data.amountWithoutTax,
-            amountWithTax: data.amountWithTax,
-            tax: data.tax,
-            currency: data.currency,
-          },
-          null,
-          2
-        )
         setBoxError(
-          `Datos incompletos para mostrar la caja de PayPhone.\n${debug}`
+          'No pudimos preparar el pago en este momento. Inténtalo nuevamente.'
         )
       }
     } catch {
@@ -354,9 +337,9 @@ export function PayphoneCheckoutModal(props: PayphoneCheckoutModalProps) {
           ) : null}
 
           {boxError ? (
-            <pre className="whitespace-pre-wrap rounded-md border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-200">
+            <div className="rounded-md border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-sm text-amber-200">
               {boxError}
-            </pre>
+            </div>
           ) : null}
 
           {isReady ? (

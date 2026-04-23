@@ -1,4 +1,4 @@
-// src/app/plataforma/talento/mis-postulaciones/page.tsx
+﻿// src/app/plataforma/talento/mis-postulaciones/page.tsx
 
 'use client'
 
@@ -23,7 +23,7 @@ export default function MisPostulacionesPage() {
     const run = async () => {
       const { data: userRes, error: userErr } = await supabase.auth.getUser()
       if (userErr) {
-        showError('No se pudo validar tu sesión', userErr.message)
+        showError('No se pudo validar tu sesión', 'Inténtalo nuevamente.')
         setState({ kind: 'signed_out' })
         return
       }
@@ -59,7 +59,23 @@ export default function MisPostulacionesPage() {
             updated_at,
             payment_mode,
             requires_payment_pre,
-            price_usd
+            price_usd,
+            price_usd_list,
+            price_usd_discount_percent,
+            price_usd_final_single,
+            price_usd_has_installments,
+            price_usd_final_installments,
+            price_usd_installments_count,
+            price_usd_installments_interest_free,
+            price_usd_installment_amount,
+            price_ars_list,
+            price_ars_discount_percent,
+            price_ars_final_single,
+            price_ars_has_installments,
+            price_ars_final_installments,
+            price_ars_installments_count,
+            price_ars_installments_interest_free,
+            price_ars_installment_amount
           ),
           edition:program_editions (
             id,
@@ -77,7 +93,10 @@ export default function MisPostulacionesPage() {
         .order('created_at', { ascending: false })
 
       if (error) {
-        showError('No se pudieron cargar tus postulaciones', error.message)
+        showError(
+          'No se pudieron cargar tus postulaciones',
+          'Inténtalo nuevamente.'
+        )
         setState({ kind: 'empty' })
         return
       }
@@ -109,3 +128,4 @@ export default function MisPostulacionesPage() {
 
   return <MisPostulacionesView state={state} pastCompleted={pastCompleted} />
 }
+

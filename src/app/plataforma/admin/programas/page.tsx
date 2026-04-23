@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
@@ -57,7 +57,8 @@ export default function AdminProgramsPage() {
     const { data, error } = await supabase
       .from('programs')
       .select(
-        'id,slug,title,description,is_published,payment_mode,requires_payment_pre,price_usd,created_at'
+        `id,slug,title,description,is_published,payment_mode,requires_payment_pre,price_usd,
+        price_usd_final_single,created_at`
       )
       .order('created_at', { ascending: false })
 
@@ -114,9 +115,10 @@ export default function AdminProgramsPage() {
     setDescription(p.description ?? '')
     setPaymentMode(resolvePaymentMode(p))
     setPriceUsd(
-      p.price_usd === null || p.price_usd === undefined
+      p.price_usd_final_single === null ||
+        p.price_usd_final_single === undefined
         ? ''
-        : String(p.price_usd)
+        : String(p.price_usd_final_single)
     )
     setOpen(true)
   }
@@ -145,6 +147,7 @@ export default function AdminProgramsPage() {
       payment_mode: paymentMode,
       requires_payment_pre: paymentMode === 'pre',
       price_usd: paymentMode === 'none' ? null : priceValue,
+      price_usd_final_single: paymentMode === 'none' ? null : priceValue,
     }
 
     if (editing) {
@@ -419,3 +422,4 @@ export default function AdminProgramsPage() {
     </div>
   )
 }
+

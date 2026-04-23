@@ -1,4 +1,4 @@
-// src/app/plataforma/admin/postulaciones/%5BpostulacionesId%5D/page.tsx
+﻿// src/app/plataforma/admin/postulaciones/%5BpostulacionesId%5D/page.tsx
 'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
@@ -271,7 +271,10 @@ export default function ApplicationDetailClientPage() {
         setApplication(null)
         setFormSchema(null)
         setIsLoading(false)
-        showErrorRef.current('No se pudo cargar la postulación', error.message)
+        showErrorRef.current(
+          'No se pudo cargar la postulación',
+          'Inténtalo nuevamente.'
+        )
         return
       }
 
@@ -413,7 +416,7 @@ export default function ApplicationDetailClientPage() {
     setIsRejectLoading(false)
 
     if (error) {
-      showError('No se pudo actualizar el estado', error.message)
+      showError('No se pudo actualizar el estado', 'Inténtalo nuevamente.')
       return
     }
 
@@ -468,3 +471,4 @@ export default function ApplicationDetailClientPage() {
     </div>
   )
 }
+

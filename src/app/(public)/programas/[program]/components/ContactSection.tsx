@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import {
   FaLinkedin,
@@ -155,3 +155,4 @@ export default function ContactSection() {
     </section>
   )
 }
+

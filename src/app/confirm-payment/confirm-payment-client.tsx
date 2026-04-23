@@ -1,8 +1,8 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { Loader2, ExternalLink } from 'lucide-react'
+import { ExternalLink, Loader2 } from 'lucide-react'
 
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -166,9 +166,7 @@ export default function ConfirmPaymentClient() {
       if (!confirm.ok || !confirm.json) {
         setStatus('failed')
         setMessage(
-          `PayPhone respondio ${confirm.status}
-
-${(confirm.raw ?? '').slice(0, 1000)}...`
+          `PayPhone respondio ${confirm.status}\n\n${(confirm.raw ?? '').slice(0, 1000)}...`
         )
         setIsPolling(false)
         return
@@ -232,12 +230,12 @@ ${(confirm.raw ?? '').slice(0, 1000)}...`
 
       setStatus('pending')
       setMessage(
-        confirm.json.message ?? 'Pago pendiente. Esperando confirmacion...'
+        confirm.json.message ?? 'Pago pendiente. Esperando confirmación...'
       )
 
       if (attemptRef.current >= MAX_ATTEMPTS) {
         setIsPolling(false)
-        setMessage('No pudimos confirmar el pago todavia. Intenta de nuevo.')
+        setMessage('No pudimos confirmar el pago todavía. Intenta de nuevo.')
         return
       }
 
@@ -255,7 +253,7 @@ ${(confirm.raw ?? '').slice(0, 1000)}...`
     if (current === 'paid') return 'Pago confirmado.'
     if (current === 'failed') return 'El pago fue rechazado.'
     if (current === 'canceled') return 'Pago cancelado.'
-    return 'Pago pendiente. Esperando confirmacion...'
+    return 'Pago pendiente. Esperando confirmación...'
   }
 
   function openCheckout() {

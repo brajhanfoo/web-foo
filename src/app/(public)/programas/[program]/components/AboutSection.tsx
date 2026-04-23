@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import React from 'react'
 import { FaLaptopCode, FaUsers, FaRocket } from 'react-icons/fa'
@@ -99,3 +99,4 @@ const AboutSection: React.FC = () => {
 }
 
 export default AboutSection
+

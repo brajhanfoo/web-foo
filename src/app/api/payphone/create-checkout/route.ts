@@ -1,12 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { supabaseAdmin } from '@/lib/supabase/admin'
-import type { ProgramPaymentMode, ProgramRow } from '@/types/programs'
+import {
+  ProgramPricingError,
+  isProgramPaymentVariant,
+  resolveCheckoutPricingOrThrow,
+  resolveCountryCode,
+  resolveCountryCodeFromHeaders,
+} from '@/lib/pricing'
+import type {
+  ProgramPaymentMode,
+  ProgramPaymentVariant,
+  ProgramRow,
+} from '@/types/programs'
 import type { PaymentProvider, PaymentStatus } from '@/types/payments'
 
 export const runtime = 'nodejs'
 
-const DEFAULT_CURRENCY = 'USD'
 const PAYPHONE_PROVIDER: PaymentProvider = 'payphone'
 
 type PaymentPurpose = 'pre_enrollment' | 'tuition'
@@ -15,7 +25,7 @@ type CreateCheckoutInput = {
   editionId: string | null
   purpose: PaymentPurpose
   applicationId: string | null
-  amountCents: number
+  paymentVariant: ProgramPaymentVariant
 }
 
 type CreateCheckoutResponse = {
@@ -35,10 +45,7 @@ type CreateCheckoutResponse = {
   reference?: string
 }
 
-type ProgramRowSummary = Pick<
-  ProgramRow,
-  'id' | 'slug' | 'payment_mode' | 'requires_payment_pre' | 'price_usd'
->
+type ProgramRowSummary = ProgramRow
 
 type ApplicationRow = {
   id: string
@@ -64,17 +71,6 @@ function asString(v: unknown): string {
   return typeof v === 'string' ? v.trim() : ''
 }
 
-function asNumber(v: unknown): number | null {
-  if (typeof v === 'number' && Number.isFinite(v)) return v
-  if (typeof v === 'string') {
-    const t = v.trim()
-    if (!t) return null
-    const n = Number(t)
-    return Number.isFinite(n) ? n : null
-  }
-  return null
-}
-
 function parseInput(body: unknown): CreateCheckoutInput | null {
   if (!isRecord(body)) return null
 
@@ -82,33 +78,25 @@ function parseInput(body: unknown): CreateCheckoutInput | null {
   const editionIdRaw = asString(body['editionId'])
   const purposeRaw = asString(body['purpose'])
   const applicationIdRaw = asString(body['applicationId'])
-  const amountCentsValue = asNumber(body['amountCents'])
+  const paymentVariantRaw =
+    asString(body['paymentVariant']) || asString(body['payment_variant'])
 
-  if (!programId || !purposeRaw || amountCentsValue === null) return null
+  if (!programId || !purposeRaw || !paymentVariantRaw) return null
   if (purposeRaw !== 'pre_enrollment' && purposeRaw !== 'tuition') return null
-
-  const amountCents = Math.round(amountCentsValue)
-  if (!Number.isFinite(amountCents) || amountCents <= 0) return null
+  if (!isProgramPaymentVariant(paymentVariantRaw)) return null
 
   return {
     programId,
     editionId: editionIdRaw || null,
     purpose: purposeRaw,
     applicationId: applicationIdRaw || null,
-    amountCents,
+    paymentVariant: paymentVariantRaw,
   }
 }
 
 function resolvePaymentMode(program: ProgramRowSummary): ProgramPaymentMode {
   if (program.payment_mode) return program.payment_mode
   return program.requires_payment_pre ? 'pre' : 'none'
-}
-
-function parsePriceToCents(priceUsd: string | number | null): number | null {
-  if (!priceUsd) return null
-  const parsed = Number(priceUsd)
-  if (!Number.isFinite(parsed)) return null
-  return Math.round(parsed * 100)
 }
 
 function buildReference(purpose: PaymentPurpose, programSlug: string): string {
@@ -203,17 +191,24 @@ export async function POST(
 
   if (!payload) {
     return NextResponse.json(
-      { ok: false, message: 'Payload inválido' },
+      { ok: false, message: 'Payload invalido' },
       { status: 400 }
     )
   }
 
-  const { programId, editionId, purpose, applicationId, amountCents } = payload
+  const { programId, editionId, purpose, applicationId, paymentVariant } =
+    payload
   const userId = userRes.user.id
 
   const { data: programRow, error: programErr } = await supabaseAdmin
     .from('programs')
-    .select('id, slug, payment_mode, requires_payment_pre, price_usd')
+    .select(
+      `id, slug, payment_mode, requires_payment_pre, price_usd,
+      price_usd_list,price_usd_discount_percent,price_usd_final_single,price_usd_has_installments,
+      price_usd_final_installments,price_usd_installments_count,price_usd_installments_interest_free,price_usd_installment_amount,
+      price_ars_list,price_ars_discount_percent,price_ars_final_single,price_ars_has_installments,
+      price_ars_final_installments,price_ars_installments_count,price_ars_installments_interest_free,price_ars_installment_amount`
+    )
     .eq('id', programId)
     .maybeSingle()
 
@@ -249,14 +244,6 @@ export async function POST(
     }
   }
 
-  const expectedCents = parsePriceToCents(program.price_usd)
-  if (expectedCents !== null && expectedCents !== amountCents) {
-    return NextResponse.json(
-      { ok: false, message: 'El monto no coincide con el precio del programa' },
-      { status: 400 }
-    )
-  }
-
   let resolvedEditionId = editionId
 
   if (applicationId) {
@@ -268,7 +255,7 @@ export async function POST(
 
     if (appErr || !appRow) {
       return NextResponse.json(
-        { ok: false, message: 'Postulación no encontrada' },
+        { ok: false, message: 'Postulacion no encontrada' },
         { status: 404 }
       )
     }
@@ -276,18 +263,62 @@ export async function POST(
     const application = appRow as ApplicationRow
     if (application.applicant_profile_id !== userId) {
       return NextResponse.json(
-        { ok: false, message: 'Sin permisos para esta postulación' },
+        { ok: false, message: 'Sin permisos para esta postulacion' },
         { status: 403 }
       )
     }
     if (application.program_id !== programId) {
       return NextResponse.json(
-        { ok: false, message: 'Programa no coincide con la postulación' },
+        { ok: false, message: 'Programa no coincide con la postulacion' },
         { status: 400 }
       )
     }
 
     resolvedEditionId = resolvedEditionId ?? application.edition_id ?? null
+  }
+
+  const { data: profileRow } = await supabaseAdmin
+    .from('profiles')
+    .select('country_residence')
+    .eq('id', userId)
+    .maybeSingle()
+
+  const headerCountryCode = resolveCountryCodeFromHeaders(request.headers)
+  const profileCountryCode = resolveCountryCode(
+    typeof profileRow?.country_residence === 'string'
+      ? profileRow.country_residence
+      : null
+  )
+  const checkoutCountryCode = headerCountryCode ?? profileCountryCode
+
+  let checkoutPricing: ReturnType<typeof resolveCheckoutPricingOrThrow>
+  try {
+    checkoutPricing = resolveCheckoutPricingOrThrow({
+      program,
+      countryCodeOrLabel: checkoutCountryCode,
+      paymentVariant,
+    })
+  } catch (error) {
+    if (error instanceof ProgramPricingError) {
+      return NextResponse.json(
+        { ok: false, message: error.message },
+        { status: 400 }
+      )
+    }
+    return NextResponse.json(
+      { ok: false, message: 'No se pudo resolver el pricing del programa.' },
+      { status: 500 }
+    )
+  }
+
+  if (checkoutPricing.currency !== 'USD') {
+    return NextResponse.json(
+      {
+        ok: false,
+        message: 'PayPhone solo esta disponible para cobros en USD.',
+      },
+      { status: 400 }
+    )
   }
 
   const existingPaid = await findExistingPaid({
@@ -350,8 +381,8 @@ export async function POST(
       application_id: applicationId,
       purpose,
       status: 'initiated',
-      amount_cents: amountCents,
-      currency: DEFAULT_CURRENCY,
+      amount_cents: checkoutPricing.amountCents,
+      currency: checkoutPricing.currency,
       client_transaction_id: null,
       payphone_transaction_id: null,
     })
@@ -402,11 +433,11 @@ export async function POST(
       clientTxId,
       token,
       storeId,
-      amount: amountCents,
-      amountWithoutTax: amountCents,
+      amount: checkoutPricing.amountCents,
+      amountWithoutTax: checkoutPricing.amountCents,
       amountWithTax: 0,
       tax: 0,
-      currency: DEFAULT_CURRENCY,
+      currency: checkoutPricing.currency,
       reference,
     },
     { status: 200 }

@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import React from 'react'
 import {
@@ -131,3 +131,4 @@ const AdmissionFlow: React.FC = () => {
 }
 
 export default AdmissionFlow
+

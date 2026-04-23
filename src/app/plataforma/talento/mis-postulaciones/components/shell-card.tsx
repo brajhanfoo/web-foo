@@ -1,4 +1,4 @@
-// src/app/plataforma/talento/mis-postulaciones/components/shell-card.tsx
+﻿// src/app/plataforma/talento/mis-postulaciones/components/shell-card.tsx
 'use client'
 
 import type * as React from 'react'
@@ -246,3 +246,4 @@ export function ShellCard(props: {
 //     </Card>
 //   )
 // }
+

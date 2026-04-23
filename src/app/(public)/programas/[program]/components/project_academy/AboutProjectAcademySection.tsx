@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 import React from 'react'
 
 const AboutProjectAcademySection: React.FC = () => {
@@ -180,3 +180,4 @@ const SprintItem: React.FC<SprintItemProps> = ({
 }
 
 export default AboutProjectAcademySection
+

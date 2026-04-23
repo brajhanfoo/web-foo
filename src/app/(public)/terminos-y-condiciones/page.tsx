@@ -1,4 +1,4 @@
-export const metadata = {
+﻿export const metadata = {
   title: 'Términos y Condiciones | Foo Talent Group',
   description:
     'Términos y Condiciones de uso de la plataforma educativa Foo Talent Group.',
@@ -250,3 +250,4 @@ export default function TermsAndConditionsPage() {
     </main>
   )
 }
+

@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { RiGraduationCapFill } from 'react-icons/ri'
 
@@ -49,3 +49,4 @@ const ProgramHero = () => {
 }
 
 export default ProgramHero
+

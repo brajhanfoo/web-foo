@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useId, useState } from 'react'
 import { useRouter } from 'next/navigation'
@@ -345,3 +345,4 @@ export function RegisterForm() {
     </div>
   )
 }
+

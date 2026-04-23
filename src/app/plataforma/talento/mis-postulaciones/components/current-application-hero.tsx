@@ -4,9 +4,11 @@
 
 import Link from 'next/link'
 import { useState } from 'react'
+import { useAuthStore } from '@/stores/auth-stores'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { PaymentMethodModal } from '@/components/payments/payment-method-modal'
+import { resolveCountryCode, resolveProgramPricing } from '@/lib/pricing'
 
 import {
   ArrowRight,
@@ -38,14 +40,11 @@ function resolvePaymentMode(program: ProgramRow | null): ProgramPaymentMode {
   return program.requires_payment_pre ? 'pre' : 'none'
 }
 
-function parsePriceToCents(priceUsd: string | number | null): number | null {
-  if (priceUsd === null || priceUsd === undefined) return null
-  const parsed = Number(priceUsd)
-  if (!Number.isFinite(parsed)) return null
-  return Math.round(parsed * 100)
-}
-
 export function CurrentApplicationHero(props: { app: ApplicationRow }) {
+  const profileCountry = useAuthStore(
+    (state) => state.profile?.country_residence
+  )
+  const viewerCountryCode = resolveCountryCode(profileCountry ?? null)
   const [checkoutOpen, setCheckoutOpen] = useState(false)
   const interviewBookingUrl = 'https://calendar.app.google/3RxfFjt86saSuTVD7'
   const programTitle = props.app.program ? props.app.program.title : 'Programa'
@@ -251,11 +250,15 @@ export function CurrentApplicationHero(props: { app: ApplicationRow }) {
   ) {
     const payment = getPaymentWindow(props.app)
     const paymentMode = resolvePaymentMode(props.app.program)
-    const amountCents =
-      parsePriceToCents(props.app.program?.price_usd ?? null) ?? 0
+    const pricing = props.app.program
+      ? resolveProgramPricing(props.app.program, viewerCountryCode)
+      : null
+    const hasCheckoutPrice = Boolean(
+      pricing?.availableVariants.length && pricing.selectedPaymentPrice
+    )
     const needsPayment =
       paymentMode === 'post' && props.app.payment_status !== 'paid'
-    const canPayNow = needsPayment && payment.canPay && amountCents > 0
+    const canPayNow = needsPayment && payment.canPay && hasCheckoutPrice
 
     const expiresLabel = payment.expiresAtIso
       ? `TU RESERVA VENCE EL: ${fmtDateESFromISO(payment.expiresAtIso)}`
@@ -294,22 +297,23 @@ export function CurrentApplicationHero(props: { app: ApplicationRow }) {
                 >
                   PAGAR MATRÍCULA <CreditCard className="h-4 w-4" />
                 </Button>
-                {!amountCents ? (
+                {!hasCheckoutPrice ? (
                   <div className="text-xs text-white/60">
-                    Falta configurar el precio del programa.
+                    Falta configurar el precio del programa para tu region.
                   </div>
                 ) : null}
-                <PaymentMethodModal
-                  open={checkoutOpen}
-                  onOpenChange={setCheckoutOpen}
-                  programId={props.app.program_id}
-                  programTitle={programTitle}
-                  editionId={props.app.edition_id}
-                  purpose="tuition"
-                  applicationId={props.app.id}
-                  amountCents={amountCents}
-                  onPaid={() => setCheckoutOpen(false)}
-                />
+                {props.app.program ? (
+                  <PaymentMethodModal
+                    open={checkoutOpen}
+                    onOpenChange={setCheckoutOpen}
+                    program={props.app.program}
+                    countryCode={viewerCountryCode}
+                    editionId={props.app.edition_id}
+                    purpose="tuition"
+                    applicationId={props.app.id}
+                    onPaid={() => setCheckoutOpen(false)}
+                  />
+                ) : null}
               </>
             ) : (
               <Badge className="border border-emerald-500/30 bg-emerald-500/10 text-emerald-300">

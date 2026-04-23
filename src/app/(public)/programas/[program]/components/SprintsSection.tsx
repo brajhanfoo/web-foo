@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import {
   FaBug,
@@ -151,3 +151,4 @@ export default function SprintsSection() {
     </section>
   )
 }
+

@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { ReactNode } from 'react'
 import { cn } from '@/lib/utils'
@@ -71,3 +71,4 @@ export function PostulationShell({
     </div>
   )
 }
+

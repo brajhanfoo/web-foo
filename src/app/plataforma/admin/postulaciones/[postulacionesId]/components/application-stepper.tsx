@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { Check } from 'lucide-react'
 import { STATUS_STEPS } from '../types/types'
@@ -85,3 +85,4 @@ export function ApplicationStepper({ currentStep }: { currentStep: number }) {
     </div>
   )
 }
+

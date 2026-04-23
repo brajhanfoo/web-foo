@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { FaBrain, FaCode, FaBriefcase, FaGlobe } from 'react-icons/fa'
 import React from 'react'
@@ -132,3 +132,4 @@ export default function ModeloFTGSection() {
     </section>
   )
 }
+

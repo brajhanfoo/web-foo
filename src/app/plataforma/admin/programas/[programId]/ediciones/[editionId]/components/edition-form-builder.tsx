@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useState } from 'react'
 import { supabase } from '@/lib/supabase/client'
@@ -569,7 +569,7 @@ export function EditionFormBuilder(props: {
     setConfirmDeactivateOpen(false)
 
     if (error) {
-      showError(`No se pudo desactivar. ${safeString(error.message)}`)
+      showError('No se pudo desactivar el formulario.', 'Inténtalo nuevamente.')
       return
     }
 
@@ -1139,3 +1139,4 @@ export function EditionFormBuilder(props: {
     </Card>
   )
 }
+

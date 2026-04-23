@@ -35,6 +35,10 @@ export async function middleware(request: NextRequest) {
   const isPlatformPath = pathname.startsWith('/plataforma')
   const isAdminPath = pathname.startsWith('/plataforma/admin')
   const isDocentePath = pathname.startsWith('/plataforma/docente')
+  const isTalentPath = pathname.startsWith('/plataforma/talento')
+  const isTalentWorkspacePath =
+    pathname.startsWith('/plataforma/talento/mis-postulaciones/') &&
+    pathname.endsWith('/workspace')
   const isMercadoPagoWebhookPath = pathname === '/api/mercadopago/webhook'
 
   if (isMercadoPagoWebhookPath) {
@@ -93,6 +97,17 @@ export async function middleware(request: NextRequest) {
       redirectUrl.searchParams.set('required', '1')
       redirectUrl.searchParams.set('redirectTo', `${pathname}${search || ''}`)
       return NextResponse.redirect(redirectUrl)
+    }
+
+    if (isTalentPath) {
+      const canViewTalentWorkspace =
+        (profile.role === 'admin' || profile.role === 'super_admin') &&
+        isTalentWorkspacePath
+      if (profile.role !== 'talent' && !canViewTalentWorkspace) {
+        const redirectUrl = request.nextUrl.clone()
+        redirectUrl.pathname = '/plataforma'
+        return NextResponse.redirect(redirectUrl)
+      }
     }
 
     if (isAdminPath) {

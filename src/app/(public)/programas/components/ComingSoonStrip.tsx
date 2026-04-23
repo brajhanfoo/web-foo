@@ -1,4 +1,4 @@
-import React from 'react'
+﻿import React from 'react'
 
 type ComingSoonItem = {
   title: string
@@ -57,3 +57,4 @@ export function ComingSoonStrip(props: { items?: ComingSoonItem[] }) {
     </section>
   )
 }
+

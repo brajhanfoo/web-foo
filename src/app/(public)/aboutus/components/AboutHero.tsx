@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { FaUsers, FaLightbulb } from 'react-icons/fa'
 
@@ -80,3 +80,4 @@ export default function AboutHero() {
     </section>
   )
 }
+

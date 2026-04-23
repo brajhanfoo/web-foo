@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import React, { useMemo } from 'react'
 import Link from 'next/link'
@@ -6,15 +6,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Check, X, Award, Folder } from 'lucide-react'
+import { formatCurrencyAmount, resolveProgramPricing } from '@/lib/pricing'
 import type { ProgramCardVM, ProgramFeature } from '../types/types'
-import {
-  formatEditionLine,
-  formatPriceUSD,
-  formatDateRangeChip,
-} from '../utils'
+import { formatEditionLine, formatDateRangeChip } from '../utils'
 
 type ProgramCardProps = {
   item: ProgramCardVM
+  countryCode: string | null
 }
 
 type AccentTokens = {
@@ -101,7 +99,7 @@ function FeatureRow(props: { feature: ProgramFeature }): React.JSX.Element {
 }
 
 export function ProgramCard(props: ProgramCardProps): React.JSX.Element {
-  const { item } = props
+  const { item, countryCode } = props
 
   const editionLine = useMemo(
     () => formatEditionLine(item.edition),
@@ -119,6 +117,31 @@ export function ProgramCard(props: ProgramCardProps): React.JSX.Element {
   const isOpen = item.status === 'open'
   const isSoon = item.status === 'soon'
   const tokens = tokensFor(item)
+  const pricing = useMemo(
+    () => resolveProgramPricing(item.program, countryCode),
+    [item.program, countryCode]
+  )
+  const locale = pricing.displayCurrency === 'ARS' ? 'es-AR' : 'es-EC'
+  const selectedPriceLabel = formatCurrencyAmount({
+    amount: pricing.selectedPaymentPrice,
+    currency: pricing.displayCurrency,
+    locale,
+  })
+  const listPriceLabel = formatCurrencyAmount({
+    amount: pricing.listPrice,
+    currency: pricing.displayCurrency,
+    locale,
+  })
+  const installmentAmountLabel = formatCurrencyAmount({
+    amount: pricing.installmentAmount,
+    currency: pricing.displayCurrency,
+    locale,
+  })
+  const singlePaymentLabel = formatCurrencyAmount({
+    amount: pricing.singlePaymentPrice,
+    currency: pricing.displayCurrency,
+    locale,
+  })
 
   const topRightIcon =
     tokens.topRightIcon === 'award' ? (
@@ -132,7 +155,6 @@ export function ProgramCard(props: ProgramCardProps): React.JSX.Element {
       ? `VER SMART PROJECTS`
       : `VER PROJECT ACADEMY`
 
-  // Smart Projects = CTA secundario, Academy = primario
   const ctaVariant: 'primary' | 'secondary' =
     item.program.slug === 'smart-projects' ? 'secondary' : 'primary'
 
@@ -144,7 +166,6 @@ export function ProgramCard(props: ProgramCardProps): React.JSX.Element {
         tokens.glowClass,
       ].join(' ')}
     >
-      {/* Frosted overlay (solo cuando está open) */}
       {isOpen ? (
         <>
           <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-[#A920D0]/12 via-black/10 to-[#00D3D3]/10" />
@@ -184,7 +205,7 @@ export function ProgramCard(props: ProgramCardProps): React.JSX.Element {
               </Badge>
             ) : (
               <Badge className="bg-white/5 text-white/60 border border-white/10">
-                PRÓXIMAMENTE
+                PROXIMAMENTE
               </Badge>
             )}
           </div>
@@ -197,7 +218,7 @@ export function ProgramCard(props: ProgramCardProps): React.JSX.Element {
             </CardTitle>
 
             <p className="text-sm md:text-base text-white/60 max-w-[62ch] whitespace-pre-line">
-              {item.program.description ?? '—'}
+              {item.program.description ?? '-'}
             </p>
           </div>
 
@@ -251,12 +272,42 @@ export function ProgramCard(props: ProgramCardProps): React.JSX.Element {
               Inversión
             </div>
             <div className="text-sm font-semibold text-white">
-              {formatPriceUSD(item.program.price_usd)}
+              {selectedPriceLabel ?? 'Próximamente'}
             </div>
+            {pricing.hasListPrice && listPriceLabel ? (
+              <div className="text-xs text-white/40 line-through">
+                {listPriceLabel}
+              </div>
+            ) : null}
+            {pricing.hasDiscount && pricing.discountPercent ? (
+              <div className="text-xs font-semibold text-[#00CCA4]">
+                {Math.round(pricing.discountPercent)}% OFF
+              </div>
+            ) : null}
+            {pricing.showInstallmentsInUi &&
+            pricing.hasInstallments &&
+            pricing.installmentsCount ? (
+              <div className="space-y-0.5 text-xs text-white/60">
+                <div>
+                  Hasta {pricing.installmentsCount} cuotas{' '}
+                  {pricing.installmentsInterestFree === false
+                    ? 'con interés'
+                    : 'sin interés'}
+                </div>
+                {installmentAmountLabel ? (
+                  <div>{installmentAmountLabel} por cuota</div>
+                ) : null}
+              </div>
+            ) : null}
+            {pricing.selectedPaymentVariant === 'installments' &&
+            singlePaymentLabel ? (
+              <div className="text-xs text-white/60">
+                Pago único: {singlePaymentLabel}
+              </div>
+            ) : null}
           </div>
         </div>
 
-        {/* CTA único (sin link extra abajo) */}
         {ctaVariant === 'secondary' ? (
           <Button
             asChild
@@ -295,3 +346,4 @@ export function ProgramCard(props: ProgramCardProps): React.JSX.Element {
     </Card>
   )
 }
+

@@ -1,4 +1,4 @@
-// components/application-workflow-card.tsx
+﻿// components/application-workflow-card.tsx
 'use client'
 
 import Link from 'next/link'
@@ -70,3 +70,4 @@ export function ApplicationWorkflowCard({
     />
   )
 }
+

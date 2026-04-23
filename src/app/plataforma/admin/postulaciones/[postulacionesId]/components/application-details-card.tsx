@@ -1,4 +1,4 @@
-// src/app/plataforma/admin/postulaciones/%5BpostulacionesId%5D/components/application-details-card.tsx
+﻿// src/app/plataforma/admin/postulaciones/%5BpostulacionesId%5D/components/application-details-card.tsx
 'use client'
 
 import Link from 'next/link'
@@ -219,3 +219,4 @@ export function ApplicationDetailsCard({
     </Card>
   )
 }
+

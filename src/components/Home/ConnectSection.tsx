@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useRouter } from 'next/navigation'
 import { MdOutlineBugReport, MdCode } from 'react-icons/md'
@@ -15,10 +15,10 @@ const ConnectSection: React.FC = () => {
       <div className="relative z-10 mx-auto grid max-w-7xl grid-cols-1 items-center gap-16 px-4 pb-24 pt-32 sm:px-6 lg:grid-cols-2">
         {/* LEFT */}
         <div>
-          {/* System ready */}
+          {/* Header tag */}
           <div className="flex items-center gap-2 mb-6 text-xs font-mono text-[#00D3D3]">
             <span className="h-2 w-2 rounded-full bg-[#E7E51A]" />
-            SYSTEM.READY()
+            INSCRIPCIONES ABIERTAS
           </div>
 
           {/* Title */}
@@ -55,7 +55,7 @@ const ConnectSection: React.FC = () => {
           </button>
         </div>
 
-        {/* RIGHT – Mock / Terminal */}
+        {/* RIGHT – Productive workflow */}
         <div className="relative hidden lg:flex justify-center">
           {/* Glow ring */}
           <div className="absolute h-[420px] w-[420px] rounded-full border border-purple-500/30 blur-[1px]" />
@@ -69,61 +69,52 @@ const ConnectSection: React.FC = () => {
                 <span className="h-3 w-3 rounded-full bg-yellow-400" />
                 <span className="h-3 w-3 rounded-full bg-green-500" />
               </div>
-              <span className="text-xs text-neutral-500 font-mono">
-                user@foo-talent:~
-              </span>
+              <span className="text-xs text-neutral-500 font-mono">Ruta guiada</span>
             </div>
 
             {/* Content */}
             <div className="p-6 space-y-6 text-sm font-mono">
-              {/* Component */}
+              {/* Stage */}
               <div className="rounded-xl border border-[#780B90]/40 p-4">
-                <span className="text-xs text-[#780B90]">COMPONENT</span>
-                <div className="mt-2 text-white">AuthService</div>
+                <span className="text-xs text-[#780B90]">ACOMPAÑAMIENTO</span>
+                <div className="mt-2 text-white">Mentoría experta</div>
                 <div className="mt-2 h-1 w-24 bg-[#780B90] rounded-full" />
               </div>
 
-              {/* Sprint */}
+              {/* Progress */}
               <div className="rounded-xl border border-[#00D3D3]/40 p-4">
                 <div className="flex justify-between text-xs text-[#00D3D3] mb-2">
-                  <span>Active Sprints</span>
-                  <span>v2.4</span>
+                  <span>Plan de avance</span>
+                  <span>12 semanas</span>
                 </div>
                 <ul className="space-y-2 text-neutral-300">
                   <li className=" flex items-center gap-2">
                     {' '}
-                    <MdOutlineBugReport className="text-[#E7E51A]" /> Fix API
-                    Latency
+                    <MdOutlineBugReport className="text-[#E7E51A]" /> Mentoría
+                    personalizada
                   </li>
                   <li className=" flex items-center gap-2">
                     {' '}
-                    <MdCode className="text-[#00D3D3]" /> Refactor Core
+                    <MdCode className="text-[#00D3D3]" /> Proyecto aplicado en
+                    equipo
                   </li>
                 </ul>
               </div>
 
-              {/* Output */}
+              {/* Outcome */}
               <div className="rounded-xl border border-[#E7E51A]/40 p-4 text-[#E7E51A]">
-                <span className="text-xs">OUTPUT</span>
-                <div className="mt-2 text-[#4ADE80]">&gt; Build Success</div>
-                <div className="text-xs text-neutral-400">420ms</div>
+                <span className="text-xs">RESULTADO</span>
+                <div className="mt-2 text-[#4ADE80]">&gt; Progreso real</div>
+                <div className="text-xs text-neutral-400">
+                  Seguimiento semanal
+                </div>
               </div>
 
-              {/* Terminal */}
+              {/* Highlights */}
               <div className="text-xs text-neutral-400">
-                <div>
-                  &gt; <span className=" text-[#780B90]">~/projects </span> npm
-                  run dev
-                </div>
-                <div className=" flex gap-1.5">
-                  <div>✓ ready in</div>
-                  <div className="text-[#E7E51A]"> 124ms</div>
-                </div>
-
-                <div>
-                  local:{' '}
-                  <span className="text-[#00CCA4]">http://localhost:3000</span>
-                </div>
+                <div>• Clases en vivo y workshops aplicados</div>
+                <div>• Feedback constante de mentores</div>
+                <div>• Preparación para entrevistas y empleabilidad</div>
               </div>
             </div>
           </div>
@@ -136,3 +127,4 @@ const ConnectSection: React.FC = () => {
 }
 
 export default ConnectSection
+

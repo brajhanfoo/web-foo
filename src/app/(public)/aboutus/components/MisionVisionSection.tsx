@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { FaBullseye, FaEye, FaGlobe } from 'react-icons/fa'
 import React from 'react'
@@ -109,3 +109,4 @@ export default function MisionVisionSection() {
     </section>
   )
 }
+

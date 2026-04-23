@@ -1,4 +1,4 @@
-export default function PrivacyPolicyPage() {
+﻿export default function PrivacyPolicyPage() {
   return (
     <main className="bg-gray-950 text-gray-300 min-h-screen">
       <div className="max-w-4xl mx-auto px-6 py-16">
@@ -171,3 +171,4 @@ export default function PrivacyPolicyPage() {
     </main>
   )
 }
+

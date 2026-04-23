@@ -1,4 +1,4 @@
-import { FiCode, FiBox, FiTrendingUp } from 'react-icons/fi'
+﻿import { FiCode, FiBox, FiTrendingUp } from 'react-icons/fi'
 import { FaRegCircleCheck } from 'react-icons/fa6'
 
 type Track = {
@@ -127,3 +127,4 @@ const TracksSection = () => {
 }
 
 export default TracksSection
+
