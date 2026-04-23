@@ -345,4 +345,3 @@ export function RegisterForm() {
     </div>
   )
 }
-

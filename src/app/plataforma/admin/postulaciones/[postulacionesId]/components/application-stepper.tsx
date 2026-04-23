@@ -85,4 +85,3 @@ export function ApplicationStepper({ currentStep }: { currentStep: number }) {
     </div>
   )
 }
-

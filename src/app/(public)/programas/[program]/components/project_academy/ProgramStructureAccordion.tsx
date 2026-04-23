@@ -187,4 +187,3 @@ const ProgramStructureAccordion: React.FC = () => {
 }
 
 export default ProgramStructureAccordion
-

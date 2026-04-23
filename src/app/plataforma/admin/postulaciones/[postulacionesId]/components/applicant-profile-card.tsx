@@ -174,4 +174,3 @@ export function ApplicantProfileCard({
     </Card>
   )
 }
-

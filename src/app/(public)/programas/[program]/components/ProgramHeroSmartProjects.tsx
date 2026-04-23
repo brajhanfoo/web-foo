@@ -49,4 +49,3 @@ const ProgramHero = () => {
 }
 
 export default ProgramHero
-

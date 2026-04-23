@@ -868,4 +868,3 @@ export default function AdminProgramDetailPage() {
     </div>
   )
 }
-

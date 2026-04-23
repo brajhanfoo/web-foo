@@ -979,4 +979,3 @@ export default function AdminEditionDetailPage() {
     </div>
   )
 }
-

@@ -165,7 +165,9 @@ const LaunchInvestmentSection = (props: LaunchInvestmentSectionProps) => {
               ) : null}
 
               <p className="mt-1 text-xs uppercase tracking-wide text-[#BDBE0B]/80">
-                {isInstallmentsSelected ? 'Plan en cuotas' : 'Precio promocional'}
+                {isInstallmentsSelected
+                  ? 'Plan en cuotas'
+                  : 'Precio promocional'}
               </p>
             </div>
 

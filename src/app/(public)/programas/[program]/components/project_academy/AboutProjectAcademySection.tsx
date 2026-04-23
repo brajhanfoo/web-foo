@@ -180,4 +180,3 @@ const SprintItem: React.FC<SprintItemProps> = ({
 }
 
 export default AboutProjectAcademySection
-

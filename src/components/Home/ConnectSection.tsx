@@ -69,7 +69,9 @@ const ConnectSection: React.FC = () => {
                 <span className="h-3 w-3 rounded-full bg-yellow-400" />
                 <span className="h-3 w-3 rounded-full bg-green-500" />
               </div>
-              <span className="text-xs text-neutral-500 font-mono">Ruta guiada</span>
+              <span className="text-xs text-neutral-500 font-mono">
+                Ruta guiada
+              </span>
             </div>
 
             {/* Content */}
@@ -127,4 +129,3 @@ const ConnectSection: React.FC = () => {
 }
 
 export default ConnectSection
-

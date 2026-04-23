@@ -173,4 +173,3 @@ export function StepCommitment({
     </div>
   )
 }
-

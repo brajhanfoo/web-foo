@@ -105,4 +105,3 @@ const FeatureItem: React.FC<FeatureItemProps> = ({ text, accent, icon }) => {
 }
 
 export default RealWorldProductSection
-

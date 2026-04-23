@@ -86,4 +86,3 @@ const CareerOutcomeSection = () => {
 }
 
 export default CareerOutcomeSection
-

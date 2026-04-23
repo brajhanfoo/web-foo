@@ -111,4 +111,3 @@ const AgileRitualsSection = () => {
 }
 
 export default AgileRitualsSection
-
