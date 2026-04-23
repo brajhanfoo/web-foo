@@ -289,8 +289,8 @@ function PricingEditor(props: PricingEditorProps) {
 
       {props.showInstallmentsHint ? (
         <div className="rounded-md border border-slate-800 bg-slate-900/40 px-3 py-2 text-xs text-slate-400">
-          Nota: en esta iteracion, cuotas USD no se muestran de forma explicita
-          en UI publica, pero quedan configuradas para compatibilidad futura.
+          Nota: si activas cuotas USD, se habilitan en checkout con Mercado
+          Pago.
         </div>
       ) : null}
     </div>
