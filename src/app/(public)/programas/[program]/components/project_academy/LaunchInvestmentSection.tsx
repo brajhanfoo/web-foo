@@ -1,9 +1,42 @@
 'use client'
+import { useEffect, useState } from 'react'
 import { FiCalendar, FiClock, FiMonitor } from 'react-icons/fi'
 import { useRouter } from 'next/navigation'
 
-const LaunchInvestmentSection = () => {
+function detectArgentinaVisitor(): boolean {
+  if (typeof window === 'undefined') return false
+
+  const locales = [
+    navigator.language,
+    ...(Array.isArray(navigator.languages) ? navigator.languages : []),
+  ]
+    .filter(Boolean)
+    .map((value) => value.toLowerCase())
+
+  if (locales.some((locale) => locale.includes('-ar') || locale === 'es-ar')) {
+    return true
+  }
+
+  const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone
+  return typeof timezone === 'string' && timezone.startsWith('America/Argentina')
+}
+
+const LaunchInvestmentSection = (props: {
+  isArgentinaVisitor?: boolean
+}) => {
   const router = useRouter()
+  const [isArgentinaVisitor, setIsArgentinaVisitor] = useState(
+    props.isArgentinaVisitor ?? false
+  )
+
+  useEffect(() => {
+    if (typeof props.isArgentinaVisitor === 'boolean') {
+      setIsArgentinaVisitor(props.isArgentinaVisitor)
+      return
+    }
+
+    setIsArgentinaVisitor(detectArgentinaVisitor())
+  }, [props.isArgentinaVisitor])
 
   return (
     <section className="mx-auto max-w-7xl px-6 py-24">
@@ -27,12 +60,44 @@ const LaunchInvestmentSection = () => {
             </span>
 
             <div className="mt-6">
-              <p className="text-sm text-white/40 line-through">$850 USD</p>
+              {isArgentinaVisitor ? (
+                <>
+                  <div className="flex flex-wrap items-center gap-3">
+                    <span className="inline-flex rounded-full bg-emerald-400/15 px-3 py-1 text-xs font-semibold text-emerald-300">
+                        40% OFF
+                    </span>
+                    <span className="text-base text-white/40 line-through sm:text-lg">
+                        $868.000 ARS
+                    </span>
+                  </div>
 
-              <div className="flex items-end gap-2">
-                <span className="text-5xl font-bold text-[#BDBE0B]">$350</span>
-                <span className="mb-1 text-sm text-white/70">USD</span>
-              </div>
+                  <p className="mt-3 text-lg text-white/85 sm:text-xl">
+                    Hasta 6 cuotas sin interés de
+                  </p>
+
+                  <div className="mt-2 flex flex-wrap items-end gap-2">
+                    <span className="text-4xl font-bold leading-none text-[#BDBE0B] sm:text-5xl">
+                      $103.000
+                    </span>
+                    <span className="mb-1 text-sm text-white/70">ARS</span>
+                  </div>
+
+                  <p className="mt-3 text-sm text-white/65 sm:text-base">
+                    Precio final: $495.000 ARS
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p className="text-sm text-white/40 line-through">$850 USD</p>
+
+                  <div className="flex items-end gap-2">
+                    <span className="text-5xl font-bold text-[#BDBE0B]">
+                      $350
+                    </span>
+                    <span className="mb-1 text-sm text-white/70">USD</span>
+                  </div>
+                </>
+              )}
 
               <p className="mt-1 text-xs uppercase tracking-wide text-[#BDBE0B]/80">
                 Precio Early Bird
@@ -46,7 +111,7 @@ const LaunchInvestmentSection = () => {
             </div>
 
             <p className="mt-6 max-w-sm text-sm text-white/50">
-              Aplica para iniciar tu proceso de admisión y asegurar este precio.
+              Aplica para iniciar tu proceso de admisión y asegurar este precio
             </p>
           </div>
 
@@ -56,7 +121,7 @@ const LaunchInvestmentSection = () => {
               <div className="flex items-start gap-3">
                 <FiCalendar className="mt-0.5 h-4 w-4 text-[#BDBE0B]" />
                 <div>
-                  <p className="font-medium text-white">Inicio: 04 de mayo</p>
+                  <p className="font-medium text-white">Inicio: 18 de mayo</p>
                   <p className="text-xs text-white/50">
                     Duración de 12 semanas
                   </p>

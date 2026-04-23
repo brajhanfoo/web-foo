@@ -38,7 +38,7 @@ const HeroProjectAcademy: React.FC = () => {
                 <span className="text-[#BDBE0B]">
                   <IoMdCalendar />
                 </span>
-                INICIO: 04 MAYO 2026
+                INICIO: 18 MAYO 2026
               </span>
             </div>
 
