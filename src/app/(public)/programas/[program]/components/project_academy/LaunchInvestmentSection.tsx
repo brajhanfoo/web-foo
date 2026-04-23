@@ -113,7 +113,7 @@ const LaunchInvestmentSection = (props: LaunchInvestmentSectionProps) => {
                       : 'text-white/80 hover:text-white',
                   ].join(' ')}
                 >
-                  Pago unico
+                  Pago único
                 </button>
               </div>
             ) : null}
@@ -151,16 +151,12 @@ const LaunchInvestmentSection = (props: LaunchInvestmentSectionProps) => {
 
               {paymentVariant === 'installments' && singlePriceLabel ? (
                 <p className="mt-3 text-sm text-white/65">
-                  Precio final en pago unico: {singlePriceLabel}
+                  Precio final en pago único: {singlePriceLabel}
                 </p>
               ) : null}
 
               <p className="mt-1 text-xs uppercase tracking-wide text-[#BDBE0B]/80">
                 Precio promocional
-              </p>
-
-              <p className="mt-4 text-xs text-white/50">
-                Configuracion de precios sincronizada desde la base de datos.
               </p>
             </div>
 
