@@ -1,4 +1,4 @@
-import React from 'react'
+﻿import React from 'react'
 import type { ResolvedProgramPricing } from '@/lib/pricing'
 import type { ProgramRow } from '@/types/programs'
 
@@ -28,7 +28,7 @@ import EnrollmentStepsSection from './components/project_academy/ProjectAcademyE
 import AdmissionProcess from './components/AdmissionProcess'
 import AdmissionPricing from './components/AdmissionPricing'
 
-// Temporal: ocultar bloque de inversión/precio en landing pública de Project Academy.
+// Temporal: ocultar bloque de inversion/precio en landing publica de Project Academy.
 // Para reactivar, cambiar a `true`.
 const SHOW_PROJECT_ACADEMY_PRICING_SECTION = false
 
@@ -91,3 +91,4 @@ export const PROGRAM_SPECS: Record<string, ProgramRenderSpec> = {
     ],
   },
 }
+

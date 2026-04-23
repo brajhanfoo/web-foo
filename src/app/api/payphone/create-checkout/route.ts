@@ -321,6 +321,17 @@ export async function POST(
     )
   }
 
+  if (paymentVariant === 'installments') {
+    return NextResponse.json(
+      {
+        ok: false,
+        message:
+          'PayPhone no admite cuotas en USD. Elige pago único o usa Mercado Pago para cuotas.',
+      },
+      { status: 400 }
+    )
+  }
+
   const existingPaid = await findExistingPaid({
     userId,
     programId,
