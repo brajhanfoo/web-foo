@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import Image from 'next/image'
@@ -397,3 +397,4 @@ export function PaymentProofDialog({
     </Dialog>
   )
 }
+

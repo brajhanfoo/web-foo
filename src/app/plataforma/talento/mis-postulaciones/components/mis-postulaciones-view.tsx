@@ -1,4 +1,4 @@
-// src/app/plataforma/talento/mis-postulaciones/components/mis-postulaciones-view.tsx
+﻿// src/app/plataforma/talento/mis-postulaciones/components/mis-postulaciones-view.tsx
 
 'use client'
 
@@ -139,3 +139,4 @@ export function MisPostulacionesView(props: {
     </div>
   )
 }
+

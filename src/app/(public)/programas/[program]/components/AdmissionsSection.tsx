@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { FaUsers, FaChalkboardTeacher, FaClock, FaLaptop } from 'react-icons/fa'
 import Link from 'next/link'
@@ -139,3 +139,4 @@ export default function AdmissionsSection() {
     </section>
   )
 }
+

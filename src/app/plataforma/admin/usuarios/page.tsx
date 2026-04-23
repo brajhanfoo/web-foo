@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
@@ -85,7 +85,7 @@ export default function AdminUsersPage() {
     )
 
     if (error) {
-      showError('No se pudieron cargar usuarios.', error.message)
+      showError('No se pudieron cargar usuarios.', 'Inténtalo nuevamente.')
       setRows([])
       setLoading(false)
       return
@@ -140,7 +140,7 @@ export default function AdminUsersPage() {
     })
     setBusy(user.id, false)
     if (error) {
-      showError('No se pudo actualizar el rol.', error.message)
+      showError('No se pudo actualizar el rol.', 'Inténtalo nuevamente.')
       return
     }
 
@@ -163,7 +163,7 @@ export default function AdminUsersPage() {
     setBusy(user.id, false)
 
     if (error) {
-      showError('No se pudo actualizar el estado.', error.message)
+      showError('No se pudo actualizar el estado.', 'Inténtalo nuevamente.')
       return
     }
 
@@ -254,3 +254,4 @@ export default function AdminUsersPage() {
     </div>
   )
 }
+

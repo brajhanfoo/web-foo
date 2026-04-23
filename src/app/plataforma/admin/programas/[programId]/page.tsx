@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
@@ -491,7 +491,7 @@ export default function AdminProgramDetailPage() {
       setSaving(false)
 
       if (response.error) {
-        showError(`No se pudo guardar. ${safeString(response.error.message)}`)
+        showError('No se pudo guardar el programa.', 'Inténtalo nuevamente.')
         return
       }
 
@@ -499,7 +499,7 @@ export default function AdminProgramDetailPage() {
       await loadAll()
     } catch (error) {
       setSaving(false)
-      showError(error instanceof Error ? error.message : 'Datos invalidos.')
+      showError('No se pudo guardar el programa.', 'Inténtalo nuevamente.')
     }
   }
 
@@ -868,3 +868,4 @@ export default function AdminProgramDetailPage() {
     </div>
   )
 }
+

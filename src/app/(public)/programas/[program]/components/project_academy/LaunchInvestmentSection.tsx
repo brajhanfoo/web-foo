@@ -46,11 +46,6 @@ const LaunchInvestmentSection = (props: LaunchInvestmentSectionProps) => {
     currency: pricing.displayCurrency,
     locale,
   })
-  const singlePriceLabel = formatCurrencyAmount({
-    amount: pricing.singlePaymentPrice,
-    currency: pricing.displayCurrency,
-    locale,
-  })
   const listPriceLabel = formatCurrencyAmount({
     amount: pricing.listPrice,
     currency: pricing.displayCurrency,
@@ -66,6 +61,20 @@ const LaunchInvestmentSection = (props: LaunchInvestmentSectionProps) => {
     pricing.showInstallmentsInUi &&
     pricing.hasInstallments &&
     pricing.singlePaymentPrice !== null
+  const isInstallmentsSelected =
+    paymentVariant === 'installments' &&
+    pricing.showInstallmentsInUi &&
+    pricing.hasInstallments
+  const hasInstallmentAmount = Boolean(installmentAmountLabel)
+  const mainPriceLabel =
+    isInstallmentsSelected && hasInstallmentAmount
+      ? installmentAmountLabel
+      : selectedPriceLabel
+  const mainPriceDescriptor = isInstallmentsSelected
+    ? hasInstallmentAmount
+      ? 'por mes'
+      : 'Total en cuotas'
+    : 'Pago único'
 
   return (
     <section className="mx-auto max-w-7xl px-6 py-24">
@@ -128,15 +137,16 @@ const LaunchInvestmentSection = (props: LaunchInvestmentSectionProps) => {
                 </p>
               ) : null}
 
-              <div className="flex items-end gap-2">
-                <span className="text-4xl font-bold leading-none text-[#BDBE0B] sm:text-5xl">
-                  {selectedPriceLabel ?? 'Próximamente'}
+              <div className="mt-1 flex items-end gap-2">
+                <span className="text-5xl font-extrabold leading-none text-[#BDBE0B] sm:text-6xl">
+                  {mainPriceLabel ?? 'Próximamente'}
+                </span>
+                <span className="pb-1 text-sm font-medium text-white/65">
+                  {mainPriceDescriptor}
                 </span>
               </div>
 
-              {pricing.showInstallmentsInUi &&
-              pricing.hasInstallments &&
-              paymentVariant === 'installments' ? (
+              {isInstallmentsSelected ? (
                 <div className="mt-3 space-y-1 text-sm text-white/80">
                   {pricing.installmentsCount ? (
                     <p>
@@ -146,20 +156,16 @@ const LaunchInvestmentSection = (props: LaunchInvestmentSectionProps) => {
                         : 'sin interés'}
                     </p>
                   ) : null}
-                  {installmentAmountLabel ? (
-                    <p>{installmentAmountLabel} por cuota</p>
+                  {hasInstallmentAmount && selectedPriceLabel ? (
+                    <p className="text-xs text-white/55">
+                      Total: {selectedPriceLabel}
+                    </p>
                   ) : null}
                 </div>
               ) : null}
 
-              {paymentVariant === 'installments' && singlePriceLabel ? (
-                <p className="mt-3 text-sm text-white/65">
-                  Precio final en pago único: {singlePriceLabel}
-                </p>
-              ) : null}
-
               <p className="mt-1 text-xs uppercase tracking-wide text-[#BDBE0B]/80">
-                Precio promocional
+                {isInstallmentsSelected ? 'Plan en cuotas' : 'Precio promocional'}
               </p>
             </div>
 
@@ -219,4 +225,3 @@ const LaunchInvestmentSection = (props: LaunchInvestmentSectionProps) => {
 }
 
 export default LaunchInvestmentSection
-

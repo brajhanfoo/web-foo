@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useMemo, useState } from 'react'
 import { CreditCard, Wallet } from 'lucide-react'
@@ -105,7 +105,7 @@ export function PaymentMethodModal(props: PaymentMethodModalProps) {
 
     if (!pricing.selectedPaymentPrice) {
       setMethodError(
-        'El programa no tiene precio configurado para esta modalidad de pago.'
+        'Esta modalidad de pago no está disponible en este momento.'
       )
       return
     }
@@ -131,9 +131,7 @@ export function PaymentMethodModal(props: PaymentMethodModalProps) {
         (await response.json()) as CreateMercadoPagoPreferenceResponse
 
       if (!response.ok || !data.ok) {
-        setMethodError(
-          data.message ?? 'No se pudo iniciar Mercado Pago para este pago.'
-        )
+        setMethodError('No pudimos iniciar el pago. Inténtalo nuevamente.')
         return
       }
 
@@ -145,18 +143,14 @@ export function PaymentMethodModal(props: PaymentMethodModalProps) {
 
       const checkoutUrl = data.initPoint ?? data.sandboxInitPoint
       if (!checkoutUrl) {
-        setMethodError('Mercado Pago no devolvio una URL de checkout valida.')
+        setMethodError('No pudimos iniciar el pago. Inténtalo nuevamente.')
         return
       }
 
       props.onOpenChange(false)
       window.location.assign(checkoutUrl)
     } catch (error) {
-      setMethodError(
-        error instanceof Error
-          ? error.message
-          : 'No se pudo iniciar Mercado Pago.'
-      )
+      setMethodError('No pudimos iniciar el pago. Inténtalo nuevamente.')
     } finally {
       setIsStartingMp(false)
     }
@@ -167,7 +161,7 @@ export function PaymentMethodModal(props: PaymentMethodModalProps) {
       <Dialog open={props.open} onOpenChange={props.onOpenChange}>
         <DialogContent className="border border-white/10 bg-[#0F1117] text-white">
           <DialogHeader>
-            <DialogTitle>Selecciona tu metodo de pago</DialogTitle>
+            <DialogTitle>Selecciona tu método de pago</DialogTitle>
             <DialogDescription className="text-white/60">
               Monto a pagar: {selectedPriceLabel ?? 'No configurado'}
             </DialogDescription>
@@ -198,8 +192,8 @@ export function PaymentMethodModal(props: PaymentMethodModalProps) {
                       <div className="text-xs text-white/50">
                         Hasta {pricing.installmentsCount} cuotas{' '}
                         {pricing.installmentsInterestFree === false
-                          ? 'con interes'
-                          : 'sin interes'}
+                          ? 'con interés'
+                          : 'sin interés'}
                       </div>
                     ) : null}
                     {installmentAmountLabel ? (
@@ -219,7 +213,7 @@ export function PaymentMethodModal(props: PaymentMethodModalProps) {
                         : 'border-white/15 bg-white/5 hover:bg-white/10',
                     ].join(' ')}
                   >
-                    <div className="text-sm font-semibold">Pago unico</div>
+                    <div className="text-sm font-semibold">Pago único</div>
                     <div className="text-xs text-white/70">
                       {singlePriceLabel ?? 'Sin precio'}
                     </div>
@@ -241,7 +235,7 @@ export function PaymentMethodModal(props: PaymentMethodModalProps) {
                 </Button>
               ) : (
                 <div className="rounded-md border border-white/10 bg-white/5 px-3 py-2 text-xs text-white/65">
-                  PayPhone esta disponible solo para cobros en USD.
+                  PayPhone está disponible solo para cobros en USD.
                 </div>
               )}
 
@@ -273,7 +267,7 @@ export function PaymentMethodModal(props: PaymentMethodModalProps) {
                 rel="noopener noreferrer"
                 className="text-xs text-white/60 underline underline-offset-4 transition-colors hover:text-white/80"
               >
-                Necesitas otra forma de pago? Consulta opciones por WhatsApp
+                ¿Necesitas otra forma de pago? Consulta opciones por WhatsApp
               </a>
             </div>
           </div>
@@ -293,3 +287,4 @@ export function PaymentMethodModal(props: PaymentMethodModalProps) {
     </>
   )
 }
+

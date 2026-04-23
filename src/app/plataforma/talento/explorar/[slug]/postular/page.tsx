@@ -802,9 +802,7 @@ export default function ProgramPostularPage() {
         return
       }
 
-      toast.showError(
-        `No se pudo enviar. ${safeString(insertResponse.error.message)}`
-      )
+      toast.showError('No se pudo enviar tu postulación. Inténtalo nuevamente.')
       return
     }
 
@@ -1092,4 +1090,3 @@ export default function ProgramPostularPage() {
     </PostulationShell>
   )
 }
-

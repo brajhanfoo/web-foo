@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
@@ -207,9 +207,7 @@ export default function ProgramsPage() {
       .order('created_at', { ascending: true })
 
     if (programsResponse.error) {
-      toast.showError(
-        `No se pudieron cargar programas. ${safeString(programsResponse.error.message)}`
-      )
+      toast.showError('No se pudieron cargar programas. Inténtalo nuevamente.')
       setItems([])
       setLoading(false)
       return
@@ -816,3 +814,4 @@ export default function ProgramsPage() {
     </div>
   )
 }
+

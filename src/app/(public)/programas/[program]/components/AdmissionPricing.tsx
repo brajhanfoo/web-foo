@@ -201,7 +201,7 @@ const AdmissionPricing: React.FC<AdmissionPricingProps> = (props) => {
         </div>
 
         <div className="text-center mt-8 max-w-xl mx-auto">
-            <p className="text-gray-500 text-xs">
+          <p className="text-gray-500 text-xs">
             Este pago corresponde únicamente al proceso de admisión y no
             garantiza el ingreso al programa.
           </p>
@@ -216,4 +216,3 @@ const AdmissionPricing: React.FC<AdmissionPricingProps> = (props) => {
 }
 
 export default AdmissionPricing
-

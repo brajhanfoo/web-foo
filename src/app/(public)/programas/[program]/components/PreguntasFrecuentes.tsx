@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 import { useState } from 'react'
 import { FaChevronDown } from 'react-icons/fa'
 
@@ -136,3 +136,4 @@ export default function PreguntasFrecuentes() {
     </section>
   )
 }
+

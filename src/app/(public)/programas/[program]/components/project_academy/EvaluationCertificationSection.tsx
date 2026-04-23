@@ -1,4 +1,4 @@
-import { FiCheckCircle, FiAward, FiShield } from 'react-icons/fi'
+﻿import { FiCheckCircle, FiAward, FiShield } from 'react-icons/fi'
 
 type EvaluationItem = {
   title: string
@@ -89,3 +89,4 @@ const EvaluationCertificationSection = () => {
 }
 
 export default EvaluationCertificationSection
+

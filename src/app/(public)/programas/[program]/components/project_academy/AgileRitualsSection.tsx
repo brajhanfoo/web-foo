@@ -1,4 +1,4 @@
-import { FiClock, FiCalendar, FiRefreshCcw, FiUsers } from 'react-icons/fi'
+﻿import { FiClock, FiCalendar, FiRefreshCcw, FiUsers } from 'react-icons/fi'
 
 type Ritual = {
   title: string
@@ -111,3 +111,4 @@ const AgileRitualsSection = () => {
 }
 
 export default AgileRitualsSection
+

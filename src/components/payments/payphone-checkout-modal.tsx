@@ -208,8 +208,9 @@ export function PayphoneCheckoutModal(props: PayphoneCheckoutModalProps) {
         const instance = new Constructor(boxOptions)
         instance.render(containerId)
       } catch (err) {
-        const message = err instanceof Error ? err.message : 'Error PayPhone'
-        setBoxError(message)
+        setBoxError(
+          'No pudimos cargar el módulo de pago. Inténtalo nuevamente.'
+        )
       }
     }
 
@@ -286,22 +287,8 @@ export function PayphoneCheckoutModal(props: PayphoneCheckoutModalProps) {
           reference: data.reference,
         })
       } else {
-        const debug = JSON.stringify(
-          {
-            hasToken: Boolean(data.token),
-            hasClientTxId: Boolean(data.clientTxId),
-            hasStoreId: Boolean(data.storeId),
-            amount: data.amount,
-            amountWithoutTax: data.amountWithoutTax,
-            amountWithTax: data.amountWithTax,
-            tax: data.tax,
-            currency: data.currency,
-          },
-          null,
-          2
-        )
         setBoxError(
-          `Datos incompletos para mostrar la caja de PayPhone.\n${debug}`
+          'No pudimos preparar el pago en este momento. Inténtalo nuevamente.'
         )
       }
     } catch {
@@ -325,7 +312,7 @@ export function PayphoneCheckoutModal(props: PayphoneCheckoutModalProps) {
         <DialogHeader>
           <DialogTitle>Completa tu pago</DialogTitle>
           <DialogDescription className="text-white/60">
-            Finaliza la transaccion dentro de la caja de PayPhone.
+            Finaliza la transacción dentro de la caja de PayPhone.
           </DialogDescription>
         </DialogHeader>
 
@@ -350,9 +337,9 @@ export function PayphoneCheckoutModal(props: PayphoneCheckoutModalProps) {
           ) : null}
 
           {boxError ? (
-            <pre className="whitespace-pre-wrap rounded-md border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-200">
+            <div className="rounded-md border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-sm text-amber-200">
               {boxError}
-            </pre>
+            </div>
           ) : null}
 
           {isReady ? (
@@ -367,7 +354,7 @@ export function PayphoneCheckoutModal(props: PayphoneCheckoutModalProps) {
             Cerrar
           </Button>
           <Button onClick={goToConfirm} disabled={!clientTxId || isLoading}>
-            Ya pague, verificar
+            Ya pagué, verificar
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 import { RiUserSearchLine } from 'react-icons/ri'
 import { HiOutlineRocketLaunch } from 'react-icons/hi2'
 import { AiOutlineCheckCircle } from 'react-icons/ai'
@@ -167,3 +167,4 @@ const Hero = () => {
 }
 
 export default Hero
+

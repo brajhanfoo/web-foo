@@ -142,4 +142,3 @@ await developer.launchCareer();`}
 }
 
 export default HeroProjectAcademy
-

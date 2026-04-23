@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 import { AiOutlineProduct } from 'react-icons/ai'
 import { FaUsers, FaBriefcase, FaRocket } from 'react-icons/fa'
 import { HiRefresh } from 'react-icons/hi'
@@ -105,3 +105,4 @@ const FeatureItem: React.FC<FeatureItemProps> = ({ text, accent, icon }) => {
 }
 
 export default RealWorldProductSection
+

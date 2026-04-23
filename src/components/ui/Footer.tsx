@@ -1,4 +1,4 @@
-import Image from 'next/image'
+﻿import Image from 'next/image'
 import Link from 'next/link'
 import { FaYoutube, FaInstagram, FaLinkedin } from 'react-icons/fa'
 import { LOGOWEB } from '@/lib/imagePaths'
@@ -86,3 +86,4 @@ export default function Footer() {
     </footer>
   )
 }
+

@@ -1,4 +1,4 @@
-import { redirect } from 'next/navigation'
+﻿import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 
 import { AdminShell } from './components/admin-shell'
@@ -27,3 +27,4 @@ export default async function AdminLayout({
 
   return <AdminShell>{children}</AdminShell>
 }
+

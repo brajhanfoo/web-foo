@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import React, { useState } from 'react'
 import { FiChevronDown } from 'react-icons/fi'
@@ -187,3 +187,4 @@ const ProgramStructureAccordion: React.FC = () => {
 }
 
 export default ProgramStructureAccordion
+

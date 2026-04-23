@@ -1,4 +1,4 @@
-import React from 'react'
+﻿import React from 'react'
 import { headers } from 'next/headers'
 import { createClient } from '@/lib/supabase/server'
 import { resolveCountryCodeFromHeaders } from '@/lib/pricing'
@@ -142,3 +142,4 @@ export default async function PublicProgramsPage(): Promise<React.JSX.Element> {
     </div>
   )
 }
+

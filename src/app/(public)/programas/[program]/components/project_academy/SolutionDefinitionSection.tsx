@@ -1,4 +1,4 @@
-import { FiZap, FiSmartphone } from 'react-icons/fi'
+﻿import { FiZap, FiSmartphone } from 'react-icons/fi'
 import { IoIosRocket } from 'react-icons/io'
 
 type SolutionOption = {
@@ -95,3 +95,4 @@ const SolutionDefinitionSection = () => {
 }
 
 export default SolutionDefinitionSection
+

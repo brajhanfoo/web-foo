@@ -1,4 +1,4 @@
-import { RegisterForm } from './components/register-form'
+﻿import { RegisterForm } from './components/register-form'
 import { HiCodeBracket, HiUserGroup } from 'react-icons/hi2'
 
 export default function RegisterPage() {
@@ -71,3 +71,4 @@ export default function RegisterPage() {
     </main>
   )
 }
+

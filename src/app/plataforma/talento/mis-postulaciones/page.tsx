@@ -1,4 +1,4 @@
-// src/app/plataforma/talento/mis-postulaciones/page.tsx
+﻿// src/app/plataforma/talento/mis-postulaciones/page.tsx
 
 'use client'
 
@@ -23,7 +23,7 @@ export default function MisPostulacionesPage() {
     const run = async () => {
       const { data: userRes, error: userErr } = await supabase.auth.getUser()
       if (userErr) {
-        showError('No se pudo validar tu sesión', userErr.message)
+        showError('No se pudo validar tu sesión', 'Inténtalo nuevamente.')
         setState({ kind: 'signed_out' })
         return
       }
@@ -93,7 +93,10 @@ export default function MisPostulacionesPage() {
         .order('created_at', { ascending: false })
 
       if (error) {
-        showError('No se pudieron cargar tus postulaciones', error.message)
+        showError(
+          'No se pudieron cargar tus postulaciones',
+          'Inténtalo nuevamente.'
+        )
         setState({ kind: 'empty' })
         return
       }
@@ -125,3 +128,4 @@ export default function MisPostulacionesPage() {
 
   return <MisPostulacionesView state={state} pastCompleted={pastCompleted} />
 }
+

@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { FaHandsHelping, FaRocket, FaUsers, FaBookOpen } from 'react-icons/fa'
 
@@ -111,3 +111,4 @@ export default function ValoresSection() {
     </section>
   )
 }
+

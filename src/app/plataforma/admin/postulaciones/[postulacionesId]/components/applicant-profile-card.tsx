@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { Check, Globe, Mail, UserCircle2 } from 'lucide-react'
 
@@ -174,3 +174,4 @@ export function ApplicantProfileCard({
     </Card>
   )
 }
+

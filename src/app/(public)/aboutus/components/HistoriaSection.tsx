@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { FaHandsHelping, FaHistory, FaRocket } from 'react-icons/fa'
 import React from 'react'
@@ -141,3 +141,4 @@ export default function HistoriaSection() {
     </section>
   )
 }
+

@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { supabase } from '@/lib/supabase/client'
@@ -209,7 +209,7 @@ export default function AdminSettingsPage() {
     setIsSavingProfile(false)
 
     if (error) {
-      showError('No se pudo guardar el perfil', error.message)
+      showError('No se pudo guardar el perfil', 'Inténtalo nuevamente.')
       return
     }
 
@@ -238,7 +238,7 @@ export default function AdminSettingsPage() {
     setIsSavingPassword(false)
 
     if (error) {
-      showError('No se pudo cambiar la contraseña', error.message)
+      showError('No se pudo cambiar la contraseña', 'Inténtalo nuevamente.')
       return
     }
 
@@ -600,3 +600,4 @@ export default function AdminSettingsPage() {
     </div>
   )
 }
+

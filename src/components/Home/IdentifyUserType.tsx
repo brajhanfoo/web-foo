@@ -1,4 +1,4 @@
-import { FaCode, FaBuilding } from 'react-icons/fa'
+﻿import { FaCode, FaBuilding } from 'react-icons/fa'
 import { useRouter } from 'next/navigation'
 
 export default function IdentifyUserType() {
@@ -74,3 +74,4 @@ export default function IdentifyUserType() {
     </section>
   )
 }
+

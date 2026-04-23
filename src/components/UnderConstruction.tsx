@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { FaTools } from 'react-icons/fa'
 import Image from 'next/image'
@@ -31,3 +31,4 @@ export default function UnderConstruction() {
     </div>
   )
 }
+

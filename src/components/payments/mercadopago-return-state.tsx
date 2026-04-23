@@ -350,4 +350,3 @@ export function MercadoPagoReturnState(props: { variant: ReturnVariant }) {
     </div>
   )
 }
-

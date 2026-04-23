@@ -1,4 +1,4 @@
-//src/app/plataforma/admin/postulaciones/components/applications-table.tsx
+﻿//src/app/plataforma/admin/postulaciones/components/applications-table.tsx
 'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
@@ -223,7 +223,7 @@ export function ApplicationsTable() {
         .order('title', { ascending: true })
 
       if (error) {
-        showError('No se pudo cargar programas', error.message)
+        showError('No se pudo cargar programas', 'Inténtalo nuevamente.')
         setPrograms([])
         return
       }
@@ -274,7 +274,7 @@ export function ApplicationsTable() {
       if (cancelled) return
 
       if (error) {
-        showError('No se pudo cargar postulaciones', error.message)
+        showError('No se pudo cargar postulaciones', 'Inténtalo nuevamente.')
         setRows([])
         setTotalCount(0)
         setIsLoading(false)
@@ -350,12 +350,10 @@ export function ApplicationsTable() {
     showSuccess('Exportado', 'Se descargó el Excel de la página actual.')
   }
 
-  // ✅ con RPC paginado, “exportar todo filtrado” idealmente sería OTRO RPC (stream/batch).
-  // Acá dejamos el comportamiento simple: exporta solo la página actual + avisamos.
   async function exportAllFiltered() {
     showError(
-      'Exportación completa pendiente',
-      'Con RPC paginado, para exportar TODO filtrado conviene un RPC dedicado. Por ahora exportá la página actual.'
+      'Exportación completa no disponible',
+      'Por ahora puedes exportar únicamente la página actual de resultados.'
     )
   }
 
@@ -762,3 +760,4 @@ export function ApplicationsTable() {
     </div>
   )
 }
+

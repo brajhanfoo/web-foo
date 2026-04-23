@@ -548,9 +548,7 @@ export default function AdminTeamDetailPage() {
       .eq('team_id', teamId)
 
     if (response.error) {
-      showError(
-        `No se pudo eliminar hito. ${safeString(response.error.message)}`
-      )
+      showError('No se pudo eliminar hito.', 'Inténtalo nuevamente.')
       return
     }
 

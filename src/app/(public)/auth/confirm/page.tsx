@@ -1,4 +1,4 @@
-'use client'
+﻿'use client'
 
 import { Suspense, useEffect, useRef, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
@@ -196,3 +196,4 @@ export default function ConfirmPage() {
     </Suspense>
   )
 }
+

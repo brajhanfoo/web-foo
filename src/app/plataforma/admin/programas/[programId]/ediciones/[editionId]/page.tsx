@@ -1,4 +1,4 @@
-// src/app/plataforma/admin/programas/%5BprogramId%5D/ediciones/%5BeditionId%5D/page.tsx
+﻿// src/app/plataforma/admin/programas/%5BprogramId%5D/ediciones/%5BeditionId%5D/page.tsx
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
@@ -263,7 +263,7 @@ export default function AdminEditionDetailPage() {
     setSaving(false)
 
     if (response.error) {
-      showError(`No se pudo guardar. ${safeString(response.error.message)}`)
+      showError('No se pudo guardar la edición.', 'Inténtalo nuevamente.')
       return
     }
 
@@ -310,9 +310,7 @@ export default function AdminEditionDetailPage() {
     setTeamSavingId(null)
 
     if (response.error) {
-      showError(
-        `No se pudo guardar el equipo. ${safeString(response.error.message)}`
-      )
+      showError('No se pudo guardar el equipo.', 'Inténtalo nuevamente.')
       return
     }
 
@@ -328,9 +326,7 @@ export default function AdminEditionDetailPage() {
       .eq('id', teamToDelete.id)
 
     if (response.error) {
-      showError(
-        `No se pudo eliminar el equipo. ${safeString(response.error.message)}`
-      )
+      showError('No se pudo eliminar el equipo.', 'Inténtalo nuevamente.')
       return
     }
 
@@ -356,7 +352,8 @@ export default function AdminEditionDetailPage() {
 
     if (response.error) {
       showError(
-        `No se pudo actualizar el participante. ${safeString(response.error.message)}`
+        'No se pudo actualizar el participante.',
+        'Inténtalo nuevamente.'
       )
       return
     }
@@ -982,3 +979,4 @@ export default function AdminEditionDetailPage() {
     </div>
   )
 }
+
