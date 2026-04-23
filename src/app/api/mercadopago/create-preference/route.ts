@@ -6,13 +6,23 @@ import {
   createMercadoPagoPreferenceClient,
   getMercadoPagoPublicKey,
 } from '@/lib/payments/mercadopago'
+import {
+  ProgramPricingError,
+  isProgramPaymentVariant,
+  resolveCheckoutPricingOrThrow,
+  resolveCountryCode,
+  resolveCountryCodeFromHeaders,
+} from '@/lib/pricing'
 import { createClient } from '@/lib/supabase/server'
 import type { PaymentProvider, PaymentStatus } from '@/types/payments'
-import type { ProgramPaymentMode, ProgramRow } from '@/types/programs'
+import type {
+  ProgramPaymentMode,
+  ProgramPaymentVariant,
+  ProgramRow,
+} from '@/types/programs'
 
 export const runtime = 'nodejs'
 
-const DEFAULT_CURRENCY = 'USD'
 const MERCADO_PAGO_PROVIDER: PaymentProvider = 'mercado_pago'
 
 type PaymentPurpose = 'pre_enrollment' | 'tuition'
@@ -21,7 +31,7 @@ type CreatePreferenceInput = {
   editionId: string | null
   purpose: PaymentPurpose
   applicationId: string | null
-  amountCents: number
+  paymentVariant: ProgramPaymentVariant
 }
 
 type CreatePreferenceResponse = {
@@ -36,16 +46,7 @@ type CreatePreferenceResponse = {
   publicKey?: string
 }
 
-type ProgramRowSummary = Pick<
-  ProgramRow,
-  | 'id'
-  | 'title'
-  | 'slug'
-  | 'description'
-  | 'payment_mode'
-  | 'requires_payment_pre'
-  | 'price_usd'
->
+type ProgramRowSummary = ProgramRow
 
 type ApplicationRow = {
   id: string
@@ -101,17 +102,6 @@ function asString(v: unknown): string {
   return typeof v === 'string' ? v.trim() : ''
 }
 
-function asNumber(v: unknown): number | null {
-  if (typeof v === 'number' && Number.isFinite(v)) return v
-  if (typeof v === 'string') {
-    const t = v.trim()
-    if (!t) return null
-    const n = Number(t)
-    return Number.isFinite(n) ? n : null
-  }
-  return null
-}
-
 function parseInput(body: unknown): CreatePreferenceInput | null {
   if (!isRecord(body)) return null
 
@@ -119,20 +109,19 @@ function parseInput(body: unknown): CreatePreferenceInput | null {
   const editionIdRaw = asString(body['editionId'])
   const purposeRaw = asString(body['purpose'])
   const applicationIdRaw = asString(body['applicationId'])
-  const amountCentsValue = asNumber(body['amountCents'])
+  const paymentVariantRaw =
+    asString(body['paymentVariant']) || asString(body['payment_variant'])
 
-  if (!programId || !purposeRaw || amountCentsValue === null) return null
+  if (!programId || !purposeRaw || !paymentVariantRaw) return null
   if (purposeRaw !== 'pre_enrollment' && purposeRaw !== 'tuition') return null
-
-  const amountCents = Math.round(amountCentsValue)
-  if (!Number.isFinite(amountCents) || amountCents <= 0) return null
+  if (!isProgramPaymentVariant(paymentVariantRaw)) return null
 
   return {
     programId,
     editionId: editionIdRaw || null,
     purpose: purposeRaw,
     applicationId: applicationIdRaw || null,
-    amountCents,
+    paymentVariant: paymentVariantRaw,
   }
 }
 
@@ -210,20 +199,13 @@ function resolvePaymentMode(program: ProgramRowSummary): ProgramPaymentMode {
   return program.requires_payment_pre ? 'pre' : 'none'
 }
 
-function parsePriceToCents(priceUsd: string | number | null): number | null {
-  if (!priceUsd) return null
-  const parsed = Number(priceUsd)
-  if (!Number.isFinite(parsed)) return null
-  return Math.round(parsed * 100)
-}
-
 function buildPreferenceTitle(params: {
   purpose: PaymentPurpose
   programTitle: string
   programSlug: string
 }): string {
   const kind =
-    params.purpose === 'pre_enrollment' ? 'Pre-inscripción' : 'Matrícula'
+    params.purpose === 'pre_enrollment' ? 'Pre-inscripcion' : 'Matricula'
   const title = params.programTitle.trim() || params.programSlug.trim()
   return `${kind} ${title}`.trim().slice(0, 120)
 }
@@ -411,6 +393,7 @@ function pickStringOrNumber(raw: unknown, key: string): string | null {
 function buildPreferenceBody(params: {
   purpose: PaymentPurpose
   amountCents: number
+  currency: 'USD' | 'ARS'
   paymentId: string
   programId: string
   applicationId: string | null
@@ -445,7 +428,7 @@ function buildPreferenceBody(params: {
         }),
         category_id: MERCADO_PAGO_CATEGORY_ID,
         quantity: 1,
-        currency_id: DEFAULT_CURRENCY,
+        currency_id: params.currency,
         unit_price: params.amountCents / 100,
       },
     ],
@@ -575,18 +558,23 @@ export async function POST(
 
   if (!payload) {
     return NextResponse.json(
-      { ok: false, message: 'Payload inválido' },
+      { ok: false, message: 'Payload invalido' },
       { status: 400 }
     )
   }
 
-  const { programId, editionId, purpose, applicationId, amountCents } = payload
+  const { programId, editionId, purpose, applicationId, paymentVariant } =
+    payload
   const userId = userRes.user.id
 
   const { data: programRow, error: programErr } = await supabaseAdmin
     .from('programs')
     .select(
-      'id, title, slug, description, payment_mode, requires_payment_pre, price_usd'
+      `id, title, slug, description, payment_mode, requires_payment_pre, price_usd,
+      price_usd_list,price_usd_discount_percent,price_usd_final_single,price_usd_has_installments,
+      price_usd_final_installments,price_usd_installments_count,price_usd_installments_interest_free,price_usd_installment_amount,
+      price_ars_list,price_ars_discount_percent,price_ars_final_single,price_ars_has_installments,
+      price_ars_final_installments,price_ars_installments_count,price_ars_installments_interest_free,price_ars_installment_amount`
     )
     .eq('id', programId)
     .maybeSingle()
@@ -633,14 +621,6 @@ export async function POST(
     }
   }
 
-  const expectedCents = parsePriceToCents(program.price_usd)
-  if (expectedCents !== null && expectedCents !== amountCents) {
-    return NextResponse.json(
-      { ok: false, message: 'El monto no coincide con el precio del programa' },
-      { status: 400 }
-    )
-  }
-
   let resolvedEditionId = editionId
 
   if (applicationId) {
@@ -652,7 +632,7 @@ export async function POST(
 
     if (appErr || !appRow) {
       return NextResponse.json(
-        { ok: false, message: 'Postulación no encontrada' },
+        { ok: false, message: 'Postulacion no encontrada' },
         { status: 404 }
       )
     }
@@ -660,18 +640,42 @@ export async function POST(
     const application = appRow as ApplicationRow
     if (application.applicant_profile_id !== userId) {
       return NextResponse.json(
-        { ok: false, message: 'Sin permisos para esta postulación' },
+        { ok: false, message: 'Sin permisos para esta postulacion' },
         { status: 403 }
       )
     }
     if (application.program_id !== programId) {
       return NextResponse.json(
-        { ok: false, message: 'Programa no coincide con la postulación' },
+        { ok: false, message: 'Programa no coincide con la postulacion' },
         { status: 400 }
       )
     }
 
     resolvedEditionId = resolvedEditionId ?? application.edition_id ?? null
+  }
+
+  const headerCountryCode = resolveCountryCodeFromHeaders(request.headers)
+  const profileCountryCode = resolveCountryCode(profile?.country_residence)
+  const checkoutCountryCode = headerCountryCode ?? profileCountryCode
+
+  let checkoutPricing: ReturnType<typeof resolveCheckoutPricingOrThrow>
+  try {
+    checkoutPricing = resolveCheckoutPricingOrThrow({
+      program,
+      countryCodeOrLabel: checkoutCountryCode ?? profile?.country_residence,
+      paymentVariant,
+    })
+  } catch (error) {
+    if (error instanceof ProgramPricingError) {
+      return NextResponse.json(
+        { ok: false, message: error.message },
+        { status: 400 }
+      )
+    }
+    return NextResponse.json(
+      { ok: false, message: 'No se pudo resolver el pricing del programa.' },
+      { status: 500 }
+    )
   }
 
   const existingPaid = await findExistingPaid({
@@ -744,8 +748,8 @@ export async function POST(
       application_id: applicationId,
       purpose,
       status: 'initiated',
-      amount_cents: amountCents,
-      currency: DEFAULT_CURRENCY,
+      amount_cents: checkoutPricing.amountCents,
+      currency: checkoutPricing.currency,
       client_transaction_id: null,
     })
     .select('id')
@@ -769,7 +773,8 @@ export async function POST(
 
     const preferenceBody = buildPreferenceBody({
       purpose,
-      amountCents,
+      amountCents: checkoutPricing.amountCents,
+      currency: checkoutPricing.currency,
       paymentId,
       programId: program.id,
       applicationId,
@@ -798,7 +803,7 @@ export async function POST(
         .from('payments')
         .update({
           status: 'failed',
-          error_message: 'Mercado Pago no devolvió preference_id o init_point.',
+          error_message: 'Mercado Pago no devolvio preference_id o init_point.',
         })
         .eq('id', paymentId)
         .eq('provider', MERCADO_PAGO_PROVIDER)
@@ -807,7 +812,7 @@ export async function POST(
         {
           ok: false,
           message:
-            'Mercado Pago no devolvió datos válidos de checkout para este intento.',
+            'Mercado Pago no devolvio datos validos de checkout para este intento.',
         },
         { status: 502 }
       )

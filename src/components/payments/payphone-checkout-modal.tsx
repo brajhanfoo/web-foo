@@ -6,6 +6,7 @@ import { Loader2 } from 'lucide-react'
 import { useToastEnhanced } from '@/hooks/use-toast-enhanced'
 
 import type { PaymentStatus } from '@/types/payments'
+import type { ProgramPaymentVariant } from '@/types/programs'
 
 import {
   Dialog,
@@ -42,13 +43,12 @@ type PayphoneCheckoutModalProps = {
   editionId: string | null
   purpose: PaymentPurpose
   applicationId?: string | null
-  amountCents: number
+  paymentVariant: ProgramPaymentVariant
   onPaid?: (paymentId: string) => void
 }
 
 type PayphoneBoxOptions = {
   token: string
-  // 👇 OJO: el script de PayPhone usa ESTA clave
   clientTransactionId: string
   amount: number
   amountWithoutTax: number
@@ -80,7 +80,7 @@ function buildRequestKey(props: PayphoneCheckoutModalProps): string {
     props.editionId ?? 'none',
     props.purpose,
     props.applicationId ?? 'none',
-    String(props.amountCents),
+    props.paymentVariant,
   ].join('|')
 }
 
@@ -171,20 +171,15 @@ export function PayphoneCheckoutModal(props: PayphoneCheckoutModalProps) {
     setRequestKey(nextKey)
     latestKeyRef.current = nextKey
 
-    if (!Number.isFinite(props.amountCents) || props.amountCents <= 0) {
-      setErrorMessage('Monto inválido para iniciar el pago.')
-      return
-    }
-
     void startCheckout(nextKey)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     props.open,
-    props.amountCents,
     props.programId,
     props.editionId,
     props.purpose,
     props.applicationId,
+    props.paymentVariant,
   ])
 
   useEffect(() => {
@@ -244,7 +239,8 @@ export function PayphoneCheckoutModal(props: PayphoneCheckoutModalProps) {
           editionId: props.editionId,
           purpose: props.purpose,
           applicationId: props.applicationId ?? null,
-          amountCents: props.amountCents,
+          paymentVariant: props.paymentVariant,
+          payment_variant: props.paymentVariant,
         }),
         cache: 'no-store',
       })
@@ -329,7 +325,7 @@ export function PayphoneCheckoutModal(props: PayphoneCheckoutModalProps) {
         <DialogHeader>
           <DialogTitle>Completa tu pago</DialogTitle>
           <DialogDescription className="text-white/60">
-            Finaliza la transacción dentro de la caja de PayPhone.
+            Finaliza la transaccion dentro de la caja de PayPhone.
           </DialogDescription>
         </DialogHeader>
 
@@ -371,10 +367,11 @@ export function PayphoneCheckoutModal(props: PayphoneCheckoutModalProps) {
             Cerrar
           </Button>
           <Button onClick={goToConfirm} disabled={!clientTxId || isLoading}>
-            Ya pagué, verificar
+            Ya pague, verificar
           </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
   )
 }
+

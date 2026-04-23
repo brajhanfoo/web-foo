@@ -1,4 +1,3 @@
-// src/app/plataforma/admin/programas/%5BprogramId%5D/page.tsx
 'use client'
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
@@ -43,6 +42,17 @@ import type {
 
 import { ArrowLeft, ExternalLink, Plus, Save } from 'lucide-react'
 
+type PricingFormState = {
+  listPrice: string
+  discountPercent: string
+  finalSingle: string
+  hasInstallments: boolean
+  finalInstallments: string
+  installmentsCount: string
+  installmentsInterestFree: boolean
+  installmentAmount: string
+}
+
 function safeString(value: unknown): string {
   return typeof value === 'string' ? value : ''
 }
@@ -60,9 +70,229 @@ function toDateOnlyOrNull(value: string): string | null {
 }
 
 function formatDateRange(startsAt: string | null, endsAt: string | null) {
-  const start = startsAt ?? '—'
-  const end = endsAt ?? '—'
-  return `${start} → ${end}`
+  const start = startsAt ?? '--'
+  const end = endsAt ?? '--'
+  return `${start} -> ${end}`
+}
+
+function emptyPricingFormState(): PricingFormState {
+  return {
+    listPrice: '',
+    discountPercent: '',
+    finalSingle: '',
+    hasInstallments: false,
+    finalInstallments: '',
+    installmentsCount: '',
+    installmentsInterestFree: true,
+    installmentAmount: '',
+  }
+}
+
+function toInputValue(value: unknown): string {
+  if (value === null || value === undefined) return ''
+  if (typeof value === 'number' && Number.isFinite(value)) return String(value)
+  if (typeof value === 'string') return value.trim()
+  return ''
+}
+
+function buildPricingState(program: ProgramRow, currency: 'usd' | 'ars') {
+  if (currency === 'usd') {
+    return {
+      listPrice: toInputValue(program.price_usd_list),
+      discountPercent: toInputValue(program.price_usd_discount_percent),
+      finalSingle: toInputValue(
+        program.price_usd_final_single ?? program.price_usd
+      ),
+      hasInstallments: Boolean(program.price_usd_has_installments),
+      finalInstallments: toInputValue(program.price_usd_final_installments),
+      installmentsCount: toInputValue(program.price_usd_installments_count),
+      installmentsInterestFree:
+        program.price_usd_installments_interest_free !== false,
+      installmentAmount: toInputValue(program.price_usd_installment_amount),
+    } satisfies PricingFormState
+  }
+
+  return {
+    listPrice: toInputValue(program.price_ars_list),
+    discountPercent: toInputValue(program.price_ars_discount_percent),
+    finalSingle: toInputValue(program.price_ars_final_single),
+    hasInstallments: Boolean(program.price_ars_has_installments),
+    finalInstallments: toInputValue(program.price_ars_final_installments),
+    installmentsCount: toInputValue(program.price_ars_installments_count),
+    installmentsInterestFree: program.price_ars_installments_interest_free !== false,
+    installmentAmount: toInputValue(program.price_ars_installment_amount),
+  } satisfies PricingFormState
+}
+
+function parseOptionalDecimal(label: string, value: string): number | null {
+  const normalized = value.trim()
+  if (!normalized) return null
+  const parsed = Number(normalized)
+  if (!Number.isFinite(parsed) || parsed < 0) {
+    throw new Error(`${label} invalido.`)
+  }
+  return parsed
+}
+
+function parseOptionalInteger(label: string, value: string): number | null {
+  const normalized = value.trim()
+  if (!normalized) return null
+  const parsed = Number(normalized)
+  if (!Number.isFinite(parsed) || parsed < 0) {
+    throw new Error(`${label} invalido.`)
+  }
+  return Math.trunc(parsed)
+}
+
+type PricingEditorProps = {
+  title: string
+  currency: 'USD' | 'ARS'
+  state: PricingFormState
+  onChange: (next: PricingFormState) => void
+  showInstallmentsHint?: boolean
+}
+
+function PricingEditor(props: PricingEditorProps) {
+  const { state } = props
+
+  return (
+    <div className="rounded-xl border border-slate-800 bg-slate-950/40 p-4 space-y-4">
+      <div>
+        <h3 className="text-sm font-semibold text-slate-100">{props.title}</h3>
+        <p className="text-xs text-slate-400">
+          Configura precio de lista, precio final y metadata de cuotas en {props.currency}.
+        </p>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-3">
+        <div className="space-y-2">
+          <Label>Precio lista ({props.currency})</Label>
+          <Input
+            value={state.listPrice}
+            onChange={(event) =>
+              props.onChange({ ...state, listPrice: event.target.value })
+            }
+            placeholder="Opcional"
+            inputMode="decimal"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label>Descuento % ({props.currency})</Label>
+          <Input
+            value={state.discountPercent}
+            onChange={(event) =>
+              props.onChange({ ...state, discountPercent: event.target.value })
+            }
+            placeholder="Opcional"
+            inputMode="decimal"
+          />
+        </div>
+
+        <div className="space-y-2">
+          <Label>Precio final pago unico ({props.currency})</Label>
+          <Input
+            value={state.finalSingle}
+            onChange={(event) =>
+              props.onChange({ ...state, finalSingle: event.target.value })
+            }
+            placeholder="Opcional"
+            inputMode="decimal"
+          />
+        </div>
+      </div>
+
+      <div className="flex items-center gap-3 rounded-lg border border-slate-800 bg-slate-900/40 p-3">
+        <Switch
+          id={`${props.currency.toLowerCase()}_has_installments`}
+          checked={state.hasInstallments}
+          onCheckedChange={(checked) =>
+            props.onChange({ ...state, hasInstallments: checked })
+          }
+        />
+        <Label htmlFor={`${props.currency.toLowerCase()}_has_installments`}>
+          Habilitar cuotas en {props.currency}
+        </Label>
+      </div>
+
+      {state.hasInstallments ? (
+        <div className="grid gap-4 md:grid-cols-4">
+          <div className="space-y-2">
+            <Label>Precio final en cuotas ({props.currency})</Label>
+            <Input
+              value={state.finalInstallments}
+              onChange={(event) =>
+                props.onChange({
+                  ...state,
+                  finalInstallments: event.target.value,
+                })
+              }
+              placeholder="Obligatorio si cuotas"
+              inputMode="decimal"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label>Cantidad maxima cuotas</Label>
+            <Input
+              value={state.installmentsCount}
+              onChange={(event) =>
+                props.onChange({
+                  ...state,
+                  installmentsCount: event.target.value,
+                })
+              }
+              placeholder="Ej: 6"
+              inputMode="numeric"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label>Monto informativo por cuota ({props.currency})</Label>
+            <Input
+              value={state.installmentAmount}
+              onChange={(event) =>
+                props.onChange({
+                  ...state,
+                  installmentAmount: event.target.value,
+                })
+              }
+              placeholder="Opcional"
+              inputMode="decimal"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label>Interes</Label>
+            <Select
+              value={state.installmentsInterestFree ? 'free' : 'with_interest'}
+              onValueChange={(value) =>
+                props.onChange({
+                  ...state,
+                  installmentsInterestFree: value === 'free',
+                })
+              }
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="free">Sin interes</SelectItem>
+                <SelectItem value="with_interest">Con interes</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      ) : null}
+
+      {props.showInstallmentsHint ? (
+        <div className="rounded-md border border-slate-800 bg-slate-900/40 px-3 py-2 text-xs text-slate-400">
+          Nota: en esta iteracion, cuotas USD no se muestran de forma explicita en UI publica,
+          pero quedan configuradas para compatibilidad futura.
+        </div>
+      ) : null}
+    </div>
+  )
 }
 
 export default function AdminProgramDetailPage() {
@@ -83,15 +313,18 @@ export default function AdminProgramDetailPage() {
   const [program, setProgram] = useState<ProgramRow | null>(null)
   const [editions, setEditions] = useState<EditionRow[]>([])
 
-  // Program fields
   const [title, setTitle] = useState('')
   const [slug, setSlug] = useState('')
   const [description, setDescription] = useState<string>('')
   const [isPublished, setIsPublished] = useState(false)
   const [paymentMode, setPaymentMode] = useState<ProgramPaymentMode>('none')
-  const [priceUsd, setPriceUsd] = useState('')
+  const [usdPricing, setUsdPricing] = useState<PricingFormState>(
+    emptyPricingFormState()
+  )
+  const [arsPricing, setArsPricing] = useState<PricingFormState>(
+    emptyPricingFormState()
+  )
 
-  // Create edition modal
   const [isEditionModalOpen, setIsEditionModalOpen] = useState(false)
   const [newEditionName, setNewEditionName] = useState('')
   const [newEditionStartsAt, setNewEditionStartsAt] = useState('')
@@ -105,7 +338,12 @@ export default function AdminProgramDetailPage() {
     const programResponse = await supabase
       .from('programs')
       .select(
-        'id, slug, title, description, is_published, payment_mode, requires_payment_pre, price_usd, created_at, updated_at'
+        `id, slug, title, description, is_published, payment_mode, requires_payment_pre, price_usd,
+        price_usd_list,price_usd_discount_percent,price_usd_final_single,price_usd_has_installments,
+        price_usd_final_installments,price_usd_installments_count,price_usd_installments_interest_free,price_usd_installment_amount,
+        price_ars_list,price_ars_discount_percent,price_ars_final_single,price_ars_has_installments,
+        price_ars_final_installments,price_ars_installments_count,price_ars_installments_interest_free,price_ars_installment_amount,
+        created_at, updated_at`
       )
       .eq('id', programId)
       .maybeSingle()
@@ -123,7 +361,8 @@ export default function AdminProgramDetailPage() {
     setDescription(p.description ?? '')
     setIsPublished(p.is_published)
     setPaymentMode(resolvePaymentMode(p))
-    setPriceUsd(p.price_usd ? String(p.price_usd) : '')
+    setUsdPricing(buildPricingState(p, 'usd'))
+    setArsPricing(buildPricingState(p, 'ars'))
 
     const editionsResponse = await supabase
       .from('program_editions')
@@ -155,40 +394,111 @@ export default function AdminProgramDetailPage() {
     if (!nextTitle) return showError('El titulo es obligatorio.')
     if (!nextSlug) return showError('El slug es obligatorio.')
 
-    const priceRaw = priceUsd.trim()
-    let priceValue: number | null = null
-    if (priceRaw) {
-      const parsed = Number(priceRaw)
-      if (!Number.isFinite(parsed) || parsed < 0) {
-        return showError('Precio invalido.')
+    try {
+      const usdList = parseOptionalDecimal('Precio lista USD', usdPricing.listPrice)
+      const usdDiscount = parseOptionalDecimal(
+        'Descuento USD',
+        usdPricing.discountPercent
+      )
+      const usdFinalSingle = parseOptionalDecimal(
+        'Precio final USD pago unico',
+        usdPricing.finalSingle
+      )
+      const usdFinalInstallments = usdPricing.hasInstallments
+        ? parseOptionalDecimal(
+            'Precio final USD en cuotas',
+            usdPricing.finalInstallments
+          )
+        : null
+      const usdInstallmentsCount = usdPricing.hasInstallments
+        ? parseOptionalInteger(
+            'Cantidad cuotas USD',
+            usdPricing.installmentsCount
+          )
+        : null
+      const usdInstallmentAmount = usdPricing.hasInstallments
+        ? parseOptionalDecimal(
+            'Monto cuota USD',
+            usdPricing.installmentAmount
+          )
+        : null
+
+      const arsList = parseOptionalDecimal('Precio lista ARS', arsPricing.listPrice)
+      const arsDiscount = parseOptionalDecimal(
+        'Descuento ARS',
+        arsPricing.discountPercent
+      )
+      const arsFinalSingle = parseOptionalDecimal(
+        'Precio final ARS pago unico',
+        arsPricing.finalSingle
+      )
+      const arsFinalInstallments = arsPricing.hasInstallments
+        ? parseOptionalDecimal(
+            'Precio final ARS en cuotas',
+            arsPricing.finalInstallments
+          )
+        : null
+      const arsInstallmentsCount = arsPricing.hasInstallments
+        ? parseOptionalInteger(
+            'Cantidad cuotas ARS',
+            arsPricing.installmentsCount
+          )
+        : null
+      const arsInstallmentAmount = arsPricing.hasInstallments
+        ? parseOptionalDecimal(
+            'Monto cuota ARS',
+            arsPricing.installmentAmount
+          )
+        : null
+
+      setSaving(true)
+
+      const response = await supabase
+        .from('programs')
+        .update({
+          title: nextTitle,
+          slug: nextSlug,
+          description: description.trim() ? description.trim() : null,
+          is_published: isPublished,
+          payment_mode: paymentMode,
+          requires_payment_pre: paymentMode === 'pre',
+          price_usd: paymentMode === 'none' ? null : usdFinalSingle,
+          price_usd_list: usdList,
+          price_usd_discount_percent: usdDiscount,
+          price_usd_final_single: usdFinalSingle,
+          price_usd_has_installments: usdPricing.hasInstallments,
+          price_usd_final_installments: usdFinalInstallments,
+          price_usd_installments_count: usdInstallmentsCount,
+          price_usd_installments_interest_free: usdPricing.hasInstallments
+            ? usdPricing.installmentsInterestFree
+            : null,
+          price_usd_installment_amount: usdInstallmentAmount,
+          price_ars_list: arsList,
+          price_ars_discount_percent: arsDiscount,
+          price_ars_final_single: arsFinalSingle,
+          price_ars_has_installments: arsPricing.hasInstallments,
+          price_ars_final_installments: arsFinalInstallments,
+          price_ars_installments_count: arsInstallmentsCount,
+          price_ars_installments_interest_free: arsPricing.hasInstallments
+            ? arsPricing.installmentsInterestFree
+            : null,
+          price_ars_installment_amount: arsInstallmentAmount,
+        })
+        .eq('id', program.id)
+
+      setSaving(false)
+
+      if (response.error) {
+        showError(`No se pudo guardar. ${safeString(response.error.message)}`)
+        return
       }
-      priceValue = parsed
+
+      showSuccess('Programa guardado.')
+      await loadAll()
+    } catch (error) {
+      setSaving(false)
+      showError(error instanceof Error ? error.message : 'Datos invalidos.')
     }
-
-    setSaving(true)
-
-    const response = await supabase
-      .from('programs')
-      .update({
-        title: nextTitle,
-        slug: nextSlug,
-        description: description.trim() ? description.trim() : null,
-        is_published: isPublished,
-        payment_mode: paymentMode,
-        requires_payment_pre: paymentMode === 'pre',
-        price_usd: paymentMode === 'none' ? null : priceValue,
-      })
-      .eq('id', program.id)
-
-    setSaving(false)
-
-    if (response.error) {
-      showError(`No se pudo guardar. ${safeString(response.error.message)}`)
-      return
-    }
-
-    showSuccess('Programa guardado.')
-    await loadAll()
   }
 
   function openEditionModal() {
@@ -332,10 +642,10 @@ export default function AdminProgramDetailPage() {
           <CardHeader>
             <CardTitle>Configuracion del programa</CardTitle>
             <CardDescription className="text-slate-300">
-              Actualiza el nombre, descripcion, pago y publicacion.
+              Actualiza datos base, modalidad de pago y pricing completo por moneda.
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-5">
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="programTitle">Nombre</Label>
@@ -384,29 +694,35 @@ export default function AdminProgramDetailPage() {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="programPrice">Precio (USD)</Label>
-                <Input
-                  id="programPrice"
-                  value={priceUsd}
-                  onChange={(element) => setPriceUsd(element.target.value)}
-                  placeholder="Ej: 49.99"
-                  inputMode="decimal"
-                  disabled={paymentMode === 'none'}
+
+              <div className="flex items-center gap-3 rounded-lg border border-slate-800 bg-slate-900/50 px-3 py-2">
+                <Switch
+                  id="programPublished"
+                  checked={isPublished}
+                  onCheckedChange={setIsPublished}
                 />
+                <Label htmlFor="programPublished">
+                  {isPublished ? 'Publicado' : 'Oculto'}
+                </Label>
               </div>
             </div>
 
-            <div className="flex items-center gap-3">
-              <Switch
-                id="programPublished"
-                checked={isPublished}
-                onCheckedChange={setIsPublished}
-              />
-              <Label htmlFor="programPublished">
-                {isPublished ? 'Publicado' : 'Oculto'}
-              </Label>
-            </div>
+            <Separator className="bg-slate-800" />
+
+            <PricingEditor
+              title="Pricing USD"
+              currency="USD"
+              state={usdPricing}
+              onChange={setUsdPricing}
+              showInstallmentsHint
+            />
+
+            <PricingEditor
+              title="Pricing ARS"
+              currency="ARS"
+              state={arsPricing}
+              onChange={setArsPricing}
+            />
 
             <div className="flex items-center justify-end">
               <Button onClick={saveProgram} disabled={saving} className="gap-2">
@@ -438,9 +754,7 @@ export default function AdminProgramDetailPage() {
                   >
                     <div className="flex flex-wrap items-start justify-between gap-3">
                       <div className="min-w-0">
-                        <div className="font-medium">
-                          {edition.edition_name}
-                        </div>
+                        <div className="font-medium">{edition.edition_name}</div>
                         <div className="text-xs text-slate-300">
                           {formatDateRange(edition.starts_at, edition.ends_at)}
                         </div>
@@ -507,9 +821,7 @@ export default function AdminProgramDetailPage() {
                   id="editionEnd"
                   type="date"
                   value={newEditionEndsAt}
-                  onChange={(element) =>
-                    setNewEditionEndsAt(element.target.value)
-                  }
+                  onChange={(element) => setNewEditionEndsAt(element.target.value)}
                 />
               </div>
             </div>
@@ -519,9 +831,7 @@ export default function AdminProgramDetailPage() {
               <Input
                 id="editionTeams"
                 value={newEditionTeamCount}
-                onChange={(element) =>
-                  setNewEditionTeamCount(element.target.value)
-                }
+                onChange={(element) => setNewEditionTeamCount(element.target.value)}
                 inputMode="numeric"
                 placeholder="Ej: 4"
               />

@@ -1,0 +1,3242 @@
+﻿diff --git a/src/app/(public)/programas/[program]/components/AdmissionPricing.tsx b/src/app/(public)/programas/[program]/components/AdmissionPricing.tsx
+index 889d172..95f2672 100644
+--- a/src/app/(public)/programas/[program]/components/AdmissionPricing.tsx
++++ b/src/app/(public)/programas/[program]/components/AdmissionPricing.tsx
+@@ -1,86 +1,206 @@
+ 'use client'
+ 
+-import React from 'react'
++import React, { useEffect, useMemo, useState } from 'react'
+ import Link from 'next/link'
+-import { FaUserCheck, FaTasks, FaComments } from 'react-icons/fa'
++import { FaTasks, FaComments } from 'react-icons/fa'
+ import { AiOutlineCheckCircle } from 'react-icons/ai'
++import {
++  formatCurrencyAmount,
++  resolveProgramPricing,
++  type ResolvedProgramPricing,
++} from '@/lib/pricing'
++import type { ProgramPaymentVariant, ProgramRow } from '@/types/programs'
++
++type AdmissionPricingProps = {
++  program: ProgramRow
++  countryCode: string | null
++  initialPricing: ResolvedProgramPricing
++}
++
++const AdmissionPricing: React.FC<AdmissionPricingProps> = (props) => {
++  const pricing = useMemo(
++    () => resolveProgramPricing(props.program, props.countryCode),
++    [props.program, props.countryCode]
++  )
++
++  const [paymentVariant, setPaymentVariant] = useState<ProgramPaymentVariant>(
++    pricing.defaultPaymentVariant
++  )
++
++  useEffect(() => {
++    setPaymentVariant(pricing.defaultPaymentVariant)
++  }, [pricing.defaultPaymentVariant])
++
++  const selectedPricing = useMemo(
++    () =>
++      resolveProgramPricing(props.program, props.countryCode, paymentVariant),
++    [props.program, props.countryCode, paymentVariant]
++  )
++
++  const locale = selectedPricing.displayCurrency === 'ARS' ? 'es-AR' : 'es-EC'
++  const selectedPriceLabel = formatCurrencyAmount({
++    amount: selectedPricing.selectedPaymentPrice,
++    currency: selectedPricing.displayCurrency,
++    locale,
++  })
++  const listPriceLabel = formatCurrencyAmount({
++    amount: selectedPricing.listPrice,
++    currency: selectedPricing.displayCurrency,
++    locale,
++  })
++  const singlePriceLabel = formatCurrencyAmount({
++    amount: selectedPricing.singlePaymentPrice,
++    currency: selectedPricing.displayCurrency,
++    locale,
++  })
++  const installmentsPriceLabel = formatCurrencyAmount({
++    amount: selectedPricing.installmentsPrice,
++    currency: selectedPricing.displayCurrency,
++    locale,
++  })
++  const installmentAmountLabel = formatCurrencyAmount({
++    amount: selectedPricing.installmentAmount,
++    currency: selectedPricing.displayCurrency,
++    locale,
++  })
++
++  const canChooseVariant =
++    selectedPricing.showInstallmentsInUi &&
++    selectedPricing.hasInstallments &&
++    selectedPricing.singlePaymentPrice !== null
+ 
+-const AdmissionPricing: React.FC = () => {
+   return (
+     <section className="w-full bg-black text-white py-20 px-6">
+       <div className="max-w-5xl mx-auto">
+-        {/* Header */}
+         <div className="text-center mb-12">
+           <h2 className="text-3xl md:text-4xl font-bold">
+-            Acceso al proceso de admisión
++            Acceso al proceso de admision
+           </h2>
+           <p className="text-gray-400 mt-4">
+-            Da el primer paso para ingresar a Smart Projects a través de una
+-            evaluación real de tu nivel.
++            Da el primer paso para ingresar a Smart Projects con una evaluacion
++            real de tu nivel.
+           </p>
+         </div>
+ 
+-        {/* Card principal */}
+         <div className="border border-gray-800 rounded-2xl p-8 md:p-10 bg-[#0A0A0A] flex flex-col md:flex-row gap-10 items-center justify-between">
+-          {/* Lado izquierdo */}
+-          <div className="text-center md:text-left">
+-            {/* Badge */}
+-            <span className="text-xs px-3 py-1 rounded-full bg-yellow-500/20 text-yellow-400">
+-              Cupos limitados
+-            </span>
+-
+-            {/* Precio */}
++          <div className="text-center md:text-left w-full md:w-auto">
++            <div className="flex flex-wrap items-center gap-2">
++              <span className="text-xs px-3 py-1 rounded-full bg-yellow-500/20 text-yellow-400">
++                Cupos limitados
++              </span>
++              {selectedPricing.hasDiscount && selectedPricing.discountPercent ? (
++                <span className="text-xs px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300">
++                  {Math.round(selectedPricing.discountPercent)}% OFF
++                </span>
++              ) : null}
++            </div>
++
++            {canChooseVariant ? (
++              <div className="mt-4 inline-flex rounded-lg border border-white/10 bg-black/40 p-1">
++                <button
++                  type="button"
++                  onClick={() => setPaymentVariant('installments')}
++                  className={[
++                    'rounded-md px-3 py-2 text-xs font-semibold transition',
++                    paymentVariant === 'installments'
++                      ? 'bg-[#00CCA4] text-black'
++                      : 'text-white/75 hover:text-white',
++                  ].join(' ')}
++                >
++                  Cuotas
++                </button>
++                <button
++                  type="button"
++                  onClick={() => setPaymentVariant('single_payment')}
++                  className={[
++                    'rounded-md px-3 py-2 text-xs font-semibold transition',
++                    paymentVariant === 'single_payment'
++                      ? 'bg-[#00CCA4] text-black'
++                      : 'text-white/75 hover:text-white',
++                  ].join(' ')}
++                >
++                  Pago unico
++                </button>
++              </div>
++            ) : null}
++
+             <div className="mt-4">
+               <h3 className="text-5xl font-bold text-white">
+-                $20 <span className="text-lg text-gray-400">USD</span>
++                {selectedPriceLabel ?? 'Proximamente'}
+               </h3>
+-              <p className="text-gray-400 text-sm mt-2">
+-                Pago único por acceso al proceso de admisión
+-              </p>
++              {selectedPricing.hasListPrice && listPriceLabel ? (
++                <p className="text-gray-500 text-sm mt-2 line-through">
++                  {listPriceLabel}
++                </p>
++              ) : null}
++
++              {selectedPricing.showInstallmentsInUi &&
++              selectedPricing.hasInstallments &&
++              paymentVariant === 'installments' ? (
++                <div className="mt-2 text-sm text-gray-300">
++                  {selectedPricing.installmentsCount ? (
++                    <p>
++                      Hasta {selectedPricing.installmentsCount} cuotas{' '}
++                      {selectedPricing.installmentsInterestFree === false
++                        ? 'con interes'
++                        : 'sin interes'}
++                    </p>
++                  ) : null}
++                  {installmentAmountLabel ? (
++                    <p>{installmentAmountLabel} por cuota</p>
++                  ) : null}
++                </div>
++              ) : null}
++
++              {paymentVariant === 'installments' && singlePriceLabel ? (
++                <p className="text-gray-400 text-sm mt-2">
++                  Pago unico: {singlePriceLabel}
++                </p>
++              ) : null}
+             </div>
+ 
+-            {/* Descripción */}
+             <p className="text-gray-300 mt-6 max-w-md">
+-              Accede a una evaluación técnica real y recibe feedback
++              Accede a una evaluacion tecnica real y recibe feedback
+               personalizado sobre tu nivel actual.
+             </p>
+ 
+-            {/* CTA */}
+             <Link href="/plataforma">
+               <button className="mt-6 px-6 py-3 bg-[#00CCA4] text-black font-semibold rounded-lg hover:opacity-90 transition cursor-pointer">
+-                Iniciar proceso de admisión
++                Iniciar proceso de admision
+               </button>
+             </Link>
++
++            {selectedPricing.showInstallmentsInUi &&
++            selectedPricing.hasInstallments &&
++            installmentsPriceLabel &&
++            singlePriceLabel ? (
++              <p className="mt-3 text-xs text-gray-400">
++                Cuotas: {installmentsPriceLabel} � Pago unico: {singlePriceLabel}
++              </p>
++            ) : null}
+           </div>
+ 
+-          {/* Lado derecho */}
+           <div className="flex flex-col gap-4 text-sm text-gray-300">
+             <div className="flex items-center gap-3">
+               <FaComments className="text-[#77039F]" />
+-              <span>Entrevista técnica por rol</span>
++              <span>Entrevista tecnica por rol</span>
+             </div>
+ 
+             <div className="flex items-center gap-3">
+               <FaTasks className="text-[#BDBE0B]" />
+-              <span>Evaluación práctica aplicada</span>
++              <span>Evaluacion practica aplicada</span>
+             </div>
+ 
+             <div className="flex items-center gap-3">
+               <AiOutlineCheckCircle className="text-[#4ADE80]" />
+               <span>Feedback personalizado</span>
+             </div>
+-            {/* 
+-                        <div className="flex items-center gap-3">
+-                            <FaUserCheck className="text-[#3B82F6]" />
+-                            <span>Posibilidad de ingreso a Smart Projects</span>
+-                        </div> */}
+           </div>
+         </div>
+ 
+-        {/* Nota final */}
+         <div className="text-center mt-8 max-w-xl mx-auto">
+           <p className="text-gray-500 text-xs">
+-            Este pago corresponde únicamente al proceso de admisión y no
++            Este pago corresponde unicamente al proceso de admision y no
+             garantiza el ingreso al programa.
+           </p>
+ 
+diff --git a/src/app/(public)/programas/[program]/components/project_academy/LaunchInvestmentSection.tsx b/src/app/(public)/programas/[program]/components/project_academy/LaunchInvestmentSection.tsx
+index c976789..3ae296d 100644
+--- a/src/app/(public)/programas/[program]/components/project_academy/LaunchInvestmentSection.tsx
++++ b/src/app/(public)/programas/[program]/components/project_academy/LaunchInvestmentSection.tsx
+@@ -1,130 +1,178 @@
+ 'use client'
+-import { useEffect, useState } from 'react'
++
++import { useEffect, useMemo, useState } from 'react'
+ import { FiCalendar, FiClock, FiMonitor } from 'react-icons/fi'
+ import { useRouter } from 'next/navigation'
+-
+-function detectArgentinaVisitor(): boolean {
+-  if (typeof window === 'undefined') return false
+-
+-  const locales = [
+-    navigator.language,
+-    ...(Array.isArray(navigator.languages) ? navigator.languages : []),
+-  ]
+-    .filter(Boolean)
+-    .map((value) => value.toLowerCase())
+-
+-  if (locales.some((locale) => locale.includes('-ar') || locale === 'es-ar')) {
+-    return true
+-  }
+-
+-  const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone
+-  return typeof timezone === 'string' && timezone.startsWith('America/Argentina')
++import {
++  formatCurrencyAmount,
++  resolveProgramPricing,
++  type ResolvedProgramPricing,
++} from '@/lib/pricing'
++import type { ProgramPaymentVariant, ProgramRow } from '@/types/programs'
++
++type LaunchInvestmentSectionProps = {
++  program: ProgramRow
++  countryCode: string | null
++  initialPricing: ResolvedProgramPricing
+ }
+ 
+-const LaunchInvestmentSection = (props: {
+-  isArgentinaVisitor?: boolean
+-}) => {
++const LaunchInvestmentSection = (props: LaunchInvestmentSectionProps) => {
+   const router = useRouter()
+-  const [isArgentinaVisitor, setIsArgentinaVisitor] = useState(
+-    props.isArgentinaVisitor ?? false
++  const basePricing = useMemo(
++    () => resolveProgramPricing(props.program, props.countryCode),
++    [props.program, props.countryCode]
++  )
++
++  const [paymentVariant, setPaymentVariant] = useState<ProgramPaymentVariant>(
++    basePricing.defaultPaymentVariant
+   )
+ 
+   useEffect(() => {
+-    if (typeof props.isArgentinaVisitor === 'boolean') {
+-      setIsArgentinaVisitor(props.isArgentinaVisitor)
+-      return
+-    }
++    setPaymentVariant(basePricing.defaultPaymentVariant)
++  }, [basePricing.defaultPaymentVariant])
++
++  const pricing = useMemo(
++    () => resolveProgramPricing(props.program, props.countryCode, paymentVariant),
++    [props.program, props.countryCode, paymentVariant]
++  )
+ 
+-    setIsArgentinaVisitor(detectArgentinaVisitor())
+-  }, [props.isArgentinaVisitor])
++  const locale = pricing.displayCurrency === 'ARS' ? 'es-AR' : 'es-EC'
++  const selectedPriceLabel = formatCurrencyAmount({
++    amount: pricing.selectedPaymentPrice,
++    currency: pricing.displayCurrency,
++    locale,
++  })
++  const singlePriceLabel = formatCurrencyAmount({
++    amount: pricing.singlePaymentPrice,
++    currency: pricing.displayCurrency,
++    locale,
++  })
++  const listPriceLabel = formatCurrencyAmount({
++    amount: pricing.listPrice,
++    currency: pricing.displayCurrency,
++    locale,
++  })
++  const installmentAmountLabel = formatCurrencyAmount({
++    amount: pricing.installmentAmount,
++    currency: pricing.displayCurrency,
++    locale,
++  })
++
++  const canChooseVariant =
++    pricing.showInstallmentsInUi &&
++    pricing.hasInstallments &&
++    pricing.singlePaymentPrice !== null
+ 
+   return (
+     <section className="mx-auto max-w-7xl px-6 py-24">
+-      {/* Header */}
+       <div className="mb-12 text-center">
+         <h2 className="text-3xl font-semibold text-white md:text-4xl">
+-          Inversión por Lanzamiento
++          Inversion por Lanzamiento
+         </h2>
+         <p className="mt-3 text-sm text-white/60">
+-          Tu futuro profesional comienza con una decisión inteligente.
++          Tu futuro profesional comienza con una decision inteligente.
+         </p>
+       </div>
+ 
+-      {/* Card */}
+       <div className="mx-auto max-w-4xl rounded-3xl border border-white/10 bg-gradient-to-br from-[#1b1c12] via-[#15160f] to-[#0f100b] p-8 shadow-2xl">
+         <div className="grid gap-8 md:grid-cols-2">
+-          {/* LEFT */}
+           <div>
+-            <span className="inline-block rounded-full bg-[#BDBE0B]/20 px-3 py-1 text-xs font-medium text-[#BDBE0B]">
+-              CUPOS LIMITADOS
+-            </span>
++            <div className="flex flex-wrap items-center gap-2">
++              <span className="inline-block rounded-full bg-[#BDBE0B]/20 px-3 py-1 text-xs font-medium text-[#BDBE0B]">
++                CUPOS LIMITADOS
++              </span>
++              {pricing.hasDiscount && pricing.discountPercent ? (
++                <span className="inline-block rounded-full bg-emerald-400/15 px-3 py-1 text-xs font-semibold text-emerald-300">
++                  {Math.round(pricing.discountPercent)}% OFF
++                </span>
++              ) : null}
++            </div>
++
++            {canChooseVariant ? (
++              <div className="mt-6 inline-flex rounded-xl border border-white/10 bg-black/35 p-1">
++                <button
++                  type="button"
++                  onClick={() => setPaymentVariant('installments')}
++                  className={[
++                    'rounded-lg px-3 py-2 text-xs font-semibold transition',
++                    paymentVariant === 'installments'
++                      ? 'bg-[#BDBE0B] text-black'
++                      : 'text-white/80 hover:text-white',
++                  ].join(' ')}
++                >
++                  Cuotas
++                </button>
++                <button
++                  type="button"
++                  onClick={() => setPaymentVariant('single_payment')}
++                  className={[
++                    'rounded-lg px-3 py-2 text-xs font-semibold transition',
++                    paymentVariant === 'single_payment'
++                      ? 'bg-[#BDBE0B] text-black'
++                      : 'text-white/80 hover:text-white',
++                  ].join(' ')}
++                >
++                  Pago unico
++                </button>
++              </div>
++            ) : null}
+ 
+             <div className="mt-6">
+-              {isArgentinaVisitor ? (
+-                <>
+-                  <div className="flex flex-wrap items-center gap-3">
+-                    <span className="inline-flex rounded-full bg-emerald-400/15 px-3 py-1 text-xs font-semibold text-emerald-300">
+-                        40% OFF
+-                    </span>
+-                    <span className="text-base text-white/40 line-through sm:text-lg">
+-                        $868.000 ARS
+-                    </span>
+-                  </div>
+-
+-                  <p className="mt-3 text-lg text-white/85 sm:text-xl">
+-                    Hasta 6 cuotas sin interés de
+-                  </p>
++              {pricing.hasListPrice && listPriceLabel ? (
++                <p className="text-sm text-white/40 line-through">{listPriceLabel}</p>
++              ) : null}
++
++              <div className="flex items-end gap-2">
++                <span className="text-4xl font-bold leading-none text-[#BDBE0B] sm:text-5xl">
++                  {selectedPriceLabel ?? 'Proximamente'}
++                </span>
++              </div>
+ 
+-                  <div className="mt-2 flex flex-wrap items-end gap-2">
+-                    <span className="text-4xl font-bold leading-none text-[#BDBE0B] sm:text-5xl">
+-                      $103.000
+-                    </span>
+-                    <span className="mb-1 text-sm text-white/70">ARS</span>
+-                  </div>
++              {pricing.showInstallmentsInUi &&
++              pricing.hasInstallments &&
++              paymentVariant === 'installments' ? (
++                <div className="mt-3 space-y-1 text-sm text-white/80">
++                  {pricing.installmentsCount ? (
++                    <p>
++                      Hasta {pricing.installmentsCount} cuotas{' '}
++                      {pricing.installmentsInterestFree === false
++                        ? 'con interes'
++                        : 'sin interes'}
++                    </p>
++                  ) : null}
++                  {installmentAmountLabel ? (
++                    <p>{installmentAmountLabel} por cuota</p>
++                  ) : null}
++                </div>
++              ) : null}
+ 
+-                  <p className="mt-3 text-sm text-white/65 sm:text-base">
+-                    Precio final: $495.000 ARS
+-                  </p>
+-                </>
+-              ) : (
+-                <>
+-                  <p className="text-sm text-white/40 line-through">$850 USD</p>
+-
+-                  <div className="flex items-end gap-2">
+-                    <span className="text-5xl font-bold text-[#BDBE0B]">
+-                      $350
+-                    </span>
+-                    <span className="mb-1 text-sm text-white/70">USD</span>
+-                  </div>
+-                </>
+-              )}
++              {paymentVariant === 'installments' && singlePriceLabel ? (
++                <p className="mt-3 text-sm text-white/65">
++                  Precio final en pago unico: {singlePriceLabel}
++                </p>
++              ) : null}
+ 
+               <p className="mt-1 text-xs uppercase tracking-wide text-[#BDBE0B]/80">
+-                Precio Early Bird
++                Precio promocional
+               </p>
+ 
+-              {/* 🔥 MICROCOPY OPTIMIZADO */}
+               <p className="mt-4 text-xs text-white/50">
+-                No pagas nada hoy · Puedes dividir el pago en cuotas con tu
+-                tarjeta
++                Configuracion de precios sincronizada desde la base de datos.
+               </p>
+             </div>
+ 
+             <p className="mt-6 max-w-sm text-sm text-white/50">
+-              Aplica para iniciar tu proceso de admisión y asegurar este precio
++              Aplica para iniciar tu proceso de admision y asegurar este precio.
+             </p>
+           </div>
+ 
+-          {/* RIGHT */}
+           <div className="flex flex-col justify-between">
+             <div className="space-y-4 text-sm text-white/80">
+               <div className="flex items-start gap-3">
+                 <FiCalendar className="mt-0.5 h-4 w-4 text-[#BDBE0B]" />
+                 <div>
+                   <p className="font-medium text-white">Inicio: 18 de mayo</p>
+-                  <p className="text-xs text-white/50">
+-                    Duración de 12 semanas
+-                  </p>
++                  <p className="text-xs text-white/50">Duracion de 12 semanas</p>
+                 </div>
+               </div>
+ 
+@@ -133,7 +181,7 @@ const LaunchInvestmentSection = (props: {
+                 <div>
+                   <p className="font-medium text-white">Formato Part-time</p>
+                   <p className="text-xs text-white/50">
+-                    Turnos a elección: Mañana, Tarde o Noche (Hora ARG / GMT-3)
++                    Turnos a eleccion: manana, tarde o noche.
+                   </p>
+                 </div>
+               </div>
+@@ -143,7 +191,7 @@ const LaunchInvestmentSection = (props: {
+                 <div>
+                   <p className="font-medium text-white">100% Remoto en vivo</p>
+                   <p className="text-xs text-white/50">
+-                    Workshops grabados disponibles 24/7
++                    Workshops grabados disponibles 24/7.
+                   </p>
+                 </div>
+               </div>
+@@ -156,9 +204,8 @@ const LaunchInvestmentSection = (props: {
+               Asegurar mi cupo
+             </button>
+ 
+-            {/* 🔥 confianza extra (opcional pero potente) */}
+             <p className="mt-3 text-center text-xs text-white/40">
+-              Acceso inmediato tras admisión · Cupos limitados por cohorte
++              Acceso inmediato tras admision � Cupos limitados por cohorte
+             </p>
+           </div>
+         </div>
+diff --git a/src/app/(public)/programas/[program]/page.tsx b/src/app/(public)/programas/[program]/page.tsx
+index 4f99165..de458cd 100644
+--- a/src/app/(public)/programas/[program]/page.tsx
++++ b/src/app/(public)/programas/[program]/page.tsx
+@@ -2,6 +2,9 @@
+ import { headers } from 'next/headers'
+ import { notFound } from 'next/navigation'
+ import type { JSX } from 'react'
++import { createClient } from '@/lib/supabase/server'
++import { resolveCountryCodeFromHeaders, resolveProgramPricing } from '@/lib/pricing'
++import type { ProgramRow } from '@/types/programs'
+ import { PROGRAM_SPECS } from './registry'
+ 
+ type ProgramPageProps = {
+@@ -11,24 +14,36 @@ type ProgramPageProps = {
+ export default async function ProgramPage(
+   props: ProgramPageProps
+ ): Promise<JSX.Element> {
++  const supabase = await createClient()
+   const { program: slug } = await props.params
+   const spec = PROGRAM_SPECS[slug]
+ 
+   if (!spec) notFound()
+ 
+-  const requestHeaders = await headers()
+-  const visitorCountry =
+-    requestHeaders.get('x-vercel-ip-country') ??
+-    requestHeaders.get('cf-ipcountry') ??
+-    requestHeaders.get('cloudfront-viewer-country') ??
+-    requestHeaders.get('x-country-code') ??
+-    ''
++  const { data: programData } = await supabase
++    .from('programs')
++    .select(
++      `id,slug,title,description,is_published,payment_mode,requires_payment_pre,price_usd,
++      price_usd_list,price_usd_discount_percent,price_usd_final_single,price_usd_has_installments,
++      price_usd_final_installments,price_usd_installments_count,price_usd_installments_interest_free,price_usd_installment_amount,
++      price_ars_list,price_ars_discount_percent,price_ars_final_single,price_ars_has_installments,
++      price_ars_final_installments,price_ars_installments_count,price_ars_installments_interest_free,price_ars_installment_amount`
++    )
++    .eq('slug', slug)
++    .eq('is_published', true)
++    .maybeSingle()
++
++  if (!programData) notFound()
+ 
+-  const isArgentinaVisitor = visitorCountry.toUpperCase() === 'AR'
++  const program = programData as ProgramRow
++
++  const requestHeaders = await headers()
++  const countryCode = resolveCountryCodeFromHeaders(requestHeaders)
++  const pricing = resolveProgramPricing(program, countryCode)
+ 
+   return (
+     <div className="min-h-screen bg-black">
+-      {spec.renderSections({ isArgentinaVisitor })}
++      {spec.renderSections({ program, countryCode, pricing })}
+     </div>
+   )
+ }
+diff --git a/src/app/(public)/programas/[program]/registry.tsx b/src/app/(public)/programas/[program]/registry.tsx
+index 4e3da40..d990176 100644
+--- a/src/app/(public)/programas/[program]/registry.tsx
++++ b/src/app/(public)/programas/[program]/registry.tsx
+@@ -1,6 +1,7 @@
+ import React from 'react'
++import type { ResolvedProgramPricing } from '@/lib/pricing'
++import type { ProgramRow } from '@/types/programs'
+ 
+-// Smart Projects (tus componentes)
+ import ProgramHeroSmartProjects from '@/app/(public)/programas/[program]/components/ProgramHeroSmartProjects'
+ import AboutSection from '@/app/(public)/programas/[program]/components/AboutSection'
+ import Timeline from '@/app/(public)/programas/[program]/components/Timeline'
+@@ -27,15 +28,21 @@ import EnrollmentStepsSection from './components/project_academy/ProjectAcademyE
+ import AdmissionProcess from './components/AdmissionProcess'
+ import AdmissionPricing from './components/AdmissionPricing'
+ 
++type ProgramRenderParams = {
++  program: ProgramRow
++  countryCode: string | null
++  pricing: ResolvedProgramPricing
++}
++
+ type ProgramRenderSpec = {
+   title: string
+-  renderSections: (params: { isArgentinaVisitor: boolean }) => React.ReactNode[]
++  renderSections: (params: ProgramRenderParams) => React.ReactNode[]
+ }
+ 
+ export const PROGRAM_SPECS: Record<string, ProgramRenderSpec> = {
+   'smart-projects': {
+     title: 'Smart Projects',
+-    renderSections: () => [
++    renderSections: ({ program, countryCode, pricing }) => [
+       <ProgramHeroSmartProjects key="hero" />,
+       <AboutSection key="about" />,
+       <Timeline key="timeline" />,
+@@ -43,16 +50,20 @@ export const PROGRAM_SPECS: Record<string, ProgramRenderSpec> = {
+       <AdmissionsSection key="admissions" />,
+       <AdmissionProcess key="admission-process" />,
+       <InstructoresMentores key="mentors" />,
+-      <AdmissionPricing key="admission-pricing" />,
++      <AdmissionPricing
++        key="admission-pricing"
++        program={program}
++        countryCode={countryCode}
++        initialPricing={pricing}
++      />,
+       <PreguntasFrecuentes key="faq" />,
+       <ContactSection key="contact" />,
+     ],
+   },
+ 
+-  // Project Academy (arrancá así y luego le metés sus secciones propias)
+   'project-academy': {
+     title: 'Project Academy',
+-    renderSections: ({ isArgentinaVisitor }) => [
++    renderSections: ({ program, countryCode, pricing }) => [
+       <div key="placeholder" className="px-6 md:py-16 text-white">
+         <HeroProjectAcademy />
+         <IsThisProgramForYou />
+@@ -63,7 +74,11 @@ export const PROGRAM_SPECS: Record<string, ProgramRenderSpec> = {
+         <CareerIntensiveSection />
+         <EvaluationCertificationSection />
+         <CareerOutcomeSection />
+-        <LaunchInvestmentSection isArgentinaVisitor={isArgentinaVisitor} />
++        <LaunchInvestmentSection
++          program={program}
++          countryCode={countryCode}
++          initialPricing={pricing}
++        />
+         <FinalCtaSection />
+         <FAQSection />
+       </div>,
+diff --git a/src/app/(public)/programas/components/ProgramCard.tsx b/src/app/(public)/programas/components/ProgramCard.tsx
+index 874ec69..0e253d4 100644
+--- a/src/app/(public)/programas/components/ProgramCard.tsx
++++ b/src/app/(public)/programas/components/ProgramCard.tsx
+@@ -6,15 +6,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+ import { Badge } from '@/components/ui/badge'
+ import { Button } from '@/components/ui/button'
+ import { Check, X, Award, Folder } from 'lucide-react'
++import { formatCurrencyAmount, resolveProgramPricing } from '@/lib/pricing'
+ import type { ProgramCardVM, ProgramFeature } from '../types/types'
+-import {
+-  formatEditionLine,
+-  formatPriceUSD,
+-  formatDateRangeChip,
+-} from '../utils'
++import { formatEditionLine, formatDateRangeChip } from '../utils'
+ 
+ type ProgramCardProps = {
+   item: ProgramCardVM
++  countryCode: string | null
+ }
+ 
+ type AccentTokens = {
+@@ -101,7 +99,7 @@ function FeatureRow(props: { feature: ProgramFeature }): React.JSX.Element {
+ }
+ 
+ export function ProgramCard(props: ProgramCardProps): React.JSX.Element {
+-  const { item } = props
++  const { item, countryCode } = props
+ 
+   const editionLine = useMemo(
+     () => formatEditionLine(item.edition),
+@@ -119,6 +117,31 @@ export function ProgramCard(props: ProgramCardProps): React.JSX.Element {
+   const isOpen = item.status === 'open'
+   const isSoon = item.status === 'soon'
+   const tokens = tokensFor(item)
++  const pricing = useMemo(
++    () => resolveProgramPricing(item.program, countryCode),
++    [item.program, countryCode]
++  )
++  const locale = pricing.displayCurrency === 'ARS' ? 'es-AR' : 'es-EC'
++  const selectedPriceLabel = formatCurrencyAmount({
++    amount: pricing.selectedPaymentPrice,
++    currency: pricing.displayCurrency,
++    locale,
++  })
++  const listPriceLabel = formatCurrencyAmount({
++    amount: pricing.listPrice,
++    currency: pricing.displayCurrency,
++    locale,
++  })
++  const installmentAmountLabel = formatCurrencyAmount({
++    amount: pricing.installmentAmount,
++    currency: pricing.displayCurrency,
++    locale,
++  })
++  const singlePaymentLabel = formatCurrencyAmount({
++    amount: pricing.singlePaymentPrice,
++    currency: pricing.displayCurrency,
++    locale,
++  })
+ 
+   const topRightIcon =
+     tokens.topRightIcon === 'award' ? (
+@@ -132,7 +155,6 @@ export function ProgramCard(props: ProgramCardProps): React.JSX.Element {
+       ? `VER SMART PROJECTS`
+       : `VER PROJECT ACADEMY`
+ 
+-  // Smart Projects = CTA secundario, Academy = primario
+   const ctaVariant: 'primary' | 'secondary' =
+     item.program.slug === 'smart-projects' ? 'secondary' : 'primary'
+ 
+@@ -144,7 +166,6 @@ export function ProgramCard(props: ProgramCardProps): React.JSX.Element {
+         tokens.glowClass,
+       ].join(' ')}
+     >
+-      {/* Frosted overlay (solo cuando está open) */}
+       {isOpen ? (
+         <>
+           <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-[#A920D0]/12 via-black/10 to-[#00D3D3]/10" />
+@@ -184,7 +205,7 @@ export function ProgramCard(props: ProgramCardProps): React.JSX.Element {
+               </Badge>
+             ) : (
+               <Badge className="bg-white/5 text-white/60 border border-white/10">
+-                PRÓXIMAMENTE
++                PROXIMAMENTE
+               </Badge>
+             )}
+           </div>
+@@ -197,7 +218,7 @@ export function ProgramCard(props: ProgramCardProps): React.JSX.Element {
+             </CardTitle>
+ 
+             <p className="text-sm md:text-base text-white/60 max-w-[62ch] whitespace-pre-line">
+-              {item.program.description ?? '—'}
++              {item.program.description ?? '-'}
+             </p>
+           </div>
+ 
+@@ -220,7 +241,7 @@ export function ProgramCard(props: ProgramCardProps): React.JSX.Element {
+             ))}
+           </ul>
+         ) : (
+-          <div className="text-sm text-white/60">Información próximamente.</div>
++          <div className="text-sm text-white/60">Informacion proxima.</div>
+         )}
+ 
+         <div className="h-px bg-white/10" />
+@@ -238,25 +259,55 @@ export function ProgramCard(props: ProgramCardProps): React.JSX.Element {
+               <div className="text-xs text-white/50">
+                 {editionLine}
+                 {rangeChip ? (
+-                  <span className="text-white/40"> · {rangeChip}</span>
++                  <span className="text-white/40"> � {rangeChip}</span>
+                 ) : null}
+               </div>
+             ) : (
+-              <div className="text-xs text-white/40">Sin edición</div>
++              <div className="text-xs text-white/40">Sin edicion</div>
+             )}
+           </div>
+ 
+           <div className="text-right space-y-1">
+             <div className="text-[10px] uppercase tracking-widest text-white/40">
+-              Inversión
++              Inversion
+             </div>
+             <div className="text-sm font-semibold text-white">
+-              {formatPriceUSD(item.program.price_usd)}
++              {selectedPriceLabel ?? 'Proximamente'}
+             </div>
++            {pricing.hasListPrice && listPriceLabel ? (
++              <div className="text-xs text-white/40 line-through">
++                {listPriceLabel}
++              </div>
++            ) : null}
++            {pricing.hasDiscount && pricing.discountPercent ? (
++              <div className="text-xs font-semibold text-[#00CCA4]">
++                {Math.round(pricing.discountPercent)}% OFF
++              </div>
++            ) : null}
++            {pricing.showInstallmentsInUi &&
++            pricing.hasInstallments &&
++            pricing.installmentsCount ? (
++              <div className="space-y-0.5 text-xs text-white/60">
++                <div>
++                  Hasta {pricing.installmentsCount} cuotas{' '}
++                  {pricing.installmentsInterestFree === false
++                    ? 'con interes'
++                    : 'sin interes'}
++                </div>
++                {installmentAmountLabel ? (
++                  <div>{installmentAmountLabel} por cuota</div>
++                ) : null}
++              </div>
++            ) : null}
++            {pricing.selectedPaymentVariant === 'installments' &&
++            singlePaymentLabel ? (
++              <div className="text-xs text-white/60">
++                Pago unico: {singlePaymentLabel}
++              </div>
++            ) : null}
+           </div>
+         </div>
+ 
+-        {/* CTA único (sin link extra abajo) */}
+         {ctaVariant === 'secondary' ? (
+           <Button
+             asChild
+diff --git a/src/app/(public)/programas/components/ProgramGrid.tsx b/src/app/(public)/programas/components/ProgramGrid.tsx
+index 4251017..549e48a 100644
+--- a/src/app/(public)/programas/components/ProgramGrid.tsx
++++ b/src/app/(public)/programas/components/ProgramGrid.tsx
+@@ -1,20 +1,21 @@
+ 'use client'
+ 
+ import React from 'react'
+-import type { ProgramCardVM } from '../types/types' // <-- OJO: apunta al types correcto
++import type { ProgramCardVM } from '../types/types'
+ import { ProgramCard } from './ProgramCard'
+ 
+ type ProgramGridProps = {
+   items: ProgramCardVM[]
++  countryCode: string | null
+ }
+ 
+ export function ProgramGrid(props: ProgramGridProps): React.JSX.Element {
+-  const { items } = props
++  const { items, countryCode } = props
+ 
+   return (
+     <section className="grid gap-6 md:grid-cols-2 max-w-6xl mx-auto">
+       {items.map((p) => (
+-        <ProgramCard key={p.program.id} item={p} />
++        <ProgramCard key={p.program.id} item={p} countryCode={countryCode} />
+       ))}
+     </section>
+   )
+diff --git a/src/app/(public)/programas/page.tsx b/src/app/(public)/programas/page.tsx
+index 42d5860..d115d9c 100644
+--- a/src/app/(public)/programas/page.tsx
++++ b/src/app/(public)/programas/page.tsx
+@@ -1,5 +1,7 @@
+ import React from 'react'
++import { headers } from 'next/headers'
+ import { createClient } from '@/lib/supabase/server'
++import { resolveCountryCodeFromHeaders } from '@/lib/pricing'
+ import type {
+   ApplicationFormRow,
+   EditionRow,
+@@ -13,12 +15,19 @@ import { ProgramGrid } from './components/ProgramGrid'
+ import { ComingSoonStrip } from './components/ComingSoonStrip'
+ 
+ export default async function PublicProgramsPage(): Promise<React.JSX.Element> {
++  const requestHeaders = await headers()
++  const countryCode = resolveCountryCodeFromHeaders(requestHeaders)
+   const supabase = await createClient()
+ 
+   const { data: programsData, error: programsError } = await supabase
+     .from('programs')
+     .select(
+-      'id,slug,title,description,is_published,payment_mode,requires_payment_pre,price_usd,created_at,updated_at'
++      `id,slug,title,description,is_published,payment_mode,requires_payment_pre,price_usd,
++      price_usd_list,price_usd_discount_percent,price_usd_final_single,price_usd_has_installments,
++      price_usd_final_installments,price_usd_installments_count,price_usd_installments_interest_free,price_usd_installment_amount,
++      price_ars_list,price_ars_discount_percent,price_ars_final_single,price_ars_has_installments,
++      price_ars_final_installments,price_ars_installments_count,price_ars_installments_interest_free,price_ars_installment_amount,
++      created_at,updated_at`
+     )
+     .eq('is_published', true)
+     .order('created_at', { ascending: true })
+@@ -126,7 +135,7 @@ export default async function PublicProgramsPage(): Promise<React.JSX.Element> {
+       <main className="relative mx-auto max-w-6xl px-6 py-10 md:py-14">
+         <ProgramsHero />
+ 
+-        <ProgramGrid items={items} />
++        <ProgramGrid items={items} countryCode={countryCode} />
+ 
+         <ComingSoonStrip />
+       </main>
+diff --git a/src/app/api/mercadopago/create-preference/route.ts b/src/app/api/mercadopago/create-preference/route.ts
+index 3a57cb4..a0b7356 100644
+--- a/src/app/api/mercadopago/create-preference/route.ts
++++ b/src/app/api/mercadopago/create-preference/route.ts
+@@ -6,13 +6,23 @@ import {
+   createMercadoPagoPreferenceClient,
+   getMercadoPagoPublicKey,
+ } from '@/lib/payments/mercadopago'
++import {
++  ProgramPricingError,
++  isProgramPaymentVariant,
++  resolveCheckoutPricingOrThrow,
++  resolveCountryCode,
++  resolveCountryCodeFromHeaders,
++} from '@/lib/pricing'
+ import { createClient } from '@/lib/supabase/server'
+ import type { PaymentProvider, PaymentStatus } from '@/types/payments'
+-import type { ProgramPaymentMode, ProgramRow } from '@/types/programs'
++import type {
++  ProgramPaymentMode,
++  ProgramPaymentVariant,
++  ProgramRow,
++} from '@/types/programs'
+ 
+ export const runtime = 'nodejs'
+ 
+-const DEFAULT_CURRENCY = 'USD'
+ const MERCADO_PAGO_PROVIDER: PaymentProvider = 'mercado_pago'
+ 
+ type PaymentPurpose = 'pre_enrollment' | 'tuition'
+@@ -21,7 +31,7 @@ type CreatePreferenceInput = {
+   editionId: string | null
+   purpose: PaymentPurpose
+   applicationId: string | null
+-  amountCents: number
++  paymentVariant: ProgramPaymentVariant
+ }
+ 
+ type CreatePreferenceResponse = {
+@@ -36,16 +46,7 @@ type CreatePreferenceResponse = {
+   publicKey?: string
+ }
+ 
+-type ProgramRowSummary = Pick<
+-  ProgramRow,
+-  | 'id'
+-  | 'title'
+-  | 'slug'
+-  | 'description'
+-  | 'payment_mode'
+-  | 'requires_payment_pre'
+-  | 'price_usd'
+->
++type ProgramRowSummary = ProgramRow
+ 
+ type ApplicationRow = {
+   id: string
+@@ -101,17 +102,6 @@ function asString(v: unknown): string {
+   return typeof v === 'string' ? v.trim() : ''
+ }
+ 
+-function asNumber(v: unknown): number | null {
+-  if (typeof v === 'number' && Number.isFinite(v)) return v
+-  if (typeof v === 'string') {
+-    const t = v.trim()
+-    if (!t) return null
+-    const n = Number(t)
+-    return Number.isFinite(n) ? n : null
+-  }
+-  return null
+-}
+-
+ function parseInput(body: unknown): CreatePreferenceInput | null {
+   if (!isRecord(body)) return null
+ 
+@@ -119,20 +109,19 @@ function parseInput(body: unknown): CreatePreferenceInput | null {
+   const editionIdRaw = asString(body['editionId'])
+   const purposeRaw = asString(body['purpose'])
+   const applicationIdRaw = asString(body['applicationId'])
+-  const amountCentsValue = asNumber(body['amountCents'])
++  const paymentVariantRaw =
++    asString(body['paymentVariant']) || asString(body['payment_variant'])
+ 
+-  if (!programId || !purposeRaw || amountCentsValue === null) return null
++  if (!programId || !purposeRaw || !paymentVariantRaw) return null
+   if (purposeRaw !== 'pre_enrollment' && purposeRaw !== 'tuition') return null
+-
+-  const amountCents = Math.round(amountCentsValue)
+-  if (!Number.isFinite(amountCents) || amountCents <= 0) return null
++  if (!isProgramPaymentVariant(paymentVariantRaw)) return null
+ 
+   return {
+     programId,
+     editionId: editionIdRaw || null,
+     purpose: purposeRaw,
+     applicationId: applicationIdRaw || null,
+-    amountCents,
++    paymentVariant: paymentVariantRaw,
+   }
+ }
+ 
+@@ -210,20 +199,13 @@ function resolvePaymentMode(program: ProgramRowSummary): ProgramPaymentMode {
+   return program.requires_payment_pre ? 'pre' : 'none'
+ }
+ 
+-function parsePriceToCents(priceUsd: string | number | null): number | null {
+-  if (!priceUsd) return null
+-  const parsed = Number(priceUsd)
+-  if (!Number.isFinite(parsed)) return null
+-  return Math.round(parsed * 100)
+-}
+-
+ function buildPreferenceTitle(params: {
+   purpose: PaymentPurpose
+   programTitle: string
+   programSlug: string
+ }): string {
+   const kind =
+-    params.purpose === 'pre_enrollment' ? 'Pre-inscripción' : 'Matrícula'
++    params.purpose === 'pre_enrollment' ? 'Pre-inscripcion' : 'Matricula'
+   const title = params.programTitle.trim() || params.programSlug.trim()
+   return `${kind} ${title}`.trim().slice(0, 120)
+ }
+@@ -411,6 +393,7 @@ function pickStringOrNumber(raw: unknown, key: string): string | null {
+ function buildPreferenceBody(params: {
+   purpose: PaymentPurpose
+   amountCents: number
++  currency: 'USD' | 'ARS'
+   paymentId: string
+   programId: string
+   applicationId: string | null
+@@ -445,7 +428,7 @@ function buildPreferenceBody(params: {
+         }),
+         category_id: MERCADO_PAGO_CATEGORY_ID,
+         quantity: 1,
+-        currency_id: DEFAULT_CURRENCY,
++        currency_id: params.currency,
+         unit_price: params.amountCents / 100,
+       },
+     ],
+@@ -575,18 +558,23 @@ export async function POST(
+ 
+   if (!payload) {
+     return NextResponse.json(
+-      { ok: false, message: 'Payload inválido' },
++      { ok: false, message: 'Payload invalido' },
+       { status: 400 }
+     )
+   }
+ 
+-  const { programId, editionId, purpose, applicationId, amountCents } = payload
++  const { programId, editionId, purpose, applicationId, paymentVariant } =
++    payload
+   const userId = userRes.user.id
+ 
+   const { data: programRow, error: programErr } = await supabaseAdmin
+     .from('programs')
+     .select(
+-      'id, title, slug, description, payment_mode, requires_payment_pre, price_usd'
++      `id, title, slug, description, payment_mode, requires_payment_pre, price_usd,
++      price_usd_list,price_usd_discount_percent,price_usd_final_single,price_usd_has_installments,
++      price_usd_final_installments,price_usd_installments_count,price_usd_installments_interest_free,price_usd_installment_amount,
++      price_ars_list,price_ars_discount_percent,price_ars_final_single,price_ars_has_installments,
++      price_ars_final_installments,price_ars_installments_count,price_ars_installments_interest_free,price_ars_installment_amount`
+     )
+     .eq('id', programId)
+     .maybeSingle()
+@@ -633,14 +621,6 @@ export async function POST(
+     }
+   }
+ 
+-  const expectedCents = parsePriceToCents(program.price_usd)
+-  if (expectedCents !== null && expectedCents !== amountCents) {
+-    return NextResponse.json(
+-      { ok: false, message: 'El monto no coincide con el precio del programa' },
+-      { status: 400 }
+-    )
+-  }
+-
+   let resolvedEditionId = editionId
+ 
+   if (applicationId) {
+@@ -652,7 +632,7 @@ export async function POST(
+ 
+     if (appErr || !appRow) {
+       return NextResponse.json(
+-        { ok: false, message: 'Postulación no encontrada' },
++        { ok: false, message: 'Postulacion no encontrada' },
+         { status: 404 }
+       )
+     }
+@@ -660,13 +640,13 @@ export async function POST(
+     const application = appRow as ApplicationRow
+     if (application.applicant_profile_id !== userId) {
+       return NextResponse.json(
+-        { ok: false, message: 'Sin permisos para esta postulación' },
++        { ok: false, message: 'Sin permisos para esta postulacion' },
+         { status: 403 }
+       )
+     }
+     if (application.program_id !== programId) {
+       return NextResponse.json(
+-        { ok: false, message: 'Programa no coincide con la postulación' },
++        { ok: false, message: 'Programa no coincide con la postulacion' },
+         { status: 400 }
+       )
+     }
+@@ -674,6 +654,30 @@ export async function POST(
+     resolvedEditionId = resolvedEditionId ?? application.edition_id ?? null
+   }
+ 
++  const headerCountryCode = resolveCountryCodeFromHeaders(request.headers)
++  const profileCountryCode = resolveCountryCode(profile?.country_residence)
++  const checkoutCountryCode = headerCountryCode ?? profileCountryCode
++
++  let checkoutPricing: ReturnType<typeof resolveCheckoutPricingOrThrow>
++  try {
++    checkoutPricing = resolveCheckoutPricingOrThrow({
++      program,
++      countryCodeOrLabel: checkoutCountryCode ?? profile?.country_residence,
++      paymentVariant,
++    })
++  } catch (error) {
++    if (error instanceof ProgramPricingError) {
++      return NextResponse.json(
++        { ok: false, message: error.message },
++        { status: 400 }
++      )
++    }
++    return NextResponse.json(
++      { ok: false, message: 'No se pudo resolver el pricing del programa.' },
++      { status: 500 }
++    )
++  }
++
+   const existingPaid = await findExistingPaid({
+     userId,
+     programId,
+@@ -744,8 +748,8 @@ export async function POST(
+       application_id: applicationId,
+       purpose,
+       status: 'initiated',
+-      amount_cents: amountCents,
+-      currency: DEFAULT_CURRENCY,
++      amount_cents: checkoutPricing.amountCents,
++      currency: checkoutPricing.currency,
+       client_transaction_id: null,
+     })
+     .select('id')
+@@ -769,7 +773,8 @@ export async function POST(
+ 
+     const preferenceBody = buildPreferenceBody({
+       purpose,
+-      amountCents,
++      amountCents: checkoutPricing.amountCents,
++      currency: checkoutPricing.currency,
+       paymentId,
+       programId: program.id,
+       applicationId,
+@@ -798,7 +803,7 @@ export async function POST(
+         .from('payments')
+         .update({
+           status: 'failed',
+-          error_message: 'Mercado Pago no devolvió preference_id o init_point.',
++          error_message: 'Mercado Pago no devolvio preference_id o init_point.',
+         })
+         .eq('id', paymentId)
+         .eq('provider', MERCADO_PAGO_PROVIDER)
+@@ -807,7 +812,7 @@ export async function POST(
+         {
+           ok: false,
+           message:
+-            'Mercado Pago no devolvió datos válidos de checkout para este intento.',
++            'Mercado Pago no devolvio datos validos de checkout para este intento.',
+         },
+         { status: 502 }
+       )
+diff --git a/src/app/api/payphone/create-checkout/route.ts b/src/app/api/payphone/create-checkout/route.ts
+index 6913f33..c9d8549 100644
+--- a/src/app/api/payphone/create-checkout/route.ts
++++ b/src/app/api/payphone/create-checkout/route.ts
+@@ -1,12 +1,22 @@
+ import { NextRequest, NextResponse } from 'next/server'
+ import { createClient } from '@/lib/supabase/server'
+ import { supabaseAdmin } from '@/lib/supabase/admin'
+-import type { ProgramPaymentMode, ProgramRow } from '@/types/programs'
++import {
++  ProgramPricingError,
++  isProgramPaymentVariant,
++  resolveCheckoutPricingOrThrow,
++  resolveCountryCode,
++  resolveCountryCodeFromHeaders,
++} from '@/lib/pricing'
++import type {
++  ProgramPaymentMode,
++  ProgramPaymentVariant,
++  ProgramRow,
++} from '@/types/programs'
+ import type { PaymentProvider, PaymentStatus } from '@/types/payments'
+ 
+ export const runtime = 'nodejs'
+ 
+-const DEFAULT_CURRENCY = 'USD'
+ const PAYPHONE_PROVIDER: PaymentProvider = 'payphone'
+ 
+ type PaymentPurpose = 'pre_enrollment' | 'tuition'
+@@ -15,7 +25,7 @@ type CreateCheckoutInput = {
+   editionId: string | null
+   purpose: PaymentPurpose
+   applicationId: string | null
+-  amountCents: number
++  paymentVariant: ProgramPaymentVariant
+ }
+ 
+ type CreateCheckoutResponse = {
+@@ -35,10 +45,7 @@ type CreateCheckoutResponse = {
+   reference?: string
+ }
+ 
+-type ProgramRowSummary = Pick<
+-  ProgramRow,
+-  'id' | 'slug' | 'payment_mode' | 'requires_payment_pre' | 'price_usd'
+->
++type ProgramRowSummary = ProgramRow
+ 
+ type ApplicationRow = {
+   id: string
+@@ -64,17 +71,6 @@ function asString(v: unknown): string {
+   return typeof v === 'string' ? v.trim() : ''
+ }
+ 
+-function asNumber(v: unknown): number | null {
+-  if (typeof v === 'number' && Number.isFinite(v)) return v
+-  if (typeof v === 'string') {
+-    const t = v.trim()
+-    if (!t) return null
+-    const n = Number(t)
+-    return Number.isFinite(n) ? n : null
+-  }
+-  return null
+-}
+-
+ function parseInput(body: unknown): CreateCheckoutInput | null {
+   if (!isRecord(body)) return null
+ 
+@@ -82,20 +78,19 @@ function parseInput(body: unknown): CreateCheckoutInput | null {
+   const editionIdRaw = asString(body['editionId'])
+   const purposeRaw = asString(body['purpose'])
+   const applicationIdRaw = asString(body['applicationId'])
+-  const amountCentsValue = asNumber(body['amountCents'])
++  const paymentVariantRaw =
++    asString(body['paymentVariant']) || asString(body['payment_variant'])
+ 
+-  if (!programId || !purposeRaw || amountCentsValue === null) return null
++  if (!programId || !purposeRaw || !paymentVariantRaw) return null
+   if (purposeRaw !== 'pre_enrollment' && purposeRaw !== 'tuition') return null
+-
+-  const amountCents = Math.round(amountCentsValue)
+-  if (!Number.isFinite(amountCents) || amountCents <= 0) return null
++  if (!isProgramPaymentVariant(paymentVariantRaw)) return null
+ 
+   return {
+     programId,
+     editionId: editionIdRaw || null,
+     purpose: purposeRaw,
+     applicationId: applicationIdRaw || null,
+-    amountCents,
++    paymentVariant: paymentVariantRaw,
+   }
+ }
+ 
+@@ -104,13 +99,6 @@ function resolvePaymentMode(program: ProgramRowSummary): ProgramPaymentMode {
+   return program.requires_payment_pre ? 'pre' : 'none'
+ }
+ 
+-function parsePriceToCents(priceUsd: string | number | null): number | null {
+-  if (!priceUsd) return null
+-  const parsed = Number(priceUsd)
+-  if (!Number.isFinite(parsed)) return null
+-  return Math.round(parsed * 100)
+-}
+-
+ function buildReference(purpose: PaymentPurpose, programSlug: string): string {
+   const base = purpose === 'pre_enrollment' ? 'Pre-inscripcion' : 'Matricula'
+   return `${base} ${programSlug}`.slice(0, 70)
+@@ -203,17 +191,24 @@ export async function POST(
+ 
+   if (!payload) {
+     return NextResponse.json(
+-      { ok: false, message: 'Payload inválido' },
++      { ok: false, message: 'Payload invalido' },
+       { status: 400 }
+     )
+   }
+ 
+-  const { programId, editionId, purpose, applicationId, amountCents } = payload
++  const { programId, editionId, purpose, applicationId, paymentVariant } =
++    payload
+   const userId = userRes.user.id
+ 
+   const { data: programRow, error: programErr } = await supabaseAdmin
+     .from('programs')
+-    .select('id, slug, payment_mode, requires_payment_pre, price_usd')
++    .select(
++      `id, slug, payment_mode, requires_payment_pre, price_usd,
++      price_usd_list,price_usd_discount_percent,price_usd_final_single,price_usd_has_installments,
++      price_usd_final_installments,price_usd_installments_count,price_usd_installments_interest_free,price_usd_installment_amount,
++      price_ars_list,price_ars_discount_percent,price_ars_final_single,price_ars_has_installments,
++      price_ars_final_installments,price_ars_installments_count,price_ars_installments_interest_free,price_ars_installment_amount`
++    )
+     .eq('id', programId)
+     .maybeSingle()
+ 
+@@ -249,14 +244,6 @@ export async function POST(
+     }
+   }
+ 
+-  const expectedCents = parsePriceToCents(program.price_usd)
+-  if (expectedCents !== null && expectedCents !== amountCents) {
+-    return NextResponse.json(
+-      { ok: false, message: 'El monto no coincide con el precio del programa' },
+-      { status: 400 }
+-    )
+-  }
+-
+   let resolvedEditionId = editionId
+ 
+   if (applicationId) {
+@@ -268,7 +255,7 @@ export async function POST(
+ 
+     if (appErr || !appRow) {
+       return NextResponse.json(
+-        { ok: false, message: 'Postulación no encontrada' },
++        { ok: false, message: 'Postulacion no encontrada' },
+         { status: 404 }
+       )
+     }
+@@ -276,13 +263,13 @@ export async function POST(
+     const application = appRow as ApplicationRow
+     if (application.applicant_profile_id !== userId) {
+       return NextResponse.json(
+-        { ok: false, message: 'Sin permisos para esta postulación' },
++        { ok: false, message: 'Sin permisos para esta postulacion' },
+         { status: 403 }
+       )
+     }
+     if (application.program_id !== programId) {
+       return NextResponse.json(
+-        { ok: false, message: 'Programa no coincide con la postulación' },
++        { ok: false, message: 'Programa no coincide con la postulacion' },
+         { status: 400 }
+       )
+     }
+@@ -290,6 +277,50 @@ export async function POST(
+     resolvedEditionId = resolvedEditionId ?? application.edition_id ?? null
+   }
+ 
++  const { data: profileRow } = await supabaseAdmin
++    .from('profiles')
++    .select('country_residence')
++    .eq('id', userId)
++    .maybeSingle()
++
++  const headerCountryCode = resolveCountryCodeFromHeaders(request.headers)
++  const profileCountryCode = resolveCountryCode(
++    typeof profileRow?.country_residence === 'string'
++      ? profileRow.country_residence
++      : null
++  )
++  const checkoutCountryCode = headerCountryCode ?? profileCountryCode
++
++  let checkoutPricing: ReturnType<typeof resolveCheckoutPricingOrThrow>
++  try {
++    checkoutPricing = resolveCheckoutPricingOrThrow({
++      program,
++      countryCodeOrLabel: checkoutCountryCode,
++      paymentVariant,
++    })
++  } catch (error) {
++    if (error instanceof ProgramPricingError) {
++      return NextResponse.json(
++        { ok: false, message: error.message },
++        { status: 400 }
++      )
++    }
++    return NextResponse.json(
++      { ok: false, message: 'No se pudo resolver el pricing del programa.' },
++      { status: 500 }
++    )
++  }
++
++  if (checkoutPricing.currency !== 'USD') {
++    return NextResponse.json(
++      {
++        ok: false,
++        message: 'PayPhone solo esta disponible para cobros en USD.',
++      },
++      { status: 400 }
++    )
++  }
++
+   const existingPaid = await findExistingPaid({
+     userId,
+     programId,
+@@ -350,8 +381,8 @@ export async function POST(
+       application_id: applicationId,
+       purpose,
+       status: 'initiated',
+-      amount_cents: amountCents,
+-      currency: DEFAULT_CURRENCY,
++      amount_cents: checkoutPricing.amountCents,
++      currency: checkoutPricing.currency,
+       client_transaction_id: null,
+       payphone_transaction_id: null,
+     })
+@@ -402,11 +433,11 @@ export async function POST(
+       clientTxId,
+       token,
+       storeId,
+-      amount: amountCents,
+-      amountWithoutTax: amountCents,
++      amount: checkoutPricing.amountCents,
++      amountWithoutTax: checkoutPricing.amountCents,
+       amountWithTax: 0,
+       tax: 0,
+-      currency: DEFAULT_CURRENCY,
++      currency: checkoutPricing.currency,
+       reference,
+     },
+     { status: 200 }
+diff --git a/src/app/plataforma/admin/programas/[programId]/page.tsx b/src/app/plataforma/admin/programas/[programId]/page.tsx
+index bb8c650..5c60ffc 100644
+--- a/src/app/plataforma/admin/programas/[programId]/page.tsx
++++ b/src/app/plataforma/admin/programas/[programId]/page.tsx
+@@ -1,4 +1,3 @@
+-// src/app/plataforma/admin/programas/%5BprogramId%5D/page.tsx
+ 'use client'
+ 
+ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+@@ -43,6 +42,17 @@ import type {
+ 
+ import { ArrowLeft, ExternalLink, Plus, Save } from 'lucide-react'
+ 
++type PricingFormState = {
++  listPrice: string
++  discountPercent: string
++  finalSingle: string
++  hasInstallments: boolean
++  finalInstallments: string
++  installmentsCount: string
++  installmentsInterestFree: boolean
++  installmentAmount: string
++}
++
+ function safeString(value: unknown): string {
+   return typeof value === 'string' ? value : ''
+ }
+@@ -60,9 +70,229 @@ function toDateOnlyOrNull(value: string): string | null {
+ }
+ 
+ function formatDateRange(startsAt: string | null, endsAt: string | null) {
+-  const start = startsAt ?? '—'
+-  const end = endsAt ?? '—'
+-  return `${start} → ${end}`
++  const start = startsAt ?? '--'
++  const end = endsAt ?? '--'
++  return `${start} -> ${end}`
++}
++
++function emptyPricingFormState(): PricingFormState {
++  return {
++    listPrice: '',
++    discountPercent: '',
++    finalSingle: '',
++    hasInstallments: false,
++    finalInstallments: '',
++    installmentsCount: '',
++    installmentsInterestFree: true,
++    installmentAmount: '',
++  }
++}
++
++function toInputValue(value: unknown): string {
++  if (value === null || value === undefined) return ''
++  if (typeof value === 'number' && Number.isFinite(value)) return String(value)
++  if (typeof value === 'string') return value.trim()
++  return ''
++}
++
++function buildPricingState(program: ProgramRow, currency: 'usd' | 'ars') {
++  if (currency === 'usd') {
++    return {
++      listPrice: toInputValue(program.price_usd_list),
++      discountPercent: toInputValue(program.price_usd_discount_percent),
++      finalSingle: toInputValue(
++        program.price_usd_final_single ?? program.price_usd
++      ),
++      hasInstallments: Boolean(program.price_usd_has_installments),
++      finalInstallments: toInputValue(program.price_usd_final_installments),
++      installmentsCount: toInputValue(program.price_usd_installments_count),
++      installmentsInterestFree:
++        program.price_usd_installments_interest_free !== false,
++      installmentAmount: toInputValue(program.price_usd_installment_amount),
++    } satisfies PricingFormState
++  }
++
++  return {
++    listPrice: toInputValue(program.price_ars_list),
++    discountPercent: toInputValue(program.price_ars_discount_percent),
++    finalSingle: toInputValue(program.price_ars_final_single),
++    hasInstallments: Boolean(program.price_ars_has_installments),
++    finalInstallments: toInputValue(program.price_ars_final_installments),
++    installmentsCount: toInputValue(program.price_ars_installments_count),
++    installmentsInterestFree: program.price_ars_installments_interest_free !== false,
++    installmentAmount: toInputValue(program.price_ars_installment_amount),
++  } satisfies PricingFormState
++}
++
++function parseOptionalDecimal(label: string, value: string): number | null {
++  const normalized = value.trim()
++  if (!normalized) return null
++  const parsed = Number(normalized)
++  if (!Number.isFinite(parsed) || parsed < 0) {
++    throw new Error(`${label} invalido.`)
++  }
++  return parsed
++}
++
++function parseOptionalInteger(label: string, value: string): number | null {
++  const normalized = value.trim()
++  if (!normalized) return null
++  const parsed = Number(normalized)
++  if (!Number.isFinite(parsed) || parsed < 0) {
++    throw new Error(`${label} invalido.`)
++  }
++  return Math.trunc(parsed)
++}
++
++type PricingEditorProps = {
++  title: string
++  currency: 'USD' | 'ARS'
++  state: PricingFormState
++  onChange: (next: PricingFormState) => void
++  showInstallmentsHint?: boolean
++}
++
++function PricingEditor(props: PricingEditorProps) {
++  const { state } = props
++
++  return (
++    <div className="rounded-xl border border-slate-800 bg-slate-950/40 p-4 space-y-4">
++      <div>
++        <h3 className="text-sm font-semibold text-slate-100">{props.title}</h3>
++        <p className="text-xs text-slate-400">
++          Configura precio de lista, precio final y metadata de cuotas en {props.currency}.
++        </p>
++      </div>
++
++      <div className="grid gap-4 md:grid-cols-3">
++        <div className="space-y-2">
++          <Label>Precio lista ({props.currency})</Label>
++          <Input
++            value={state.listPrice}
++            onChange={(event) =>
++              props.onChange({ ...state, listPrice: event.target.value })
++            }
++            placeholder="Opcional"
++            inputMode="decimal"
++          />
++        </div>
++
++        <div className="space-y-2">
++          <Label>Descuento % ({props.currency})</Label>
++          <Input
++            value={state.discountPercent}
++            onChange={(event) =>
++              props.onChange({ ...state, discountPercent: event.target.value })
++            }
++            placeholder="Opcional"
++            inputMode="decimal"
++          />
++        </div>
++
++        <div className="space-y-2">
++          <Label>Precio final pago unico ({props.currency})</Label>
++          <Input
++            value={state.finalSingle}
++            onChange={(event) =>
++              props.onChange({ ...state, finalSingle: event.target.value })
++            }
++            placeholder="Opcional"
++            inputMode="decimal"
++          />
++        </div>
++      </div>
++
++      <div className="flex items-center gap-3 rounded-lg border border-slate-800 bg-slate-900/40 p-3">
++        <Switch
++          id={`${props.currency.toLowerCase()}_has_installments`}
++          checked={state.hasInstallments}
++          onCheckedChange={(checked) =>
++            props.onChange({ ...state, hasInstallments: checked })
++          }
++        />
++        <Label htmlFor={`${props.currency.toLowerCase()}_has_installments`}>
++          Habilitar cuotas en {props.currency}
++        </Label>
++      </div>
++
++      {state.hasInstallments ? (
++        <div className="grid gap-4 md:grid-cols-4">
++          <div className="space-y-2">
++            <Label>Precio final en cuotas ({props.currency})</Label>
++            <Input
++              value={state.finalInstallments}
++              onChange={(event) =>
++                props.onChange({
++                  ...state,
++                  finalInstallments: event.target.value,
++                })
++              }
++              placeholder="Obligatorio si cuotas"
++              inputMode="decimal"
++            />
++          </div>
++
++          <div className="space-y-2">
++            <Label>Cantidad maxima cuotas</Label>
++            <Input
++              value={state.installmentsCount}
++              onChange={(event) =>
++                props.onChange({
++                  ...state,
++                  installmentsCount: event.target.value,
++                })
++              }
++              placeholder="Ej: 6"
++              inputMode="numeric"
++            />
++          </div>
++
++          <div className="space-y-2">
++            <Label>Monto informativo por cuota ({props.currency})</Label>
++            <Input
++              value={state.installmentAmount}
++              onChange={(event) =>
++                props.onChange({
++                  ...state,
++                  installmentAmount: event.target.value,
++                })
++              }
++              placeholder="Opcional"
++              inputMode="decimal"
++            />
++          </div>
++
++          <div className="space-y-2">
++            <Label>Interes</Label>
++            <Select
++              value={state.installmentsInterestFree ? 'free' : 'with_interest'}
++              onValueChange={(value) =>
++                props.onChange({
++                  ...state,
++                  installmentsInterestFree: value === 'free',
++                })
++              }
++            >
++              <SelectTrigger>
++                <SelectValue />
++              </SelectTrigger>
++              <SelectContent>
++                <SelectItem value="free">Sin interes</SelectItem>
++                <SelectItem value="with_interest">Con interes</SelectItem>
++              </SelectContent>
++            </Select>
++          </div>
++        </div>
++      ) : null}
++
++      {props.showInstallmentsHint ? (
++        <div className="rounded-md border border-slate-800 bg-slate-900/40 px-3 py-2 text-xs text-slate-400">
++          Nota: en esta iteracion, cuotas USD no se muestran de forma explicita en UI publica,
++          pero quedan configuradas para compatibilidad futura.
++        </div>
++      ) : null}
++    </div>
++  )
+ }
+ 
+ export default function AdminProgramDetailPage() {
+@@ -83,15 +313,18 @@ export default function AdminProgramDetailPage() {
+   const [program, setProgram] = useState<ProgramRow | null>(null)
+   const [editions, setEditions] = useState<EditionRow[]>([])
+ 
+-  // Program fields
+   const [title, setTitle] = useState('')
+   const [slug, setSlug] = useState('')
+   const [description, setDescription] = useState<string>('')
+   const [isPublished, setIsPublished] = useState(false)
+   const [paymentMode, setPaymentMode] = useState<ProgramPaymentMode>('none')
+-  const [priceUsd, setPriceUsd] = useState('')
++  const [usdPricing, setUsdPricing] = useState<PricingFormState>(
++    emptyPricingFormState()
++  )
++  const [arsPricing, setArsPricing] = useState<PricingFormState>(
++    emptyPricingFormState()
++  )
+ 
+-  // Create edition modal
+   const [isEditionModalOpen, setIsEditionModalOpen] = useState(false)
+   const [newEditionName, setNewEditionName] = useState('')
+   const [newEditionStartsAt, setNewEditionStartsAt] = useState('')
+@@ -105,7 +338,12 @@ export default function AdminProgramDetailPage() {
+     const programResponse = await supabase
+       .from('programs')
+       .select(
+-        'id, slug, title, description, is_published, payment_mode, requires_payment_pre, price_usd, created_at, updated_at'
++        `id, slug, title, description, is_published, payment_mode, requires_payment_pre, price_usd,
++        price_usd_list,price_usd_discount_percent,price_usd_final_single,price_usd_has_installments,
++        price_usd_final_installments,price_usd_installments_count,price_usd_installments_interest_free,price_usd_installment_amount,
++        price_ars_list,price_ars_discount_percent,price_ars_final_single,price_ars_has_installments,
++        price_ars_final_installments,price_ars_installments_count,price_ars_installments_interest_free,price_ars_installment_amount,
++        created_at, updated_at`
+       )
+       .eq('id', programId)
+       .maybeSingle()
+@@ -123,7 +361,8 @@ export default function AdminProgramDetailPage() {
+     setDescription(p.description ?? '')
+     setIsPublished(p.is_published)
+     setPaymentMode(resolvePaymentMode(p))
+-    setPriceUsd(p.price_usd ? String(p.price_usd) : '')
++    setUsdPricing(buildPricingState(p, 'usd'))
++    setArsPricing(buildPricingState(p, 'ars'))
+ 
+     const editionsResponse = await supabase
+       .from('program_editions')
+@@ -155,40 +394,111 @@ export default function AdminProgramDetailPage() {
+     if (!nextTitle) return showError('El titulo es obligatorio.')
+     if (!nextSlug) return showError('El slug es obligatorio.')
+ 
+-    const priceRaw = priceUsd.trim()
+-    let priceValue: number | null = null
+-    if (priceRaw) {
+-      const parsed = Number(priceRaw)
+-      if (!Number.isFinite(parsed) || parsed < 0) {
+-        return showError('Precio invalido.')
+-      }
+-      priceValue = parsed
+-    }
++    try {
++      const usdList = parseOptionalDecimal('Precio lista USD', usdPricing.listPrice)
++      const usdDiscount = parseOptionalDecimal(
++        'Descuento USD',
++        usdPricing.discountPercent
++      )
++      const usdFinalSingle = parseOptionalDecimal(
++        'Precio final USD pago unico',
++        usdPricing.finalSingle
++      )
++      const usdFinalInstallments = usdPricing.hasInstallments
++        ? parseOptionalDecimal(
++            'Precio final USD en cuotas',
++            usdPricing.finalInstallments
++          )
++        : null
++      const usdInstallmentsCount = usdPricing.hasInstallments
++        ? parseOptionalInteger(
++            'Cantidad cuotas USD',
++            usdPricing.installmentsCount
++          )
++        : null
++      const usdInstallmentAmount = usdPricing.hasInstallments
++        ? parseOptionalDecimal(
++            'Monto cuota USD',
++            usdPricing.installmentAmount
++          )
++        : null
++
++      const arsList = parseOptionalDecimal('Precio lista ARS', arsPricing.listPrice)
++      const arsDiscount = parseOptionalDecimal(
++        'Descuento ARS',
++        arsPricing.discountPercent
++      )
++      const arsFinalSingle = parseOptionalDecimal(
++        'Precio final ARS pago unico',
++        arsPricing.finalSingle
++      )
++      const arsFinalInstallments = arsPricing.hasInstallments
++        ? parseOptionalDecimal(
++            'Precio final ARS en cuotas',
++            arsPricing.finalInstallments
++          )
++        : null
++      const arsInstallmentsCount = arsPricing.hasInstallments
++        ? parseOptionalInteger(
++            'Cantidad cuotas ARS',
++            arsPricing.installmentsCount
++          )
++        : null
++      const arsInstallmentAmount = arsPricing.hasInstallments
++        ? parseOptionalDecimal(
++            'Monto cuota ARS',
++            arsPricing.installmentAmount
++          )
++        : null
++
++      setSaving(true)
++
++      const response = await supabase
++        .from('programs')
++        .update({
++          title: nextTitle,
++          slug: nextSlug,
++          description: description.trim() ? description.trim() : null,
++          is_published: isPublished,
++          payment_mode: paymentMode,
++          requires_payment_pre: paymentMode === 'pre',
++          price_usd: paymentMode === 'none' ? null : usdFinalSingle,
++          price_usd_list: usdList,
++          price_usd_discount_percent: usdDiscount,
++          price_usd_final_single: usdFinalSingle,
++          price_usd_has_installments: usdPricing.hasInstallments,
++          price_usd_final_installments: usdFinalInstallments,
++          price_usd_installments_count: usdInstallmentsCount,
++          price_usd_installments_interest_free: usdPricing.hasInstallments
++            ? usdPricing.installmentsInterestFree
++            : null,
++          price_usd_installment_amount: usdInstallmentAmount,
++          price_ars_list: arsList,
++          price_ars_discount_percent: arsDiscount,
++          price_ars_final_single: arsFinalSingle,
++          price_ars_has_installments: arsPricing.hasInstallments,
++          price_ars_final_installments: arsFinalInstallments,
++          price_ars_installments_count: arsInstallmentsCount,
++          price_ars_installments_interest_free: arsPricing.hasInstallments
++            ? arsPricing.installmentsInterestFree
++            : null,
++          price_ars_installment_amount: arsInstallmentAmount,
++        })
++        .eq('id', program.id)
+ 
+-    setSaving(true)
++      setSaving(false)
+ 
+-    const response = await supabase
+-      .from('programs')
+-      .update({
+-        title: nextTitle,
+-        slug: nextSlug,
+-        description: description.trim() ? description.trim() : null,
+-        is_published: isPublished,
+-        payment_mode: paymentMode,
+-        requires_payment_pre: paymentMode === 'pre',
+-        price_usd: paymentMode === 'none' ? null : priceValue,
+-      })
+-      .eq('id', program.id)
+-
+-    setSaving(false)
++      if (response.error) {
++        showError(`No se pudo guardar. ${safeString(response.error.message)}`)
++        return
++      }
+ 
+-    if (response.error) {
+-      showError(`No se pudo guardar. ${safeString(response.error.message)}`)
+-      return
++      showSuccess('Programa guardado.')
++      await loadAll()
++    } catch (error) {
++      setSaving(false)
++      showError(error instanceof Error ? error.message : 'Datos invalidos.')
+     }
+-
+-    showSuccess('Programa guardado.')
+-    await loadAll()
+   }
+ 
+   function openEditionModal() {
+@@ -332,10 +642,10 @@ export default function AdminProgramDetailPage() {
+           <CardHeader>
+             <CardTitle>Configuracion del programa</CardTitle>
+             <CardDescription className="text-slate-300">
+-              Actualiza el nombre, descripcion, pago y publicacion.
++              Actualiza datos base, modalidad de pago y pricing completo por moneda.
+             </CardDescription>
+           </CardHeader>
+-          <CardContent className="space-y-4">
++          <CardContent className="space-y-5">
+             <div className="grid gap-4 md:grid-cols-2">
+               <div className="space-y-2">
+                 <Label htmlFor="programTitle">Nombre</Label>
+@@ -384,29 +694,35 @@ export default function AdminProgramDetailPage() {
+                   </SelectContent>
+                 </Select>
+               </div>
+-              <div className="space-y-2">
+-                <Label htmlFor="programPrice">Precio (USD)</Label>
+-                <Input
+-                  id="programPrice"
+-                  value={priceUsd}
+-                  onChange={(element) => setPriceUsd(element.target.value)}
+-                  placeholder="Ej: 49.99"
+-                  inputMode="decimal"
+-                  disabled={paymentMode === 'none'}
++
++              <div className="flex items-center gap-3 rounded-lg border border-slate-800 bg-slate-900/50 px-3 py-2">
++                <Switch
++                  id="programPublished"
++                  checked={isPublished}
++                  onCheckedChange={setIsPublished}
+                 />
++                <Label htmlFor="programPublished">
++                  {isPublished ? 'Publicado' : 'Oculto'}
++                </Label>
+               </div>
+             </div>
+ 
+-            <div className="flex items-center gap-3">
+-              <Switch
+-                id="programPublished"
+-                checked={isPublished}
+-                onCheckedChange={setIsPublished}
+-              />
+-              <Label htmlFor="programPublished">
+-                {isPublished ? 'Publicado' : 'Oculto'}
+-              </Label>
+-            </div>
++            <Separator className="bg-slate-800" />
++
++            <PricingEditor
++              title="Pricing USD"
++              currency="USD"
++              state={usdPricing}
++              onChange={setUsdPricing}
++              showInstallmentsHint
++            />
++
++            <PricingEditor
++              title="Pricing ARS"
++              currency="ARS"
++              state={arsPricing}
++              onChange={setArsPricing}
++            />
+ 
+             <div className="flex items-center justify-end">
+               <Button onClick={saveProgram} disabled={saving} className="gap-2">
+@@ -438,9 +754,7 @@ export default function AdminProgramDetailPage() {
+                   >
+                     <div className="flex flex-wrap items-start justify-between gap-3">
+                       <div className="min-w-0">
+-                        <div className="font-medium">
+-                          {edition.edition_name}
+-                        </div>
++                        <div className="font-medium">{edition.edition_name}</div>
+                         <div className="text-xs text-slate-300">
+                           {formatDateRange(edition.starts_at, edition.ends_at)}
+                         </div>
+@@ -507,9 +821,7 @@ export default function AdminProgramDetailPage() {
+                   id="editionEnd"
+                   type="date"
+                   value={newEditionEndsAt}
+-                  onChange={(element) =>
+-                    setNewEditionEndsAt(element.target.value)
+-                  }
++                  onChange={(element) => setNewEditionEndsAt(element.target.value)}
+                 />
+               </div>
+             </div>
+@@ -519,9 +831,7 @@ export default function AdminProgramDetailPage() {
+               <Input
+                 id="editionTeams"
+                 value={newEditionTeamCount}
+-                onChange={(element) =>
+-                  setNewEditionTeamCount(element.target.value)
+-                }
++                onChange={(element) => setNewEditionTeamCount(element.target.value)}
+                 inputMode="numeric"
+                 placeholder="Ej: 4"
+               />
+diff --git a/src/app/plataforma/admin/programas/page.tsx b/src/app/plataforma/admin/programas/page.tsx
+index 07e5882..53e0665 100644
+--- a/src/app/plataforma/admin/programas/page.tsx
++++ b/src/app/plataforma/admin/programas/page.tsx
+@@ -57,7 +57,8 @@ export default function AdminProgramsPage() {
+     const { data, error } = await supabase
+       .from('programs')
+       .select(
+-        'id,slug,title,description,is_published,payment_mode,requires_payment_pre,price_usd,created_at'
++        `id,slug,title,description,is_published,payment_mode,requires_payment_pre,price_usd,
++        price_usd_final_single,created_at`
+       )
+       .order('created_at', { ascending: false })
+ 
+@@ -114,9 +115,10 @@ export default function AdminProgramsPage() {
+     setDescription(p.description ?? '')
+     setPaymentMode(resolvePaymentMode(p))
+     setPriceUsd(
+-      p.price_usd === null || p.price_usd === undefined
++      p.price_usd_final_single === null ||
++        p.price_usd_final_single === undefined
+         ? ''
+-        : String(p.price_usd)
++        : String(p.price_usd_final_single)
+     )
+     setOpen(true)
+   }
+@@ -145,6 +147,7 @@ export default function AdminProgramsPage() {
+       payment_mode: paymentMode,
+       requires_payment_pre: paymentMode === 'pre',
+       price_usd: paymentMode === 'none' ? null : priceValue,
++      price_usd_final_single: paymentMode === 'none' ? null : priceValue,
+     }
+ 
+     if (editing) {
+diff --git a/src/app/plataforma/talento/explorar/[slug]/postular/page.tsx b/src/app/plataforma/talento/explorar/[slug]/postular/page.tsx
+index f79d4bb..72b35e4 100644
+--- a/src/app/plataforma/talento/explorar/[slug]/postular/page.tsx
++++ b/src/app/plataforma/talento/explorar/[slug]/postular/page.tsx
+@@ -8,6 +8,7 @@ import { useAuthStore } from '@/stores/auth-stores'
+ import { useToastEnhanced } from '@/hooks/use-toast-enhanced'
+ import { PaymentMethodModal } from '@/components/payments/payment-method-modal'
+ import { Button } from '@/components/ui/button'
++import { resolveCountryCode, resolveProgramPricing } from '@/lib/pricing'
+ 
+ import {
+   StepRole,
+@@ -93,13 +94,6 @@ function resolvePaymentMode(program: ProgramRow): ProgramPaymentMode {
+   return program.requires_payment_pre ? 'pre' : 'none'
+ }
+ 
+-function parsePriceToCents(priceUsd: string | number | null): number | null {
+-  if (priceUsd === null || priceUsd === undefined) return null
+-  const parsed = Number(priceUsd)
+-  if (!Number.isFinite(parsed)) return null
+-  return Math.round(parsed * 100)
+-}
+-
+ function isFormOpen(form: ApplicationFormRow, now: Date): boolean {
+   if (!form.is_active) return false
+   const opensAt = form.opens_at ? new Date(form.opens_at) : null
+@@ -309,6 +303,7 @@ export default function ProgramPostularPage() {
+   const [values, setValues] = useState<FormValuesMap>({})
+   const [hasPaidPre, setHasPaidPre] = useState<boolean | null>(null)
+   const [checkoutOpen, setCheckoutOpen] = useState(false)
++  const viewerCountryCode = resolveCountryCode(profile?.country_residence ?? null)
+ 
+   useEffect(() => {
+     if (hasBootedOnceRef.current) return
+@@ -340,7 +335,11 @@ export default function ProgramPostularPage() {
+     const programResponse = await supabase
+       .from('programs')
+       .select(
+-        'id, slug, title, description, is_published, payment_mode, requires_payment_pre, price_usd'
++        `id, slug, title, description, is_published, payment_mode, requires_payment_pre, price_usd,
++        price_usd_list,price_usd_discount_percent,price_usd_final_single,price_usd_has_installments,
++        price_usd_final_installments,price_usd_installments_count,price_usd_installments_interest_free,price_usd_installment_amount,
++        price_ars_list,price_ars_discount_percent,price_ars_final_single,price_ars_has_installments,
++        price_ars_final_installments,price_ars_installments_count,price_ars_installments_interest_free,price_ars_installment_amount`
+       )
+       .eq('slug', slug)
+       .maybeSingle()
+@@ -938,6 +937,7 @@ export default function ProgramPostularPage() {
+   }
+ 
+   const paymentMode = resolvePaymentMode(program)
++  const checkoutPricing = resolveProgramPricing(program, viewerCountryCode)
+ 
+   if (paymentMode === 'pre') {
+     if (hasPaidPre === null) {
+@@ -951,7 +951,10 @@ export default function ProgramPostularPage() {
+     }
+ 
+     if (!hasPaidPre) {
+-      const amountCents = parsePriceToCents(program.price_usd) ?? 0
++      const hasCheckoutPrice = Boolean(
++        checkoutPricing.availableVariants.length &&
++          checkoutPricing.selectedPaymentPrice
++      )
+       return (
+         <div className="max-w-3xl mx-auto space-y-4 p-4 sm:p-6">
+           <Link
+@@ -970,14 +973,14 @@ export default function ProgramPostularPage() {
+             <Button
+               className="w-full bg-amber-400 text-black hover:bg-amber-400/90"
+               onClick={() => setCheckoutOpen(true)}
+-              disabled={!amountCents}
++              disabled={!hasCheckoutPrice}
+             >
+               Pagar e inscribirme
+             </Button>
+ 
+-            {!amountCents ? (
++            {!hasCheckoutPrice ? (
+               <div className="text-xs text-white/60">
+-                Falta configurar el precio del programa.
++                Falta configurar el precio del programa para tu region.
+               </div>
+             ) : null}
+           </div>
+@@ -985,11 +988,10 @@ export default function ProgramPostularPage() {
+           <PaymentMethodModal
+             open={checkoutOpen}
+             onOpenChange={setCheckoutOpen}
+-            programId={program.id}
+-            programTitle={program.title}
++            program={program}
++            countryCode={viewerCountryCode}
+             editionId={edition?.id ?? null}
+             purpose="pre_enrollment"
+-            amountCents={amountCents}
+             onPaid={() => {
+               setHasPaidPre(true)
+               setCheckoutOpen(false)
+diff --git a/src/app/plataforma/talento/explorar/page.tsx b/src/app/plataforma/talento/explorar/page.tsx
+index e371a17..69e33b9 100644
+--- a/src/app/plataforma/talento/explorar/page.tsx
++++ b/src/app/plataforma/talento/explorar/page.tsx
+@@ -6,6 +6,11 @@ import { useRouter } from 'next/navigation'
+ import { supabase } from '@/lib/supabase/client'
+ import { useToastEnhanced } from '@/hooks/use-toast-enhanced'
+ import { useAuthStore } from '@/stores/auth-stores'
++import {
++  formatCurrencyAmount,
++  resolveCountryCode,
++  resolveProgramPricing,
++} from '@/lib/pricing'
+ 
+ import {
+   Card,
+@@ -69,20 +74,6 @@ function paymentKey(programId: string, editionId: string | null): string {
+   return `${programId}:${editionId ?? 'none'}`
+ }
+ 
+-function parsePriceToCents(priceUsd: string | number | null): number | null {
+-  if (priceUsd === null || priceUsd === undefined) return null
+-  const parsed = Number(priceUsd)
+-  if (!Number.isFinite(parsed)) return null
+-  return Math.round(parsed * 100)
+-}
+-
+-const USD_FORMATTER = new Intl.NumberFormat('es-EC', {
+-  style: 'currency',
+-  currency: 'USD',
+-  currencyDisplay: 'code',
+-  maximumFractionDigits: 2,
+-})
+-
+ const DATE_FORMATTER = new Intl.DateTimeFormat('es-EC', {
+   day: '2-digit',
+   month: '2-digit',
+@@ -90,14 +81,6 @@ const DATE_FORMATTER = new Intl.DateTimeFormat('es-EC', {
+   timeZone: 'UTC',
+ })
+ 
+-function formatUsd(priceUsd: string | number | null): string | null {
+-  if (priceUsd === null || priceUsd === undefined) return null
+-  const parsed = Number(priceUsd)
+-  if (!Number.isFinite(parsed)) return null
+-  if (parsed <= 0) return 'Gratis'
+-  return USD_FORMATTER.format(parsed)
+-}
+-
+ function parseIsoDateOnlyToDM(value: string): string {
+   // Espera "YYYY-MM-DD" o "YYYY-MM-DDTHH:mm:ssZ"
+   const s = value.trim()
+@@ -166,6 +149,7 @@ export default function ProgramsPage() {
+   const [checkoutProgram, setCheckoutProgram] = useState<ProgramCardVM | null>(
+     null
+   )
++  const viewerCountryCode = resolveCountryCode(profile?.country_residence ?? null)
+ 
+   useEffect(() => {
+     if (didBootReference.current) return
+@@ -211,7 +195,12 @@ export default function ProgramsPage() {
+     const programsResponse = await supabase
+       .from('programs')
+       .select(
+-        'id, slug, title, description, is_published, payment_mode, requires_payment_pre, price_usd, created_at'
++        `id, slug, title, description, is_published, payment_mode, requires_payment_pre, price_usd,
++        price_usd_list,price_usd_discount_percent,price_usd_final_single,price_usd_has_installments,
++        price_usd_final_installments,price_usd_installments_count,price_usd_installments_interest_free,price_usd_installment_amount,
++        price_ars_list,price_ars_discount_percent,price_ars_final_single,price_ars_has_installments,
++        price_ars_final_installments,price_ars_installments_count,price_ars_installments_interest_free,price_ars_installment_amount,
++        created_at`
+       )
+       .order('created_at', { ascending: true })
+ 
+@@ -428,14 +417,16 @@ export default function ProgramsPage() {
+   }
+   function openCheckoutFor(program: ProgramCardVM): void {
+     if (!userId) {
+-      toast.showError('Inicia sesión para pagar.')
++      toast.showError('Inicia sesion para pagar.')
+       router.push('/ingresar')
+       return
+     }
+ 
+-    const amountCents = parsePriceToCents(program.price_usd)
+-    if (!amountCents || amountCents <= 0) {
+-      toast.showError('Este programa no tiene un precio configurado.')
++    const pricing = resolveProgramPricing(program, viewerCountryCode)
++    if (!pricing.availableVariants.length || !pricing.selectedPaymentPrice) {
++      toast.showError(
++        'Este programa no tiene un precio configurado para tu region.'
++      )
+       return
+     }
+ 
+@@ -488,7 +479,19 @@ export default function ProgramsPage() {
+             {items.map((p) => {
+               const iconKind = pickProgramIcon(p.slug)
+               const paymentMode = resolvePaymentMode(p)
+-              const priceLabel = formatUsd(p.price_usd)
++              const pricing = resolveProgramPricing(p, viewerCountryCode)
++              const locale =
++                pricing.displayCurrency === 'ARS' ? 'es-AR' : 'es-EC'
++              const priceLabel = formatCurrencyAmount({
++                amount: pricing.selectedPaymentPrice,
++                currency: pricing.displayCurrency,
++                locale,
++              })
++              const installmentLabel = formatCurrencyAmount({
++                amount: pricing.installmentAmount,
++                currency: pricing.displayCurrency,
++                locale,
++              })
+               const paidPre = hasPaidPre(p.id, p.edition?.id ?? null)
+               const applied = hasApplied(p.id, p.edition?.id ?? null)
+               const endsAtDate = p.edition
+@@ -683,12 +686,41 @@ export default function ProgramsPage() {
+                       </div>
+ 
+                       {priceLabel ? (
+-                        <div className="flex items-center gap-2">
+-                          <CreditCard
+-                            className="h-4 w-4 text-white/50"
+-                            aria-hidden="true"
+-                          />
+-                          <span className="text-white/60">{priceLabel}</span>
++                        <div className="space-y-1">
++                          <div className="flex items-center gap-2">
++                            <CreditCard
++                              className="h-4 w-4 text-white/50"
++                              aria-hidden="true"
++                            />
++                            <span className="text-white/60">{priceLabel}</span>
++                          </div>
++                          {pricing.hasListPrice && pricing.listPrice ? (
++                            <div className="text-xs text-white/40 line-through">
++                              {formatCurrencyAmount({
++                                amount: pricing.listPrice,
++                                currency: pricing.displayCurrency,
++                                locale,
++                              })}
++                            </div>
++                          ) : null}
++                          {pricing.hasDiscount && pricing.discountPercent ? (
++                            <div className="text-xs font-semibold text-emerald-300">
++                              {Math.round(pricing.discountPercent)}% OFF
++                            </div>
++                          ) : null}
++                          {pricing.showInstallmentsInUi &&
++                          pricing.hasInstallments &&
++                          pricing.installmentsCount ? (
++                            <div className="text-xs text-white/55">
++                              Hasta {pricing.installmentsCount} cuotas{' '}
++                              {pricing.installmentsInterestFree === false
++                                ? 'con interes'
++                                : 'sin interes'}
++                              {installmentLabel
++                                ? ` · ${installmentLabel} por cuota`
++                                : ''}
++                            </div>
++                          ) : null}
+                         </div>
+                       ) : null}
+ 
+@@ -727,11 +759,10 @@ export default function ProgramsPage() {
+             onOpenChange={(open) => {
+               if (!open) setCheckoutOpen(false)
+             }}
+-            programId={checkoutProgram.id}
+-            programTitle={checkoutProgram.title}
++            program={checkoutProgram}
++            countryCode={viewerCountryCode}
+             editionId={checkoutProgram.edition?.id ?? null}
+             purpose="pre_enrollment"
+-            amountCents={parsePriceToCents(checkoutProgram.price_usd) ?? 0}
+             onPaid={() => {
+               const key = paymentKey(
+                 checkoutProgram.id,
+diff --git a/src/app/plataforma/talento/mis-postulaciones/components/current-application-hero.tsx b/src/app/plataforma/talento/mis-postulaciones/components/current-application-hero.tsx
+index c04f656..38e2e21 100644
+--- a/src/app/plataforma/talento/mis-postulaciones/components/current-application-hero.tsx
++++ b/src/app/plataforma/talento/mis-postulaciones/components/current-application-hero.tsx
+@@ -4,9 +4,11 @@
+ 
+ import Link from 'next/link'
+ import { useState } from 'react'
++import { useAuthStore } from '@/stores/auth-stores'
+ import { Badge } from '@/components/ui/badge'
+ import { Button } from '@/components/ui/button'
+ import { PaymentMethodModal } from '@/components/payments/payment-method-modal'
++import { resolveCountryCode, resolveProgramPricing } from '@/lib/pricing'
+ 
+ import {
+   ArrowRight,
+@@ -38,14 +40,9 @@ function resolvePaymentMode(program: ProgramRow | null): ProgramPaymentMode {
+   return program.requires_payment_pre ? 'pre' : 'none'
+ }
+ 
+-function parsePriceToCents(priceUsd: string | number | null): number | null {
+-  if (priceUsd === null || priceUsd === undefined) return null
+-  const parsed = Number(priceUsd)
+-  if (!Number.isFinite(parsed)) return null
+-  return Math.round(parsed * 100)
+-}
+-
+ export function CurrentApplicationHero(props: { app: ApplicationRow }) {
++  const profileCountry = useAuthStore((state) => state.profile?.country_residence)
++  const viewerCountryCode = resolveCountryCode(profileCountry ?? null)
+   const [checkoutOpen, setCheckoutOpen] = useState(false)
+   const interviewBookingUrl = 'https://calendar.app.google/3RxfFjt86saSuTVD7'
+   const programTitle = props.app.program ? props.app.program.title : 'Programa'
+@@ -251,11 +248,15 @@ export function CurrentApplicationHero(props: { app: ApplicationRow }) {
+   ) {
+     const payment = getPaymentWindow(props.app)
+     const paymentMode = resolvePaymentMode(props.app.program)
+-    const amountCents =
+-      parsePriceToCents(props.app.program?.price_usd ?? null) ?? 0
++    const pricing = props.app.program
++      ? resolveProgramPricing(props.app.program, viewerCountryCode)
++      : null
++    const hasCheckoutPrice = Boolean(
++      pricing?.availableVariants.length && pricing.selectedPaymentPrice
++    )
+     const needsPayment =
+       paymentMode === 'post' && props.app.payment_status !== 'paid'
+-    const canPayNow = needsPayment && payment.canPay && amountCents > 0
++    const canPayNow = needsPayment && payment.canPay && hasCheckoutPrice
+ 
+     const expiresLabel = payment.expiresAtIso
+       ? `TU RESERVA VENCE EL: ${fmtDateESFromISO(payment.expiresAtIso)}`
+@@ -294,22 +295,23 @@ export function CurrentApplicationHero(props: { app: ApplicationRow }) {
+                 >
+                   PAGAR MATRÍCULA <CreditCard className="h-4 w-4" />
+                 </Button>
+-                {!amountCents ? (
++                {!hasCheckoutPrice ? (
+                   <div className="text-xs text-white/60">
+-                    Falta configurar el precio del programa.
++                    Falta configurar el precio del programa para tu region.
+                   </div>
+                 ) : null}
+-                <PaymentMethodModal
+-                  open={checkoutOpen}
+-                  onOpenChange={setCheckoutOpen}
+-                  programId={props.app.program_id}
+-                  programTitle={programTitle}
+-                  editionId={props.app.edition_id}
+-                  purpose="tuition"
+-                  applicationId={props.app.id}
+-                  amountCents={amountCents}
+-                  onPaid={() => setCheckoutOpen(false)}
+-                />
++                {props.app.program ? (
++                  <PaymentMethodModal
++                    open={checkoutOpen}
++                    onOpenChange={setCheckoutOpen}
++                    program={props.app.program}
++                    countryCode={viewerCountryCode}
++                    editionId={props.app.edition_id}
++                    purpose="tuition"
++                    applicationId={props.app.id}
++                    onPaid={() => setCheckoutOpen(false)}
++                  />
++                ) : null}
+               </>
+             ) : (
+               <Badge className="border border-emerald-500/30 bg-emerald-500/10 text-emerald-300">
+diff --git a/src/app/plataforma/talento/mis-postulaciones/page.tsx b/src/app/plataforma/talento/mis-postulaciones/page.tsx
+index 88ab681..ab0a36a 100644
+--- a/src/app/plataforma/talento/mis-postulaciones/page.tsx
++++ b/src/app/plataforma/talento/mis-postulaciones/page.tsx
+@@ -59,7 +59,23 @@ export default function MisPostulacionesPage() {
+             updated_at,
+             payment_mode,
+             requires_payment_pre,
+-            price_usd
++            price_usd,
++            price_usd_list,
++            price_usd_discount_percent,
++            price_usd_final_single,
++            price_usd_has_installments,
++            price_usd_final_installments,
++            price_usd_installments_count,
++            price_usd_installments_interest_free,
++            price_usd_installment_amount,
++            price_ars_list,
++            price_ars_discount_percent,
++            price_ars_final_single,
++            price_ars_has_installments,
++            price_ars_final_installments,
++            price_ars_installments_count,
++            price_ars_installments_interest_free,
++            price_ars_installment_amount
+           ),
+           edition:program_editions (
+             id,
+diff --git a/src/components/payments/payment-method-modal.tsx b/src/components/payments/payment-method-modal.tsx
+index e3629d9..7761199 100644
+--- a/src/components/payments/payment-method-modal.tsx
++++ b/src/components/payments/payment-method-modal.tsx
+@@ -1,9 +1,14 @@
+ 'use client'
+ 
+-import { useState } from 'react'
++import { useEffect, useMemo, useState } from 'react'
+ import { CreditCard, Wallet } from 'lucide-react'
+ 
+ import type { PaymentStatus } from '@/types/payments'
++import type { ProgramPaymentVariant, ProgramRow } from '@/types/programs'
++import {
++  formatCurrencyAmount,
++  resolveProgramPricing,
++} from '@/lib/pricing'
+ 
+ import { Button } from '@/components/ui/button'
+ import {
+@@ -32,12 +37,11 @@ type CreateMercadoPagoPreferenceResponse = {
+ type PaymentMethodModalProps = {
+   open: boolean
+   onOpenChange: (open: boolean) => void
+-  programId: string
+-  programTitle?: string | null
++  program: ProgramRow
++  countryCode: string | null
+   editionId: string | null
+   purpose: PaymentPurpose
+   applicationId?: string | null
+-  amountCents: number
+   onPaid?: (paymentId: string) => void
+ }
+ 
+@@ -45,9 +49,52 @@ export function PaymentMethodModal(props: PaymentMethodModalProps) {
+   const [payphoneOpen, setPayphoneOpen] = useState(false)
+   const [isStartingMp, setIsStartingMp] = useState(false)
+   const [methodError, setMethodError] = useState<string | null>(null)
++
++  const [paymentVariant, setPaymentVariant] = useState<ProgramPaymentVariant>(
++    'single_payment'
++  )
++
++  const pricing = useMemo(
++    () => resolveProgramPricing(props.program, props.countryCode, paymentVariant),
++    [props.program, props.countryCode, paymentVariant]
++  )
++
++  useEffect(() => {
++    setPaymentVariant(pricing.defaultPaymentVariant)
++  }, [pricing.defaultPaymentVariant, props.open])
++
+   const paymentSupportUrl = buildPaymentSupportWhatsAppUrl({
+     purpose: props.purpose,
+-    programTitle: props.programTitle ?? null,
++    programTitle: props.program.title,
++  })
++
++  const canChooseVariant =
++    pricing.showInstallmentsInUi &&
++    pricing.hasInstallments &&
++    pricing.singlePaymentPrice !== null
++
++  const canUsePayphone = pricing.checkoutCurrency === 'USD'
++
++  const locale = pricing.displayCurrency === 'ARS' ? 'es-AR' : 'es-EC'
++  const selectedPriceLabel = formatCurrencyAmount({
++    amount: pricing.selectedPaymentPrice,
++    currency: pricing.displayCurrency,
++    locale,
++  })
++  const singlePriceLabel = formatCurrencyAmount({
++    amount: pricing.singlePaymentPrice,
++    currency: pricing.displayCurrency,
++    locale,
++  })
++  const installmentsPriceLabel = formatCurrencyAmount({
++    amount: pricing.installmentsPrice,
++    currency: pricing.displayCurrency,
++    locale,
++  })
++  const installmentAmountLabel = formatCurrencyAmount({
++    amount: pricing.installmentAmount,
++    currency: pricing.displayCurrency,
++    locale,
+   })
+ 
+   function openPayphone() {
+@@ -58,6 +105,14 @@ export function PaymentMethodModal(props: PaymentMethodModalProps) {
+ 
+   async function openMercadoPago() {
+     setMethodError(null)
++
++    if (!pricing.selectedPaymentPrice) {
++      setMethodError(
++        'El programa no tiene precio configurado para esta modalidad de pago.'
++      )
++      return
++    }
++
+     setIsStartingMp(true)
+ 
+     try {
+@@ -65,11 +120,12 @@ export function PaymentMethodModal(props: PaymentMethodModalProps) {
+         method: 'POST',
+         headers: { 'Content-Type': 'application/json' },
+         body: JSON.stringify({
+-          programId: props.programId,
++          programId: props.program.id,
+           editionId: props.editionId,
+           purpose: props.purpose,
+           applicationId: props.applicationId ?? null,
+-          amountCents: props.amountCents,
++          paymentVariant,
++          payment_variant: paymentVariant,
+         }),
+         cache: 'no-store',
+       })
+@@ -92,7 +148,7 @@ export function PaymentMethodModal(props: PaymentMethodModalProps) {
+ 
+       const checkoutUrl = data.initPoint ?? data.sandboxInitPoint
+       if (!checkoutUrl) {
+-        setMethodError('Mercado Pago no devolvió una URL de checkout válida.')
++        setMethodError('Mercado Pago no devolvio una URL de checkout valida.')
+         return
+       }
+ 
+@@ -116,34 +172,96 @@ export function PaymentMethodModal(props: PaymentMethodModalProps) {
+           <DialogHeader>
+             <DialogTitle>Selecciona tu metodo de pago</DialogTitle>
+             <DialogDescription className="text-white/60">
+-              Puedes pagar con Payphone o Mercado Pago Checkout Pro.
++              Monto a pagar: {selectedPriceLabel ?? 'No configurado'}
+             </DialogDescription>
+           </DialogHeader>
+ 
+-          <div className="space-y-3">
+-            <Button
+-              type="button"
+-              className="h-12 w-full justify-between bg-[#00CCA4] text-black hover:bg-[#00CCA4]/90"
+-              onClick={openPayphone}
+-              disabled={isStartingMp}
+-            >
+-              <span>Pagar con Payphone</span>
+-              <CreditCard className="h-4 w-4" />
+-            </Button>
+-
+-            <Button
+-              type="button"
+-              className="h-12 w-full justify-between border border-white/20 bg-transparent text-white hover:bg-white/10"
+-              onClick={() => void openMercadoPago()}
+-              disabled={isStartingMp}
+-            >
+-              <span>
+-                {isStartingMp
+-                  ? 'Iniciando Mercado Pago...'
+-                  : 'Pagar con Mercado Pago'}
+-              </span>
+-              <Wallet className="h-4 w-4" />
+-            </Button>
++          <div className="space-y-4">
++            {canChooseVariant ? (
++              <div className="rounded-lg border border-white/10 bg-black/40 p-3 space-y-2">
++                <div className="text-xs uppercase tracking-wide text-white/50">
++                  Modalidad de pago
++                </div>
++                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
++                  <button
++                    type="button"
++                    onClick={() => setPaymentVariant('installments')}
++                    className={[
++                      'rounded-lg border px-3 py-2 text-left transition',
++                      paymentVariant === 'installments'
++                        ? 'border-[#00CCA4] bg-[#00CCA4]/15'
++                        : 'border-white/15 bg-white/5 hover:bg-white/10',
++                    ].join(' ')}
++                  >
++                    <div className="text-sm font-semibold">Cuotas</div>
++                    <div className="text-xs text-white/70">
++                      {installmentsPriceLabel ?? 'Sin precio'}
++                    </div>
++                    {pricing.installmentsCount ? (
++                      <div className="text-xs text-white/50">
++                        Hasta {pricing.installmentsCount} cuotas{' '}
++                        {pricing.installmentsInterestFree === false
++                          ? 'con interes'
++                          : 'sin interes'}
++                      </div>
++                    ) : null}
++                    {installmentAmountLabel ? (
++                      <div className="text-xs text-white/50">
++                        {installmentAmountLabel} por cuota
++                      </div>
++                    ) : null}
++                  </button>
++
++                  <button
++                    type="button"
++                    onClick={() => setPaymentVariant('single_payment')}
++                    className={[
++                      'rounded-lg border px-3 py-2 text-left transition',
++                      paymentVariant === 'single_payment'
++                        ? 'border-[#00CCA4] bg-[#00CCA4]/15'
++                        : 'border-white/15 bg-white/5 hover:bg-white/10',
++                    ].join(' ')}
++                  >
++                    <div className="text-sm font-semibold">Pago unico</div>
++                    <div className="text-xs text-white/70">
++                      {singlePriceLabel ?? 'Sin precio'}
++                    </div>
++                  </button>
++                </div>
++              </div>
++            ) : null}
++
++            <div className="space-y-3">
++              {canUsePayphone ? (
++                <Button
++                  type="button"
++                  className="h-12 w-full justify-between bg-[#00CCA4] text-black hover:bg-[#00CCA4]/90"
++                  onClick={openPayphone}
++                  disabled={isStartingMp || !pricing.selectedPaymentPrice}
++                >
++                  <span>Pagar con Payphone</span>
++                  <CreditCard className="h-4 w-4" />
++                </Button>
++              ) : (
++                <div className="rounded-md border border-white/10 bg-white/5 px-3 py-2 text-xs text-white/65">
++                  PayPhone esta disponible solo para cobros en USD.
++                </div>
++              )}
++
++              <Button
++                type="button"
++                className="h-12 w-full justify-between border border-white/20 bg-transparent text-white hover:bg-white/10"
++                onClick={() => void openMercadoPago()}
++                disabled={isStartingMp || !pricing.selectedPaymentPrice}
++              >
++                <span>
++                  {isStartingMp
++                    ? 'Iniciando Mercado Pago...'
++                    : 'Pagar con Mercado Pago'}
++                </span>
++                <Wallet className="h-4 w-4" />
++              </Button>
++            </div>
+ 
+             {methodError ? (
+               <div className="rounded-md border border-red-500/40 bg-red-500/10 px-3 py-2 text-sm text-red-300">
+@@ -158,7 +276,7 @@ export function PaymentMethodModal(props: PaymentMethodModalProps) {
+                 rel="noopener noreferrer"
+                 className="text-xs text-white/60 underline underline-offset-4 transition-colors hover:text-white/80"
+               >
+-                ¿Necesitas otra forma de pago? Consulta opciones por WhatsApp
++                Necesitas otra forma de pago? Consulta opciones por WhatsApp
+               </a>
+             </div>
+           </div>
+@@ -168,11 +286,11 @@ export function PaymentMethodModal(props: PaymentMethodModalProps) {
+       <PayphoneCheckoutModal
+         open={payphoneOpen}
+         onOpenChange={setPayphoneOpen}
+-        programId={props.programId}
++        programId={props.program.id}
+         editionId={props.editionId}
+         purpose={props.purpose}
+         applicationId={props.applicationId}
+-        amountCents={props.amountCents}
++        paymentVariant={paymentVariant}
+         onPaid={props.onPaid}
+       />
+     </>
+diff --git a/src/components/payments/payphone-checkout-modal.tsx b/src/components/payments/payphone-checkout-modal.tsx
+index 7633e37..7394d4e 100644
+--- a/src/components/payments/payphone-checkout-modal.tsx
++++ b/src/components/payments/payphone-checkout-modal.tsx
+@@ -6,6 +6,7 @@ import { Loader2 } from 'lucide-react'
+ import { useToastEnhanced } from '@/hooks/use-toast-enhanced'
+ 
+ import type { PaymentStatus } from '@/types/payments'
++import type { ProgramPaymentVariant } from '@/types/programs'
+ 
+ import {
+   Dialog,
+@@ -42,13 +43,12 @@ type PayphoneCheckoutModalProps = {
+   editionId: string | null
+   purpose: PaymentPurpose
+   applicationId?: string | null
+-  amountCents: number
++  paymentVariant: ProgramPaymentVariant
+   onPaid?: (paymentId: string) => void
+ }
+ 
+ type PayphoneBoxOptions = {
+   token: string
+-  // 👇 OJO: el script de PayPhone usa ESTA clave
+   clientTransactionId: string
+   amount: number
+   amountWithoutTax: number
+@@ -80,7 +80,7 @@ function buildRequestKey(props: PayphoneCheckoutModalProps): string {
+     props.editionId ?? 'none',
+     props.purpose,
+     props.applicationId ?? 'none',
+-    String(props.amountCents),
++    props.paymentVariant,
+   ].join('|')
+ }
+ 
+@@ -171,20 +171,15 @@ export function PayphoneCheckoutModal(props: PayphoneCheckoutModalProps) {
+     setRequestKey(nextKey)
+     latestKeyRef.current = nextKey
+ 
+-    if (!Number.isFinite(props.amountCents) || props.amountCents <= 0) {
+-      setErrorMessage('Monto inválido para iniciar el pago.')
+-      return
+-    }
+-
+     void startCheckout(nextKey)
+     // eslint-disable-next-line react-hooks/exhaustive-deps
+   }, [
+     props.open,
+-    props.amountCents,
+     props.programId,
+     props.editionId,
+     props.purpose,
+     props.applicationId,
++    props.paymentVariant,
+   ])
+ 
+   useEffect(() => {
+@@ -244,7 +239,8 @@ export function PayphoneCheckoutModal(props: PayphoneCheckoutModalProps) {
+           editionId: props.editionId,
+           purpose: props.purpose,
+           applicationId: props.applicationId ?? null,
+-          amountCents: props.amountCents,
++          paymentVariant: props.paymentVariant,
++          payment_variant: props.paymentVariant,
+         }),
+         cache: 'no-store',
+       })
+@@ -329,7 +325,7 @@ export function PayphoneCheckoutModal(props: PayphoneCheckoutModalProps) {
+         <DialogHeader>
+           <DialogTitle>Completa tu pago</DialogTitle>
+           <DialogDescription className="text-white/60">
+-            Finaliza la transacción dentro de la caja de PayPhone.
++            Finaliza la transaccion dentro de la caja de PayPhone.
+           </DialogDescription>
+         </DialogHeader>
+ 
+@@ -371,10 +367,11 @@ export function PayphoneCheckoutModal(props: PayphoneCheckoutModalProps) {
+             Cerrar
+           </Button>
+           <Button onClick={goToConfirm} disabled={!clientTxId || isLoading}>
+-            Ya pagué, verificar
++            Ya pague, verificar
+           </Button>
+         </DialogFooter>
+       </DialogContent>
+     </Dialog>
+   )
+ }
++
+diff --git a/src/types/programs.ts b/src/types/programs.ts
+index a7cc992..24fe489 100644
+--- a/src/types/programs.ts
++++ b/src/types/programs.ts
+@@ -1,4 +1,5 @@
+ export type ProgramPaymentMode = 'none' | 'pre' | 'post'
++export type ProgramPaymentVariant = 'single_payment' | 'installments'
+ 
+ export type ProgramStatus = 'open' | 'closed' | 'soon'
+ 
+@@ -14,6 +15,22 @@ export type ProgramRow = ProgramRowBase & {
+   payment_mode: ProgramPaymentMode | null
+   requires_payment_pre: boolean
+   price_usd: number | string | null
++  price_usd_list: number | string | null
++  price_usd_discount_percent: number | string | null
++  price_usd_final_single: number | string | null
++  price_usd_has_installments: boolean | null
++  price_usd_final_installments: number | string | null
++  price_usd_installments_count: number | string | null
++  price_usd_installments_interest_free: boolean | null
++  price_usd_installment_amount: number | string | null
++  price_ars_list: number | string | null
++  price_ars_discount_percent: number | string | null
++  price_ars_final_single: number | string | null
++  price_ars_has_installments: boolean | null
++  price_ars_final_installments: number | string | null
++  price_ars_installments_count: number | string | null
++  price_ars_installments_interest_free: boolean | null
++  price_ars_installment_amount: number | string | null
+   created_at?: string
+   updated_at?: string
+ }
+
+diff --git a/src/lib/pricing/index.ts b/src/lib/pricing/index.ts
+new file mode 100644
+--- /dev/null
++++ b/src/lib/pricing/index.ts
+@@ -0,0 +1,20 @@
++export {
++  ProgramPricingError,
++  formatCurrencyAmount,
++  isArgentinaCountry,
++  isProgramPaymentVariant,
++  resolveCheckoutPricingOrThrow,
++  resolveCountryCode,
++  resolveCountryCodeFromHeaders,
++  resolveProgramPricing,
++  toAmountCents,
++} from './program-pricing'
++
++export type {
++  PricingCurrency,
++  PricingRegion,
++  ProgramPricingBlock,
++  ProgramPricingErrorCode,
++  ResolvedCheckoutPricing,
++  ResolvedProgramPricing,
++} from './program-pricing'
+
+
+diff --git a/src/lib/pricing/program-pricing.ts b/src/lib/pricing/program-pricing.ts
+new file mode 100644
+--- /dev/null
++++ b/src/lib/pricing/program-pricing.ts
+@@ -0,0 +1,391 @@
++import type { ProgramPaymentVariant, ProgramRow } from '@/types/programs'
++
++export type PricingRegion = 'AR' | 'GLOBAL'
++export type PricingCurrency = 'ARS' | 'USD'
++
++export type ProgramPricingBlock = {
++  currency: PricingCurrency
++  listPrice: number | null
++  discountPercent: number | null
++  singlePaymentPrice: number | null
++  hasInstallments: boolean
++  installmentsPrice: number | null
++  installmentsCount: number | null
++  installmentsInterestFree: boolean | null
++  installmentAmount: number | null
++}
++
++export type ResolvedProgramPricing = {
++  region: PricingRegion
++  displayCurrency: PricingCurrency
++  checkoutCurrency: PricingCurrency
++  regionPricing: ProgramPricingBlock
++  hasListPrice: boolean
++  listPrice: number | null
++  hasDiscount: boolean
++  discountPercent: number | null
++  singlePaymentPrice: number | null
++  hasInstallments: boolean
++  installmentsPrice: number | null
++  installmentsCount: number | null
++  installmentsInterestFree: boolean | null
++  installmentAmount: number | null
++  showInstallmentsInUi: boolean
++  availableVariants: ProgramPaymentVariant[]
++  defaultPaymentVariant: ProgramPaymentVariant
++  selectedPaymentVariant: ProgramPaymentVariant
++  selectedPaymentPrice: number | null
++}
++
++export type ResolvedCheckoutPricing = ResolvedProgramPricing & {
++  paymentVariant: ProgramPaymentVariant
++  amount: number
++  amountCents: number
++  currency: PricingCurrency
++}
++
++export type ProgramPricingErrorCode =
++  | 'PAYMENT_VARIANT_REQUIRED'
++  | 'PAYMENT_VARIANT_NOT_SUPPORTED'
++  | 'PRICE_CONFIGURATION_MISSING'
++  | 'PRICE_VARIANT_NOT_CONFIGURED'
++
++export class ProgramPricingError extends Error {
++  code: ProgramPricingErrorCode
++
++  constructor(code: ProgramPricingErrorCode, message: string) {
++    super(message)
++    this.code = code
++  }
++}
++
++type NumericLike = number | string | null | undefined
++
++function toNumber(value: NumericLike): number | null {
++  if (value === null || value === undefined) return null
++  const parsed = Number(value)
++  if (!Number.isFinite(parsed)) return null
++  return parsed
++}
++
++function toNonNegativeMoney(value: NumericLike): number | null {
++  const parsed = toNumber(value)
++  if (parsed === null || parsed < 0) return null
++  return Math.round(parsed * 100) / 100
++}
++
++function toDiscountPercent(value: NumericLike): number | null {
++  const parsed = toNumber(value)
++  if (parsed === null || parsed <= 0 || parsed > 100) return null
++  return Math.round(parsed * 100) / 100
++}
++
++function toPositiveInt(value: NumericLike): number | null {
++  const parsed = toNumber(value)
++  if (parsed === null || parsed <= 0) return null
++  return Math.trunc(parsed)
++}
++
++function toNullableBoolean(value: unknown): boolean | null {
++  if (typeof value === 'boolean') return value
++  if (typeof value === 'number') {
++    if (value === 1) return true
++    if (value === 0) return false
++  }
++  if (typeof value === 'string') {
++    const normalized = value.trim().toLowerCase()
++    if (normalized === 'true' || normalized === '1') return true
++    if (normalized === 'false' || normalized === '0') return false
++  }
++  return null
++}
++
++function normalizeText(value: string): string {
++  return value
++    .trim()
++    .toLowerCase()
++    .normalize('NFD')
++    .replace(/[\u0300-\u036f]/g, '')
++}
++
++const COUNTRY_LABEL_TO_CODE: Record<string, string> = {
++  ar: 'AR',
++  argentina: 'AR',
++  arg: 'AR',
++  us: 'US',
++  usa: 'US',
++  'united states': 'US',
++  'estados unidos': 'US',
++  ec: 'EC',
++  ecuador: 'EC',
++  pe: 'PE',
++  peru: 'PE',
++  co: 'CO',
++  colombia: 'CO',
++  cl: 'CL',
++  chile: 'CL',
++  uy: 'UY',
++  uruguay: 'UY',
++  bo: 'BO',
++  bolivia: 'BO',
++  mx: 'MX',
++  mexico: 'MX',
++  br: 'BR',
++  brasil: 'BR',
++  brazil: 'BR',
++}
++
++export function resolveCountryCode(
++  countryCodeOrLabel: string | null | undefined
++): string | null {
++  if (!countryCodeOrLabel) return null
++
++  const raw = countryCodeOrLabel.trim()
++  if (!raw) return null
++
++  const localeMatch = /^([a-z]{2,3})(?:[-_])([a-z]{2})$/i.exec(raw)
++  if (localeMatch) {
++    return localeMatch[2].toUpperCase()
++  }
++
++  if (/^[a-z]{2}$/i.test(raw)) {
++    return raw.toUpperCase()
++  }
++
++  const normalized = normalizeText(raw)
++  if (COUNTRY_LABEL_TO_CODE[normalized]) {
++    return COUNTRY_LABEL_TO_CODE[normalized]
++  }
++
++  return null
++}
++
++export function resolveCountryCodeFromHeaders(headers: Headers): string | null {
++  const direct =
++    headers.get('x-vercel-ip-country') ??
++    headers.get('cf-ipcountry') ??
++    headers.get('cloudfront-viewer-country') ??
++    headers.get('x-country-code')
++
++  const directCode = resolveCountryCode(direct)
++  if (directCode) return directCode
++
++  const acceptLanguage = headers.get('accept-language')
++  if (!acceptLanguage) return null
++
++  const first = acceptLanguage.split(',')[0]?.trim()
++  if (!first) return null
++
++  return resolveCountryCode(first)
++}
++
++export function isArgentinaCountry(countryCodeOrLabel: string | null): boolean {
++  return resolveCountryCode(countryCodeOrLabel) === 'AR'
++}
++
++function resolveRegion(countryCodeOrLabel: string | null | undefined): PricingRegion {
++  return isArgentinaCountry(countryCodeOrLabel ?? null) ? 'AR' : 'GLOBAL'
++}
++
++function resolveUsdPricing(program: ProgramRow): ProgramPricingBlock {
++  const singlePaymentPrice =
++    toNonNegativeMoney(program.price_usd_final_single) ??
++    toNonNegativeMoney(program.price_usd)
++
++  const installmentsEnabled = Boolean(
++    toNullableBoolean(program.price_usd_has_installments)
++  )
++  const installmentsPrice = toNonNegativeMoney(program.price_usd_final_installments)
++  const hasInstallments = installmentsEnabled && installmentsPrice !== null
++
++  return {
++    currency: 'USD',
++    listPrice: toNonNegativeMoney(program.price_usd_list),
++    discountPercent: toDiscountPercent(program.price_usd_discount_percent),
++    singlePaymentPrice,
++    hasInstallments,
++    installmentsPrice: hasInstallments ? installmentsPrice : null,
++    installmentsCount: hasInstallments
++      ? toPositiveInt(program.price_usd_installments_count)
++      : null,
++    installmentsInterestFree: hasInstallments
++      ? toNullableBoolean(program.price_usd_installments_interest_free)
++      : null,
++    installmentAmount: hasInstallments
++      ? toNonNegativeMoney(program.price_usd_installment_amount)
++      : null,
++  }
++}
++
++function resolveArsPricing(program: ProgramRow): ProgramPricingBlock {
++  const singlePaymentPrice = toNonNegativeMoney(program.price_ars_final_single)
++  const installmentsEnabled = Boolean(
++    toNullableBoolean(program.price_ars_has_installments)
++  )
++  const installmentsPrice = toNonNegativeMoney(program.price_ars_final_installments)
++  const hasInstallments = installmentsEnabled && installmentsPrice !== null
++
++  return {
++    currency: 'ARS',
++    listPrice: toNonNegativeMoney(program.price_ars_list),
++    discountPercent: toDiscountPercent(program.price_ars_discount_percent),
++    singlePaymentPrice,
++    hasInstallments,
++    installmentsPrice: hasInstallments ? installmentsPrice : null,
++    installmentsCount: hasInstallments
++      ? toPositiveInt(program.price_ars_installments_count)
++      : null,
++    installmentsInterestFree: hasInstallments
++      ? toNullableBoolean(program.price_ars_installments_interest_free)
++      : null,
++    installmentAmount: hasInstallments
++      ? toNonNegativeMoney(program.price_ars_installment_amount)
++      : null,
++  }
++}
++
++export function isProgramPaymentVariant(
++  value: unknown
++): value is ProgramPaymentVariant {
++  return value === 'single_payment' || value === 'installments'
++}
++
++export function resolveProgramPricing(
++  program: ProgramRow,
++  countryCodeOrLabel: string | null | undefined,
++  selectedPaymentVariant?: ProgramPaymentVariant | null
++): ResolvedProgramPricing {
++  const region = resolveRegion(countryCodeOrLabel)
++  const regionPricing = region === 'AR' ? resolveArsPricing(program) : resolveUsdPricing(program)
++
++  const availableVariants: ProgramPaymentVariant[] = []
++  if (regionPricing.singlePaymentPrice !== null) {
++    availableVariants.push('single_payment')
++  }
++  if (regionPricing.hasInstallments && regionPricing.installmentsPrice !== null) {
++    availableVariants.push('installments')
++  }
++
++  const showInstallmentsInUi = region === 'AR' && regionPricing.hasInstallments
++  const preferredDefault: ProgramPaymentVariant =
++    showInstallmentsInUi && availableVariants.includes('installments')
++      ? 'installments'
++      : 'single_payment'
++
++  const defaultPaymentVariant: ProgramPaymentVariant =
++    availableVariants.includes(preferredDefault)
++      ? preferredDefault
++      : (availableVariants[0] ?? 'single_payment')
++
++  const nextSelected = selectedPaymentVariant ?? defaultPaymentVariant
++  const selectedPaymentVariantResolved = availableVariants.includes(nextSelected)
++    ? nextSelected
++    : defaultPaymentVariant
++
++  const selectedPaymentPrice =
++    selectedPaymentVariantResolved === 'installments'
++      ? regionPricing.installmentsPrice
++      : regionPricing.singlePaymentPrice
++
++  const hasListPrice =
++    regionPricing.listPrice !== null &&
++    selectedPaymentPrice !== null &&
++    regionPricing.listPrice > selectedPaymentPrice
++
++  const hasDiscount =
++    regionPricing.discountPercent !== null && regionPricing.discountPercent > 0
++
++  return {
++    region,
++    displayCurrency: regionPricing.currency,
++    checkoutCurrency: regionPricing.currency,
++    regionPricing,
++    hasListPrice,
++    listPrice: hasListPrice ? regionPricing.listPrice : null,
++    hasDiscount,
++    discountPercent: hasDiscount ? regionPricing.discountPercent : null,
++    singlePaymentPrice: regionPricing.singlePaymentPrice,
++    hasInstallments: regionPricing.hasInstallments,
++    installmentsPrice: regionPricing.installmentsPrice,
++    installmentsCount: regionPricing.installmentsCount,
++    installmentsInterestFree: regionPricing.installmentsInterestFree,
++    installmentAmount: regionPricing.installmentAmount,
++    showInstallmentsInUi,
++    availableVariants,
++    defaultPaymentVariant,
++    selectedPaymentVariant: selectedPaymentVariantResolved,
++    selectedPaymentPrice,
++  }
++}
++
++export function toAmountCents(amount: number): number {
++  return Math.round(amount * 100)
++}
++
++export function resolveCheckoutPricingOrThrow(params: {
++  program: ProgramRow
++  countryCodeOrLabel: string | null | undefined
++  paymentVariant: ProgramPaymentVariant | null | undefined
++}): ResolvedCheckoutPricing {
++  if (!params.paymentVariant) {
++    throw new ProgramPricingError(
++      'PAYMENT_VARIANT_REQUIRED',
++      'Debes enviar paymentVariant para iniciar el checkout.'
++    )
++  }
++
++  const resolved = resolveProgramPricing(
++    params.program,
++    params.countryCodeOrLabel,
++    params.paymentVariant
++  )
++
++  if (resolved.availableVariants.length === 0) {
++    throw new ProgramPricingError(
++      'PRICE_CONFIGURATION_MISSING',
++      'El programa no tiene pricing configurado para esta region.'
++    )
++  }
++
++  if (!resolved.availableVariants.includes(params.paymentVariant)) {
++    throw new ProgramPricingError(
++      'PAYMENT_VARIANT_NOT_SUPPORTED',
++      'La modalidad de pago seleccionada no esta disponible para este programa.'
++    )
++  }
++
++  const amount =
++    params.paymentVariant === 'installments'
++      ? resolved.installmentsPrice
++      : resolved.singlePaymentPrice
++
++  if (amount === null) {
++    throw new ProgramPricingError(
++      'PRICE_VARIANT_NOT_CONFIGURED',
++      'No hay precio configurado para la modalidad de pago seleccionada.'
++    )
++  }
++
++  return {
++    ...resolved,
++    paymentVariant: params.paymentVariant,
++    amount,
++    amountCents: toAmountCents(amount),
++    currency: resolved.checkoutCurrency,
++  }
++}
++
++export function formatCurrencyAmount(params: {
++  amount: number | null | undefined
++  currency: PricingCurrency
++  locale?: string
++}): string | null {
++  if (params.amount === null || params.amount === undefined) return null
++  if (!Number.isFinite(params.amount)) return null
++  return new Intl.NumberFormat(params.locale ?? 'es-AR', {
++    style: 'currency',
++    currency: params.currency,
++    currencyDisplay: 'code',
++    maximumFractionDigits: params.currency === 'ARS' ? 0 : 2,
++  }).format(params.amount)
++}
+

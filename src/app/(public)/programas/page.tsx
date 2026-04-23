@@ -1,5 +1,7 @@
 import React from 'react'
+import { headers } from 'next/headers'
 import { createClient } from '@/lib/supabase/server'
+import { resolveCountryCodeFromHeaders } from '@/lib/pricing'
 import type {
   ApplicationFormRow,
   EditionRow,
@@ -13,12 +15,19 @@ import { ProgramGrid } from './components/ProgramGrid'
 import { ComingSoonStrip } from './components/ComingSoonStrip'
 
 export default async function PublicProgramsPage(): Promise<React.JSX.Element> {
+  const requestHeaders = await headers()
+  const countryCode = resolveCountryCodeFromHeaders(requestHeaders)
   const supabase = await createClient()
 
   const { data: programsData, error: programsError } = await supabase
     .from('programs')
     .select(
-      'id,slug,title,description,is_published,payment_mode,requires_payment_pre,price_usd,created_at,updated_at'
+      `id,slug,title,description,is_published,payment_mode,requires_payment_pre,price_usd,
+      price_usd_list,price_usd_discount_percent,price_usd_final_single,price_usd_has_installments,
+      price_usd_final_installments,price_usd_installments_count,price_usd_installments_interest_free,price_usd_installment_amount,
+      price_ars_list,price_ars_discount_percent,price_ars_final_single,price_ars_has_installments,
+      price_ars_final_installments,price_ars_installments_count,price_ars_installments_interest_free,price_ars_installment_amount,
+      created_at,updated_at`
     )
     .eq('is_published', true)
     .order('created_at', { ascending: true })
@@ -126,7 +135,7 @@ export default async function PublicProgramsPage(): Promise<React.JSX.Element> {
       <main className="relative mx-auto max-w-6xl px-6 py-10 md:py-14">
         <ProgramsHero />
 
-        <ProgramGrid items={items} />
+        <ProgramGrid items={items} countryCode={countryCode} />
 
         <ComingSoonStrip />
       </main>

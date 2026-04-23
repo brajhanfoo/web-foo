@@ -8,6 +8,7 @@ import { useAuthStore } from '@/stores/auth-stores'
 import { useToastEnhanced } from '@/hooks/use-toast-enhanced'
 import { PaymentMethodModal } from '@/components/payments/payment-method-modal'
 import { Button } from '@/components/ui/button'
+import { resolveCountryCode, resolveProgramPricing } from '@/lib/pricing'
 
 import {
   StepRole,
@@ -91,13 +92,6 @@ function isInputFieldType(value: unknown): value is FieldTypeInput {
 function resolvePaymentMode(program: ProgramRow): ProgramPaymentMode {
   if (program.payment_mode) return program.payment_mode
   return program.requires_payment_pre ? 'pre' : 'none'
-}
-
-function parsePriceToCents(priceUsd: string | number | null): number | null {
-  if (priceUsd === null || priceUsd === undefined) return null
-  const parsed = Number(priceUsd)
-  if (!Number.isFinite(parsed)) return null
-  return Math.round(parsed * 100)
 }
 
 function isFormOpen(form: ApplicationFormRow, now: Date): boolean {
@@ -309,6 +303,7 @@ export default function ProgramPostularPage() {
   const [values, setValues] = useState<FormValuesMap>({})
   const [hasPaidPre, setHasPaidPre] = useState<boolean | null>(null)
   const [checkoutOpen, setCheckoutOpen] = useState(false)
+  const viewerCountryCode = resolveCountryCode(profile?.country_residence ?? null)
 
   useEffect(() => {
     if (hasBootedOnceRef.current) return
@@ -340,7 +335,11 @@ export default function ProgramPostularPage() {
     const programResponse = await supabase
       .from('programs')
       .select(
-        'id, slug, title, description, is_published, payment_mode, requires_payment_pre, price_usd'
+        `id, slug, title, description, is_published, payment_mode, requires_payment_pre, price_usd,
+        price_usd_list,price_usd_discount_percent,price_usd_final_single,price_usd_has_installments,
+        price_usd_final_installments,price_usd_installments_count,price_usd_installments_interest_free,price_usd_installment_amount,
+        price_ars_list,price_ars_discount_percent,price_ars_final_single,price_ars_has_installments,
+        price_ars_final_installments,price_ars_installments_count,price_ars_installments_interest_free,price_ars_installment_amount`
       )
       .eq('slug', slug)
       .maybeSingle()
@@ -938,6 +937,7 @@ export default function ProgramPostularPage() {
   }
 
   const paymentMode = resolvePaymentMode(program)
+  const checkoutPricing = resolveProgramPricing(program, viewerCountryCode)
 
   if (paymentMode === 'pre') {
     if (hasPaidPre === null) {
@@ -951,7 +951,10 @@ export default function ProgramPostularPage() {
     }
 
     if (!hasPaidPre) {
-      const amountCents = parsePriceToCents(program.price_usd) ?? 0
+      const hasCheckoutPrice = Boolean(
+        checkoutPricing.availableVariants.length &&
+          checkoutPricing.selectedPaymentPrice
+      )
       return (
         <div className="max-w-3xl mx-auto space-y-4 p-4 sm:p-6">
           <Link
@@ -970,14 +973,14 @@ export default function ProgramPostularPage() {
             <Button
               className="w-full bg-amber-400 text-black hover:bg-amber-400/90"
               onClick={() => setCheckoutOpen(true)}
-              disabled={!amountCents}
+              disabled={!hasCheckoutPrice}
             >
               Pagar e inscribirme
             </Button>
 
-            {!amountCents ? (
+            {!hasCheckoutPrice ? (
               <div className="text-xs text-white/60">
-                Falta configurar el precio del programa.
+                Falta configurar el precio del programa para tu region.
               </div>
             ) : null}
           </div>
@@ -985,11 +988,10 @@ export default function ProgramPostularPage() {
           <PaymentMethodModal
             open={checkoutOpen}
             onOpenChange={setCheckoutOpen}
-            programId={program.id}
-            programTitle={program.title}
+            program={program}
+            countryCode={viewerCountryCode}
             editionId={edition?.id ?? null}
             purpose="pre_enrollment"
-            amountCents={amountCents}
             onPaid={() => {
               setHasPaidPre(true)
               setCheckoutOpen(false)

@@ -1,6 +1,7 @@
 import React from 'react'
+import type { ResolvedProgramPricing } from '@/lib/pricing'
+import type { ProgramRow } from '@/types/programs'
 
-// Smart Projects (tus componentes)
 import ProgramHeroSmartProjects from '@/app/(public)/programas/[program]/components/ProgramHeroSmartProjects'
 import AboutSection from '@/app/(public)/programas/[program]/components/AboutSection'
 import Timeline from '@/app/(public)/programas/[program]/components/Timeline'
@@ -27,15 +28,21 @@ import EnrollmentStepsSection from './components/project_academy/ProjectAcademyE
 import AdmissionProcess from './components/AdmissionProcess'
 import AdmissionPricing from './components/AdmissionPricing'
 
+type ProgramRenderParams = {
+  program: ProgramRow
+  countryCode: string | null
+  pricing: ResolvedProgramPricing
+}
+
 type ProgramRenderSpec = {
   title: string
-  renderSections: (params: { isArgentinaVisitor: boolean }) => React.ReactNode[]
+  renderSections: (params: ProgramRenderParams) => React.ReactNode[]
 }
 
 export const PROGRAM_SPECS: Record<string, ProgramRenderSpec> = {
   'smart-projects': {
     title: 'Smart Projects',
-    renderSections: () => [
+    renderSections: ({ program, countryCode, pricing }) => [
       <ProgramHeroSmartProjects key="hero" />,
       <AboutSection key="about" />,
       <Timeline key="timeline" />,
@@ -43,16 +50,20 @@ export const PROGRAM_SPECS: Record<string, ProgramRenderSpec> = {
       <AdmissionsSection key="admissions" />,
       <AdmissionProcess key="admission-process" />,
       <InstructoresMentores key="mentors" />,
-      <AdmissionPricing key="admission-pricing" />,
+      <AdmissionPricing
+        key="admission-pricing"
+        program={program}
+        countryCode={countryCode}
+        initialPricing={pricing}
+      />,
       <PreguntasFrecuentes key="faq" />,
       <ContactSection key="contact" />,
     ],
   },
 
-  // Project Academy (arrancá así y luego le metés sus secciones propias)
   'project-academy': {
     title: 'Project Academy',
-    renderSections: ({ isArgentinaVisitor }) => [
+    renderSections: ({ program, countryCode, pricing }) => [
       <div key="placeholder" className="px-6 md:py-16 text-white">
         <HeroProjectAcademy />
         <IsThisProgramForYou />
@@ -63,7 +74,11 @@ export const PROGRAM_SPECS: Record<string, ProgramRenderSpec> = {
         <CareerIntensiveSection />
         <EvaluationCertificationSection />
         <CareerOutcomeSection />
-        <LaunchInvestmentSection isArgentinaVisitor={isArgentinaVisitor} />
+        <LaunchInvestmentSection
+          program={program}
+          countryCode={countryCode}
+          initialPricing={pricing}
+        />
         <FinalCtaSection />
         <FAQSection />
       </div>,

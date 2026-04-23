@@ -6,6 +6,11 @@ import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase/client'
 import { useToastEnhanced } from '@/hooks/use-toast-enhanced'
 import { useAuthStore } from '@/stores/auth-stores'
+import {
+  formatCurrencyAmount,
+  resolveCountryCode,
+  resolveProgramPricing,
+} from '@/lib/pricing'
 
 import {
   Card,
@@ -69,34 +74,12 @@ function paymentKey(programId: string, editionId: string | null): string {
   return `${programId}:${editionId ?? 'none'}`
 }
 
-function parsePriceToCents(priceUsd: string | number | null): number | null {
-  if (priceUsd === null || priceUsd === undefined) return null
-  const parsed = Number(priceUsd)
-  if (!Number.isFinite(parsed)) return null
-  return Math.round(parsed * 100)
-}
-
-const USD_FORMATTER = new Intl.NumberFormat('es-EC', {
-  style: 'currency',
-  currency: 'USD',
-  currencyDisplay: 'code',
-  maximumFractionDigits: 2,
-})
-
 const DATE_FORMATTER = new Intl.DateTimeFormat('es-EC', {
   day: '2-digit',
   month: '2-digit',
   year: 'numeric',
   timeZone: 'UTC',
 })
-
-function formatUsd(priceUsd: string | number | null): string | null {
-  if (priceUsd === null || priceUsd === undefined) return null
-  const parsed = Number(priceUsd)
-  if (!Number.isFinite(parsed)) return null
-  if (parsed <= 0) return 'Gratis'
-  return USD_FORMATTER.format(parsed)
-}
 
 function parseIsoDateOnlyToDM(value: string): string {
   // Espera "YYYY-MM-DD" o "YYYY-MM-DDTHH:mm:ssZ"
@@ -166,6 +149,7 @@ export default function ProgramsPage() {
   const [checkoutProgram, setCheckoutProgram] = useState<ProgramCardVM | null>(
     null
   )
+  const viewerCountryCode = resolveCountryCode(profile?.country_residence ?? null)
 
   useEffect(() => {
     if (didBootReference.current) return
@@ -211,7 +195,12 @@ export default function ProgramsPage() {
     const programsResponse = await supabase
       .from('programs')
       .select(
-        'id, slug, title, description, is_published, payment_mode, requires_payment_pre, price_usd, created_at'
+        `id, slug, title, description, is_published, payment_mode, requires_payment_pre, price_usd,
+        price_usd_list,price_usd_discount_percent,price_usd_final_single,price_usd_has_installments,
+        price_usd_final_installments,price_usd_installments_count,price_usd_installments_interest_free,price_usd_installment_amount,
+        price_ars_list,price_ars_discount_percent,price_ars_final_single,price_ars_has_installments,
+        price_ars_final_installments,price_ars_installments_count,price_ars_installments_interest_free,price_ars_installment_amount,
+        created_at`
       )
       .order('created_at', { ascending: true })
 
@@ -428,14 +417,16 @@ export default function ProgramsPage() {
   }
   function openCheckoutFor(program: ProgramCardVM): void {
     if (!userId) {
-      toast.showError('Inicia sesión para pagar.')
+      toast.showError('Inicia sesion para pagar.')
       router.push('/ingresar')
       return
     }
 
-    const amountCents = parsePriceToCents(program.price_usd)
-    if (!amountCents || amountCents <= 0) {
-      toast.showError('Este programa no tiene un precio configurado.')
+    const pricing = resolveProgramPricing(program, viewerCountryCode)
+    if (!pricing.availableVariants.length || !pricing.selectedPaymentPrice) {
+      toast.showError(
+        'Este programa no tiene un precio configurado para tu region.'
+      )
       return
     }
 
@@ -488,7 +479,19 @@ export default function ProgramsPage() {
             {items.map((p) => {
               const iconKind = pickProgramIcon(p.slug)
               const paymentMode = resolvePaymentMode(p)
-              const priceLabel = formatUsd(p.price_usd)
+              const pricing = resolveProgramPricing(p, viewerCountryCode)
+              const locale =
+                pricing.displayCurrency === 'ARS' ? 'es-AR' : 'es-EC'
+              const priceLabel = formatCurrencyAmount({
+                amount: pricing.selectedPaymentPrice,
+                currency: pricing.displayCurrency,
+                locale,
+              })
+              const installmentLabel = formatCurrencyAmount({
+                amount: pricing.installmentAmount,
+                currency: pricing.displayCurrency,
+                locale,
+              })
               const paidPre = hasPaidPre(p.id, p.edition?.id ?? null)
               const applied = hasApplied(p.id, p.edition?.id ?? null)
               const endsAtDate = p.edition
@@ -683,12 +686,41 @@ export default function ProgramsPage() {
                       </div>
 
                       {priceLabel ? (
-                        <div className="flex items-center gap-2">
-                          <CreditCard
-                            className="h-4 w-4 text-white/50"
-                            aria-hidden="true"
-                          />
-                          <span className="text-white/60">{priceLabel}</span>
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2">
+                            <CreditCard
+                              className="h-4 w-4 text-white/50"
+                              aria-hidden="true"
+                            />
+                            <span className="text-white/60">{priceLabel}</span>
+                          </div>
+                          {pricing.hasListPrice && pricing.listPrice ? (
+                            <div className="text-xs text-white/40 line-through">
+                              {formatCurrencyAmount({
+                                amount: pricing.listPrice,
+                                currency: pricing.displayCurrency,
+                                locale,
+                              })}
+                            </div>
+                          ) : null}
+                          {pricing.hasDiscount && pricing.discountPercent ? (
+                            <div className="text-xs font-semibold text-emerald-300">
+                              {Math.round(pricing.discountPercent)}% OFF
+                            </div>
+                          ) : null}
+                          {pricing.showInstallmentsInUi &&
+                          pricing.hasInstallments &&
+                          pricing.installmentsCount ? (
+                            <div className="text-xs text-white/55">
+                              Hasta {pricing.installmentsCount} cuotas{' '}
+                              {pricing.installmentsInterestFree === false
+                                ? 'con interes'
+                                : 'sin interes'}
+                              {installmentLabel
+                                ? ` · ${installmentLabel} por cuota`
+                                : ''}
+                            </div>
+                          ) : null}
                         </div>
                       ) : null}
 
@@ -727,11 +759,10 @@ export default function ProgramsPage() {
             onOpenChange={(open) => {
               if (!open) setCheckoutOpen(false)
             }}
-            programId={checkoutProgram.id}
-            programTitle={checkoutProgram.title}
+            program={checkoutProgram}
+            countryCode={viewerCountryCode}
             editionId={checkoutProgram.edition?.id ?? null}
             purpose="pre_enrollment"
-            amountCents={parsePriceToCents(checkoutProgram.price_usd) ?? 0}
             onPaid={() => {
               const key = paymentKey(
                 checkoutProgram.id,
