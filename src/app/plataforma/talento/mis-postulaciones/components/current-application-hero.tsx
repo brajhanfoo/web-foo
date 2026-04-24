@@ -4,11 +4,9 @@
 
 import Link from 'next/link'
 import { useState } from 'react'
-import { useAuthStore } from '@/stores/auth-stores'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { PaymentMethodModal } from '@/components/payments/payment-method-modal'
-import { resolveCountryCode, resolveProgramPricing } from '@/lib/pricing'
 
 import {
   ArrowRight,
@@ -41,10 +39,6 @@ function resolvePaymentMode(program: ProgramRow | null): ProgramPaymentMode {
 }
 
 export function CurrentApplicationHero(props: { app: ApplicationRow }) {
-  const profileCountry = useAuthStore(
-    (state) => state.profile?.country_residence
-  )
-  const viewerCountryCode = resolveCountryCode(profileCountry ?? null)
   const [checkoutOpen, setCheckoutOpen] = useState(false)
   const interviewBookingUrl = 'https://calendar.app.google/3RxfFjt86saSuTVD7'
   const programTitle = props.app.program ? props.app.program.title : 'Programa'
@@ -250,15 +244,10 @@ export function CurrentApplicationHero(props: { app: ApplicationRow }) {
   ) {
     const payment = getPaymentWindow(props.app)
     const paymentMode = resolvePaymentMode(props.app.program)
-    const pricing = props.app.program
-      ? resolveProgramPricing(props.app.program, viewerCountryCode)
-      : null
-    const hasCheckoutPrice = Boolean(
-      pricing?.availableVariants.length && pricing.selectedPaymentPrice
-    )
+    const hasProgramForCheckout = Boolean(props.app.program)
     const needsPayment =
       paymentMode === 'post' && props.app.payment_status !== 'paid'
-    const canPayNow = needsPayment && payment.canPay && hasCheckoutPrice
+    const canPayNow = needsPayment && payment.canPay && hasProgramForCheckout
 
     const expiresLabel = payment.expiresAtIso
       ? `TU RESERVA VENCE EL: ${fmtDateESFromISO(payment.expiresAtIso)}`
@@ -297,9 +286,9 @@ export function CurrentApplicationHero(props: { app: ApplicationRow }) {
                 >
                   PAGAR MATRÍCULA <CreditCard className="h-4 w-4" />
                 </Button>
-                {!hasCheckoutPrice ? (
+                {!hasProgramForCheckout ? (
                   <div className="text-xs text-white/60">
-                    Falta configurar el precio del programa para tu region.
+                    No se pudo cargar la configuración del programa.
                   </div>
                 ) : null}
                 {props.app.program ? (
@@ -307,7 +296,7 @@ export function CurrentApplicationHero(props: { app: ApplicationRow }) {
                     open={checkoutOpen}
                     onOpenChange={setCheckoutOpen}
                     program={props.app.program}
-                    countryCode={viewerCountryCode}
+                    countryCode={null}
                     editionId={props.app.edition_id}
                     purpose="tuition"
                     applicationId={props.app.id}

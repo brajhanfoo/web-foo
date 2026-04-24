@@ -293,7 +293,6 @@ function PricingEditor(props: PricingEditorProps) {
           </div>
         </div>
       ) : null}
-
     </div>
   )
 }
