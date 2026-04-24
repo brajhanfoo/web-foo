@@ -95,7 +95,7 @@ export function PaymentMethodModal(props: PaymentMethodModalProps) {
           const nextCountry =
             typeof payload.countryCode === 'string'
               ? payload.countryCode
-              : props.countryCode ?? null
+              : (props.countryCode ?? null)
           setResolvedCountryCode(nextCountry)
         }
       } catch {
@@ -233,7 +233,7 @@ export function PaymentMethodModal(props: PaymentMethodModalProps) {
               Monto a pagar:{' '}
               {isResolvingCountry
                 ? 'Verificando región...'
-                : selectedPriceLabel ?? 'No configurado'}
+                : (selectedPriceLabel ?? 'No configurado')}
             </DialogDescription>
           </DialogHeader>
 
@@ -314,9 +314,7 @@ export function PaymentMethodModal(props: PaymentMethodModalProps) {
                   <CreditCard className="h-4 w-4" />
                 </Button>
               ) : (
-                <div className="rounded-md border border-white/10 bg-white/5 px-3 py-2 text-xs text-white/65">
-                  PayPhone está disponible solo para cobros en USD.
-                </div>
+                ''
               )}
 
               <Button
