@@ -66,11 +66,11 @@ export function PaymentMethodModal(props: PaymentMethodModalProps) {
   })
 
   const canChooseVariant =
-    pricing.hasInstallments && pricing.singlePaymentPrice !== null
+    pricing.showInstallmentsInUi &&
+    pricing.hasInstallments &&
+    pricing.singlePaymentPrice !== null
 
   const canUsePayphone = pricing.checkoutCurrency === 'USD'
-  const canUsePayphoneForVariant =
-    canUsePayphone && paymentVariant === 'single_payment'
 
   const locale = pricing.displayCurrency === 'ARS' ? 'es-AR' : 'es-EC'
   const selectedPriceLabel = formatCurrencyAmount({
@@ -96,12 +96,6 @@ export function PaymentMethodModal(props: PaymentMethodModalProps) {
 
   function openPayphone() {
     setMethodError(null)
-
-    if (!canUsePayphoneForVariant) {
-      setMethodError('PayPhone solo permite pago único en USD.')
-      return
-    }
-
     props.onOpenChange(false)
     setPayphoneOpen(true)
   }
@@ -177,6 +171,12 @@ export function PaymentMethodModal(props: PaymentMethodModalProps) {
           </DialogHeader>
 
           <div className="space-y-4">
+            {!canChooseVariant && pricing.displayCurrency === 'USD' ? (
+              <div className="rounded-md border border-white/10 bg-white/5 px-3 py-2 text-xs text-white/70">
+                Pago único en dólares.
+              </div>
+            ) : null}
+
             {canChooseVariant ? (
               <div className="rounded-lg border border-white/10 bg-black/40 p-3 space-y-2">
                 <div className="text-xs uppercase tracking-wide text-white/50">
@@ -233,27 +233,15 @@ export function PaymentMethodModal(props: PaymentMethodModalProps) {
 
             <div className="space-y-3">
               {canUsePayphone ? (
-                <>
-                  <Button
-                    type="button"
-                    className="h-12 w-full justify-between bg-[#00CCA4] text-black hover:bg-[#00CCA4]/90"
-                    onClick={openPayphone}
-                    disabled={
-                      isStartingMp ||
-                      !pricing.selectedPaymentPrice ||
-                      !canUsePayphoneForVariant
-                    }
-                  >
-                    <span>Pagar con PayPhone</span>
-                    <CreditCard className="h-4 w-4" />
-                  </Button>
-                  {!canUsePayphoneForVariant ? (
-                    <div className="rounded-md border border-white/10 bg-white/5 px-3 py-2 text-xs text-white/65">
-                      Las cuotas en USD están disponibles solo con Mercado
-                      Pago. Para pagar con PayPhone, elige pago único.
-                    </div>
-                  ) : null}
-                </>
+                <Button
+                  type="button"
+                  className="h-12 w-full justify-between bg-[#00CCA4] text-black hover:bg-[#00CCA4]/90"
+                  onClick={openPayphone}
+                  disabled={isStartingMp || !pricing.selectedPaymentPrice}
+                >
+                  <span>Pagar con PayPhone</span>
+                  <CreditCard className="h-4 w-4" />
+                </Button>
               ) : (
                 <div className="rounded-md border border-white/10 bg-white/5 px-3 py-2 text-xs text-white/65">
                   PayPhone está disponible solo para cobros en USD.
