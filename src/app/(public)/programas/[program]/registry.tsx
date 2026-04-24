@@ -30,7 +30,7 @@ import AdmissionPricing from './components/AdmissionPricing'
 
 // Temporal: ocultar bloque de inversion/precio en landing publica de Project Academy.
 // Para reactivar, cambiar a `true`.
-const SHOW_PROJECT_ACADEMY_PRICING_SECTION = false
+const SHOW_PROJECT_ACADEMY_PRICING_SECTION = true
 
 type ProgramRenderParams = {
   program: ProgramRow
