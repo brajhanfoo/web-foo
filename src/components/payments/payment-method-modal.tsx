@@ -31,6 +31,11 @@ type CreateMercadoPagoPreferenceResponse = {
   sandboxInitPoint?: string
 }
 
+type GeoCountryResponse = {
+  ok: boolean
+  countryCode?: string | null
+}
+
 type PaymentMethodModalProps = {
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -45,20 +50,70 @@ type PaymentMethodModalProps = {
 export function PaymentMethodModal(props: PaymentMethodModalProps) {
   const [payphoneOpen, setPayphoneOpen] = useState(false)
   const [isStartingMp, setIsStartingMp] = useState(false)
+  const [isResolvingCountry, setIsResolvingCountry] = useState(false)
   const [methodError, setMethodError] = useState<string | null>(null)
+  const [resolvedCountryCode, setResolvedCountryCode] = useState<string | null>(
+    props.countryCode ?? null
+  )
 
   const [paymentVariant, setPaymentVariant] =
     useState<ProgramPaymentVariant>('single_payment')
+  const countryCodeForPricing = resolvedCountryCode ?? props.countryCode ?? null
 
   const pricing = useMemo(
     () =>
-      resolveProgramPricing(props.program, props.countryCode, paymentVariant),
-    [props.program, props.countryCode, paymentVariant]
+      resolveProgramPricing(
+        props.program,
+        countryCodeForPricing,
+        paymentVariant
+      ),
+    [props.program, countryCodeForPricing, paymentVariant]
   )
 
   useEffect(() => {
     setPaymentVariant(pricing.defaultPaymentVariant)
   }, [pricing.defaultPaymentVariant, props.open])
+
+  useEffect(() => {
+    if (!props.open) return
+
+    let cancelled = false
+    setResolvedCountryCode(props.countryCode ?? null)
+    setIsResolvingCountry(true)
+
+    const resolveViewerCountry = async () => {
+      try {
+        const response = await fetch('/api/geo/country', {
+          method: 'GET',
+          cache: 'no-store',
+        })
+
+        const payload = (await response.json()) as GeoCountryResponse
+        if (cancelled) return
+
+        if (response.ok && payload.ok) {
+          const nextCountry =
+            typeof payload.countryCode === 'string'
+              ? payload.countryCode
+              : props.countryCode ?? null
+          setResolvedCountryCode(nextCountry)
+        }
+      } catch {
+        if (cancelled) return
+        setResolvedCountryCode(props.countryCode ?? null)
+      } finally {
+        if (!cancelled) {
+          setIsResolvingCountry(false)
+        }
+      }
+    }
+
+    void resolveViewerCountry()
+
+    return () => {
+      cancelled = true
+    }
+  }, [props.open, props.countryCode])
 
   const paymentSupportUrl = buildPaymentSupportWhatsAppUrl({
     purpose: props.purpose,
@@ -96,12 +151,21 @@ export function PaymentMethodModal(props: PaymentMethodModalProps) {
 
   function openPayphone() {
     setMethodError(null)
+
+    if (isResolvingCountry) {
+      return
+    }
+
     props.onOpenChange(false)
     setPayphoneOpen(true)
   }
 
   async function openMercadoPago() {
     setMethodError(null)
+
+    if (isResolvingCountry) {
+      return
+    }
 
     if (!pricing.selectedPaymentPrice) {
       setMethodError(
@@ -166,7 +230,10 @@ export function PaymentMethodModal(props: PaymentMethodModalProps) {
           <DialogHeader>
             <DialogTitle>Selecciona tu método de pago</DialogTitle>
             <DialogDescription className="text-white/60">
-              Monto a pagar: {selectedPriceLabel ?? 'No configurado'}
+              Monto a pagar:{' '}
+              {isResolvingCountry
+                ? 'Verificando región...'
+                : selectedPriceLabel ?? 'No configurado'}
             </DialogDescription>
           </DialogHeader>
 
@@ -237,7 +304,11 @@ export function PaymentMethodModal(props: PaymentMethodModalProps) {
                   type="button"
                   className="h-12 w-full justify-between bg-[#00CCA4] text-black hover:bg-[#00CCA4]/90"
                   onClick={openPayphone}
-                  disabled={isStartingMp || !pricing.selectedPaymentPrice}
+                  disabled={
+                    isResolvingCountry ||
+                    isStartingMp ||
+                    !pricing.selectedPaymentPrice
+                  }
                 >
                   <span>Pagar con PayPhone</span>
                   <CreditCard className="h-4 w-4" />
@@ -252,7 +323,11 @@ export function PaymentMethodModal(props: PaymentMethodModalProps) {
                 type="button"
                 className="h-12 w-full justify-between border border-white/20 bg-transparent text-white hover:bg-white/10"
                 onClick={() => void openMercadoPago()}
-                disabled={isStartingMp || !pricing.selectedPaymentPrice}
+                disabled={
+                  isResolvingCountry ||
+                  isStartingMp ||
+                  !pricing.selectedPaymentPrice
+                }
               >
                 <span>
                   {isStartingMp
