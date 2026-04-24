@@ -194,30 +194,16 @@ function resolveUsdPricing(program: ProgramRow): ProgramPricingBlock {
     toNonNegativeMoney(program.price_usd_final_single) ??
     toNonNegativeMoney(program.price_usd)
 
-  const installmentsEnabled = Boolean(
-    toNullableBoolean(program.price_usd_has_installments)
-  )
-  const installmentsPrice = toNonNegativeMoney(
-    program.price_usd_final_installments
-  )
-  const hasInstallments = installmentsEnabled && installmentsPrice !== null
-
   return {
     currency: 'USD',
     listPrice: toNonNegativeMoney(program.price_usd_list),
     discountPercent: toDiscountPercent(program.price_usd_discount_percent),
     singlePaymentPrice,
-    hasInstallments,
-    installmentsPrice: hasInstallments ? installmentsPrice : null,
-    installmentsCount: hasInstallments
-      ? toPositiveInt(program.price_usd_installments_count)
-      : null,
-    installmentsInterestFree: hasInstallments
-      ? toNullableBoolean(program.price_usd_installments_interest_free)
-      : null,
-    installmentAmount: hasInstallments
-      ? toNonNegativeMoney(program.price_usd_installment_amount)
-      : null,
+    hasInstallments: false,
+    installmentsPrice: null,
+    installmentsCount: null,
+    installmentsInterestFree: null,
+    installmentAmount: null,
   }
 }
 
@@ -270,6 +256,7 @@ export function resolveProgramPricing(
     availableVariants.push('single_payment')
   }
   if (
+    region === 'AR' &&
     regionPricing.hasInstallments &&
     regionPricing.installmentsPrice !== null
   ) {
@@ -360,6 +347,16 @@ export function resolveCheckoutPricingOrThrow(params: {
   }
 
   if (!resolved.availableVariants.includes(params.paymentVariant)) {
+    throw new ProgramPricingError(
+      'PAYMENT_VARIANT_NOT_SUPPORTED',
+      'La modalidad de pago seleccionada no esta disponible para este programa.'
+    )
+  }
+
+  if (
+    resolved.checkoutCurrency === 'USD' &&
+    params.paymentVariant === 'installments'
+  ) {
     throw new ProgramPricingError(
       'PAYMENT_VARIANT_NOT_SUPPORTED',
       'La modalidad de pago seleccionada no esta disponible para este programa.'

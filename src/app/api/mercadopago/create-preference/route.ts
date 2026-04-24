@@ -391,34 +391,23 @@ function pickStringOrNumber(raw: unknown, key: string): string | null {
 }
 
 function resolveInstallmentsLimit(params: {
+  currency: 'USD' | 'ARS'
   paymentVariant: ProgramPaymentVariant
   installmentsCount: number | null
 }): number {
+  if (params.currency === 'USD') {
+    return 1
+  }
+
   if (params.paymentVariant === 'single_payment') {
     return 1
   }
 
-  return params.installmentsCount && params.installmentsCount > 0
-    ? params.installmentsCount
-    : 1
-}
-
-function resolveMercadoPagoUserMessage(params: {
-  rawMessage: string
-  paymentVariant: ProgramPaymentVariant
-  currency: 'USD' | 'ARS'
-}): string {
-  const normalized = params.rawMessage.toLowerCase()
-  const mentionsInstallments = /installments?|cuotas?/.test(normalized)
-
-  if (params.paymentVariant === 'installments' && mentionsInstallments) {
-    if (params.currency === 'USD') {
-      return 'Las cuotas en USD no están disponibles para Mercado Pago con esta cuenta o país. Elige pago único en USD.'
-    }
-    return 'Las cuotas no están disponibles en este momento para Mercado Pago. Inténtalo con pago único.'
-  }
-
-  return params.rawMessage
+  const count =
+    params.installmentsCount && params.installmentsCount > 0
+      ? params.installmentsCount
+      : 1
+  return Math.min(count, 6)
 }
 
 function buildPreferenceBody(params: {
@@ -442,6 +431,7 @@ function buildPreferenceBody(params: {
   }
 }): Record<string, unknown> {
   const installmentsLimit = resolveInstallmentsLimit({
+    currency: params.currency,
     paymentVariant: params.paymentVariant,
     installmentsCount: params.installmentsCount,
   })
@@ -722,13 +712,24 @@ export async function POST(
 
   if (
     paymentVariant === 'installments' &&
-    (!checkoutPricing.installmentsCount || checkoutPricing.installmentsCount < 1)
+    (!checkoutPricing.installmentsCount ||
+      checkoutPricing.installmentsCount < 1)
   ) {
     return NextResponse.json(
       {
         ok: false,
         message:
           'No hay una cantidad de cuotas configurada para esta modalidad de pago.',
+      },
+      { status: 400 }
+    )
+  }
+
+  if (checkoutPricing.currency === 'USD' && paymentVariant === 'installments') {
+    return NextResponse.json(
+      {
+        ok: false,
+        message: 'La modalidad de pago seleccionada no esta disponible.',
       },
       { status: 400 }
     )
@@ -913,20 +914,15 @@ export async function POST(
       { status: 200 }
     )
   } catch (error) {
-    const rawErrorMessage =
+    const normalizedErrorMessage =
       extractErrorMessage(error) ??
       'No se pudo crear la preferencia de Mercado Pago.'
-    const userMessage = resolveMercadoPagoUserMessage({
-      rawMessage: rawErrorMessage,
-      paymentVariant,
-      currency: checkoutPricing.currency,
-    })
 
     await supabaseAdmin
       .from('payments')
       .update({
         status: 'failed',
-        error_message: rawErrorMessage,
+        error_message: normalizedErrorMessage,
       })
       .eq('id', paymentId)
       .eq('provider', MERCADO_PAGO_PROVIDER)
@@ -934,7 +930,7 @@ export async function POST(
     return NextResponse.json(
       {
         ok: false,
-        message: userMessage,
+        message: normalizedErrorMessage,
       },
       { status: 502 }
     )

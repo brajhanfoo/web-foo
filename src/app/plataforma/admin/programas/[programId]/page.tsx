@@ -103,12 +103,11 @@ function buildPricingState(program: ProgramRow, currency: 'usd' | 'ars') {
       finalSingle: toInputValue(
         program.price_usd_final_single ?? program.price_usd
       ),
-      hasInstallments: Boolean(program.price_usd_has_installments),
-      finalInstallments: toInputValue(program.price_usd_final_installments),
-      installmentsCount: toInputValue(program.price_usd_installments_count),
-      installmentsInterestFree:
-        program.price_usd_installments_interest_free !== false,
-      installmentAmount: toInputValue(program.price_usd_installment_amount),
+      hasInstallments: false,
+      finalInstallments: '',
+      installmentsCount: '',
+      installmentsInterestFree: true,
+      installmentAmount: '',
     } satisfies PricingFormState
   }
 
@@ -150,19 +149,21 @@ type PricingEditorProps = {
   currency: 'USD' | 'ARS'
   state: PricingFormState
   onChange: (next: PricingFormState) => void
-  showInstallmentsHint?: boolean
+  allowInstallments?: boolean
 }
 
 function PricingEditor(props: PricingEditorProps) {
   const { state } = props
+  const allowInstallments = props.allowInstallments ?? true
 
   return (
     <div className="rounded-xl border border-slate-800 bg-slate-950/40 p-4 space-y-4">
       <div>
         <h3 className="text-sm font-semibold text-slate-100">{props.title}</h3>
         <p className="text-xs text-slate-400">
-          Configura precio de lista, precio final y metadata de cuotas en{' '}
-          {props.currency}.
+          {allowInstallments
+            ? `Configura precio de lista, precio final y metadata de cuotas en ${props.currency}.`
+            : `Configura precio de lista y precio final en ${props.currency}.`}
         </p>
       </div>
 
@@ -204,20 +205,26 @@ function PricingEditor(props: PricingEditorProps) {
         </div>
       </div>
 
-      <div className="flex items-center gap-3 rounded-lg border border-slate-800 bg-slate-900/40 p-3">
-        <Switch
-          id={`${props.currency.toLowerCase()}_has_installments`}
-          checked={state.hasInstallments}
-          onCheckedChange={(checked) =>
-            props.onChange({ ...state, hasInstallments: checked })
-          }
-        />
-        <Label htmlFor={`${props.currency.toLowerCase()}_has_installments`}>
-          Habilitar cuotas en {props.currency}
-        </Label>
-      </div>
+      {allowInstallments ? (
+        <div className="flex items-center gap-3 rounded-lg border border-slate-800 bg-slate-900/40 p-3">
+          <Switch
+            id={`${props.currency.toLowerCase()}_has_installments`}
+            checked={state.hasInstallments}
+            onCheckedChange={(checked) =>
+              props.onChange({ ...state, hasInstallments: checked })
+            }
+          />
+          <Label htmlFor={`${props.currency.toLowerCase()}_has_installments`}>
+            Habilitar cuotas en {props.currency}
+          </Label>
+        </div>
+      ) : (
+        <div className="rounded-md border border-slate-800 bg-slate-900/40 px-3 py-2 text-xs text-slate-400">
+          Pago unico en dolares.
+        </div>
+      )}
 
-      {state.hasInstallments ? (
+      {allowInstallments && state.hasInstallments ? (
         <div className="grid gap-4 md:grid-cols-4">
           <div className="space-y-2">
             <Label>Precio final en cuotas ({props.currency})</Label>
@@ -287,12 +294,6 @@ function PricingEditor(props: PricingEditorProps) {
         </div>
       ) : null}
 
-      {props.showInstallmentsHint ? (
-        <div className="rounded-md border border-slate-800 bg-slate-900/40 px-3 py-2 text-xs text-slate-400">
-          Nota: si activas cuotas USD, se habilitan en checkout con Mercado
-          Pago.
-        </div>
-      ) : null}
     </div>
   )
 }
@@ -409,22 +410,6 @@ export default function AdminProgramDetailPage() {
         'Precio final USD pago unico',
         usdPricing.finalSingle
       )
-      const usdFinalInstallments = usdPricing.hasInstallments
-        ? parseOptionalDecimal(
-            'Precio final USD en cuotas',
-            usdPricing.finalInstallments
-          )
-        : null
-      const usdInstallmentsCount = usdPricing.hasInstallments
-        ? parseOptionalInteger(
-            'Cantidad cuotas USD',
-            usdPricing.installmentsCount
-          )
-        : null
-      const usdInstallmentAmount = usdPricing.hasInstallments
-        ? parseOptionalDecimal('Monto cuota USD', usdPricing.installmentAmount)
-        : null
-
       const arsList = parseOptionalDecimal(
         'Precio lista ARS',
         arsPricing.listPrice
@@ -468,13 +453,11 @@ export default function AdminProgramDetailPage() {
           price_usd_list: usdList,
           price_usd_discount_percent: usdDiscount,
           price_usd_final_single: usdFinalSingle,
-          price_usd_has_installments: usdPricing.hasInstallments,
-          price_usd_final_installments: usdFinalInstallments,
-          price_usd_installments_count: usdInstallmentsCount,
-          price_usd_installments_interest_free: usdPricing.hasInstallments
-            ? usdPricing.installmentsInterestFree
-            : null,
-          price_usd_installment_amount: usdInstallmentAmount,
+          price_usd_has_installments: false,
+          price_usd_final_installments: null,
+          price_usd_installments_count: null,
+          price_usd_installments_interest_free: null,
+          price_usd_installment_amount: null,
           price_ars_list: arsList,
           price_ars_discount_percent: arsDiscount,
           price_ars_final_single: arsFinalSingle,
@@ -717,7 +700,7 @@ export default function AdminProgramDetailPage() {
               currency="USD"
               state={usdPricing}
               onChange={setUsdPricing}
-              showInstallmentsHint
+              allowInstallments={false}
             />
 
             <PricingEditor
