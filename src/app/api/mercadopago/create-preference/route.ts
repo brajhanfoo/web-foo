@@ -390,10 +390,32 @@ function pickStringOrNumber(raw: unknown, key: string): string | null {
   return null
 }
 
+function resolveInstallmentsLimit(params: {
+  currency: 'USD' | 'ARS'
+  paymentVariant: ProgramPaymentVariant
+  installmentsCount: number | null
+}): number {
+  if (params.currency === 'USD') {
+    return 1
+  }
+
+  if (params.paymentVariant === 'single_payment') {
+    return 1
+  }
+
+  const count =
+    params.installmentsCount && params.installmentsCount > 0
+      ? params.installmentsCount
+      : 1
+  return Math.min(count, 6)
+}
+
 function buildPreferenceBody(params: {
   purpose: PaymentPurpose
   amountCents: number
   currency: 'USD' | 'ARS'
+  paymentVariant: ProgramPaymentVariant
+  installmentsCount: number | null
   paymentId: string
   programId: string
   applicationId: string | null
@@ -408,6 +430,12 @@ function buildPreferenceBody(params: {
     notification: string
   }
 }): Record<string, unknown> {
+  const installmentsLimit = resolveInstallmentsLimit({
+    currency: params.currency,
+    paymentVariant: params.paymentVariant,
+    installmentsCount: params.installmentsCount,
+  })
+
   return {
     items: [
       {
@@ -440,6 +468,10 @@ function buildPreferenceBody(params: {
     },
     auto_return: 'approved',
     notification_url: params.urls.notification,
+    payment_methods: {
+      installments: installmentsLimit,
+      default_installments: installmentsLimit,
+    },
     ...(params.payer ? { payer: params.payer } : {}),
   }
 }
@@ -678,6 +710,31 @@ export async function POST(
     )
   }
 
+  if (
+    paymentVariant === 'installments' &&
+    (!checkoutPricing.installmentsCount ||
+      checkoutPricing.installmentsCount < 1)
+  ) {
+    return NextResponse.json(
+      {
+        ok: false,
+        message:
+          'No hay una cantidad de cuotas configurada para esta modalidad de pago.',
+      },
+      { status: 400 }
+    )
+  }
+
+  if (checkoutPricing.currency === 'USD' && paymentVariant === 'installments') {
+    return NextResponse.json(
+      {
+        ok: false,
+        message: 'La modalidad de pago seleccionada no esta disponible.',
+      },
+      { status: 400 }
+    )
+  }
+
   const existingPaid = await findExistingPaid({
     userId,
     programId,
@@ -775,6 +832,8 @@ export async function POST(
       purpose,
       amountCents: checkoutPricing.amountCents,
       currency: checkoutPricing.currency,
+      paymentVariant,
+      installmentsCount: checkoutPricing.installmentsCount,
       paymentId,
       programId: program.id,
       applicationId,

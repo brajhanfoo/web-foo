@@ -71,6 +71,8 @@ type FormSchema = {
 }
 
 type StepIdentifier = 1 | 2 | 3
+const TALENT_EXPLORE_PATH = '/plataforma/talento/explorar'
+const TALENT_APPLICATIONS_PATH = '/plataforma/talento/mis-postulaciones'
 
 function safeString(value: unknown): string {
   return typeof value === 'string' ? value : ''
@@ -290,6 +292,7 @@ export default function ProgramPostularPage() {
   const slug = params.slug
 
   const hasBootedOnceRef = useRef(false)
+  const hasNavigatedAfterSubmitRef = useRef(false)
 
   const [isLoading, setIsLoading] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -699,6 +702,7 @@ export default function ProgramPostularPage() {
   }
 
   async function handleSubmit() {
+    if (isSubmitting) return
     if (!program || !form || !schema) return
     if (!userId || !profile) return
     if (!validateStep(3)) return
@@ -717,6 +721,12 @@ export default function ProgramPostularPage() {
 
     setIsSubmitting(true)
 
+    const goToApplications = () => {
+      if (hasNavigatedAfterSubmitRef.current) return
+      hasNavigatedAfterSubmitRef.current = true
+      router.replace(TALENT_APPLICATIONS_PATH)
+    }
+
     const editionId: string | null = edition?.id ?? null
 
     const exists = await alreadyApplied({
@@ -728,7 +738,7 @@ export default function ProgramPostularPage() {
     if (exists) {
       setIsSubmitting(false)
       toast.showError('Ya te postulaste a este programa en esta edición.')
-      router.push(`/plataforma/talento/explorar/${program.slug}`)
+      goToApplications()
       return
     }
 
@@ -798,7 +808,7 @@ export default function ProgramPostularPage() {
       // choque con índice único (multi-tab / carrera / doble click)
       if (msg.includes('duplicate key')) {
         toast.showError('Ya te postulaste a este programa en esta edición.')
-        router.push(`/plataforma/talento/explorar/${program.slug}`)
+        goToApplications()
         return
       }
 
@@ -807,7 +817,7 @@ export default function ProgramPostularPage() {
     }
 
     toast.showSuccess('¡Postulación enviada! Te contactaremos pronto.')
-    router.push(`/plataforma/talento/explorar/${program.slug}`)
+    goToApplications()
   }
 
   // ---------------------------- UI states (early) ---------------------------
@@ -880,7 +890,7 @@ export default function ProgramPostularPage() {
       <div className="max-w-3xl mx-auto space-y-4 p-4 sm:p-6">
         <Link
           className="inline-flex items-center rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-white hover:bg-white/10"
-          href={`/plataforma/talento/explorar/${program.slug}`}
+          href={TALENT_EXPLORE_PATH}
         >
           ← Volver
         </Link>
@@ -912,7 +922,7 @@ export default function ProgramPostularPage() {
       <div className="max-w-3xl mx-auto space-y-4 p-4 sm:p-6">
         <Link
           className="inline-flex items-center rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-white hover:bg-white/10"
-          href={`/plataforma/talento/explorar/${program.slug}`}
+          href={TALENT_EXPLORE_PATH}
         >
           ← Volver
         </Link>
