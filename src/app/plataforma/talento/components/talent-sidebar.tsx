@@ -127,7 +127,7 @@ export function TalentSidebar({
           type="button"
           className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm text-white/70 transition hover:bg-white/5 hover:text-white cursor-pointer"
           onClick={() => {
-            window.open('https://wa.me/51901831491', '_blank')
+            window.open('https://wa.me/51931236033', '_blank')
             onNavigate?.()
           }}
         >
