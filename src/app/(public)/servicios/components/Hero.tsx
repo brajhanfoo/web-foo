@@ -95,7 +95,7 @@ const Hero = () => {
             </button> */}
             {/* CTA */}
             <a
-              href="https://wa.me/51901831491?text=Hola%20quiero%20informaci%C3%B3n%20sobre%20contratar%20talento"
+              href="https://wa.me/51931236033?text=Hola%20quiero%20informaci%C3%B3n%20sobre%20contratar%20talento"
               target="_blank"
               rel="noopener noreferrer"
               className="relative z-10 text-[#00D3D3] text-sm font-medium tracking-wide hover:underline cursor-pointer"
@@ -153,7 +153,7 @@ const Hero = () => {
 
           {/* CTA */}
           <a
-            href="https://wa.me/51901831491?text=Hola%20quiero%20informaci%C3%B3n%20sobre%20patrocinar%20los%20programas"
+            href="https://wa.me/51931236033?text=Hola%20quiero%20informaci%C3%B3n%20sobre%20patrocinar%20los%20programas"
             target="_blank"
             rel="noopener noreferrer"
             className="relative z-10 bottom-[-22px] text-[#780B90] text-sm font-medium tracking-wide hover:underline cursor-pointer"

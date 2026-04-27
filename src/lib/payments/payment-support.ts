@@ -1,4 +1,4 @@
-const DEFAULT_PAYMENT_SUPPORT_WHATSAPP = '+51901831491'
+const DEFAULT_PAYMENT_SUPPORT_WHATSAPP = '+51931236033'
 
 type PaymentPurpose = 'pre_enrollment' | 'tuition'
 
