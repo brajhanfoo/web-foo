@@ -172,14 +172,14 @@ const ProgramStructureAccordion: React.FC = () => {
             laboral global.
           </p>
 
-          <Link href="/ProjectAcademy-brochure.pdf" target="_blank">
+          {/* <Link href="/ProjectAcademy-brochure.pdf" target="_blank">
             <span className="mt-6 inline-flex items-center rounded-lg border border-white/20 px-4 py-2 text-sm transition hover:border-white/40 cursor-pointer bg-white/10 hover:bg-white/20">
               <span className="mr-2">
                 <MdOutlineFileDownload className="inline-block" />
               </span>
               Descargar brochure del programa
             </span>
-          </Link>
+          </Link> */}
         </div>
       </div>
     </section>
