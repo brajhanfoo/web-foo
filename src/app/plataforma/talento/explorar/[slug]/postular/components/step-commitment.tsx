@@ -21,6 +21,7 @@ export function StepCommitment({
   onBack,
   onSubmit,
   isSubmitting,
+  programSlug,
 }: {
   appliedRoleTitle: string
   declaredLevelLabel?: string
@@ -30,6 +31,7 @@ export function StepCommitment({
   onBack: () => void
   onSubmit: () => void
   isSubmitting: boolean
+  programSlug?: string
 }) {
   const termsPdfAccepted = Boolean(values['acepto_terminos_pdf'])
 
@@ -73,7 +75,14 @@ export function StepCommitment({
       <p className="text-sm text-white/70">
         Para finalizar tu proceso, por favor lee y acepta los siguientes{' '}
         <Link
-          href="https://drive.google.com/file/d/1NO30SG06Y5Z-dIClueNPqXPSvmJlqV0K/view?usp=drive_link"
+          href={(() => {
+            const slug = (programSlug || '').toLowerCase()
+            if (slug.includes('academy') || slug.includes('project-academy'))
+              return '/legal/FTG_Terminos_y_Condiciones_Project_Academy.pdf'
+            if (slug.includes('smart') || slug.includes('smart-projects'))
+              return '/legal/FTG_Terminos_y_Condiciones_Smart_Projects.pdf'
+            return '/legal/FTG_Terminos_y_Condiciones.pdf'
+          })()}
           target="_blank"
           rel="noopener noreferrer"
           className="font-semibold text-emerald-400 underline underline-offset-4 hover:text-emerald-300"

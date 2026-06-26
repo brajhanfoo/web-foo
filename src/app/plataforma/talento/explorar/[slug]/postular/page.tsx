@@ -1093,6 +1093,7 @@ export default function ProgramPostularPage() {
           values={values}
           onChangeValue={handleChangeValue}
           isSubmitting={isSubmitting}
+          programSlug={program?.slug ?? undefined}
           onBack={() => setStep(2)}
           onSubmit={handleSubmit}
         />
