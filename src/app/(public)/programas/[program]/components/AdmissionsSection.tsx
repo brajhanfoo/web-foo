@@ -42,7 +42,7 @@ export default function AdmissionsSection() {
           <div className="absolute inset-0 rounded-3xl border border-[#BDBE0B]/20 pointer-events-none" />
 
           {/* texto */}
-          <p className="text-gray-300 text-lg leading-relaxed mb-10 max-w-4xl text-center mx-auto">
+          <p className="text-gray-300 text-lg leading-relaxed mb-6 max-w-4xl text-center mx-auto">
             Cada cohorte reúne al menos{' '}
             <span className="text-white font-semibold">50 estudiantes</span>,
             organizados en equipos de desarrollo de software. El programa
@@ -56,6 +56,12 @@ export default function AdmissionsSection() {
             </span>
             .
           </p>
+
+          <div className="flex justify-center mb-10">
+            <span className="inline-flex items-center rounded-full border border-[#D85DFB]/40 bg-[#D85DFB]/10 px-4 py-2 text-sm font-semibold text-[#D85DFB]">
+              8va edición
+            </span>
+          </div>
 
           {/* grid */}
           <div className="grid md:grid-cols-2 gap-6 mb-12">
@@ -110,28 +116,27 @@ export default function AdmissionsSection() {
             </div>
           </div>
 
-          {/* estado cerrado */}
+          {/* estado abierto */}
           <div className="text-center">
-            <div
+            <Link
+              href="/plataforma/talento/explorar"
               className="
-              inline-block
-              bg-gradient-to-r from-gray-700 to-gray-800
-              text-gray-300
-              font-semibold
-              py-4 px-10
-              rounded-xl
-              border border-white/10
-              shadow-[0_0_20px_rgba(255,255,255,0.05)]
-              cursor-not-allowed
-              text-lg
-              opacity-80
+              group relative inline-flex items-center justify-center
+              overflow-hidden rounded-2xl border border-[#D85DFB]/40
+              bg-[#D85DFB]
+              px-8 py-4 text-lg font-semibold text-white
+              shadow-[0_0_35px_rgba(216,93,251,0.25)]
+              transition-all duration-300 hover:scale-[1.02] hover:bg-[#c74ae8] hover:shadow-[0_0_45px_rgba(216,93,251,0.35)]
               "
             >
-              Convocatoria cerrada
-            </div>
+              <span className="relative z-10">Convocatoria abierta</span>
+              <span className="relative z-10 ml-2 transition-transform duration-300 group-hover:translate-x-1">
+                →
+              </span>
+            </Link>
 
-            <p className="text-gray-500 text-sm mt-4">
-              Próxima apertura: Octava edición próximamente
+            <p className="text-gray-400 text-sm mt-4">
+              Inscríbete ahora y explora las oportunidades disponibles
             </p>
           </div>
         </div>
